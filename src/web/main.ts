@@ -34,7 +34,7 @@ import {
   type ProductionItem,
   type Unit,
 } from "../core";
-import { draw, setupCanvas, TILE, type DrawInput } from "./render";
+import { draw, setupCanvas, tileSize, type DrawInput } from "./render";
 import { ERROR_TEXT, eventText } from "./texts";
 
 const HUMAN = 0;
@@ -106,7 +106,7 @@ function startNewGame(seed: string): void {
   selectedUnitId = null;
   selectNextUnit();
   save();
-  ctx = setupCanvas(canvas, state.map.width, state.map.height);
+  ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());
   refresh();
 }
 
@@ -267,6 +267,7 @@ function buildDrawInput(): DrawInput {
       y: u.y,
       fortified: u.fortified,
       working: u.work !== null,
+      workProgress: u.work ? workShare(u) : undefined,
       hasMoves: needsOrders(u),
     })),
     cities: view.cities.map((c) => ({ id: c.id, owner: c.owner, name: c.name, x: c.x, y: c.y, size: c.size })),
@@ -280,6 +281,35 @@ function buildDrawInput(): DrawInput {
     target: route ? { point: route.target, turns: route.turns } : null,
   };
 }
+
+/** Share of a settler's current improvement that is done, 0..1. */
+function workShare(u: Unit): number {
+  if (!u.work) return 0;
+  const terrain = state.map.terrain[u.y * state.map.width + u.x]!;
+  const need = IMPROVEMENTS[u.work.improvement].turns[terrain] ?? 1;
+  return u.work.progress / need;
+}
+
+/** Largest tile size that fits the map next to the side panel in the current window. */
+function fitTileSize(): number {
+  const panel = 290 + 16 + 34;
+  const header = 84;
+  const byWidth = (window.innerWidth - panel) / state.map.width;
+  const byHeight = (window.innerHeight - header) / state.map.height;
+  return Math.max(20, Math.min(44, Math.floor(Math.min(byWidth, byHeight))));
+}
+
+let resizeTimer: number | undefined;
+window.addEventListener("resize", () => {
+  window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => {
+    const tile = fitTileSize();
+    if (tile !== tileSize()) {
+      ctx = setupCanvas(canvas, state.map.width, state.map.height, tile);
+      refresh();
+    }
+  }, 150);
+});
 
 /** Tiles within the 21-tile radius of each player's known cities. */
 function territoryOf(cities: City[]): Map<number, Set<number>> {
@@ -481,8 +511,8 @@ function closeCity(): void {
 
 function tileFromEvent(e: MouseEvent): Point | null {
   const rect = canvas.getBoundingClientRect();
-  const x = Math.floor((e.clientX - rect.left) / TILE);
-  const y = Math.floor((e.clientY - rect.top) / TILE);
+  const x = Math.floor((e.clientX - rect.left) / tileSize());
+  const y = Math.floor((e.clientY - rect.top) / tileSize());
   if (x < 0 || y < 0 || x >= state.map.width || y >= state.map.height) return null;
   return { x, y };
 }
@@ -640,7 +670,7 @@ newGameButton.addEventListener("click", () => {
 // ---------- start ----------
 
 if (load()) {
-  ctx = setupCanvas(canvas, state.map.width, state.map.height);
+  ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());
   selectNextUnit();
   refresh();
 } else {

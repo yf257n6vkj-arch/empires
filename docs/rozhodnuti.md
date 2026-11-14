@@ -2,6 +2,10 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 14. 11. 2026: Fáze 1 je hotová
+
+Michal fázi 1 uzavřel. Hra umí průzkum, zakládání a růst měst, výrobu, stavbu cest, dolů a zavlažování, přiblížení mapy a automatické ukládání, grafika je doladěná. Pokračujeme fází 2.
+
 ## 14. 11. 2026: Terén má vlastní barvy, povrch a měkké přechody
 
 Michal chtěl terén realističtější a jednotlivé druhy lépe rozlišitelné. Každý terén má teď vlastní barvu i tvary. Louka je sytě zelená s trsy trávy a kvítky, pláně zlatavé se suchou trávou a keři. Les je tmavý a hustý, kopce olivově zelené oblé hřbety. Hory jsou šedé skalnaté štíty se sněhem, poušť světlý písek s dunami a občas kaktusem. Sousední políčka se na hranách a v rozích jemně prolínají a moře plynule tmavne od pobřeží, takže mapa nepůsobí jako šachovnice. U pobřeží je mělčina, pláž a příboj. Přiblížená mapa si kreslí pozadí s rezervou kolem výřezu, aby posouvání zůstalo plynulé.

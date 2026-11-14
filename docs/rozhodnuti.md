@@ -2,6 +2,10 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 14. 11. 2026: Fáze 2 je ekonomika jedné civilizace, boj přijde ve fázi 3
+
+Ve fázi 2 postavíme technologie (asi 24 ve 4 érách), posuvník mezi výzkumem a zlatem, údržbu budov a urychlení výroby za zlato, asi 10 budov, 5 divů, spokojenost a všech asi 12 typů jednotek. Jednotky budou mít útok a obranu, ale bojovat začnou až ve fázi 3, kde přibude hra dvou lidí, válka a mír, vítězství a skóre. Boj jsme posunuli, protože bez soupeře by ho nešlo vyzkoušet. Fáze 2 projde, když jeden hráč dohraje do 120. tahu a strom technologií jde za tu dobu rozumně projít. Tempo změříme jednoduchým automatickým hráčem na stovkách map. Ten nenahrazuje AI, slouží jen k ladění čísel.
+
 ## 14. 11. 2026: Fáze 1 je hotová
 
 Michal fázi 1 uzavřel. Hra umí průzkum, zakládání a růst měst, výrobu, stavbu cest, dolů a zavlažování, přiblížení mapy a automatické ukládání, grafika je doladěná. Pokračujeme fází 2.

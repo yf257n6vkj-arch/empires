@@ -17,13 +17,13 @@ import { DEFAULT_CAMERA, type Camera } from "./camera";
 export const TILE = 24;
 
 export const TERRAIN_COLORS: Record<TerrainId, string> = {
-  ocean: "#2b5f86",
-  grassland: "#7ba75c",
-  plains: "#c2b16b",
-  forest: "#5f8c4a",
-  hills: "#a5945f",
-  mountains: "#958e80",
-  desert: "#ddc994",
+  ocean: "#2f749d",
+  grassland: "#6fab45",
+  plains: "#bcb062",
+  forest: "#40693a",
+  hills: "#8a9450",
+  mountains: "#857d72",
+  desert: "#e6d29c",
 };
 
 export const PLAYER_COLORS = ["#f4f1ea", "#d9483b", "#3f8fd6", "#e2ac2f"];
@@ -88,8 +88,10 @@ let pixelRatio = 1;
 let background: HTMLCanvasElement | null = null;
 let backgroundKey = "";
 let camera: Camera = DEFAULT_CAMERA;
-/** Tiles in view (inclusive), with one tile of slack for details that overflow. */
+/** Tiles drawn into the background (inclusive), with one tile of slack for details that overflow. */
 let view = { x0: 0, y0: 0, x1: 0, y1: 0 };
+/** Part of the map (in tiles) held in the background cache. */
+let bgRegion = { x: 0, y: 0, w: 0, h: 0 };
 
 function inView(x: number, y: number): boolean {
   return x >= view.x0 && x <= view.x1 && y >= view.y0 && y <= view.y1;
@@ -119,9 +121,10 @@ export function setupCanvas(
   return ctx;
 }
 
-function applyScale(ctx: CanvasRenderingContext2D): void {
+/** Scales design units to device pixels; (ox, oy) is the map tile shown at the canvas corner. */
+function applyScale(ctx: CanvasRenderingContext2D, ox = camera.x, oy = camera.y): void {
   const s = (pixelRatio * tilePixels * camera.zoom) / TILE;
-  ctx.setTransform(s, 0, 0, s, -camera.x * TILE * s, -camera.y * TILE * s);
+  ctx.setTransform(s, 0, 0, s, -ox * TILE * s, -oy * TILE * s);
 }
 
 // ---------- small helpers ----------
@@ -167,7 +170,7 @@ function inputKey(input: DrawInput): string {
     mix(owner + 7);
     for (const i of tiles) mix(i);
   }
-  return `${h >>> 0}:${input.width}x${input.height}:${tilePixels}:${pixelRatio}:${camera.zoom}:${camera.x}:${camera.y}`;
+  return `${h >>> 0}:${input.width}x${input.height}:${tilePixels}:${pixelRatio}:${camera.zoom}`;
 }
 
 // ---------- main entry ----------
@@ -175,26 +178,46 @@ function inputKey(input: DrawInput): string {
 export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height } = input;
   camera = input.camera ?? DEFAULT_CAMERA;
-  view = {
-    x0: Math.max(0, Math.floor(camera.x) - 1),
-    y0: Math.max(0, Math.floor(camera.y) - 1),
-    x1: Math.min(width - 1, Math.ceil(camera.x + width / camera.zoom) + 1),
-    y1: Math.min(height - 1, Math.ceil(camera.y + height / camera.zoom) + 1),
-  };
+  const viewW = width / camera.zoom;
+  const viewH = height / camera.zoom;
   const key = inputKey(input);
-  if (!background || key !== backgroundKey) {
+  const r = bgRegion;
+  const covered =
+    camera.x >= r.x - 1e-6 &&
+    camera.y >= r.y - 1e-6 &&
+    camera.x + viewW <= r.x + r.w + 1e-6 &&
+    camera.y + viewH <= r.y + r.h + 1e-6;
+  if (!background || key !== backgroundKey || !covered) {
+    // When zoomed in, draw a margin around the view so that moving the map
+    // only shifts the cached image instead of drawing all the terrain again.
+    const margin = camera.zoom > 1 ? 0.35 : 0;
+    const x0 = Math.max(0, camera.x - viewW * margin);
+    const y0 = Math.max(0, camera.y - viewH * margin);
+    const x1 = Math.min(width, camera.x + viewW * (1 + margin));
+    const y1 = Math.min(height, camera.y + viewH * (1 + margin));
+    bgRegion = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+    view = {
+      x0: Math.max(0, Math.floor(x0) - 1),
+      y0: Math.max(0, Math.floor(y0) - 1),
+      x1: Math.min(width - 1, Math.ceil(x1) + 1),
+      y1: Math.min(height - 1, Math.ceil(y1) + 1),
+    };
+    const px = tilePixels * camera.zoom * pixelRatio;
     background ??= document.createElement("canvas");
-    background.width = ctx.canvas.width;
-    background.height = ctx.canvas.height;
+    background.width = Math.max(ctx.canvas.width, Math.ceil(bgRegion.w * px));
+    background.height = Math.max(ctx.canvas.height, Math.ceil(bgRegion.h * px));
     const bg = background.getContext("2d")!;
-    applyScale(bg);
+    applyScale(bg, bgRegion.x, bgRegion.y);
     drawBackground(bg, input);
     backgroundKey = key;
   }
+  const px = tilePixels * camera.zoom * pixelRatio;
+  const sx = Math.max(0, Math.min(background.width - ctx.canvas.width, Math.round((camera.x - bgRegion.x) * px)));
+  const sy = Math.max(0, Math.min(background.height - ctx.canvas.height, Math.round((camera.y - bgRegion.y) * px)));
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  ctx.drawImage(background, 0, 0);
+  ctx.drawImage(background, sx, sy, ctx.canvas.width, ctx.canvas.height, 0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.restore();
   applyScale(ctx);
 
@@ -231,11 +254,12 @@ function drawBackground(ctx: CanvasRenderingContext2D, input: DrawInput): void {
       if (t) drawTerrainBase(ctx, t, x, y, depth[y * width + x] ?? 0);
     }
   }
+  drawTerrainBlend(ctx, input, depth);
   drawCoast(ctx, input);
   for (let y = view.y0; y <= view.y1; y++) {
     for (let x = view.x0; x <= view.x1; x++) {
       const t = terrain[y * width + x] ?? null;
-      if (t) drawTerrainDetail(ctx, t, x, y);
+      if (t) drawTerrainDetail(ctx, t, x, y, depth[y * width + x] ?? 0);
     }
   }
   drawImprovements(ctx, input);
@@ -243,7 +267,6 @@ function drawBackground(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   drawFogEdge(ctx, input);
 }
 
-/** Distance of every known sea tile from the nearest known land, for darker deep water. */
 function seaDepth(input: DrawInput): number[] {
   const { width, height, terrain } = input;
   const depth = new Array<number>(width * height).fill(99);
@@ -258,7 +281,12 @@ function seaDepth(input: DrawInput): number[] {
     const i = queue[q]!;
     const x = i % width;
     const y = Math.floor(i / width);
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+    for (const [dx, dy] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ] as const) {
       const nx = x + dx;
       const ny = y + dy;
       if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
@@ -272,234 +300,533 @@ function seaDepth(input: DrawInput): number[] {
   return depth;
 }
 
+const SEA_BY_DEPTH = ["#4f9fc0", "#3a86ad", "#2f749d", "#28658e", "#225a82"];
+
+/** Light and dark specks that give each terrain a surface texture. */
+const SPECKLE: Record<Exclude<TerrainId, "ocean">, { light: string; dark: string; n: number }> = {
+  grassland: { light: "#8dc45a", dark: "#558f34", n: 16 },
+  plains: { light: "#d2c477", dark: "#9a8d44", n: 16 },
+  forest: { light: "#5e8f45", dark: "#2f5428", n: 14 },
+  hills: { light: "#a7ae66", dark: "#6c733a", n: 14 },
+  mountains: { light: "#aaa398", dark: "#665f56", n: 18 },
+  desert: { light: "#f2e4ba", dark: "#c9b077", n: 16 },
+};
+
+/**
+ * Base fills reach slightly under the next tile, so no hairline seams appear
+ * when tile edges fall between device pixels.
+ */
+const BLEED = 0.5;
+
 function drawTerrainBase(ctx: CanvasRenderingContext2D, t: TerrainId, x: number, y: number, depth: number): void {
   const px = x * TILE;
   const py = y * TILE;
   if (t === "ocean") {
-    const d = Math.min(depth, 4);
-    const base = ["#4b93b8", "#3c7fa8", "#326f99", "#2b628b", "#265780"][d] ?? "#265780";
-    ctx.fillStyle = shade(base, 0.97 + hash(x, y, 1) * 0.06);
-    ctx.fillRect(px, py, TILE, TILE);
+    const base = groundColor(t, depth);
+    ctx.fillStyle = shade(base, 0.99 + hash(x, y, 1) * 0.02);
+    ctx.fillRect(px, py, TILE + BLEED, TILE + BLEED);
     return;
   }
-  // Slight brightness variation per tile so large areas do not look flat.
-  ctx.fillStyle = shade(TERRAIN_COLORS[t], 0.94 + hash(x, y, 2) * 0.1);
-  ctx.fillRect(px, py, TILE, TILE);
-  const glow = ctx.createLinearGradient(px, py, px + TILE, py + TILE);
-  glow.addColorStop(0, "rgba(255, 255, 240, 0.07)");
-  glow.addColorStop(1, "rgba(0, 0, 0, 0.06)");
-  ctx.fillStyle = glow;
-  ctx.fillRect(px, py, TILE, TILE);
+  ctx.fillStyle = shade(TERRAIN_COLORS[t], 0.985 + hash(x, y, 2) * 0.03);
+  ctx.fillRect(px, py, TILE + BLEED, TILE + BLEED);
+  const sp = SPECKLE[t];
+  const light = new Path2D();
+  const dark = new Path2D();
+  for (let k = 0; k < sp.n; k++) {
+    const sx = px + hash(x, y, 40 + k) * TILE;
+    const sy = py + hash(x, y, 80 + k) * TILE;
+    const w = 0.8 + hash(x, y, 120 + k) * 1.6;
+    (k % 2 === 0 ? light : dark).rect(sx - w / 2, sy - 0.4, w, 0.8 + hash(x, y, 160 + k) * 0.6);
+  }
+  ctx.fillStyle = shade(sp.light, 1, 0.55);
+  ctx.fill(light);
+  ctx.fillStyle = shade(sp.dark, 1, 0.45);
+  ctx.fill(dark);
 }
 
-function drawTerrainDetail(ctx: CanvasRenderingContext2D, t: TerrainId, x: number, y: number): void {
+/** Base colour of a tile, with the sea shaded by its distance from land. */
+function groundColor(t: TerrainId, depth: number): string {
+  if (t !== "ocean") return TERRAIN_COLORS[t];
+  return SEA_BY_DEPTH[Math.min(depth, SEA_BY_DEPTH.length) - 1] ?? SEA_BY_DEPTH[SEA_BY_DEPTH.length - 1]!;
+}
+
+/**
+ * Soft transitions: every tile takes a little of each different neighbour's
+ * colour along the shared edge and corner, so borders are not hard squares.
+ * The sea also blends between depths, and water next to land gets a lighter
+ * shallow band.
+ */
+function drawTerrainBlend(ctx: CanvasRenderingContext2D, input: DrawInput, depth: number[]): void {
+  const { width, height, terrain } = input;
+  const inMap = (x: number, y: number) => x >= 0 && y >= 0 && x < width && y < height;
+  const at = (x: number, y: number) => (inMap(x, y) ? (terrain[y * width + x] ?? null) : null);
+  const colorAt = (x: number, y: number): string | null => {
+    const t = at(x, y);
+    return t ? groundColor(t, depth[y * width + x] ?? 0) : null;
+  };
+  /** Colour that the tile (x, y) should borrow from its neighbour, or null. */
+  const borrow = (x: number, y: number, nx: number, ny: number): { color: string; alpha: number; reach: number } | null => {
+    const t = at(x, y);
+    const n = at(nx, ny);
+    if (!t || !n) return null;
+    if (t === "ocean" && n !== "ocean") return { color: "#7cc8cf", alpha: 0.5, reach: 9 };
+    if (t !== "ocean" && n === "ocean") return null;
+    const own = colorAt(x, y);
+    const other = colorAt(nx, ny);
+    if (!other || other === own) return null;
+    return t === "ocean" ? { color: other, alpha: 0.5, reach: 12 } : { color: other, alpha: 0.6, reach: 7 };
+  };
+  const sides = [
+    [0, -1],
+    [0, 1],
+    [-1, 0],
+    [1, 0],
+  ] as const;
+  const corners = [
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+    [1, 1],
+  ] as const;
+  for (let y = view.y0; y <= view.y1; y++) {
+    for (let x = view.x0; x <= view.x1; x++) {
+      if (!at(x, y)) continue;
+      const px = x * TILE;
+      const py = y * TILE;
+      for (const [dx, dy] of sides) {
+        const b = borrow(x, y, x + dx, y + dy);
+        if (!b) continue;
+        // Gradient from the shared edge into this tile.
+        const ex = dx === 1 ? px + TILE : px;
+        const ey = dy === 1 ? py + TILE : py;
+        const g =
+          dx !== 0
+            ? ctx.createLinearGradient(ex, 0, ex - dx * b.reach, 0)
+            : ctx.createLinearGradient(0, ey, 0, ey - dy * b.reach);
+        g.addColorStop(0, shade(b.color, 1, b.alpha));
+        g.addColorStop(1, shade(b.color, 1, 0));
+        ctx.fillStyle = g;
+        if (dx !== 0) ctx.fillRect(dx === 1 ? px + TILE - b.reach : px, py, b.reach, TILE);
+        else ctx.fillRect(px, dy === 1 ? py + TILE - b.reach : py, TILE, b.reach);
+      }
+      // Corners where only the diagonal neighbour differs.
+      for (const [dx, dy] of corners) {
+        if (borrow(x, y, x + dx, y) || borrow(x, y, x, y + dy)) continue;
+        const b = borrow(x, y, x + dx, y + dy);
+        if (!b) continue;
+        const cx = dx === 1 ? px + TILE : px;
+        const cy = dy === 1 ? py + TILE : py;
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, b.reach);
+        g.addColorStop(0, shade(b.color, 1, b.alpha));
+        g.addColorStop(1, shade(b.color, 1, 0));
+        ctx.fillStyle = g;
+        ctx.fillRect(dx === 1 ? px + TILE - b.reach : px, dy === 1 ? py + TILE - b.reach : py, b.reach, b.reach);
+      }
+    }
+  }
+}
+
+function drawTerrainDetail(ctx: CanvasRenderingContext2D, t: TerrainId, x: number, y: number, depth: number): void {
   const px = x * TILE;
   const py = y * TILE;
   const r = (k: number) => hash(x, y, k);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
   switch (t) {
     case "ocean": {
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
-      ctx.lineWidth = 0.8;
-      ctx.lineCap = "round";
-      for (let k = 0; k < 2; k++) {
-        const wx = px + 3 + r(k + 3) * 12;
-        const wy = py + 6 + k * 9 + r(k + 5) * 4;
+      // Small wave crests; fewer and fainter far from the coast.
+      const count = depth <= 2 ? 3 : 2;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${depth <= 1 ? 0.28 : 0.16})`;
+      ctx.lineWidth = 0.7;
+      for (let k = 0; k < count; k++) {
+        const wx = px + 2 + r(k + 3) * 15;
+        const wy = py + 5 + k * 7 + r(k + 5) * 3;
         ctx.beginPath();
-        ctx.moveTo(wx, wy);
-        ctx.quadraticCurveTo(wx + 2.5, wy - 2, wx + 5, wy);
-        ctx.quadraticCurveTo(wx + 7.5, wy + 2, wx + 10, wy);
+        ctx.moveTo(wx, wy + 1);
+        ctx.quadraticCurveTo(wx + 2, wy - 1, wx + 4, wy + 0.6);
+        ctx.quadraticCurveTo(wx + 6, wy - 1, wx + 8, wy + 1);
         ctx.stroke();
       }
       break;
     }
     case "grassland": {
-      ctx.strokeStyle = "rgba(52, 96, 40, 0.3)";
-      ctx.lineWidth = 0.7;
-      ctx.lineCap = "round";
-      for (let k = 0; k < 3; k++) {
-        const gx = px + 3 + r(k) * 17;
-        const gy = py + 5 + r(k + 9) * 15;
+      for (let k = 0; k < 5; k++) {
+        drawGrassTuft(ctx, px + 3 + r(k) * 18, py + 5 + r(k + 9) * 16, 2 + r(k + 20), "#3f7a28", "#7fbd4f");
+      }
+      // A few wild flowers.
+      const flowers = r(30) > 0.45 ? 2 + Math.floor(r(31) * 3) : 0;
+      for (let k = 0; k < flowers; k++) {
+        ctx.fillStyle = r(40 + k) > 0.5 ? "#f4d44c" : "#f6f1e6";
         ctx.beginPath();
-        ctx.moveTo(gx - 1, gy - 1.8);
-        ctx.lineTo(gx, gy);
-        ctx.lineTo(gx + 1, gy - 1.8);
-        ctx.stroke();
+        ctx.arc(px + 3 + r(50 + k) * 18, py + 3 + r(60 + k) * 18, 0.65, 0, Math.PI * 2);
+        ctx.fill();
       }
       break;
     }
     case "plains": {
-      ctx.strokeStyle = "rgba(140, 112, 42, 0.55)";
-      ctx.lineWidth = 0.9;
-      ctx.lineCap = "round";
-      for (let row = 0; row < 3; row++) {
-        const sy = py + 7 + row * 6 + r(row) * 1.5;
-        for (let k = 0; k < 4; k++) {
-          const sx = px + 3 + k * 5 + r(row * 4 + k) * 2;
-          ctx.beginPath();
-          ctx.moveTo(sx, sy);
-          ctx.lineTo(sx + 1.2, sy - 3.5);
-          ctx.stroke();
-        }
+      // Dry, golden grassland with tall tufts and the odd shrub.
+      for (let k = 0; k < 6; k++) {
+        drawGrassTuft(ctx, px + 3 + r(k) * 18, py + 6 + r(k + 9) * 16, 3 + r(k + 20) * 1.2, "#8a7a2e", "#dccd7c");
+      }
+      if (r(33) > 0.4) {
+        const bx = px + 5 + r(34) * 14;
+        const by = py + 8 + r(35) * 12;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+        ctx.beginPath();
+        ctx.ellipse(bx + 0.6, by + 1.6, 2.6, 0.9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#6f7d35";
+        ctx.beginPath();
+        ctx.arc(bx - 0.8, by, 1.7, 0, Math.PI * 2);
+        ctx.arc(bx + 1, by - 0.3, 1.9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#93a24a";
+        ctx.beginPath();
+        ctx.arc(bx - 0.2, by - 1, 1.1, 0, Math.PI * 2);
+        ctx.fill();
       }
       break;
     }
     case "forest": {
-      const trees: [number, number, number][] = [
-        [6, 9, 0.9], [15, 7, 1], [10, 15, 1.05], [19, 15, 0.95], [5, 19, 0.85],
+      const spots: [number, number, number][] = [
+        [5, 7, 0.85],
+        [13, 5, 0.9],
+        [20, 8, 0.85],
+        [9, 13, 1],
+        [17, 14, 0.95],
+        [4, 19, 0.9],
+        [12, 21, 1],
+        [20, 20, 0.9],
       ];
-      for (const [tx, ty, s] of trees) {
-        const ox = px + tx + (r(tx) - 0.5) * 2;
-        const oy = py + ty + (r(ty) - 0.5) * 2;
-        if (r(tx + ty) > 0.5) drawConifer(ctx, ox, oy, s);
+      for (const [k, [tx, ty, s]] of spots.entries()) {
+        const ox = px + tx + (r(k) - 0.5) * 2.4;
+        const oy = py + ty + (r(k + 10) - 0.5) * 2;
+        if (r(k + 20) > 0.45) drawConifer(ctx, ox, oy, s);
         else drawLeafTree(ctx, ox, oy, s);
       }
       break;
     }
     case "hills": {
-      drawHill(ctx, px + 7.5, py + 17, 7, 6);
-      drawHill(ctx, px + 16.5, py + 13, 7.5, 7);
+      drawHill(ctx, px + 7, py + 19, 7.5, 7, r(1));
+      drawHill(ctx, px + 16.5, py + 14, 8, 8, r(2));
+      if (r(3) > 0.5) drawHill(ctx, px + 18, py + 22, 5, 4, r(4));
       break;
     }
     case "mountains": {
-      drawPeak(ctx, px + 15, py + 21, 8, 15);
-      drawPeak(ctx, px + 8, py + 22, 6.5, 11);
+      drawPeak(ctx, px + 7, py + 15, 6, 9, r(1));
+      drawPeak(ctx, px + 15.5, py + 21, 9, 17, r(2));
+      drawPeak(ctx, px + 6.5, py + 23, 6.5, 10, r(3));
       break;
     }
     case "desert": {
-      ctx.strokeStyle = "rgba(170, 135, 70, 0.55)";
-      ctx.lineWidth = 1;
-      ctx.lineCap = "round";
-      for (let k = 0; k < 2; k++) {
-        const dx = px + 3 + r(k) * 6;
-        const dy = py + 9 + k * 8;
+      drawDune(ctx, px + 2 + r(1) * 3, py + 9 + r(2) * 2, 13);
+      drawDune(ctx, px + 8 + r(3) * 3, py + 18 + r(4) * 2, 14);
+      ctx.fillStyle = "rgba(140, 110, 60, 0.55)";
+      for (let k = 0; k < 4; k++) {
         ctx.beginPath();
-        ctx.moveTo(dx, dy);
-        ctx.quadraticCurveTo(dx + 6, dy - 4, dx + 13, dy);
-        ctx.stroke();
+        ctx.ellipse(px + 2 + r(k + 7) * 20, py + 2 + r(k + 11) * 20, 0.7, 0.45, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
-      ctx.fillStyle = "rgba(160, 125, 65, 0.45)";
-      for (let k = 0; k < 3; k++) ctx.fillRect(px + 3 + r(k + 7) * 17, py + 3 + r(k + 11) * 17, 1.2, 1.2);
+      if (r(20) > 0.72) drawCactus(ctx, px + 5 + r(21) * 14, py + 8 + r(22) * 12);
       break;
     }
   }
 }
 
-function drawConifer(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+/** A tuft of grass blades growing from (x, y). */
+function drawGrassTuft(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  h: number,
+  dark: string,
+  light: string,
+): void {
+  ctx.lineWidth = 0.55;
+  ctx.strokeStyle = dark;
   ctx.beginPath();
-  ctx.ellipse(x + 0.8, y + 4.2 * s, 3 * s, 1.1 * s, 0, 0, Math.PI * 2);
+  ctx.moveTo(x - 1.2, y - h * 0.75);
+  ctx.quadraticCurveTo(x - 0.6, y - h * 0.3, x - 0.2, y);
+  ctx.moveTo(x, y - h);
+  ctx.lineTo(x, y);
+  ctx.moveTo(x + 1.2, y - h * 0.7);
+  ctx.quadraticCurveTo(x + 0.6, y - h * 0.3, x + 0.2, y);
+  ctx.stroke();
+  ctx.strokeStyle = light;
+  ctx.lineWidth = 0.35;
+  ctx.beginPath();
+  ctx.moveTo(x + 0.25, y - h * 0.95);
+  ctx.lineTo(x + 0.25, y - h * 0.4);
+  ctx.stroke();
+}
+
+function drawConifer(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+  ctx.beginPath();
+  ctx.ellipse(x + 1, y + 4.4 * s, 3.2 * s, 1.1 * s, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#5b3a22";
-  ctx.fillRect(x - 0.6 * s, y + 1.5 * s, 1.2 * s, 2.6 * s);
-  for (const [dy, w] of [[1.5, 3.6], [-1.2, 2.9], [-3.8, 2.1]] as const) {
-    ctx.fillStyle = "#2c5a33";
+  ctx.fillStyle = "#4e321e";
+  ctx.fillRect(x - 0.55 * s, y + 2 * s, 1.1 * s, 2.4 * s);
+  for (const [dy, w] of [
+    [2.2, 3.4],
+    [-0.6, 2.8],
+    [-3.2, 2.1],
+  ] as const) {
+    const top = y + (dy - 3.6) * s;
+    const base = y + dy * s;
+    ctx.fillStyle = "#1f4a2a";
     ctx.beginPath();
-    ctx.moveTo(x, y + (dy - 3.4) * s);
-    ctx.lineTo(x + w * s, y + dy * s);
-    ctx.lineTo(x - w * s, y + dy * s);
+    ctx.moveTo(x, top);
+    ctx.lineTo(x + w * s, base);
+    ctx.lineTo(x - w * s, base);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#3e7543";
+    ctx.fillStyle = "#2f6a3a";
     ctx.beginPath();
-    ctx.moveTo(x, y + (dy - 3.4) * s);
-    ctx.lineTo(x - w * s, y + dy * s);
-    ctx.lineTo(x - 0.3 * s, y + dy * s);
+    ctx.moveTo(x, top);
+    ctx.lineTo(x - w * s, base);
+    ctx.lineTo(x - 0.2 * s, base - 0.4 * s);
     ctx.closePath();
     ctx.fill();
   }
 }
 
 function drawLeafTree(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
   ctx.beginPath();
-  ctx.ellipse(x + 0.8, y + 4.2 * s, 3.2 * s, 1.1 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + 1, y + 4.4 * s, 3.4 * s, 1.2 * s, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#5b3a22";
-  ctx.fillRect(x - 0.6 * s, y + 0.5 * s, 1.2 * s, 3.5 * s);
-  ctx.fillStyle = "#33683a";
+  ctx.fillStyle = "#57391f";
+  ctx.fillRect(x - 0.55 * s, y + 0.8 * s, 1.1 * s, 3.4 * s);
+  ctx.fillStyle = "#2c5e2c";
   ctx.beginPath();
-  ctx.arc(x, y - 1 * s, 3.6 * s, 0, Math.PI * 2);
+  ctx.arc(x - 1.5 * s, y - 0.2 * s, 2.4 * s, 0, Math.PI * 2);
+  ctx.arc(x + 1.5 * s, y - 0.1 * s, 2.4 * s, 0, Math.PI * 2);
+  ctx.arc(x, y - 2 * s, 2.7 * s, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#4b8a48";
+  ctx.fillStyle = "#4a8a3e";
   ctx.beginPath();
-  ctx.arc(x - 1 * s, y - 2 * s, 2.2 * s, 0, Math.PI * 2);
+  ctx.arc(x - 1.2 * s, y - 2.4 * s, 1.5 * s, 0, Math.PI * 2);
+  ctx.arc(x - 2 * s, y - 0.6 * s, 1 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#6aa652";
+  ctx.beginPath();
+  ctx.arc(x - 1.5 * s, y - 2.9 * s, 0.7 * s, 0, Math.PI * 2);
   ctx.fill();
 }
 
-function drawHill(ctx: CanvasRenderingContext2D, cx: number, by: number, rx: number, h: number): void {
-  const g = ctx.createLinearGradient(cx - rx, by - h, cx + rx, by);
-  g.addColorStop(0, "#c2b17a");
-  g.addColorStop(1, "#7f6f43");
+/** A rounded, grassy hill lit from the top left. */
+function drawHill(ctx: CanvasRenderingContext2D, cx: number, by: number, rx: number, h: number, v: number): void {
+  ctx.fillStyle = "rgba(40, 35, 10, 0.22)";
+  ctx.beginPath();
+  ctx.ellipse(cx + 1.2, by + 0.6, rx * 1.02, 1.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  const g = ctx.createLinearGradient(cx - rx * 0.6, by - h, cx + rx * 0.7, by);
+  g.addColorStop(0, "#b9bd72");
+  g.addColorStop(0.45, "#929a50");
+  g.addColorStop(1, "#5d6430");
   ctx.fillStyle = g;
+  const peak = cx - rx * (0.1 + v * 0.15);
   ctx.beginPath();
   ctx.moveTo(cx - rx, by);
-  ctx.quadraticCurveTo(cx - rx * 0.4, by - h * 1.3, cx, by - h);
-  ctx.quadraticCurveTo(cx + rx * 0.5, by - h * 0.8, cx + rx, by);
+  ctx.bezierCurveTo(cx - rx * 0.75, by - h * 0.7, peak - rx * 0.35, by - h, peak, by - h);
+  ctx.bezierCurveTo(peak + rx * 0.45, by - h, cx + rx * 0.75, by - h * 0.6, cx + rx, by);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "rgba(70, 58, 30, 0.5)";
-  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = "rgba(55, 60, 25, 0.55)";
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  // Contour line and grass on the lit side.
+  ctx.strokeStyle = "rgba(220, 225, 160, 0.45)";
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(peak - rx * 0.55, by - h * 0.62);
+  ctx.quadraticCurveTo(peak - rx * 0.2, by - h * 0.92, peak + rx * 0.15, by - h * 0.93);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(60, 70, 25, 0.5)";
+  ctx.lineWidth = 0.45;
+  ctx.beginPath();
+  ctx.moveTo(peak + rx * 0.35, by - h * 0.55);
+  ctx.quadraticCurveTo(peak + rx * 0.55, by - h * 0.3, peak + rx * 0.5, by - 0.5);
   ctx.stroke();
 }
 
-function drawPeak(ctx: CanvasRenderingContext2D, cx: number, by: number, half: number, h: number): void {
+/** A rocky peak with a lit and a shaded face and a snow cap. */
+function drawPeak(ctx: CanvasRenderingContext2D, cx: number, by: number, half: number, h: number, v: number): void {
   const top = by - h;
-  ctx.fillStyle = "#c7c0b2";
+  const tx = cx + (v - 0.5) * half * 0.3;
+  ctx.fillStyle = "rgba(30, 25, 20, 0.25)";
+  ctx.beginPath();
+  ctx.ellipse(cx + 1.5, by + 0.4, half * 1.05, 1.3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Lit face.
+  const lit = ctx.createLinearGradient(cx - half, top, cx, by);
+  lit.addColorStop(0, "#d3ccc0");
+  lit.addColorStop(1, "#9a9286");
+  ctx.fillStyle = lit;
   ctx.beginPath();
   ctx.moveTo(cx - half, by);
-  ctx.lineTo(cx, top);
-  ctx.lineTo(cx + 0.5, by);
+  ctx.lineTo(cx - half * 0.45, top + h * 0.45);
+  ctx.lineTo(tx, top);
+  ctx.lineTo(tx + 0.4, by);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#6d675d";
+  // Shaded face.
+  ctx.fillStyle = "#635c53";
   ctx.beginPath();
-  ctx.moveTo(cx, top);
+  ctx.moveTo(tx, top);
+  ctx.lineTo(cx + half * 0.5, top + h * 0.5);
   ctx.lineTo(cx + half, by);
-  ctx.lineTo(cx + 0.5, by);
+  ctx.lineTo(tx + 0.4, by);
   ctx.closePath();
   ctx.fill();
-  // Snow cap.
-  ctx.fillStyle = "#f7f5ef";
+  // Rock cracks.
+  ctx.strokeStyle = "rgba(70, 64, 56, 0.6)";
+  ctx.lineWidth = 0.4;
   ctx.beginPath();
-  ctx.moveTo(cx, top);
-  ctx.lineTo(cx + half * 0.32, top + h * 0.32);
-  ctx.lineTo(cx + half * 0.08, top + h * 0.26);
-  ctx.lineTo(cx - half * 0.12, top + h * 0.36);
-  ctx.lineTo(cx - half * 0.32, top + h * 0.32);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(tx - half * 0.2, top + h * 0.45);
+  ctx.lineTo(tx - half * 0.35, top + h * 0.7);
+  ctx.lineTo(tx - half * 0.25, by - 0.5);
+  ctx.moveTo(tx + half * 0.25, top + h * 0.55);
+  ctx.lineTo(tx + half * 0.4, by - 1);
+  ctx.stroke();
+  // Snow cap on taller peaks.
+  if (h >= 9) {
+    const sh = h * 0.3;
+    ctx.fillStyle = "#f7f8f6";
+    ctx.beginPath();
+    ctx.moveTo(tx, top);
+    ctx.lineTo(tx - half * 0.34, top + sh);
+    ctx.lineTo(tx - half * 0.15, top + sh * 0.8);
+    ctx.lineTo(tx, top + sh * 1.05);
+    ctx.lineTo(tx + 0.4, top + sh * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#c9d3dc";
+    ctx.beginPath();
+    ctx.moveTo(tx, top);
+    ctx.lineTo(tx + 0.4, top + sh * 0.85);
+    ctx.lineTo(tx + half * 0.18, top + sh * 0.75);
+    ctx.lineTo(tx + half * 0.3, top + sh * 0.95);
+    ctx.lineTo(tx + half * 0.33, top + sh * 0.6);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.strokeStyle = "rgba(50, 45, 40, 0.55)";
+  ctx.lineWidth = 0.45;
+  ctx.beginPath();
+  ctx.moveTo(cx - half, by);
+  ctx.lineTo(cx - half * 0.45, top + h * 0.45);
+  ctx.lineTo(tx, top);
+  ctx.lineTo(cx + half * 0.5, top + h * 0.5);
+  ctx.lineTo(cx + half, by);
+  ctx.stroke();
 }
 
-/** Sandy shore on land tiles that touch the sea, and a line of surf on the water. */
+/** A sand dune: a lit windward slope, a sharp crest and a shaded lee side. */
+function drawDune(ctx: CanvasRenderingContext2D, x: number, y: number, w: number): void {
+  const crestX = x + w * 0.6;
+  const crestY = y - 3.2;
+  // Lit windward slope.
+  ctx.fillStyle = "rgba(252, 240, 205, 0.85)";
+  ctx.beginPath();
+  ctx.moveTo(x, y + 2.5);
+  ctx.quadraticCurveTo(x + w * 0.3, y - 1.2, crestX, crestY);
+  ctx.quadraticCurveTo(x + w * 0.45, y + 1.6, x, y + 2.5);
+  ctx.fill();
+  // Shaded lee side.
+  const g = ctx.createLinearGradient(crestX, crestY, crestX + 1.5, y + 3);
+  g.addColorStop(0, "rgba(176, 134, 72, 0.75)");
+  g.addColorStop(1, "rgba(200, 165, 100, 0)");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(crestX, crestY);
+  ctx.quadraticCurveTo(x + w * 0.85, y - 1.2, x + w, y + 2.6);
+  ctx.quadraticCurveTo(x + w * 0.7, y + 3.4, x + w * 0.45, y + 2.4);
+  ctx.quadraticCurveTo(x + w * 0.55, y, crestX, crestY);
+  ctx.fill();
+  // Crest line.
+  ctx.strokeStyle = "rgba(160, 120, 62, 0.55)";
+  ctx.lineWidth = 0.45;
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.15, y + 1.2);
+  ctx.quadraticCurveTo(x + w * 0.35, y - 1.2, crestX, crestY);
+  ctx.quadraticCurveTo(x + w * 0.85, y - 1.2, x + w, y + 2.6);
+  ctx.stroke();
+}
+
+function drawCactus(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+  ctx.beginPath();
+  ctx.ellipse(x + 1, y + 0.4, 2, 0.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#4f7a35";
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y - 5);
+  ctx.moveTo(x, y - 2.2);
+  ctx.lineTo(x - 1.6, y - 2.2);
+  ctx.lineTo(x - 1.6, y - 3.8);
+  ctx.moveTo(x, y - 3);
+  ctx.lineTo(x + 1.5, y - 3);
+  ctx.lineTo(x + 1.5, y - 4.4);
+  ctx.stroke();
+  ctx.strokeStyle = "#78a752";
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  ctx.moveTo(x - 0.3, y - 0.3);
+  ctx.lineTo(x - 0.3, y - 4.8);
+  ctx.stroke();
+}
+
+/** Sandy beaches and a line of surf where land meets the sea. */
 function drawCoast(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height, terrain } = input;
   const at = (x: number, y: number) =>
-    x < 0 || y < 0 || x >= width || y >= height ? null : terrain[y * width + x] ?? null;
+    x < 0 || y < 0 || x >= width || y >= height ? null : (terrain[y * width + x] ?? null);
   for (let y = view.y0; y <= view.y1; y++) {
     for (let x = view.x0; x <= view.x1; x++) {
       const t = at(x, y);
       if (!t || t === "ocean") continue;
       const px = x * TILE;
       const py = y * TILE;
-      const sides: [boolean, number, number, number, number][] = [
-        [at(x, y - 1) === "ocean", px, py, TILE, 3],
-        [at(x, y + 1) === "ocean", px, py + TILE - 3, TILE, 3],
-        [at(x - 1, y) === "ocean", px, py, 3, TILE],
-        [at(x + 1, y) === "ocean", px + TILE - 3, py, 3, TILE],
-      ];
-      for (const [isSea, sx, sy, sw, sh] of sides) {
-        if (!isSea) continue;
-        ctx.fillStyle = "rgba(232, 214, 160, 0.9)";
-        ctx.fillRect(sx, sy, sw, sh);
+      const sides = [
+        [0, -1],
+        [0, 1],
+        [-1, 0],
+        [1, 0],
+      ] as const;
+      for (const [dx, dy] of sides) {
+        if (at(x + dx, y + dy) !== "ocean") continue;
+        const ex = dx === 1 ? px + TILE : px;
+        const ey = dy === 1 ? py + TILE : py;
+        const reach = 4.5;
+        const g =
+          dx !== 0
+            ? ctx.createLinearGradient(ex, 0, ex - dx * reach, 0)
+            : ctx.createLinearGradient(0, ey, 0, ey - dy * reach);
+        g.addColorStop(0, "rgba(236, 220, 170, 1)");
+        g.addColorStop(0.55, "rgba(230, 212, 160, 0.85)");
+        g.addColorStop(1, "rgba(230, 212, 160, 0)");
+        ctx.fillStyle = g;
+        if (dx !== 0) ctx.fillRect(dx === 1 ? px + TILE - reach : px, py, reach, TILE);
+        else ctx.fillRect(px, dy === 1 ? py + TILE - reach : py, TILE, reach);
+        // Surf just off the beach.
+        ctx.strokeStyle = "rgba(245, 252, 255, 0.6)";
+        ctx.lineWidth = 0.9;
+        ctx.beginPath();
+        if (dx === 0) {
+          const sy = ey + dy * 1;
+          ctx.moveTo(px, sy);
+          for (let k = 1; k <= 4; k++) ctx.lineTo(px + (k * TILE) / 4, sy + (k % 2 ? 0.5 : -0.3) * dy);
+        } else {
+          const sx = ex + dx * 1;
+          ctx.moveTo(sx, py);
+          for (let k = 1; k <= 4; k++) ctx.lineTo(sx + (k % 2 ? 0.5 : -0.3) * dx, py + (k * TILE) / 4);
+        }
+        ctx.stroke();
       }
-      ctx.strokeStyle = "rgba(240, 250, 255, 0.55)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      if (sides[0]![0]) { ctx.moveTo(px, py - 1); ctx.lineTo(px + TILE, py - 1); }
-      if (sides[1]![0]) { ctx.moveTo(px, py + TILE + 1); ctx.lineTo(px + TILE, py + TILE + 1); }
-      if (sides[2]![0]) { ctx.moveTo(px - 1, py); ctx.lineTo(px - 1, py + TILE); }
-      if (sides[3]![0]) { ctx.moveTo(px + TILE + 1, py); ctx.lineTo(px + TILE + 1, py + TILE); }
-      ctx.stroke();
     }
   }
 }

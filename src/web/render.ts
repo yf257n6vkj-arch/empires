@@ -58,6 +58,10 @@ export interface DrawInput {
   highlight?: number[];
   /** Planned route of the selected unit. */
   path?: Point[];
+  /** For each step of `path`, the turn in which the unit makes it (1 = this turn). */
+  pathTurns?: number[];
+  /** Tile under the mouse or goto target; turns = null when the unit cannot get there. */
+  target?: { point: Point; turns: number | null } | null;
 }
 
 export function setupCanvas(canvas: HTMLCanvasElement, width: number, height: number): CanvasRenderingContext2D {
@@ -113,6 +117,7 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   }
 
   if (input.path && input.path.length > 0) drawPath(ctx, input);
+  if (input.target) drawTarget(ctx, input.target, width, height);
   for (const s of input.starts) drawStart(ctx, s.point, s.playerId);
   for (const c of input.cities) drawCity(ctx, c, c.id === input.selectedCityId);
   drawUnits(ctx, input);
@@ -176,19 +181,66 @@ function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void
 function drawPath(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const unit = input.units.find((u) => u.id === input.selectedUnitId);
   if (!unit || !input.path) return;
-  ctx.strokeStyle = "rgba(255, 230, 120, 0.9)";
+  const center = (p: Point) => [p.x * TILE + TILE / 2, p.y * TILE + TILE / 2] as const;
+  ctx.strokeStyle = "rgba(255, 230, 120, 0.95)";
   ctx.lineWidth = 2;
   ctx.setLineDash([4, 4]);
   ctx.beginPath();
-  ctx.moveTo(unit.x * TILE + TILE / 2, unit.y * TILE + TILE / 2);
-  for (const p of input.path) ctx.lineTo(p.x * TILE + TILE / 2, p.y * TILE + TILE / 2);
+  ctx.moveTo(...center(unit));
+  for (const p of input.path) ctx.lineTo(...center(p));
   ctx.stroke();
   ctx.setLineDash([]);
-  const end = input.path[input.path.length - 1]!;
-  ctx.fillStyle = "rgba(255, 230, 120, 0.9)";
+
+  // A dot where the unit stops at the end of each turn on the way.
+  const turns = input.pathTurns ?? [];
+  input.path.forEach((p, i) => {
+    const turn = turns[i];
+    const next = turns[i + 1];
+    if (turn === undefined || next === undefined || next === turn) return;
+    const [cx, cy] = center(p);
+    ctx.fillStyle = "#ffe678";
+    ctx.strokeStyle = "rgba(20, 20, 20, 0.85)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  });
+}
+
+function drawTarget(
+  ctx: CanvasRenderingContext2D,
+  target: { point: Point; turns: number | null },
+  width: number,
+  height: number,
+): void {
+  const px = target.point.x * TILE;
+  const py = target.point.y * TILE;
+  const reachable = target.turns !== null;
+  ctx.fillStyle = reachable ? "rgba(255, 216, 74, 0.28)" : "rgba(220, 70, 60, 0.25)";
+  ctx.fillRect(px, py, TILE, TILE);
+  ctx.strokeStyle = reachable ? "#ffd84a" : "#e0533d";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(px + 1, py + 1, TILE - 2, TILE - 2);
+
+  const label = reachable ? String(target.turns) : "×";
+  ctx.font = "bold 11px ui-sans-serif, system-ui, sans-serif";
+  const w = Math.max(16, ctx.measureText(label).width + 8);
+  // Badge at the top right corner of the tile, kept inside the map.
+  const bx = Math.min(px + TILE - 2, width * TILE - w / 2 - 1);
+  const by = Math.max(py, 9);
+  void height;
+  ctx.fillStyle = reachable ? "#ffd84a" : "#e0533d";
   ctx.beginPath();
-  ctx.arc(end.x * TILE + TILE / 2, end.y * TILE + TILE / 2, 3, 0, Math.PI * 2);
+  ctx.roundRect(bx - w / 2, by - 8, w, 16, 8);
   ctx.fill();
+  ctx.strokeStyle = "#111";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = "#111";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, bx, by + 0.5);
 }
 
 function drawCity(ctx: CanvasRenderingContext2D, c: DrawCity, selected: boolean): void {

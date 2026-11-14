@@ -6,8 +6,8 @@
  */
 import { distance, fromIndex, neighbors8, type GridSize, type Point } from "./geometry";
 import { RULES, TERRAINS } from "./rules";
-import type { GameState, PlayerId } from "./state";
-import { getPlayer, idx, moveCost } from "./world";
+import type { GameState, PlayerId, Unit } from "./state";
+import { fullMoves, getPlayer, idx, moveCost } from "./world";
 
 /** Returns the tiles to step on, excluding `from`, or null when there is no known route. */
 export function findPath(state: GameState, player: PlayerId, from: Point, to: Point): Point[] | null {
@@ -67,6 +67,39 @@ function knownMoveCost(
     return terrain && TERRAINS[terrain].land ? TERRAINS[terrain].moveCost * RULES.movesFraction : null;
   }
   return moveCost(state, fromPoint, toPoint);
+}
+
+export interface PathPlan {
+  /** Turns of movement needed, counting the current turn as 1. */
+  turns: number;
+  /** For every step of the path, the turn (1-based) in which the unit makes it. */
+  stepTurns: number[];
+}
+
+/**
+ * Estimates how many turns a unit needs to walk `path`, with the same
+ * movement rules as real moves and only the costs the player knows.
+ * Used by the screen to show the arrival turn and by the AI to compare targets.
+ */
+export function planPath(state: GameState, unit: Unit, path: Point[]): PathPlan {
+  const explored = getPlayer(state, unit.owner).explored;
+  const full = fullMoves(unit);
+  let moves = unit.movesLeft;
+  let turn = 1;
+  const stepTurns: number[] = [];
+  let from: Point = unit;
+  for (const step of path) {
+    const cost =
+      knownMoveCost(state, explored, idx(state.map, from), from, idx(state.map, step)) ?? full;
+    if (moves <= 0 || (moves < cost && moves < full)) {
+      turn += 1;
+      moves = full;
+    }
+    moves = Math.max(0, moves - cost);
+    stepTurns.push(turn);
+    from = step;
+  }
+  return { turns: path.length === 0 ? 0 : turn, stepTurns };
 }
 
 function rebuild(map: GridSize, cameFrom: Map<number, number>, end: number): Point[] {

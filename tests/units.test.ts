@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyCommand, apply, findPath, RULES } from "../src/core";
+import { applyCommand, apply, findPath, planPath, RULES } from "../src/core";
 import { addUnit, stateFromAscii, unit } from "./helpers";
 
 const F = RULES.movesFraction;
@@ -114,5 +114,48 @@ describe("path finding and goto", () => {
     expect(unit(next, w.id)).toMatchObject({ x: 1, goto: { x: 4, y: 0 } });
     for (let i = 0; i < 3; i++) next = apply(next, { type: "endTurn" });
     expect(unit(next, w.id)).toMatchObject({ x: 4, goto: null });
+  });
+});
+
+describe("planPath", () => {
+  it("counts the current turn as the first one", () => {
+    const s = stateFromAscii(["....."]);
+    const w = addUnit(s, "warriors", 0, 0);
+    const path = findPath(s, 0, w, { x: 1, y: 0 })!;
+    expect(planPath(s, w, path)).toEqual({ turns: 1, stepTurns: [1] });
+  });
+
+  it("needs one turn per flat tile for a one-move unit", () => {
+    const s = stateFromAscii(["....."]);
+    const w = addUnit(s, "warriors", 0, 0);
+    expect(planPath(s, w, findPath(s, 0, w, { x: 4, y: 0 })!)).toEqual({ turns: 4, stepTurns: [1, 2, 3, 4] });
+  });
+
+  it("starts next turn when the unit has already moved", () => {
+    const s = stateFromAscii(["..."]);
+    const w = addUnit(s, "warriors", 0, 0);
+    w.movesLeft = 0;
+    expect(planPath(s, w, [{ x: 1, y: 0 }]).turns).toBe(2);
+  });
+
+  it("covers three road tiles in one turn", () => {
+    const s = stateFromAscii(["....."]);
+    s.map.road.fill(1);
+    const w = addUnit(s, "warriors", 0, 0);
+    expect(planPath(s, w, findPath(s, 0, w, { x: 4, y: 0 })!).stepTurns).toEqual([1, 1, 1, 2]);
+  });
+
+  it("matches what goto really does", () => {
+    const s = stateFromAscii(["..f.h..", "...M..."]);
+    const w = addUnit(s, "warriors", 0, 0);
+    const target = { x: 6, y: 0 };
+    const planned = planPath(s, w, findPath(s, 0, w, target)!).turns;
+    let next = apply(s, { type: "goto", unitId: w.id, to: target });
+    let turns = 1;
+    while (unit(next, w.id).goto) {
+      next = apply(next, { type: "endTurn" });
+      turns++;
+    }
+    expect(turns).toBe(planned);
   });
 });

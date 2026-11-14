@@ -13,6 +13,7 @@ import {
   IMPROVEMENTS,
   newGame,
   passComputerTurns,
+  planPath,
   playerView,
   productionCost,
   productionName,
@@ -62,7 +63,8 @@ let state!: GameState;
 let log: LogEntry[] = [];
 let selectedUnitId: number | null = null;
 let selectedCityId: number | null = null;
-let hoverPath: Point[] | null = null;
+let hoverTile: Point | null = null;
+let hoverRouteText = "";
 let ctx: CanvasRenderingContext2D;
 
 // ---------- saving ----------
@@ -175,7 +177,6 @@ function afterUnitAction(): void {
   const unit = selectedUnit();
   // Founding a city opens the city panel; keep it open.
   if (selectedCityId === null && (!unit || !needsOrders(unit))) selectNextUnit();
-  hoverPath = null;
   refresh();
 }
 
@@ -205,12 +206,51 @@ function endTurn(): void {
 
 // ---------- drawing ----------
 
+interface Route {
+  target: Point;
+  path: Point[] | null;
+  stepTurns: number[];
+  /** Turns needed, 1 = this turn; null when the unit cannot get there. */
+  turns: number | null;
+}
+
+/** What a click on `p` would do with the selected unit: move or send it there. */
+function clickWouldMove(unit: Unit, p: Point): boolean {
+  if (unit.x === p.x && unit.y === p.y) return false;
+  if (distance(unit, p) === 1) return true;
+  const ownCity = state.cities.some((c) => c.x === p.x && c.y === p.y && c.owner === HUMAN);
+  const ownUnits = state.units.some((u) => u.x === p.x && u.y === p.y && u.owner === HUMAN);
+  return !ownCity && !ownUnits;
+}
+
+function routeTo(unit: Unit, target: Point): Route {
+  const path = findPath(state, HUMAN, unit, target);
+  if (!path) return { target, path: null, stepTurns: [], turns: null };
+  const plan = planPath(state, unit, path);
+  return { target, path, stepTurns: plan.stepTurns, turns: plan.turns };
+}
+
+/** The route to show: the tile under the mouse first, otherwise the unit's current goto. */
+function routePreview(): Route | null {
+  const unit = selectedUnit();
+  if (!unit) return null;
+  if (hoverTile && clickWouldMove(unit, hoverTile)) return routeTo(unit, hoverTile);
+  if (unit.goto) return routeTo(unit, unit.goto);
+  return null;
+}
+
+function routeText(route: Route): string {
+  if (route.turns === null) return "Sem jednotka nedojde.";
+  if (route.turns === 1) return "Jednotka sem dojde ještě v tomhle tahu.";
+  return `Cesta sem zabere ${turnsText(route.turns)}.`;
+}
+
 function buildDrawInput(): DrawInput {
   const unit = selectedUnit();
   const city = selectedCity();
   const view = playerView(state, HUMAN);
   const showAll = showAllBox.checked;
-  const path = unit?.goto ? findPath(state, HUMAN, unit, unit.goto) : hoverPath;
+  const route = routePreview();
   return {
     width: view.width,
     height: view.height,
@@ -233,11 +273,18 @@ function buildDrawInput(): DrawInput {
     selectedUnitId,
     selectedCityId,
     highlight: city ? city.worked : [],
-    path: path ?? undefined,
+    path: route?.path ?? undefined,
+    pathTurns: route?.stepTurns,
+    target: route ? { point: route.target, turns: route.turns } : null,
   };
 }
 
 function refresh(): void {
+  // The selection or the units may have changed, so the hovered route is computed again.
+  if (hoverTile) {
+    const unit = selectedUnit();
+    hoverRouteText = unit && clickWouldMove(unit, hoverTile) ? routeText(routeTo(unit, hoverTile)) : "";
+  }
   draw(ctx, buildDrawInput());
   turnLabel.textContent = `Tah ${state.turn} z ${RULES.maxTurns}`;
   seedLabel.textContent = state.seed;
@@ -290,7 +337,10 @@ function renderUnit(unit: Unit): void {
   if (unit.work) {
     const need = IMPROVEMENTS[unit.work.improvement].turns[terrain] ?? 0;
     status = `Staví: ${IMPROVEMENTS[unit.work.improvement].name.toLowerCase()}, hotovo za ${turnsText(need - unit.work.progress)}.`;
-  } else if (unit.goto) status = `Míří na políčko [${unit.goto.x}, ${unit.goto.y}].`;
+  } else if (unit.goto) {
+    const turns = routeTo(unit, unit.goto).turns;
+    status = `Míří na políčko [${unit.goto.x}, ${unit.goto.y}]` + (turns ? `, ${turns === 1 ? "dojde v tomhle tahu" : `dojde za ${turnsText(turns)}`}.` : ".");
+  }
   else if (unit.fortified) status = "Opevněná.";
 
   const buttons: string[] = [];
@@ -477,24 +527,26 @@ canvas.addEventListener("mousemove", (e) => {
       (extras.length ? `<br>${extras.join(", ")}` : "") +
       (r.land ? `<br>pohyb ${r.moveCost}${r.defenseBonus ? ` · obrana +${r.defenseBonus} %` : ""}` : "");
   }
+  // Highlight the target and redraw only when the tile under the mouse changes.
+  if (!hoverTile || hoverTile.x !== p.x || hoverTile.y !== p.y) {
+    hoverTile = p;
+    hoverRouteText = "";
+    const unit = selectedUnit();
+    if (unit && clickWouldMove(unit, p)) hoverRouteText = routeText(routeTo(unit, p));
+    draw(ctx, buildDrawInput());
+  }
+  if (hoverRouteText) tooltip.insertAdjacentHTML("beforeend", `<br><span class="route">${hoverRouteText}</span>`);
+
   tooltip.hidden = false;
   const rect = canvas.getBoundingClientRect();
   tooltip.style.left = `${Math.min(e.clientX - rect.left + 14, rect.width - tooltip.offsetWidth - 4)}px`;
   tooltip.style.top = `${Math.min(e.clientY - rect.top + 14, rect.height - tooltip.offsetHeight - 4)}px`;
-
-  // Preview the route for a far click.
-  const unit = selectedUnit();
-  const newPath = unit && !unit.goto && distance(unit, p) > 1 ? findPath(state, HUMAN, unit, p) : null;
-  if (JSON.stringify(newPath) !== JSON.stringify(hoverPath)) {
-    hoverPath = newPath;
-    draw(ctx, buildDrawInput());
-  }
 });
 
 canvas.addEventListener("mouseleave", () => {
   tooltip.hidden = true;
-  if (hoverPath) {
-    hoverPath = null;
+  if (hoverTile) {
+    hoverTile = null;
     draw(ctx, buildDrawInput());
   }
 });

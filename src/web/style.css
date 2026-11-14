@@ -75,3 +75,4 @@ details summary { cursor: pointer; font-size: 13px; color: var(--muted); font-we
 details[open] summary { margin-bottom: 8px; }
 .help { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
 label.check { display: flex; align-items: center; gap: 6px; margin-top: 10px; color: var(--text); }
+#tooltip .route { color: #ffe678; }

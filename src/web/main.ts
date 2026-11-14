@@ -121,6 +121,7 @@ function startNewGame(seed: string): void {
   selectedCityId = null;
   selectedUnitId = null;
   camera = DEFAULT_CAMERA;
+  updateZoomButtons();
   selectNextUnit();
   save();
   ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());

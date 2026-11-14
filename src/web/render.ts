@@ -54,6 +54,8 @@ export interface DrawInput {
   starts: { point: Point; playerId: number }[];
   selectedUnitId?: number | null;
   selectedCityId?: number | null;
+  /** Tiles within reach of each player's cities, keyed by player id. */
+  territory?: Map<number, Set<number>>;
   /** Tiles to outline, e.g. tiles worked by the selected city. */
   highlight?: number[];
   /** Planned route of the selected unit. */
@@ -107,6 +109,8 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     ctx.lineTo(width * TILE, y * TILE + 0.5);
   }
   ctx.stroke();
+
+  if (input.territory) drawTerritory(ctx, input);
 
   for (const i of input.highlight ?? []) {
     const x = (i % width) * TILE;
@@ -176,6 +180,50 @@ function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void
       }
     }
   }
+}
+
+/**
+ * Outlines the land each player's cities can work (the 21-tile city radius),
+ * with a light tint inside. Purely visual; the rules have no borders.
+ */
+function drawTerritory(ctx: CanvasRenderingContext2D, input: DrawInput): void {
+  const { width } = input;
+  for (const [owner, tiles] of input.territory ?? []) {
+    const color = PLAYER_COLORS[owner % PLAYER_COLORS.length] ?? "#fff";
+    ctx.fillStyle = hexToRgba(color, 0.08);
+    for (const i of tiles) ctx.fillRect((i % width) * TILE, Math.floor(i / width) * TILE, TILE, TILE);
+
+    const edges = new Path2D();
+    for (const i of tiles) {
+      const x = i % width;
+      const y = Math.floor(i / width);
+      const px = x * TILE;
+      const py = y * TILE;
+      const has = (dx: number, dy: number) => {
+        const nx = x + dx;
+        const ny = y + dy;
+        return nx >= 0 && ny >= 0 && nx < width && ny < input.height && tiles.has(ny * width + nx);
+      };
+      if (!has(0, -1)) { edges.moveTo(px, py + 1); edges.lineTo(px + TILE, py + 1); }
+      if (!has(0, 1)) { edges.moveTo(px, py + TILE - 1); edges.lineTo(px + TILE, py + TILE - 1); }
+      if (!has(-1, 0)) { edges.moveTo(px + 1, py); edges.lineTo(px + 1, py + TILE); }
+      if (!has(1, 0)) { edges.moveTo(px + TILE - 1, py); edges.lineTo(px + TILE - 1, py + TILE); }
+    }
+    // A dark line under the coloured one keeps the border readable on any terrain.
+    ctx.strokeStyle = "rgba(10, 10, 10, 0.6)";
+    ctx.lineWidth = 3.5;
+    ctx.stroke(edges);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 3]);
+    ctx.stroke(edges);
+    ctx.setLineDash([]);
+  }
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
 function drawPath(ctx: CanvasRenderingContext2D, input: DrawInput): void {

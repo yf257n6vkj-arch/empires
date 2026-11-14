@@ -7,6 +7,7 @@ import {
   BUILDINGS,
   canBuildImprovement,
   canFoundCity,
+  cityRadiusTiles,
   cityReport,
   distance,
   findPath,
@@ -272,11 +273,23 @@ function buildDrawInput(): DrawInput {
     starts: showAll ? state.players.slice(1).map((p) => ({ point: p.start, playerId: p.id })) : [],
     selectedUnitId,
     selectedCityId,
+    territory: territoryOf(view.cities),
     highlight: city ? city.worked : [],
     path: route?.path ?? undefined,
     pathTurns: route?.stepTurns,
     target: route ? { point: route.target, turns: route.turns } : null,
   };
+}
+
+/** Tiles within the 21-tile radius of each player's known cities. */
+function territoryOf(cities: City[]): Map<number, Set<number>> {
+  const result = new Map<number, Set<number>>();
+  for (const c of cities) {
+    const tiles = result.get(c.owner) ?? new Set<number>();
+    for (const i of cityRadiusTiles(state.map, c)) tiles.add(i);
+    result.set(c.owner, tiles);
+  }
+  return result;
 }
 
 function refresh(): void {

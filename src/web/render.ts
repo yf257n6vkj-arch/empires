@@ -190,7 +190,8 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   if (input.path && input.path.length > 0) drawPath(ctx, input);
   if (input.target) drawTarget(ctx, input.target, width, height);
   for (const s of input.starts) drawStart(ctx, s.point, s.playerId);
-  for (const c of input.cities) drawCity(ctx, c, c.id === input.selectedCityId);
+  const cities = [...input.cities].sort((a, b) => a.y - b.y || a.x - b.x);
+  for (const c of cities) drawCity(ctx, c, c.id === input.selectedCityId);
   drawUnits(ctx, input);
   for (const c of input.cities) drawCityLabel(ctx, c, width);
 }
@@ -706,115 +707,459 @@ function drawStart(ctx: CanvasRenderingContext2D, p: Point, playerId: number): v
 
 // ---------- cities ----------
 
-/** Positions of houses inside the tile, filled in order as the city grows. */
-const HOUSE_SLOTS: [number, number, number][] = [
-  [9, 13, 1], [15.5, 12, 1.05], [12, 18, 1], [6.5, 18.5, 0.9], [18, 18, 0.95], [4.5, 12.5, 0.85], [19.5, 12.5, 0.85],
-];
+/*
+ * Cities are drawn as small 3D-looking settlements, a bit larger than a tile.
+ * Coordinates below are relative to the bottom centre of the tile, in design
+ * units; negative y goes up. Buildings are listed back to front.
+ */
 
-function housesFor(size: number): number {
-  if (size <= 1) return 2;
-  if (size <= 3) return 3;
-  if (size <= 5) return 4;
-  if (size <= 7) return 5;
-  return 7;
+type Building =
+  | { kind: "house"; x: number; y: number; w: number; h: number; roof: string }
+  | { kind: "hall"; x: number; y: number; w: number; h: number }
+  | { kind: "keep"; x: number; y: number; w: number; h: number }
+  | { kind: "tower"; x: number; y: number; r: number; h: number };
+
+interface CityLayout {
+  wall: "palisade" | "stone";
+  buildings: Building[];
+  /** Towers on the front wall, drawn after it. */
+  frontTowers: { x: number; y: number; r: number; h: number }[];
 }
 
-function drawCity(ctx: CanvasRenderingContext2D, c: DrawCity, selected: boolean): void {
-  const px = c.x * TILE;
-  const py = c.y * TILE;
-  const color = playerColor(c.owner);
-  const cx = px + TILE / 2;
-  const cy = py + TILE / 2 + 1;
+const ROOF_RED = "#b0533a";
+const ROOF_BROWN = "#8a5a36";
+const ROOF_SLATE = "#5d6772";
 
-  // Ground and a palisade in the player's colour.
-  ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+function cityLayout(size: number): CityLayout {
+  if (size <= 2) {
+    return {
+      wall: "palisade",
+      buildings: [
+        { kind: "house", x: -6, y: -9, w: 6, h: 4, roof: ROOF_BROWN },
+        { kind: "house", x: 1.5, y: -8, w: 7, h: 4.5, roof: ROOF_RED },
+        { kind: "house", x: -3, y: -4, w: 6, h: 4, roof: ROOF_RED },
+      ],
+      frontTowers: [],
+    };
+  }
+  if (size <= 5) {
+    return {
+      wall: "palisade",
+      buildings: [
+        { kind: "house", x: -9, y: -10, w: 6, h: 4, roof: ROOF_BROWN },
+        { kind: "hall", x: -2.5, y: -10.5, w: 8, h: 6 },
+        { kind: "house", x: 6, y: -9, w: 6, h: 4, roof: ROOF_RED },
+        { kind: "house", x: -10, y: -4.5, w: 6.5, h: 4, roof: ROOF_RED },
+        { kind: "house", x: -2, y: -3.5, w: 6, h: 4, roof: ROOF_BROWN },
+        { kind: "house", x: 5, y: -4, w: 6.5, h: 4.5, roof: ROOF_RED },
+      ],
+      frontTowers: [],
+    };
+  }
+  if (size <= 7) {
+    return {
+      wall: "stone",
+      buildings: [
+        { kind: "house", x: -10, y: -12, w: 6, h: 4, roof: ROOF_RED },
+        { kind: "keep", x: -3, y: -12, w: 7, h: 11 },
+        { kind: "house", x: 6, y: -11, w: 6, h: 4.5, roof: ROOF_BROWN },
+        { kind: "house", x: -11, y: -6.5, w: 6.5, h: 4.5, roof: ROOF_BROWN },
+        { kind: "house", x: -3.5, y: -6, w: 6, h: 4, roof: ROOF_RED },
+        { kind: "house", x: 4.5, y: -6.5, w: 7, h: 4.5, roof: ROOF_RED },
+      ],
+      frontTowers: [
+        { x: -13, y: -1.5, r: 2.6, h: 9 },
+        { x: 13, y: -1.5, r: 2.6, h: 9 },
+      ],
+    };
+  }
+  return {
+    wall: "stone",
+    buildings: [
+      { kind: "tower", x: -12, y: -14, r: 2.4, h: 10 },
+      { kind: "tower", x: 12, y: -14, r: 2.4, h: 10 },
+      { kind: "house", x: -9, y: -13, w: 6, h: 4.5, roof: ROOF_BROWN },
+      { kind: "keep", x: -3.5, y: -12.5, w: 8, h: 14 },
+      { kind: "house", x: 6.5, y: -12.5, w: 6, h: 5, roof: ROOF_RED },
+      { kind: "house", x: -12, y: -7, w: 6, h: 4.5, roof: ROOF_RED },
+      { kind: "hall", x: -5, y: -6.5, w: 7, h: 5.5 },
+      { kind: "house", x: 3.5, y: -7, w: 6, h: 4.5, roof: ROOF_BROWN },
+      { kind: "house", x: 9.5, y: -6, w: 5, h: 4, roof: ROOF_RED },
+    ],
+    frontTowers: [
+      { x: -13.5, y: -1.5, r: 2.8, h: 10 },
+      { x: 13.5, y: -1.5, r: 2.8, h: 10 },
+    ],
+  };
+}
+
+/** Depth offset of the side faces, so buildings look seen from the front right. */
+const DEPTH = 2.2;
+
+function drawCity(ctx: CanvasRenderingContext2D, c: DrawCity, selected: boolean): void {
+  const ox = c.x * TILE + TILE / 2;
+  const oy = c.y * TILE + TILE - 2;
+  const color = playerColor(c.owner);
+  const layout = cityLayout(c.size);
+  const rx = c.size >= 6 ? 15 : c.size >= 3 ? 14 : 11;
+  const ry = c.size >= 6 ? 7 : 6;
+  const cy = oy - ry - 1;
+
+  ctx.save();
+  ctx.translate(ox, 0);
+
+  // Ground: a trodden earth plaza with a soft shadow.
+  ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
   ctx.beginPath();
-  ctx.ellipse(cx + 0.8, cy + 1.5, 11.5, 10, 0, 0, Math.PI * 2);
+  ctx.ellipse(1, cy + 2, rx + 1.5, ry + 2.5, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#cdb88a";
+  ctx.fillStyle = "#bba57a";
   ctx.beginPath();
-  ctx.ellipse(cx, cy, 11, 9.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, cy, rx, ry + 1.5, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.8;
-  ctx.stroke();
   if (selected) {
     ctx.strokeStyle = "#ffd84a";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.ellipse(cx, cy, 13, 11.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, cy, rx + 3, ry + 4.5, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 
-  const slots = HOUSE_SLOTS.slice(0, housesFor(c.size)).sort((a, b) => a[1] - b[1]);
-  for (const [hx, hy, s] of slots) drawHouse(ctx, px + hx, py + hy, s);
-  if (c.size >= 4) drawTower(ctx, px + 12, py + 9.5, color, c.size >= 8);
-  else drawFlag(ctx, px + 15.5, py + 5.5, color);
+  // Back half of the wall, then buildings, then the front half and its towers.
+  drawWallArc(ctx, layout.wall, 0, cy, rx, ry, Math.PI, Math.PI * 2, color);
+  for (const b of layout.buildings) drawBuilding(ctx, b, oy, color);
+  drawWallArc(ctx, layout.wall, 0, cy, rx, ry, 0, Math.PI, color);
+  if (layout.wall === "stone") drawGate(ctx, 0, cy + ry);
+  for (const t of layout.frontTowers) drawRoundTower(ctx, t.x, oy + t.y, t.r, t.h, color);
+
+  ctx.restore();
 }
 
-function drawHouse(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
-  const w = 5.2 * s;
-  const h = 3.6 * s;
-  ctx.fillStyle = "#efe4cc";
-  ctx.fillRect(x - w / 2, y - h, w, h);
-  ctx.fillStyle = "#d2c3a2";
-  ctx.fillRect(x + w / 6, y - h, w / 3, h);
-  ctx.fillStyle = "#3a2c22";
-  ctx.fillRect(x - 0.6 * s, y - 1.8 * s, 1.2 * s, 1.8 * s);
-  ctx.fillStyle = "#b4513b";
+function drawBuilding(ctx: CanvasRenderingContext2D, b: Building, oy: number, color: string): void {
+  switch (b.kind) {
+    case "house":
+      drawHouse(ctx, b.x, oy + b.y, b.w, b.h, b.roof);
+      break;
+    case "hall":
+      drawHall(ctx, b.x, oy + b.y, b.w, b.h, color);
+      break;
+    case "keep":
+      drawKeep(ctx, b.x, oy + b.y, b.w, b.h, color);
+      break;
+    case "tower":
+      drawRoundTower(ctx, b.x, oy + b.y, b.r, b.h, color);
+      break;
+  }
+}
+
+/** A gabled, half-timbered house; (x, y) is the bottom left corner of the front face. */
+function drawHouse(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, roof: string): void {
+  const d = DEPTH;
+  const rh = w * 0.55;
+  const top = y - h;
+  // Side wall (darker), seen to the right.
+  ctx.fillStyle = "#cbb894";
   ctx.beginPath();
-  ctx.moveTo(x - w / 2 - 0.8, y - h);
-  ctx.lineTo(x, y - h - 3.2 * s);
-  ctx.lineTo(x + w / 2 + 0.8, y - h);
+  ctx.moveTo(x + w, y);
+  ctx.lineTo(x + w + d, y - d * 0.6);
+  ctx.lineTo(x + w + d, top - d * 0.6);
+  ctx.lineTo(x + w, top);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#8c3a2a";
+  // Front wall.
+  ctx.fillStyle = "#efe3c6";
+  ctx.fillRect(x, top, w, h);
+  // Back roof slope.
+  ctx.fillStyle = shade(roof, 0.75);
   ctx.beginPath();
-  ctx.moveTo(x, y - h - 3.2 * s);
-  ctx.lineTo(x + w / 2 + 0.8, y - h);
+  ctx.moveTo(x, top);
+  ctx.lineTo(x + w / 2, top - rh);
+  ctx.lineTo(x + w / 2 + d, top - rh - d * 0.6);
+  ctx.lineTo(x + d, top - d * 0.6);
+  ctx.closePath();
+  ctx.fill();
+  // Gable.
+  ctx.fillStyle = "#e6d6b2";
+  ctx.beginPath();
+  ctx.moveTo(x, top);
+  ctx.lineTo(x + w / 2, top - rh);
+  ctx.lineTo(x + w, top);
+  ctx.closePath();
+  ctx.fill();
+  // Timber frame on the gable and wall.
+  ctx.strokeStyle = "#6b4a2e";
+  ctx.lineWidth = 0.45;
+  ctx.beginPath();
+  ctx.moveTo(x, top);
+  ctx.lineTo(x + w, top);
+  ctx.moveTo(x + w / 2, top - rh);
+  ctx.lineTo(x + w / 2, top);
+  ctx.moveTo(x + w * 0.25, top - rh * 0.5);
+  ctx.lineTo(x + w * 0.75, top - rh * 0.5);
+  ctx.stroke();
+  // Front roof slope over the side.
+  ctx.fillStyle = roof;
+  ctx.beginPath();
+  ctx.moveTo(x + w / 2, top - rh);
+  ctx.lineTo(x + w / 2 + d, top - rh - d * 0.6);
+  ctx.lineTo(x + w + d + 0.5, top - d * 0.6 + 0.3);
+  ctx.lineTo(x + w + 0.5, top + 0.3);
+  ctx.closePath();
+  ctx.fill();
+  // Roof edge over the gable.
+  ctx.strokeStyle = shade(roof, 0.6);
+  ctx.lineWidth = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(x - 0.4, top + 0.3);
+  ctx.lineTo(x + w / 2, top - rh);
+  ctx.lineTo(x + w + 0.4, top + 0.3);
+  ctx.stroke();
+  // Door and window.
+  ctx.fillStyle = "#4a3324";
+  ctx.fillRect(x + w * 0.2, y - h * 0.62, w * 0.2, h * 0.62);
+  ctx.fillStyle = "#3b4a57";
+  ctx.fillRect(x + w * 0.58, y - h * 0.72, w * 0.22, h * 0.28);
+  ctx.strokeStyle = "rgba(50, 35, 20, 0.6)";
+  ctx.lineWidth = 0.4;
+  ctx.strokeRect(x, top, w, h);
+}
+
+/** A larger hall with a hipped roof and a banner. */
+function drawHall(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {
+  const d = DEPTH * 1.2;
+  const top = y - h;
+  ctx.fillStyle = "#b9a37a";
+  ctx.beginPath();
+  ctx.moveTo(x + w, y);
+  ctx.lineTo(x + w + d, y - d * 0.6);
+  ctx.lineTo(x + w + d, top - d * 0.6);
+  ctx.lineTo(x + w, top);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#e3d2ac";
+  ctx.fillRect(x, top, w, h);
+  ctx.fillStyle = ROOF_RED;
+  ctx.beginPath();
+  ctx.moveTo(x - 0.6, top + 0.2);
+  ctx.lineTo(x + w * 0.25, top - 3.5);
+  ctx.lineTo(x + w * 0.75 + d, top - 3.5 - d * 0.6);
+  ctx.lineTo(x + w + d + 0.6, top - d * 0.6 + 0.2);
+  ctx.lineTo(x + w + 0.6, top + 0.2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = shade(ROOF_RED, 0.75);
+  ctx.beginPath();
+  ctx.moveTo(x - 0.6, top + 0.2);
+  ctx.lineTo(x + w * 0.25, top - 3.5);
+  ctx.lineTo(x + w * 0.75, top - 3.5);
+  ctx.lineTo(x + w + 0.6, top + 0.2);
+  ctx.closePath();
+  ctx.fill();
+  // Arched door and two windows.
+  ctx.fillStyle = "#4a3324";
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.4, y);
+  ctx.lineTo(x + w * 0.4, y - h * 0.45);
+  ctx.arc(x + w * 0.5, y - h * 0.45, w * 0.1, Math.PI, 0);
+  ctx.lineTo(x + w * 0.6, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#3b4a57";
+  ctx.fillRect(x + w * 0.12, y - h * 0.72, w * 0.14, h * 0.25);
+  ctx.fillRect(x + w * 0.74, y - h * 0.72, w * 0.14, h * 0.25);
+  ctx.strokeStyle = "rgba(50, 35, 20, 0.6)";
+  ctx.lineWidth = 0.4;
+  ctx.strokeRect(x, top, w, h);
+  drawBanner(ctx, x + w * 0.25, top - 3.5, color, 4.5);
+}
+
+/** A square stone keep with battlements. */
+function drawKeep(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {
+  const d = DEPTH * 1.3;
+  const top = y - h;
+  ctx.fillStyle = "#8d8a80";
+  ctx.beginPath();
+  ctx.moveTo(x + w, y);
+  ctx.lineTo(x + w + d, y - d * 0.6);
+  ctx.lineTo(x + w + d, top - d * 0.6);
+  ctx.lineTo(x + w, top);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#bdb8aa";
+  ctx.fillRect(x, top, w, h);
+  // Stone courses.
+  ctx.strokeStyle = "rgba(90, 85, 75, 0.45)";
+  ctx.lineWidth = 0.35;
+  ctx.beginPath();
+  for (let sy = top + 2; sy < y; sy += 2) {
+    ctx.moveTo(x, sy);
+    ctx.lineTo(x + w, sy);
+  }
+  ctx.stroke();
+  // Battlements.
+  ctx.fillStyle = "#bdb8aa";
+  for (let bx = x; bx < x + w - 0.5; bx += 2) ctx.fillRect(bx, top - 1.3, 1.1, 1.3);
+  ctx.fillStyle = "#a6a294";
+  ctx.beginPath();
+  ctx.moveTo(x, top);
+  ctx.lineTo(x + d, top - d * 0.6);
+  ctx.lineTo(x + w + d, top - d * 0.6);
+  ctx.lineTo(x + w, top);
+  ctx.closePath();
+  ctx.fill();
+  // Arrow slits and gate.
+  ctx.fillStyle = "#2e2a26";
+  ctx.fillRect(x + w * 0.25, top + h * 0.2, 0.7, 2);
+  ctx.fillRect(x + w * 0.7, top + h * 0.2, 0.7, 2);
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.35, y);
+  ctx.lineTo(x + w * 0.35, y - h * 0.22);
+  ctx.arc(x + w * 0.5, y - h * 0.22, w * 0.15, Math.PI, 0);
+  ctx.lineTo(x + w * 0.65, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(50, 45, 40, 0.7)";
+  ctx.lineWidth = 0.45;
+  ctx.strokeRect(x, top, w, h);
+  drawBanner(ctx, x + w / 2 + d / 2, top - d * 0.6 - 0.5, color, 6);
+}
+
+/** A round tower with a conical roof; (x, y) is the centre of its base. */
+function drawRoundTower(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, h: number, color: string): void {
+  const g = ctx.createLinearGradient(x - r, 0, x + r, 0);
+  g.addColorStop(0, "#d2cdbf");
+  g.addColorStop(0.55, "#aaa598");
+  g.addColorStop(1, "#7d796e");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(x - r, y - h);
+  ctx.lineTo(x - r, y);
+  ctx.ellipse(x, y, r, r * 0.4, 0, Math.PI, 0, true);
+  ctx.lineTo(x + r, y - h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(60, 55, 48, 0.7)";
+  ctx.lineWidth = 0.45;
+  ctx.stroke();
+  ctx.fillStyle = "#2e2a26";
+  ctx.fillRect(x - 0.35, y - h * 0.6, 0.7, 1.8);
+  // Conical roof.
+  ctx.fillStyle = ROOF_SLATE;
+  ctx.beginPath();
+  ctx.moveTo(x - r - 0.6, y - h);
+  ctx.lineTo(x, y - h - r * 2.2);
+  ctx.lineTo(x + r + 0.6, y - h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = shade(ROOF_SLATE, 0.7);
+  ctx.beginPath();
+  ctx.moveTo(x, y - h - r * 2.2);
+  ctx.lineTo(x + r + 0.6, y - h);
   ctx.lineTo(x + 0.3, y - h);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "rgba(40, 30, 20, 0.55)";
-  ctx.lineWidth = 0.6;
-  ctx.strokeRect(x - w / 2, y - h, w, h);
+  drawBanner(ctx, x, y - h - r * 2.2, color, 4);
 }
 
-function drawTower(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, big: boolean): void {
-  const w = big ? 5 : 4;
-  const h = big ? 9 : 7;
-  ctx.fillStyle = "#bdb4a3";
-  ctx.fillRect(x - w / 2, y - h, w, h);
-  ctx.fillStyle = "#958c7b";
-  ctx.fillRect(x, y - h, w / 2, h);
-  ctx.fillStyle = "#bdb4a3";
-  for (const bx of [-w / 2, -0.6, w / 2 - 1.2]) ctx.fillRect(x + bx, y - h - 1.4, 1.2, 1.4);
-  ctx.strokeStyle = "rgba(40, 30, 20, 0.6)";
-  ctx.lineWidth = 0.6;
-  ctx.strokeRect(x - w / 2, y - h, w, h);
-  drawFlag(ctx, x, y - h - 1.4, color);
-}
-
-function drawFlag(ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void {
+function drawBanner(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, pole: number): void {
   ctx.strokeStyle = "#3a2c22";
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 0.55;
   ctx.beginPath();
   ctx.moveTo(x, y);
-  ctx.lineTo(x, y - 5.5);
+  ctx.lineTo(x, y - pole);
   ctx.stroke();
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.moveTo(x, y - 5.5);
-  ctx.lineTo(x + 4.2, y - 4.4);
-  ctx.lineTo(x, y - 3.2);
+  ctx.moveTo(x, y - pole);
+  ctx.quadraticCurveTo(x + 2.2, y - pole - 0.6, x + 4.2, y - pole + 0.5);
+  ctx.lineTo(x + 3.4, y - pole + 1.6);
+  ctx.lineTo(x + 4.2, y - pole + 2.6);
+  ctx.quadraticCurveTo(x + 2.2, y - pole + 1.6, x, y - pole + 2.2);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = INK;
-  ctx.lineWidth = 0.6;
+  ctx.lineWidth = 0.4;
   ctx.stroke();
+}
+
+/** Half of the city wall along an ellipse, from angle a0 to a1 (0 = right, PI/2 = front). */
+function drawWallArc(
+  ctx: CanvasRenderingContext2D,
+  kind: "palisade" | "stone",
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  a0: number,
+  a1: number,
+  color: string,
+): void {
+  if (kind === "palisade") {
+    const steps = 22;
+    for (let k = 0; k <= steps; k++) {
+      const a = a0 + ((a1 - a0) * k) / steps;
+      const px = cx + Math.cos(a) * rx;
+      const py = cy + Math.sin(a) * (ry + 1.5);
+      const h = 3.4 + (k % 2) * 0.5;
+      ctx.fillStyle = k % 3 === 0 ? "#7a5232" : "#8f6340";
+      ctx.beginPath();
+      ctx.moveTo(px - 0.65, py);
+      ctx.lineTo(px - 0.65, py - h);
+      ctx.lineTo(px, py - h - 0.9);
+      ctx.lineTo(px + 0.65, py - h);
+      ctx.lineTo(px + 0.65, py);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // A band in the player's colour binding the stakes.
+    ctx.strokeStyle = shade(color, 0.95, 0.9);
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - 1.8, rx, ry + 1.5, 0, a0, a1);
+    ctx.stroke();
+    return;
+  }
+  // Stone wall: a thick band with battlements on top.
+  const h = 3.6;
+  ctx.lineCap = "butt";
+  ctx.strokeStyle = "#8f8a7e";
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - h / 2, rx, ry + 1.5, 0, a0, a1);
+  ctx.stroke();
+  const steps = 26;
+  for (let k = 0; k <= steps; k++) {
+    const a = a0 + ((a1 - a0) * k) / steps;
+    const px = cx + Math.cos(a) * rx;
+    const py = cy + Math.sin(a) * (ry + 1.5);
+    const front = Math.sin(a) > 0;
+    ctx.fillStyle = front ? "#c4bfb1" : "#a19c8f";
+    ctx.fillRect(px - 0.9, py - h, 1.8, h);
+    if (k % 2 === 0) ctx.fillRect(px - 0.6, py - h - 1.1, 1.2, 1.1);
+  }
+  ctx.strokeStyle = "rgba(70, 65, 58, 0.55)";
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry + 1.5, 0, a0, a1);
+  ctx.stroke();
+}
+
+function drawGate(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.fillStyle = "#b3ae9f";
+  ctx.fillRect(x - 3, y - 6, 6, 6);
+  ctx.fillStyle = "#c4bfb1";
+  for (const bx of [-3, -0.6, 1.8]) ctx.fillRect(x + bx, y - 7.2, 1.2, 1.2);
+  ctx.fillStyle = "#3a2c22";
+  ctx.beginPath();
+  ctx.moveTo(x - 1.5, y);
+  ctx.lineTo(x - 1.5, y - 2.8);
+  ctx.arc(x, y - 2.8, 1.5, Math.PI, 0);
+  ctx.lineTo(x + 1.5, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(60, 55, 48, 0.7)";
+  ctx.lineWidth = 0.4;
+  ctx.strokeRect(x - 3, y - 6, 6, 6);
 }
 
 /** Name plate under the city with its size in a disc of the player's colour. */
@@ -824,7 +1169,7 @@ function drawCityLabel(ctx: CanvasRenderingContext2D, c: DrawCity, width: number
   const w = nameW + 18;
   let x = c.x * TILE + TILE / 2 - w / 2;
   x = Math.max(1, Math.min(x, width * TILE - w - 1));
-  const y = c.y * TILE + TILE - 1;
+  const y = c.y * TILE + TILE + 0.5;
   ctx.fillStyle = "rgba(18, 18, 20, 0.85)";
   ctx.beginPath();
   ctx.roundRect(x, y, w, 11, 5.5);
@@ -847,109 +1192,123 @@ function drawCityLabel(ctx: CanvasRenderingContext2D, c: DrawCity, width: number
 
 // ---------- units ----------
 
+const SKIN = "#d9a77c";
+const HAIR = "#3b2a1d";
+const WOOD = "#7a5230";
+const WOOD_DARK = "#4f3420";
+
 function drawUnits(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const byTile = new Map<number, DrawUnit[]>();
   for (const u of input.units) {
     const key = u.y * input.width + u.x;
     byTile.set(key, [...(byTile.get(key) ?? []), u]);
   }
-  for (const [, units] of byTile) {
+  // Draw from the top of the map down so figures in front overlap those behind.
+  const stacks = [...byTile.values()].sort((a, b) => a[0]!.y - b[0]!.y || a[0]!.x - b[0]!.x);
+  for (const units of stacks) {
     // Show the selected unit on top of its stack, otherwise one that still waits for orders.
     const top =
       units.find((u) => u.id === input.selectedUnitId) ?? units.find((u) => u.hasMoves) ?? units[0]!;
     const inCity = input.cities.some((c) => c.x === top.x && c.y === top.y);
-    // In a city the unit sits small in the lower left corner so the houses stay visible.
-    const scale = inCity ? 0.62 : 1;
-    const cx = top.x * TILE + (inCity ? 6.5 : TILE / 2);
-    const cy = top.y * TILE + (inCity ? 15 : TILE / 2);
-    drawUnitToken(ctx, top, cx, cy, scale, top.id === input.selectedUnitId, units.length);
+    // In a city the figure stands small in the front left corner so the city stays visible.
+    const scale = inCity ? 0.6 : 1;
+    const fx = top.x * TILE + (inCity ? 3.5 : TILE / 2);
+    const fy = top.y * TILE + (inCity ? 19.5 : 21);
+    drawMiniature(ctx, top, fx, fy, scale, top.id === input.selectedUnitId, units.length);
   }
 }
 
-function drawUnitToken(
+/** A unit as a painted miniature on a base in the player's colour; (fx, fy) is the base centre. */
+function drawMiniature(
   ctx: CanvasRenderingContext2D,
   u: DrawUnit,
-  cx: number,
-  cy: number,
+  fx: number,
+  fy: number,
   s: number,
   selected: boolean,
   stack: number,
 ): void {
   const color = playerColor(u.owner);
-  const ink = contrastInk(color);
-  const r = 9.2 * s;
+  const wide = u.type === "settlers";
+  const brx = (wide ? 10.5 : 7.2) * s;
+  const bry = (wide ? 3 : 2.6) * s;
+  const bcx = fx + (wide ? -1.2 * s : 0);
 
   ctx.save();
-  ctx.globalAlpha = u.hasMoves || selected ? 1 : 0.78;
+  ctx.globalAlpha = u.hasMoves || selected ? 1 : 0.82;
 
+  // Shadow and base.
   ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
   ctx.beginPath();
-  ctx.ellipse(cx + 0.6 * s, cy + r * 0.85, r * 0.95, r * 0.38, 0, 0, Math.PI * 2);
+  ctx.ellipse(bcx + 0.8 * s, fy + 1 * s, brx + 0.6 * s, bry + 0.7 * s, 0, 0, Math.PI * 2);
   ctx.fill();
-
   if (selected) {
-    ctx.strokeStyle = "rgba(255, 216, 74, 0.45)";
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = "rgba(255, 216, 74, 0.5)";
+    ctx.lineWidth = 3.2;
     ctx.beginPath();
-    ctx.arc(cx, cy, r + 2.2, 0, Math.PI * 2);
+    ctx.ellipse(bcx, fy, brx + 2, bry + 1.4, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = shade(color, 0.7);
+  ctx.beginPath();
+  ctx.ellipse(bcx, fy + 0.8 * s, brx, bry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(bcx, fy, brx, bry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = selected ? "#ffd84a" : INK;
+  ctx.lineWidth = selected ? 1.3 : 0.8;
+  ctx.stroke();
+
+  if (u.working) {
+    const done = Math.max(0.04, Math.min(1, u.workProgress ?? 0));
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(bcx, fy, brx + 1.6, bry + 1.2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = "#ffd84a";
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.ellipse(bcx, fy, brx + 1.6, bry + 1.2, 0, -Math.PI / 2, -Math.PI / 2 + done * Math.PI * 2);
     ctx.stroke();
   }
 
-  const disc = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.2, cx, cy, r);
-  disc.addColorStop(0, shade(color, 1.1));
-  disc.addColorStop(1, shade(color, 0.9));
-  ctx.fillStyle = disc;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = selected ? "#ffd84a" : INK;
-  ctx.lineWidth = selected ? 1.8 : 1.3;
-  ctx.stroke();
-
   ctx.save();
-  ctx.translate(cx, cy);
+  ctx.translate(fx, fy);
   ctx.scale(s, s);
-  if (u.type === "warriors") drawWarrior(ctx, ink);
-  else drawSettler(ctx, ink, color);
+  if (u.type === "warriors") drawWarriorFigure(ctx, color);
+  else drawSettlerFigure(ctx, color, u.working);
   ctx.restore();
 
   if (u.fortified) {
-    // A small stone wall in front of the token.
-    ctx.fillStyle = "#8f8778";
+    // A low stone wall in front of the base.
+    ctx.fillStyle = "#9b9485";
     ctx.strokeStyle = INK;
-    ctx.lineWidth = 0.7;
-    for (let k = -2; k <= 2; k++) {
+    ctx.lineWidth = 0.5;
+    for (let k = -3; k <= 3; k++) {
+      const wx = bcx + k * 2.4 * s;
+      const wy = fy + bry * 0.9 + Math.abs(k) * -0.35 * s;
       ctx.beginPath();
-      ctx.rect(cx + k * 3 * s - 1.5 * s, cy + r - 2.5 * s, 3 * s, 2.6 * s);
+      ctx.rect(wx - 1.2 * s, wy - 2.6 * s, 2.4 * s, 2.6 * s);
       ctx.fill();
       ctx.stroke();
     }
   }
-  if (u.working) {
-    const done = Math.max(0.04, Math.min(1, u.workProgress ?? 0));
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
-    ctx.lineWidth = 2.4;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 1.6, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.strokeStyle = "#ffd84a";
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 1.6, -Math.PI / 2, -Math.PI / 2 + done * Math.PI * 2);
-    ctx.stroke();
-  }
+
   if (stack > 1) {
-    const bx = cx + r * 0.8;
-    const by = cy - r * 0.8;
+    const bx = fx + 7 * s;
+    const by = fy - 17 * s;
     ctx.fillStyle = INK;
     ctx.beginPath();
-    ctx.arc(bx, by, 4.2, 0, Math.PI * 2);
+    ctx.arc(bx, by, 3.8, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = "#f3efe6";
-    ctx.lineWidth = 0.8;
+    ctx.lineWidth = 0.7;
     ctx.stroke();
     ctx.fillStyle = "#f3efe6";
-    ctx.font = "700 6px ui-sans-serif, system-ui, sans-serif";
+    ctx.font = "700 5.5px ui-sans-serif, system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(stack), bx, by + 0.3);
@@ -957,96 +1316,257 @@ function drawUnitToken(
   ctx.restore();
 }
 
-/** Warrior with a club and a round shield, drawn around (0, 0). */
-function drawWarrior(ctx: CanvasRenderingContext2D, ink: string): void {
-  ctx.fillStyle = ink;
-  ctx.strokeStyle = ink;
+/** Warrior in a tunic of the player's colour, with a club and a wooden shield. Origin at the feet. */
+function drawWarriorFigure(ctx: CanvasRenderingContext2D, color: string): void {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  // Head.
+  const outline = "rgba(25, 20, 15, 0.85)";
+
+  // Legs and sandals.
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 2.2;
   ctx.beginPath();
-  ctx.arc(-0.5, -4.6, 1.9, 0, Math.PI * 2);
+  ctx.moveTo(-1.3, -6);
+  ctx.lineTo(-1.8, -0.6);
+  ctx.moveTo(1.3, -6);
+  ctx.lineTo(1.9, -0.6);
+  ctx.stroke();
+  ctx.strokeStyle = SKIN;
+  ctx.lineWidth = 1.3;
+  ctx.stroke();
+  ctx.fillStyle = WOOD_DARK;
+  ctx.fillRect(-2.9, -1, 2, 1);
+  ctx.fillRect(1, -1, 2, 1);
+
+  // Right arm raising the club (behind the body).
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(2.2, -12);
+  ctx.lineTo(4.4, -14.2);
+  ctx.stroke();
+  ctx.strokeStyle = SKIN;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  // Club.
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(3.6, -13.2);
+  ctx.lineTo(6.2, -19.4);
+  ctx.stroke();
+  ctx.fillStyle = WOOD;
+  ctx.beginPath();
+  ctx.ellipse(6.4, -19.8, 1.5, 2.1, 0.4, 0, Math.PI * 2);
   ctx.fill();
-  // Body.
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+
+  // Tunic.
+  const tunic = ctx.createLinearGradient(-3.5, 0, 3.5, 0);
+  tunic.addColorStop(0, shade(color, 1.05));
+  tunic.addColorStop(1, shade(color, 0.72));
+  ctx.fillStyle = tunic;
   ctx.beginPath();
-  ctx.moveTo(-2.4, -2.2);
-  ctx.lineTo(1.4, -2.2);
-  ctx.lineTo(1.1, 2);
-  ctx.lineTo(-2.1, 2);
+  ctx.moveTo(-2.8, -13);
+  ctx.lineTo(2.8, -13);
+  ctx.lineTo(3.8, -5.2);
+  ctx.lineTo(-3.8, -5.2);
   ctx.closePath();
   ctx.fill();
-  // Legs.
-  ctx.lineWidth = 1.4;
-  ctx.beginPath();
-  ctx.moveTo(-1.5, 2);
-  ctx.lineTo(-2.4, 5.6);
-  ctx.moveTo(0.6, 2);
-  ctx.lineTo(1.6, 5.6);
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 0.55;
   ctx.stroke();
-  // Arm raising a club.
-  ctx.lineWidth = 1.2;
+  // Belt.
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 0.9;
   ctx.beginPath();
-  ctx.moveTo(1.2, -1.6);
-  ctx.lineTo(3.4, -3.6);
+  ctx.moveTo(-3.2, -8.6);
+  ctx.lineTo(3.2, -8.6);
   ctx.stroke();
-  ctx.lineWidth = 1.7;
+
+  // Head with hair and a headband.
+  ctx.fillStyle = SKIN;
   ctx.beginPath();
-  ctx.moveTo(3.1, -3.1);
-  ctx.lineTo(5.2, -6.9);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(5.3, -7.1, 1.3, 0, Math.PI * 2);
+  ctx.arc(0, -15.4, 2.3, 0, Math.PI * 2);
   ctx.fill();
-  // Shield.
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.fillStyle = HAIR;
   ctx.beginPath();
-  ctx.arc(-3.4, 0, 2.6, 0, Math.PI * 2);
+  ctx.arc(0, -15.6, 2.35, Math.PI * 1.05, Math.PI * 1.95);
+  ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = ink === INK ? "rgba(255, 255, 255, 0.35)" : "rgba(0, 0, 0, 0.35)";
+  ctx.strokeStyle = shade(color, 0.85);
+  ctx.lineWidth = 0.6;
   ctx.beginPath();
-  ctx.arc(-3.4, 0, 1.1, 0, Math.PI * 2);
+  ctx.moveTo(-2.2, -16.1);
+  ctx.lineTo(2.2, -16.1);
+  ctx.stroke();
+  ctx.fillStyle = "#2a1d14";
+  ctx.fillRect(-1.1, -15.3, 0.5, 0.5);
+  ctx.fillRect(0.6, -15.3, 0.5, 0.5);
+
+  // Round wooden shield held in front, rimmed with the player's colour.
+  const shield = ctx.createRadialGradient(-4.4, -10.2, 0.5, -3.8, -9.4, 3.6);
+  shield.addColorStop(0, "#a8743f");
+  shield.addColorStop(1, "#6b4526");
+  ctx.fillStyle = shield;
+  ctx.beginPath();
+  ctx.arc(-3.8, -9.4, 3.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 0.9;
+  ctx.stroke();
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  ctx.arc(-3.8, -9.4, 3.85, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "#c9c3b4";
+  ctx.beginPath();
+  ctx.arc(-3.8, -9.4, 0.9, 0, Math.PI * 2);
   ctx.fill();
 }
 
-/** Covered wagon, drawn around (0, 0). */
-function drawSettler(ctx: CanvasRenderingContext2D, ink: string, color: string): void {
-  ctx.fillStyle = ink;
-  ctx.strokeStyle = ink;
+/** Settlers: a covered wagon pulled by an ox, with a pennant in the player's colour. Origin at the base centre. */
+function drawSettlerFigure(ctx: CanvasRenderingContext2D, color: string, working: boolean): void {
   ctx.lineCap = "round";
-  // Canvas cover.
+  ctx.lineJoin = "round";
+  const outline = "rgba(25, 20, 15, 0.85)";
+
+  // Ox legs, body, head and horns (facing left).
+  ctx.strokeStyle = "#4a3020";
+  ctx.lineWidth = 0.9;
   ctx.beginPath();
-  ctx.moveTo(-5.6, 0.5);
-  ctx.bezierCurveTo(-5.6, -6.2, 3.6, -6.2, 3.6, 0.5);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = shade(color, 1.05);
+  for (const lx of [-10, -8.6, -5.6, -4.2]) {
+    ctx.moveTo(lx, -3.5);
+    ctx.lineTo(lx + (lx < -7 ? -0.3 : 0.3), -0.4);
+  }
+  ctx.stroke();
+  ctx.fillStyle = "#86593a";
   ctx.beginPath();
-  ctx.moveTo(-4.4, 0.2);
-  ctx.bezierCurveTo(-4.3, -4.7, 2.4, -4.7, 2.5, 0.2);
-  ctx.closePath();
+  ctx.ellipse(-7, -5, 4.1, 2.5, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = ink;
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 0.45;
+  ctx.stroke();
+  ctx.fillStyle = "#a57656";
+  ctx.beginPath();
+  ctx.ellipse(-7.5, -5.8, 2.6, 1.1, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#7a5034";
+  ctx.beginPath();
+  ctx.ellipse(-11.4, -5.6, 1.7, 1.3, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = outline;
+  ctx.stroke();
+  ctx.strokeStyle = "#efe6cf";
   ctx.lineWidth = 0.6;
   ctx.beginPath();
-  ctx.moveTo(-1, -3.6);
-  ctx.lineTo(-1, 0.2);
+  ctx.moveTo(-11.2, -6.7);
+  ctx.quadraticCurveTo(-11.8, -8.2, -10.6, -8.4);
+  ctx.moveTo(-11.6, -6.6);
+  ctx.quadraticCurveTo(-13, -7.6, -12.8, -8.6);
   ctx.stroke();
-  // Wagon bed and shaft.
-  ctx.fillStyle = ink;
-  ctx.fillRect(-6.2, 0.5, 10.4, 1.8);
-  ctx.lineWidth = 1.1;
+
+  // Shaft from the yoke to the wagon.
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 0.8;
   ctx.beginPath();
-  ctx.moveTo(4.2, 1.6);
-  ctx.lineTo(7, 0.4);
+  ctx.moveTo(-4, -4.2);
+  ctx.lineTo(-0.5, -3.6);
   ctx.stroke();
-  // Wheels.
-  for (const wx of [-3.6, 2]) {
+
+  // Wagon bed.
+  ctx.fillStyle = WOOD;
+  ctx.fillRect(-0.8, -5.6, 10, 3);
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 0.45;
+  ctx.strokeRect(-0.8, -5.6, 10, 3);
+  ctx.beginPath();
+  ctx.moveTo(-0.8, -4.1);
+  ctx.lineTo(9.2, -4.1);
+  ctx.stroke();
+
+  // Canvas cover with ribs.
+  const cover = ctx.createLinearGradient(0, -13, 0, -5.6);
+  cover.addColorStop(0, "#fbf4e2");
+  cover.addColorStop(1, "#d9ccad");
+  ctx.fillStyle = cover;
+  ctx.beginPath();
+  ctx.moveTo(-0.3, -5.6);
+  ctx.bezierCurveTo(-0.6, -14.2, 9, -14.2, 8.7, -5.6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(120, 100, 70, 0.55)";
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  for (const rx of [2.4, 4.2, 6]) {
+    ctx.moveTo(rx, -5.6);
+    ctx.lineTo(rx, -11.7);
+  }
+  ctx.stroke();
+
+  // Spoked wheels.
+  for (const wx of [1.6, 7]) {
+    ctx.fillStyle = WOOD_DARK;
     ctx.beginPath();
-    ctx.arc(wx, 3.6, 2.1, 0, Math.PI * 2);
+    ctx.arc(wx, -1.9, 2.3, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = shade(color, 1.05);
+    ctx.fillStyle = "#a07a4a";
     ctx.beginPath();
-    ctx.arc(wx, 3.6, 0.7, 0, Math.PI * 2);
+    ctx.arc(wx, -1.9, 1.6, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = ink;
+    ctx.strokeStyle = WOOD_DARK;
+    ctx.lineWidth = 0.4;
+    ctx.beginPath();
+    for (let k = 0; k < 4; k++) {
+      const a = (k * Math.PI) / 4;
+      ctx.moveTo(wx - Math.cos(a) * 1.6, -1.9 - Math.sin(a) * 1.6);
+      ctx.lineTo(wx + Math.cos(a) * 1.6, -1.9 + Math.sin(a) * 1.6);
+    }
+    ctx.stroke();
+  }
+
+  // Pennant in the player's colour on a pole at the back.
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(8.6, -6);
+  ctx.lineTo(8.6, -16.5);
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(8.6, -16.5);
+  ctx.lineTo(13, -15.2);
+  ctx.lineTo(8.6, -13.8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 0.4;
+  ctx.stroke();
+
+  if (working) {
+    // A shovel stuck in the ground next to the wagon.
+    ctx.strokeStyle = WOOD_DARK;
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(-2.4, -1);
+    ctx.lineTo(-3.6, -8);
+    ctx.stroke();
+    ctx.fillStyle = "#9aa0a6";
+    ctx.beginPath();
+    ctx.moveTo(-2.9, -1.4);
+    ctx.lineTo(-1.5, -1.6);
+    ctx.lineTo(-1.8, 0.4);
+    ctx.lineTo(-2.6, 0.6);
+    ctx.closePath();
+    ctx.fill();
   }
 }

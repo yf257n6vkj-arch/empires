@@ -34,6 +34,16 @@ import {
   type ProductionItem,
   type Unit,
 } from "../core";
+import {
+  DEFAULT_CAMERA,
+  keepInView,
+  MAX_ZOOM,
+  panBy,
+  screenToTile,
+  zoomAt,
+  ZOOM_STEP,
+  type Camera,
+} from "./camera";
 import { draw, setupCanvas, tileSize, type DrawInput } from "./render";
 import { ERROR_TEXT, eventText } from "./texts";
 
@@ -54,6 +64,9 @@ const seedInput = $<HTMLInputElement>("#seed");
 const seedLabel = $<HTMLElement>("#seed-label");
 const newGameButton = $<HTMLButtonElement>("#new-game");
 const showAllBox = $<HTMLInputElement>("#show-all");
+const zoomInButton = $<HTMLButtonElement>("#zoom-in");
+const zoomOutButton = $<HTMLButtonElement>("#zoom-out");
+const zoomResetButton = $<HTMLButtonElement>("#zoom-reset");
 
 interface LogEntry {
   turn: number;
@@ -67,6 +80,9 @@ let selectedCityId: number | null = null;
 let hoverTile: Point | null = null;
 let hoverRouteText = "";
 let ctx: CanvasRenderingContext2D;
+let camera: Camera = DEFAULT_CAMERA;
+/** Selected unit and its position when the view last followed it. */
+let followed = "";
 
 // ---------- saving ----------
 
@@ -104,6 +120,7 @@ function startNewGame(seed: string): void {
   log = [{ turn: 1, text: "Začíná nová hra. Najdi osadníkem dobré místo a založ první město (klávesa B)." }];
   selectedCityId = null;
   selectedUnitId = null;
+  camera = DEFAULT_CAMERA;
   selectNextUnit();
   save();
   ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());
@@ -279,6 +296,7 @@ function buildDrawInput(): DrawInput {
     path: route?.path ?? undefined,
     pathTurns: route?.stepTurns,
     target: route ? { point: route.target, turns: route.turns } : null,
+    camera,
   };
 }
 
@@ -322,7 +340,17 @@ function territoryOf(cities: City[]): Map<number, Set<number>> {
   return result;
 }
 
+/** When zoomed in, scrolls the map so the selected unit stays in view after it moves or changes. */
+function followSelection(): void {
+  const unit = selectedUnit();
+  const key = unit ? `${unit.id}:${unit.x}:${unit.y}` : "";
+  if (key === followed) return;
+  followed = key;
+  if (unit) camera = keepInView(camera, unit, state.map);
+}
+
 function refresh(): void {
+  followSelection();
   // The selection or the units may have changed, so the hovered route is computed again.
   if (hoverTile) {
     const unit = selectedUnit();
@@ -511,13 +539,115 @@ function closeCity(): void {
 
 function tileFromEvent(e: MouseEvent): Point | null {
   const rect = canvas.getBoundingClientRect();
-  const x = Math.floor((e.clientX - rect.left) / tileSize());
-  const y = Math.floor((e.clientY - rect.top) / tileSize());
+  const { x, y } = screenToTile(camera, e.clientX - rect.left, e.clientY - rect.top, tileSize());
   if (x < 0 || y < 0 || x >= state.map.width || y >= state.map.height) return null;
   return { x, y };
 }
 
+// ---------- zoom and scrolling ----------
+
+function setCamera(next: Camera): void {
+  if (next.zoom === camera.zoom && next.x === camera.x && next.y === camera.y) return;
+  camera = next;
+  hoverTile = null;
+  tooltip.hidden = true;
+  updateZoomButtons();
+  draw(ctx, buildDrawInput());
+}
+
+/** Zooms around a point given in CSS pixels on the canvas; the map centre when omitted. */
+function zoomTo(zoom: number, px?: number, py?: number): void {
+  const t = tileSize();
+  const ax = px === undefined ? state.map.width / 2 : px / t;
+  const ay = py === undefined ? state.map.height / 2 : py / t;
+  setCamera(zoomAt(camera, zoom, ax, ay, state.map));
+}
+
+function updateZoomButtons(): void {
+  zoomResetButton.textContent = `${Math.round(camera.zoom * 100)} %`;
+  zoomInButton.disabled = camera.zoom >= MAX_ZOOM - 1e-6;
+  zoomOutButton.disabled = camera.zoom <= 1 + 1e-6;
+  zoomResetButton.disabled = camera.zoom <= 1 + 1e-6;
+  canvas.classList.toggle("zoomed", camera.zoom > 1 + 1e-6);
+}
+
+zoomInButton.addEventListener("click", () => zoomTo(camera.zoom * ZOOM_STEP));
+zoomOutButton.addEventListener("click", () => zoomTo(camera.zoom / ZOOM_STEP));
+zoomResetButton.addEventListener("click", () => zoomTo(1));
+
+// Trackpad: two fingers move the map, pinching zooms (the browser reports a pinch
+// as a wheel event with ctrlKey). Mouse: the wheel moves the map, Ctrl + wheel zooms.
+canvas.addEventListener(
+  "wheel",
+  (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? rect.height : 1;
+    if (e.ctrlKey) {
+      const factor = Math.exp(-e.deltaY * unit * 0.01);
+      zoomTo(camera.zoom * factor, e.clientX - rect.left, e.clientY - rect.top);
+      return;
+    }
+    const px = tileSize() * camera.zoom;
+    setCamera(panBy(camera, (e.deltaX * unit) / px, (e.deltaY * unit) / px, state.map));
+  },
+  { passive: false },
+);
+
+// Safari reports trackpad pinching as gesture events instead of wheel events.
+interface GestureEvent extends UIEvent {
+  scale: number;
+  clientX: number;
+  clientY: number;
+}
+let gestureStartZoom = 1;
+canvas.addEventListener("gesturestart", (e) => {
+  e.preventDefault();
+  gestureStartZoom = camera.zoom;
+});
+canvas.addEventListener("gesturechange", (e) => {
+  e.preventDefault();
+  const g = e as GestureEvent;
+  const rect = canvas.getBoundingClientRect();
+  zoomTo(gestureStartZoom * g.scale, g.clientX - rect.left, g.clientY - rect.top);
+});
+
+// Dragging with the mouse moves the map; a drag does not count as a click.
+const DRAG_THRESHOLD = 5;
+let drag: { x: number; y: number; moved: boolean } | null = null;
+let suppressClick = false;
+canvas.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return;
+  drag = { x: e.clientX, y: e.clientY, moved: false };
+});
+canvas.addEventListener("pointermove", (e) => {
+  if (!drag || (e.buttons & 1) === 0) return;
+  const dx = e.clientX - drag.x;
+  const dy = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+  if (!drag.moved) {
+    drag.moved = true;
+    canvas.setPointerCapture(e.pointerId);
+    canvas.classList.add("dragging");
+  }
+  const px = tileSize() * camera.zoom;
+  setCamera(panBy(camera, -dx / px, -dy / px, state.map));
+  drag.x = e.clientX;
+  drag.y = e.clientY;
+});
+const endDrag = () => {
+  if (drag?.moved) suppressClick = true;
+  drag = null;
+  canvas.classList.remove("dragging");
+};
+canvas.addEventListener("pointerup", endDrag);
+canvas.addEventListener("pointercancel", endDrag);
+
 canvas.addEventListener("click", (e) => {
+  if (suppressClick) {
+    suppressClick = false;
+    return;
+  }
   const p = tileFromEvent(e);
   if (!p) return;
   const unit = selectedUnit();
@@ -639,6 +769,18 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     return endTurn();
   }
+  if (e.key === "+" || e.key === "=") {
+    e.preventDefault();
+    return zoomTo(camera.zoom * ZOOM_STEP);
+  }
+  if (e.key === "-") {
+    e.preventDefault();
+    return zoomTo(camera.zoom / ZOOM_STEP);
+  }
+  if (e.key === "0") {
+    e.preventDefault();
+    return zoomTo(1);
+  }
   if (e.key === "Escape") {
     if (selectedCityId !== null) return closeCity();
     selectedUnitId = null;
@@ -669,6 +811,7 @@ newGameButton.addEventListener("click", () => {
 
 // ---------- start ----------
 
+updateZoomButtons();
 if (load()) {
   ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());
   selectNextUnit();

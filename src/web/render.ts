@@ -6,8 +6,12 @@
  * The map background (terrain, coast, improvements, borders, fog edge) changes
  * rarely, so it is drawn into an offscreen canvas and reused while the mouse
  * moves; only units, cities and overlays are drawn every frame.
+ *
+ * The camera (see camera.ts) zooms and moves the view. Only the tiles in view
+ * are drawn into the background, so moving a zoomed map stays fast.
  */
 import type { Point, TerrainId } from "../core";
+import { DEFAULT_CAMERA, type Camera } from "./camera";
 
 /** Tile size in design units. */
 export const TILE = 24;
@@ -73,6 +77,8 @@ export interface DrawInput {
   pathTurns?: number[];
   /** Tile under the mouse or goto target; turns = null when the unit cannot get there. */
   target?: { point: Point; turns: number | null } | null;
+  /** Visible part of the map; the whole map when omitted. */
+  camera?: Camera;
 }
 
 // ---------- canvas setup ----------
@@ -81,6 +87,13 @@ let tilePixels = TILE;
 let pixelRatio = 1;
 let background: HTMLCanvasElement | null = null;
 let backgroundKey = "";
+let camera: Camera = DEFAULT_CAMERA;
+/** Tiles in view (inclusive), with one tile of slack for details that overflow. */
+let view = { x0: 0, y0: 0, x1: 0, y1: 0 };
+
+function inView(x: number, y: number): boolean {
+  return x >= view.x0 && x <= view.x1 && y >= view.y0 && y <= view.y1;
+}
 
 /** Real size of one tile on screen, in CSS pixels. */
 export function tileSize(): number {
@@ -107,8 +120,8 @@ export function setupCanvas(
 }
 
 function applyScale(ctx: CanvasRenderingContext2D): void {
-  const s = (pixelRatio * tilePixels) / TILE;
-  ctx.setTransform(s, 0, 0, s, 0, 0);
+  const s = (pixelRatio * tilePixels * camera.zoom) / TILE;
+  ctx.setTransform(s, 0, 0, s, -camera.x * TILE * s, -camera.y * TILE * s);
 }
 
 // ---------- small helpers ----------
@@ -154,13 +167,20 @@ function inputKey(input: DrawInput): string {
     mix(owner + 7);
     for (const i of tiles) mix(i);
   }
-  return `${h >>> 0}:${input.width}x${input.height}:${tilePixels}:${pixelRatio}`;
+  return `${h >>> 0}:${input.width}x${input.height}:${tilePixels}:${pixelRatio}:${camera.zoom}:${camera.x}:${camera.y}`;
 }
 
 // ---------- main entry ----------
 
 export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height } = input;
+  camera = input.camera ?? DEFAULT_CAMERA;
+  view = {
+    x0: Math.max(0, Math.floor(camera.x) - 1),
+    y0: Math.max(0, Math.floor(camera.y) - 1),
+    x1: Math.min(width - 1, Math.ceil(camera.x + width / camera.zoom) + 1),
+    y1: Math.min(height - 1, Math.ceil(camera.y + height / camera.zoom) + 1),
+  };
   const key = inputKey(input);
   if (!background || key !== backgroundKey) {
     background ??= document.createElement("canvas");
@@ -176,6 +196,7 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.drawImage(background, 0, 0);
   ctx.restore();
+  applyScale(ctx);
 
   for (const i of input.highlight ?? []) {
     const x = (i % width) * TILE;
@@ -204,15 +225,15 @@ function drawBackground(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   ctx.fillRect(0, 0, width * TILE, height * TILE);
 
   const depth = seaDepth(input);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = view.y0; y <= view.y1; y++) {
+    for (let x = view.x0; x <= view.x1; x++) {
       const t = terrain[y * width + x] ?? null;
       if (t) drawTerrainBase(ctx, t, x, y, depth[y * width + x] ?? 0);
     }
   }
   drawCoast(ctx, input);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = view.y0; y <= view.y1; y++) {
+    for (let x = view.x0; x <= view.x1; x++) {
       const t = terrain[y * width + x] ?? null;
       if (t) drawTerrainDetail(ctx, t, x, y);
     }
@@ -454,8 +475,8 @@ function drawCoast(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height, terrain } = input;
   const at = (x: number, y: number) =>
     x < 0 || y < 0 || x >= width || y >= height ? null : terrain[y * width + x] ?? null;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = view.y0; y <= view.y1; y++) {
+    for (let x = view.x0; x <= view.x1; x++) {
       const t = at(x, y);
       if (!t || t === "ocean") continue;
       const px = x * TILE;
@@ -489,8 +510,8 @@ function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void
   const roadAt = (x: number, y: number) =>
     x >= 0 && y >= 0 && x < width && y < height && (input.road[y * width + x] === 1 || cityTiles.has(y * width + x));
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = view.y0; y <= view.y1; y++) {
+    for (let x = view.x0; x <= view.x1; x++) {
       const i = y * width + x;
       const px = x * TILE;
       const py = y * TILE;
@@ -559,10 +580,11 @@ function drawTerritory(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   for (const [owner, tiles] of input.territory ?? []) {
     const color = playerColor(owner);
     ctx.fillStyle = shade(color, 1, 0.07);
-    for (const i of tiles) ctx.fillRect((i % width) * TILE, Math.floor(i / width) * TILE, TILE, TILE);
+    const shown = [...tiles].filter((i) => inView(i % width, Math.floor(i / width)));
+    for (const i of shown) ctx.fillRect((i % width) * TILE, Math.floor(i / width) * TILE, TILE, TILE);
 
     const edges = new Path2D();
-    for (const i of tiles) {
+    for (const i of shown) {
       const x = i % width;
       const y = Math.floor(i / width);
       const px = x * TILE;
@@ -594,8 +616,8 @@ function drawFogEdge(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height, terrain } = input;
   const known = (x: number, y: number) => x < 0 || y < 0 || x >= width || y >= height || terrain[y * width + x] !== null;
   const depth = 9;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = view.y0; y <= view.y1; y++) {
+    for (let x = view.x0; x <= view.x1; x++) {
       if (!terrain[y * width + x]) continue;
       const px = x * TILE;
       const py = y * TILE;
@@ -1164,30 +1186,36 @@ function drawGate(ctx: CanvasRenderingContext2D, x: number, y: number): void {
 
 /** Name plate under the city with its size in a disc of the player's colour. */
 function drawCityLabel(ctx: CanvasRenderingContext2D, c: DrawCity, width: number): void {
+  // Labels grow more slowly than the map when zoomed in, so they do not cover it.
+  const k = 1 / Math.sqrt(camera.zoom);
   ctx.font = "600 8.5px ui-sans-serif, system-ui, sans-serif";
   const nameW = ctx.measureText(c.name).width;
   const w = nameW + 18;
-  let x = c.x * TILE + TILE / 2 - w / 2;
-  x = Math.max(1, Math.min(x, width * TILE - w - 1));
+  let x = c.x * TILE + TILE / 2 - (w * k) / 2;
+  x = Math.max(1, Math.min(x, width * TILE - w * k - 1));
   const y = c.y * TILE + TILE + 0.5;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(k, k);
   ctx.fillStyle = "rgba(18, 18, 20, 0.85)";
   ctx.beginPath();
-  ctx.roundRect(x, y, w, 11, 5.5);
+  ctx.roundRect(0, 0, w, 11, 5.5);
   ctx.fill();
   const color = playerColor(c.owner);
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(x + 5.5, y + 5.5, 4.6, 0, Math.PI * 2);
+  ctx.arc(5.5, 5.5, 4.6, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = contrastInk(color);
   ctx.font = "700 7px ui-sans-serif, system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(String(c.size), x + 5.5, y + 5.8);
+  ctx.fillText(String(c.size), 5.5, 5.8);
   ctx.fillStyle = "#f3efe6";
   ctx.font = "600 8.5px ui-sans-serif, system-ui, sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText(c.name, x + 12.5, y + 6);
+  ctx.fillText(c.name, 12.5, 6);
+  ctx.restore();
 }
 
 // ---------- units ----------

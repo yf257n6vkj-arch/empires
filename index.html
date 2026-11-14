@@ -20,6 +20,11 @@
       <div class="map-wrap">
         <canvas id="map"></canvas>
         <div id="tooltip" hidden></div>
+        <div class="zoom">
+          <button type="button" id="zoom-in" title="Přiblížit (klávesa +)" aria-label="Přiblížit">+</button>
+          <button type="button" id="zoom-out" title="Oddálit (klávesa −)" aria-label="Oddálit">−</button>
+          <button type="button" id="zoom-reset" title="Zpátky na celou mapu (klávesa 0)">100 %</button>
+        </div>
       </div>
       <aside>
         <section id="selection"></section>
@@ -37,6 +42,8 @@
               <li><kbd>B</kbd> založit město, <kbd>R</kbd> cesta, <kbd>I</kbd> zavlažování, <kbd>M</kbd> důl</li>
               <li><kbd>F</kbd> opevnit, <kbd>mezerník</kbd> nechat jednotku do příštího tahu, <kbd>N</kbd> další jednotka</li>
               <li><kbd>Enter</kbd> konec tahu, <kbd>Esc</kbd> zrušit výběr</li>
+              <li>Přiblížení: roztažení dvěma prsty na trackpadu, <kbd>Ctrl</kbd> + kolečko myši nebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Klávesa <kbd>0</kbd> vrátí celou mapu.</li>
+              <li>Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením.</li>
             </ul>
           </details>
         </section>

@@ -11,6 +11,8 @@ Hotová je fáze 1. Hráč začíná s osadníkem a válečníkem, prozkoumává
 - Šipky nebo číslice 1 až 9 posouvají vybranou jednotku.
 - `B` založí město, `R` postaví cestu, `I` zavlažování, `M` důl, `F` opevní jednotku, mezerník ji nechá do příštího tahu, `N` vybere další jednotku.
 - `Enter` ukončí tah, `Esc` zruší výběr.
+- Mapu přiblížíš roztažením prstů na trackpadu, `Ctrl` a kolečkem myši, tlačítky v rohu mapy nebo klávesami `+` a `−`. Nula vrátí celou mapu.
+- Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením.
 
 ## Jak hru spustit na Macu
 

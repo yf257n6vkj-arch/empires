@@ -76,3 +76,11 @@ details[open] summary { margin-bottom: 8px; }
 .help { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
 label.check { display: flex; align-items: center; gap: 6px; margin-top: 10px; color: var(--text); }
 #tooltip .route { color: #ffe678; }
+.zoom { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; line-height: 1.2; }
+.zoom button {
+  min-width: 30px; height: 30px; padding: 0 8px; font-size: 16px; font-weight: 600;
+  background: rgba(26, 30, 35, 0.85); border-color: rgba(255, 255, 255, 0.18);
+}
+.zoom #zoom-reset { font-size: 12px; font-variant-numeric: tabular-nums; }
+canvas.zoomed { cursor: crosshair; }
+canvas.dragging { cursor: grabbing; }

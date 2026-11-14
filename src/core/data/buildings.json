@@ -1,20 +1,20 @@
 {
-  "_comment": "upkeep = zlato za tah. effects: content = kolik nespokojených uklidní, sciencePct/goldPct/shieldsPct = přídavek v procentech, keepFoodOnGrowth = podíl jídla, který zůstane po růstu, maxSize = největší velikost města s touto budovou. wonder = div světa (postaví ho jen jedna civilizace, scope all = působí ve všech jejích městech). victory = poslední div, vítězství přidá fáze 3. Hradby a kasárna začnou působit s bojem ve fázi 3.",
+  "_comment": "Ceny jsou zhruba poloviční proti Civilizaci 1, protože naše partie má jen 120 tahů. upkeep = zlato za tah. effects: content = kolik nespokojených uklidní, sciencePct/goldPct/shieldsPct = přídavek v procentech, keepFoodOnGrowth = podíl jídla, který zůstane po růstu, maxSize = největší velikost města s touto budovou. wonder = div světa (postaví ho jen jedna civilizace, scope all = působí ve všech jejích městech). victory = poslední div, vítězství přidá fáze 3. Hradby a kasárna začnou působit s bojem ve fázi 3.",
   "buildings": [
-    { "id": "granary", "name": "Sýpka", "cost": 60, "upkeep": 1, "requires": "pottery", "requiresBuilding": null, "wonder": false, "effects": { "keepFoodOnGrowth": 0.5 } },
-    { "id": "temple", "name": "Chrám", "cost": 40, "upkeep": 1, "requires": "ceremonies", "requiresBuilding": null, "wonder": false, "effects": { "content": 2 } },
-    { "id": "walls", "name": "Hradby", "cost": 60, "upkeep": 1, "requires": "masonry", "requiresBuilding": null, "wonder": false, "effects": {} },
-    { "id": "barracks", "name": "Kasárna", "cost": 40, "upkeep": 1, "requires": "bronze", "requiresBuilding": null, "wonder": false, "effects": {} },
-    { "id": "library", "name": "Knihovna", "cost": 80, "upkeep": 1, "requires": "writing", "requiresBuilding": null, "wonder": false, "effects": { "sciencePct": 50 } },
-    { "id": "marketplace", "name": "Tržiště", "cost": 80, "upkeep": 1, "requires": "currency", "requiresBuilding": null, "wonder": false, "effects": { "goldPct": 50 } },
-    { "id": "amphitheater", "name": "Amfiteátr", "cost": 70, "upkeep": 3, "requires": "construction", "requiresBuilding": null, "wonder": false, "effects": { "content": 3 } },
-    { "id": "aqueduct", "name": "Akvadukt", "cost": 100, "upkeep": 2, "requires": "engineering", "requiresBuilding": null, "wonder": false, "effects": { "maxSize": 16 } },
-    { "id": "university", "name": "Univerzita", "cost": 140, "upkeep": 3, "requires": "scholarship", "requiresBuilding": "library", "wonder": false, "effects": { "sciencePct": 50 } },
-    { "id": "factory", "name": "Továrna", "cost": 180, "upkeep": 4, "requires": "industry", "requiresBuilding": null, "wonder": false, "effects": { "shieldsPct": 50 } },
-    { "id": "stoneCircle", "name": "Kamenný kruh", "cost": 180, "upkeep": 0, "requires": "mysticism", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": { "content": 1 } },
-    { "id": "hallOfScholars", "name": "Síň učenců", "cost": 220, "upkeep": 0, "requires": "philosophy", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": { "sciencePct": 25 } },
-    { "id": "greatObservatory", "name": "Velká hvězdárna", "cost": 240, "upkeep": 0, "requires": "astronomy", "requiresBuilding": null, "wonder": true, "scope": "city", "effects": { "sciencePct": 100 } },
-    { "id": "grandBazaar", "name": "Velký bazar", "cost": 260, "upkeep": 0, "requires": "banking", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": { "goldPct": 25 } },
-    { "id": "greatWork", "name": "Velké dílo", "cost": 600, "upkeep": 0, "requires": "modernScience", "requiresBuilding": null, "wonder": true, "scope": "city", "victory": true, "effects": {} }
+    { "id": "granary", "name": "Sýpka", "cost": 30, "upkeep": 1, "requires": "pottery", "requiresBuilding": null, "wonder": false, "effects": { "keepFoodOnGrowth": 0.5 } },
+    { "id": "temple", "name": "Chrám", "cost": 20, "upkeep": 1, "requires": "ceremonies", "requiresBuilding": null, "wonder": false, "effects": { "content": 2 } },
+    { "id": "walls", "name": "Hradby", "cost": 30, "upkeep": 1, "requires": "masonry", "requiresBuilding": null, "wonder": false, "effects": {} },
+    { "id": "barracks", "name": "Kasárna", "cost": 20, "upkeep": 1, "requires": "bronze", "requiresBuilding": null, "wonder": false, "effects": {} },
+    { "id": "library", "name": "Knihovna", "cost": 40, "upkeep": 1, "requires": "writing", "requiresBuilding": null, "wonder": false, "effects": { "sciencePct": 50 } },
+    { "id": "marketplace", "name": "Tržiště", "cost": 40, "upkeep": 1, "requires": "currency", "requiresBuilding": null, "wonder": false, "effects": { "goldPct": 50 } },
+    { "id": "amphitheater", "name": "Amfiteátr", "cost": 35, "upkeep": 3, "requires": "construction", "requiresBuilding": null, "wonder": false, "effects": { "content": 3 } },
+    { "id": "aqueduct", "name": "Akvadukt", "cost": 50, "upkeep": 2, "requires": "engineering", "requiresBuilding": null, "wonder": false, "effects": { "maxSize": 16 } },
+    { "id": "university", "name": "Univerzita", "cost": 70, "upkeep": 3, "requires": "scholarship", "requiresBuilding": "library", "wonder": false, "effects": { "sciencePct": 50 } },
+    { "id": "factory", "name": "Továrna", "cost": 90, "upkeep": 4, "requires": "industry", "requiresBuilding": null, "wonder": false, "effects": { "shieldsPct": 50 } },
+    { "id": "stoneCircle", "name": "Kamenný kruh", "cost": 90, "upkeep": 0, "requires": "mysticism", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": { "content": 1 } },
+    { "id": "hallOfScholars", "name": "Síň učenců", "cost": 110, "upkeep": 0, "requires": "philosophy", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": { "sciencePct": 25 } },
+    { "id": "greatObservatory", "name": "Velká hvězdárna", "cost": 120, "upkeep": 0, "requires": "astronomy", "requiresBuilding": null, "wonder": true, "scope": "city", "effects": { "sciencePct": 100 } },
+    { "id": "grandBazaar", "name": "Velký bazar", "cost": 130, "upkeep": 0, "requires": "banking", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": { "goldPct": 25 } },
+    { "id": "greatWork", "name": "Velké dílo", "cost": 300, "upkeep": 0, "requires": "modernScience", "requiresBuilding": null, "wonder": true, "scope": "city", "victory": true, "effects": {} }
   ]
 }

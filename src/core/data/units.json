@@ -1,17 +1,17 @@
 {
-  "_comment": "Ceny a síla podle Civilizace 1. moves = počet políček po rovině za tah. requires = technologie, která jednotku odemyká. obsoleteBy = jednotka, která ji nahradí ve výběru výroby. Útok a obranu použije boj ve fázi 3.",
+  "_comment": "Síla podle Civilizace 1, ceny poloviční, protože naše partie má jen 120 tahů. moves = počet políček po rovině za tah. requires = technologie, která jednotku odemyká. obsoleteBy = jednotka, která ji nahradí ve výběru výroby. Útok a obranu použije boj ve fázi 3.",
   "units": [
-    { "id": "settlers", "name": "Osadník", "cost": 30, "attack": 0, "defense": 1, "moves": 1, "foundsCity": true, "buildsImprovements": true, "populationCost": 1, "foodUpkeep": 1, "requires": null, "obsoleteBy": null },
-    { "id": "warriors", "name": "Válečník", "cost": 10, "attack": 1, "defense": 1, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": null, "obsoleteBy": "spearmen" },
-    { "id": "spearmen", "name": "Kopiník", "cost": 20, "attack": 1, "defense": 2, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "bronze", "obsoleteBy": "musketeers" },
-    { "id": "horsemen", "name": "Jezdec", "cost": 20, "attack": 2, "defense": 1, "moves": 2, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "horseback", "obsoleteBy": "knights" },
-    { "id": "archers", "name": "Lučištník", "cost": 30, "attack": 3, "defense": 2, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "archery", "obsoleteBy": "musketeers" },
-    { "id": "swordsmen", "name": "Šermíř", "cost": 40, "attack": 4, "defense": 2, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "iron", "obsoleteBy": "riflemen" },
-    { "id": "catapult", "name": "Katapult", "cost": 40, "attack": 6, "defense": 1, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "mathematics", "obsoleteBy": "cannon" },
-    { "id": "knights", "name": "Rytíř", "cost": 40, "attack": 4, "defense": 2, "moves": 2, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "chivalry", "obsoleteBy": "tank" },
-    { "id": "musketeers", "name": "Mušketýr", "cost": 30, "attack": 3, "defense": 3, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "gunpowder", "obsoleteBy": "riflemen" },
-    { "id": "cannon", "name": "Dělo", "cost": 40, "attack": 8, "defense": 1, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "metallurgy", "obsoleteBy": null },
-    { "id": "riflemen", "name": "Střelec", "cost": 40, "attack": 5, "defense": 4, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "conscription", "obsoleteBy": null },
-    { "id": "tank", "name": "Tank", "cost": 80, "attack": 10, "defense": 5, "moves": 3, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "combustion", "obsoleteBy": null }
+    { "id": "settlers", "name": "Osadník", "cost": 15, "attack": 0, "defense": 1, "moves": 1, "foundsCity": true, "buildsImprovements": true, "populationCost": 1, "foodUpkeep": 1, "requires": null, "obsoleteBy": null },
+    { "id": "warriors", "name": "Válečník", "cost": 5, "attack": 1, "defense": 1, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": null, "obsoleteBy": "spearmen" },
+    { "id": "spearmen", "name": "Kopiník", "cost": 10, "attack": 1, "defense": 2, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "bronze", "obsoleteBy": "musketeers" },
+    { "id": "horsemen", "name": "Jezdec", "cost": 10, "attack": 2, "defense": 1, "moves": 2, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "horseback", "obsoleteBy": "knights" },
+    { "id": "archers", "name": "Lučištník", "cost": 15, "attack": 3, "defense": 2, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "archery", "obsoleteBy": "musketeers" },
+    { "id": "swordsmen", "name": "Šermíř", "cost": 20, "attack": 4, "defense": 2, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "iron", "obsoleteBy": "riflemen" },
+    { "id": "catapult", "name": "Katapult", "cost": 20, "attack": 6, "defense": 1, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "mathematics", "obsoleteBy": "cannon" },
+    { "id": "knights", "name": "Rytíř", "cost": 20, "attack": 4, "defense": 2, "moves": 2, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "chivalry", "obsoleteBy": "tank" },
+    { "id": "musketeers", "name": "Mušketýr", "cost": 15, "attack": 3, "defense": 3, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "gunpowder", "obsoleteBy": "riflemen" },
+    { "id": "cannon", "name": "Dělo", "cost": 20, "attack": 8, "defense": 1, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "metallurgy", "obsoleteBy": null },
+    { "id": "riflemen", "name": "Střelec", "cost": 20, "attack": 5, "defense": 4, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "conscription", "obsoleteBy": null },
+    { "id": "tank", "name": "Tank", "cost": 40, "attack": 10, "defense": 5, "moves": 3, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "combustion", "obsoleteBy": null }
   ]
 }

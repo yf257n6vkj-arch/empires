@@ -4,6 +4,7 @@
  */
 export * from "./city";
 export * from "./commands";
+export * from "./economy";
 export * from "./events";
 export * from "./game";
 export * from "./geometry";

@@ -3,10 +3,10 @@
  * A turn is a function from the old state and commands to a new state.
  */
 import type { Point } from "./geometry";
-import type { BuildingId, ImprovementId, TerrainId, UnitTypeId } from "./rules";
+import type { BuildingId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 export interface GameMap {
   width: number;
@@ -35,6 +35,15 @@ export interface Player {
   explored: number[];
   /** How many city names the player has used, for naming the next city. */
   citiesFounded: number;
+  /** Technologies the player knows, in the order they were learned. */
+  techs: TechId[];
+  /** Technology being researched, null = the player has to choose. */
+  researching: TechId | null;
+  /** Science collected towards the next technology. */
+  research: number;
+  gold: number;
+  /** Share of trade that goes to science, in percent; the rest is gold. */
+  scienceRate: number;
 }
 
 export interface WorkOrder {

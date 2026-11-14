@@ -3,6 +3,7 @@
  * another; when the last player ends, a new game turn begins.
  */
 import { processCityDraft } from "./city";
+import { buildingUpkeep, researchCost, sellBuildingsForUpkeepDraft } from "./economy";
 import { continueGotoDraft } from "./units";
 import type { GameEvent } from "./events";
 import { IMPROVEMENTS, type ImprovementId } from "./rules";
@@ -13,9 +14,14 @@ import { fullMoves, idx } from "./world";
 export function endTurnDraft(draft: GameState, events: GameEvent[]): void {
   const player = draft.currentPlayer;
 
+  let science = 0;
+  let gold = 0;
   for (const city of draft.cities.filter((c) => c.owner === player)) {
-    processCityDraft(draft, city, events);
+    const out = processCityDraft(draft, city, events);
+    science += out.science;
+    gold += out.gold;
   }
+  economyDraft(draft, player, science, gold, events);
   for (const unit of draft.units.filter((u) => u.owner === player && u.work)) {
     progressWorkDraft(draft, unit, events);
   }
@@ -24,6 +30,25 @@ export function endTurnDraft(draft: GameState, events: GameEvent[]): void {
   if (next === 0) draft.turn += 1;
   draft.currentPlayer = next;
   startTurnDraft(draft, next, events);
+}
+
+/** Pays upkeep, adds gold and science, and finishes research (mutates the draft). */
+function economyDraft(draft: GameState, playerId: PlayerId, science: number, gold: number, events: GameEvent[]): void {
+  const player = draft.players[playerId];
+  if (!player) return;
+  player.gold += gold - buildingUpkeep(draft, playerId);
+  sellBuildingsForUpkeepDraft(draft, playerId, events);
+
+  // Science collects even with nothing chosen, so no turn of research is lost.
+  player.research += science;
+  const tech = player.researching;
+  if (tech !== null && player.research >= researchCost(player)) {
+    player.research -= researchCost(player);
+    player.techs.push(tech);
+    player.researching = null;
+    events.push({ type: "techLearned", player: playerId, tech });
+    events.push({ type: "researchNeeded", player: playerId });
+  }
 }
 
 function startTurnDraft(draft: GameState, player: PlayerId, events: GameEvent[]): void {

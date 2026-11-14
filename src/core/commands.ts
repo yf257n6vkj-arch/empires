@@ -6,14 +6,15 @@
  * Each `can*` function returns null when the action is allowed, otherwise a
  * reason code. `applyCommand` never mutates its input; it returns a new state.
  */
-import { assignWorkersDraft, productionOptions, sameItem } from "./city";
+import { assignWorkersDraft, sameItem } from "./city";
+import { buyCost, canBuild, canResearch, fallbackProduction } from "./economy";
 import type { GameEvent } from "./events";
 import { distance, neighbors4, type Point } from "./geometry";
 import { findPath } from "./path";
 import { canMove, continueGotoDraft, moveDraft } from "./units";
 
 export { canMove };
-import { CITY_NAMES, IMPROVEMENTS, RULES, TERRAINS, UNIT_TYPES, type ImprovementId } from "./rules";
+import { BUILDINGS, CITY_NAMES, IMPROVEMENTS, RULES, TECHS, TERRAINS, UNIT_TYPES, type ImprovementId, type TechId } from "./rules";
 import type { CityId, GameState, ProductionItem, Unit, UnitId } from "./state";
 import { endTurnDraft } from "./turn";
 import { cityAt, cityName, cloneState, getPlayer, idx, reveal } from "./world";
@@ -27,6 +28,9 @@ export type Command =
   | { type: "skipTurn"; unitId: UnitId }
   | { type: "cancelOrders"; unitId: UnitId }
   | { type: "setProduction"; cityId: CityId; item: ProductionItem }
+  | { type: "buy"; cityId: CityId }
+  | { type: "setResearch"; tech: TechId }
+  | { type: "setScienceRate"; rate: number }
   | { type: "endTurn" };
 
 export type CommandError =
@@ -47,7 +51,12 @@ export type CommandError =
   | "needsWater"
   | "onCityTile"
   | "noPath"
-  | "invalidProduction";
+  | "invalidProduction"
+  | "alreadyComplete"
+  | "notEnoughGold"
+  | "unknownTech"
+  | "cannotResearch"
+  | "invalidRate";
 
 export type CommandResult =
   | { ok: true; state: GameState; events: GameEvent[] }
@@ -139,7 +148,7 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
         size: 1,
         food: 0,
         shields: 0,
-        production: { kind: "unit", id: "warriors" } as ProductionItem,
+        production: fallbackProduction(draft, unit.owner),
         buildings: [],
         worked: [],
         foundedTurn: draft.turn,
@@ -191,11 +200,42 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       const city = state.cities.find((c) => c.id === command.cityId);
       if (!city) return { ok: false, error: "unknownCity" };
       if (city.owner !== state.currentPlayer) return { ok: false, error: "notYourCity" };
-      if (!productionOptions(city).some((o) => sameItem(o, command.item))) {
-        return { ok: false, error: "invalidProduction" };
-      }
+      if (!canBuild(state, city, command.item)) return { ok: false, error: "invalidProduction" };
       const draft = cloneState(state);
       draft.cities.find((c) => c.id === city.id)!.production = { ...command.item };
+      return { ok: true, state: draft, events };
+    }
+
+    case "buy": {
+      const city = state.cities.find((c) => c.id === command.cityId);
+      if (!city) return { ok: false, error: "unknownCity" };
+      if (city.owner !== state.currentPlayer) return { ok: false, error: "notYourCity" };
+      const price = buyCost(city);
+      if (price === 0) return { ok: false, error: "alreadyComplete" };
+      if (getPlayer(state, city.owner).gold < price) return { ok: false, error: "notEnoughGold" };
+      const draft = cloneState(state);
+      const c = draft.cities.find((x) => x.id === city.id)!;
+      getPlayer(draft, c.owner).gold -= price;
+      c.shields = c.production.kind === "unit" ? UNIT_TYPES[c.production.id].cost : BUILDINGS[c.production.id].cost;
+      return { ok: true, state: draft, events };
+    }
+
+    case "setResearch": {
+      if (!(command.tech in TECHS)) return { ok: false, error: "unknownTech" };
+      const player = getPlayer(state, state.currentPlayer);
+      if (!canResearch(player, command.tech)) return { ok: false, error: "cannotResearch" };
+      const draft = cloneState(state);
+      getPlayer(draft, state.currentPlayer).researching = command.tech;
+      return { ok: true, state: draft, events };
+    }
+
+    case "setScienceRate": {
+      const rate = command.rate;
+      if (!Number.isInteger(rate) || rate < 0 || rate > 100 || rate % RULES.rateStep !== 0) {
+        return { ok: false, error: "invalidRate" };
+      }
+      const draft = cloneState(state);
+      getPlayer(draft, state.currentPlayer).scienceRate = rate;
       return { ok: true, state: draft, events };
     }
 

@@ -108,16 +108,19 @@ describe("city economy", () => {
     city.food = growthThreshold(1) - 1;
     s = apply(s, { type: "endTurn" });
     expect(s.cities[0]!.size).toBe(2);
-    expect(s.cities[0]!.food).toBe(Math.floor(growthThreshold(1) * BUILDINGS.granary.keepFoodOnGrowth));
+    expect(s.cities[0]!.food).toBe(Math.floor(growthThreshold(1) * BUILDINGS.granary.effects.keepFoodOnGrowth!));
   });
 
-  it("switches to warriors after a building and refuses to build it twice", () => {
+  it("switches to a defender after a building and refuses to build it twice", () => {
     let s = foundAt(GRASS);
+    s.players[0]!.techs.push("pottery");
+    s.players[0]!.gold = 100;
     const id = s.cities[0]!.id;
     s = apply(s, { type: "setProduction", cityId: id, item: { kind: "building", id: "granary" } });
     s.cities[0]!.shields = BUILDINGS.granary.cost;
     s = apply(s, { type: "endTurn" });
     expect(s.cities[0]!.buildings).toEqual(["granary"]);
+    expect(s.cities[0]!.production).toEqual({ kind: "unit", id: "warriors" });
     expect(applyCommand(s, { type: "setProduction", cityId: id, item: { kind: "building", id: "granary" } })).toEqual({
       ok: false,
       error: "invalidProduction",

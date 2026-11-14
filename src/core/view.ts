@@ -8,7 +8,8 @@
  * scores) must be added here, and only in the form a human could see it.
  */
 import type { Point } from "./geometry";
-import type { TerrainId } from "./rules";
+import { builtWonders, researchCost } from "./economy";
+import type { BuildingId, TechId, TerrainId } from "./rules";
 import type { City, GameState, PlayerId, Unit } from "./state";
 
 export interface PlayerView {
@@ -32,6 +33,17 @@ export interface PlayerView {
   playerNames: string[];
   units: Unit[];
   cities: City[];
+  /** The player's own economy, as shown in the top bar. */
+  economy: {
+    techs: TechId[];
+    researching: TechId | null;
+    research: number;
+    researchCost: number;
+    gold: number;
+    scienceRate: number;
+  };
+  /** Wonders already standing somewhere; every player hears when one is finished. */
+  builtWonders: BuildingId[];
 }
 
 export function playerView(state: GameState, playerId: PlayerId): PlayerView {
@@ -53,5 +65,14 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     // Only own units and cities until other players can be met.
     units: state.units.filter((u) => u.owner === playerId).map((u) => ({ ...u })),
     cities: state.cities.filter((c) => c.owner === playerId).map((c) => ({ ...c })),
+    economy: {
+      techs: [...player.techs],
+      researching: player.researching,
+      research: player.research,
+      researchCost: researchCost(player),
+      gold: player.gold,
+      scienceRate: player.scienceRate,
+    },
+    builtWonders: builtWonders(state),
   };
 }

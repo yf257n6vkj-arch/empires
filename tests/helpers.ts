@@ -1,4 +1,4 @@
-import { STATE_VERSION, type GameState, type TerrainId, type Unit, type UnitTypeId } from "../src/core";
+import { startingEconomy, STATE_VERSION, type GameState, type TerrainId, type Unit, type UnitTypeId } from "../src/core";
 import { Rng, fullMoves } from "../src/core";
 
 const LEGEND: Record<string, TerrainId> = {
@@ -39,6 +39,7 @@ export function stateFromAscii(rows: string[], players = 1): GameState {
       start: { x: 0, y: 0 },
       explored: id === 0 ? new Array<number>(width * height).fill(1) : zeros(),
       citiesFounded: 0,
+      ...startingEconomy(),
     })),
     units: [],
     cities: [],

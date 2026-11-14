@@ -1,5 +1,5 @@
 {
-  "_comment": "Obecné konstanty pravidel. movesFraction: pohyb se počítá v třetinách, cesta stojí jednu třetinu.",
+  "_comment": "Obecné konstanty pravidel. movesFraction: pohyb se počítá v třetinách, cesta stojí jednu třetinu. contentBase: kolik obyvatel je spokojených bez pomoci. maxCitySize: největší město bez akvaduktu. Cena výzkumu = researchCostBase + researchCostPerTech × počet známých technologií. Nákup zbytku výroby stojí buyPerShield × r + r² / buyQuadratic zlata (r = chybějící štíty), dvojnásobek, když město ještě nic nevyrobilo, a dvojnásobek u divů.",
   "maxTurns": 120,
   "movesFraction": 3,
   "roadMoveCost": 1,
@@ -9,5 +9,17 @@
   "foodPerCitizen": 2,
   "growthFoodBase": 10,
   "cityCenterMinShields": 1,
-  "startingUnits": ["settlers", "warriors"]
+  "startingUnits": ["settlers", "warriors"],
+  "contentBase": 4,
+  "martialLawMax": 3,
+  "maxCitySize": 8,
+  "researchCostBase": 20,
+  "researchCostPerTech": 10,
+  "startingGold": 30,
+  "startingScienceRate": 50,
+  "rateStep": 10,
+  "buyPerShield": 2,
+  "buyQuadratic": 20,
+  "buyEmptyMultiplier": 2,
+  "buyWonderMultiplier": 2
 }

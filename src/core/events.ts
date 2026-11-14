@@ -3,7 +3,7 @@
  * only; the screen turns them into Czech text, the AI can read them directly.
  */
 import type { Point } from "./geometry";
-import type { BuildingId, ImprovementId, UnitTypeId } from "./rules";
+import type { BuildingId, ImprovementId, TechId, UnitTypeId } from "./rules";
 import type { CityId, PlayerId, ProductionItem, UnitId } from "./state";
 
 export type GameEvent =
@@ -16,4 +16,10 @@ export type GameEvent =
   | { type: "productionNeeded"; cityId: CityId }
   | { type: "improvementDone"; unitId: UnitId; at: Point; improvement: ImprovementId }
   | { type: "gotoBlocked"; unitId: UnitId }
-  | { type: "turnStarted"; turn: number; player: PlayerId };
+  | { type: "turnStarted"; turn: number; player: PlayerId }
+  | { type: "wonderBuilt"; cityId: CityId; owner: PlayerId; building: BuildingId }
+  | { type: "buildingSold"; cityId: CityId; building: BuildingId }
+  | { type: "cityDisorder"; cityId: CityId }
+  | { type: "cityAtMaxSize"; cityId: CityId; size: number }
+  | { type: "techLearned"; player: PlayerId; tech: TechId }
+  | { type: "researchNeeded"; player: PlayerId };

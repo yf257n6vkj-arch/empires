@@ -8,6 +8,7 @@ import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
 import { RULES } from "./rules";
 import { chooseStartPositions } from "./start";
+import { startingEconomy } from "./economy";
 import { STATE_VERSION, type GameState, type Player, type Unit } from "./state";
 import { fullMoves, reveal } from "./world";
 
@@ -35,6 +36,7 @@ export function newGame(options: NewGameOptions): GameState {
     start,
     explored: new Array<number>(map.width * map.height).fill(0),
     citiesFounded: 0,
+    ...startingEconomy(),
   }));
 
   const state: GameState = {
@@ -88,4 +90,19 @@ export function passComputerTurns(state: GameState): { state: GameState; events:
     events.push(...result.events);
   }
   return { state: current, events };
+}
+
+/**
+ * Brings a saved game from an older version up to date, or returns null when
+ * that is not possible. Version 2 saves only lack the economy of phase 2.
+ */
+export function migrateState(saved: { version?: number } & Record<string, unknown>): GameState | null {
+  if (saved.version === STATE_VERSION) return saved as unknown as GameState;
+  if (saved.version === 2) {
+    const state = JSON.parse(JSON.stringify(saved)) as GameState;
+    state.version = STATE_VERSION;
+    state.players = state.players.map((p) => ({ ...startingEconomy(), ...p }));
+    return state;
+  }
+  return null;
 }

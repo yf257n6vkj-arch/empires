@@ -1,0 +1,29 @@
+{
+  "_comment": "era 1 až 4. requires = technologie, které musí hráč znát předem. Co technologie odemyká, říkají jednotky a budovy v poli requires. Cena výzkumu je v game.json.",
+  "techs": [
+    { "id": "pottery", "name": "Hrnčířství", "era": 1, "requires": [] },
+    { "id": "bronze", "name": "Zpracování bronzu", "era": 1, "requires": [] },
+    { "id": "masonry", "name": "Zednictví", "era": 1, "requires": [] },
+    { "id": "ceremonies", "name": "Obřady", "era": 1, "requires": [] },
+    { "id": "horseback", "name": "Jízda na koni", "era": 1, "requires": [] },
+    { "id": "writing", "name": "Písmo", "era": 1, "requires": [] },
+    { "id": "iron", "name": "Zpracování železa", "era": 2, "requires": ["bronze"] },
+    { "id": "archery", "name": "Lukostřelba", "era": 2, "requires": ["bronze", "horseback"] },
+    { "id": "currency", "name": "Peníze", "era": 2, "requires": ["bronze", "writing"] },
+    { "id": "mathematics", "name": "Matematika", "era": 2, "requires": ["writing", "masonry"] },
+    { "id": "mysticism", "name": "Mystika", "era": 2, "requires": ["ceremonies", "writing"] },
+    { "id": "construction", "name": "Stavebnictví", "era": 2, "requires": ["masonry", "pottery"] },
+    { "id": "engineering", "name": "Inženýrství", "era": 3, "requires": ["construction", "mathematics"] },
+    { "id": "philosophy", "name": "Filozofie", "era": 3, "requires": ["mysticism", "currency"] },
+    { "id": "chivalry", "name": "Rytířství", "era": 3, "requires": ["iron", "archery"] },
+    { "id": "astronomy", "name": "Astronomie", "era": 3, "requires": ["mathematics", "mysticism"] },
+    { "id": "banking", "name": "Bankovnictví", "era": 3, "requires": ["currency", "philosophy"] },
+    { "id": "scholarship", "name": "Vysoké učení", "era": 3, "requires": ["philosophy", "astronomy"] },
+    { "id": "gunpowder", "name": "Střelný prach", "era": 4, "requires": ["engineering", "iron"] },
+    { "id": "metallurgy", "name": "Metalurgie", "era": 4, "requires": ["gunpowder", "scholarship"] },
+    { "id": "conscription", "name": "Branná povinnost", "era": 4, "requires": ["gunpowder", "banking"] },
+    { "id": "industry", "name": "Průmysl", "era": 4, "requires": ["banking", "metallurgy"] },
+    { "id": "combustion", "name": "Spalovací motor", "era": 4, "requires": ["industry", "conscription"] },
+    { "id": "modernScience", "name": "Moderní věda", "era": 4, "requires": ["combustion", "scholarship"] }
+  ]
+}

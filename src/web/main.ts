@@ -48,9 +48,13 @@ function render(): void {
 function startGame(seed: string): void {
   game = newGame({ seed, playerCount: PLAYER_COUNT });
   seedInput.value = seed;
-  const url = new URL(window.location.href);
-  url.hash = `seed=${encodeURIComponent(seed)}`;
-  history.replaceState(null, "", url);
+  try {
+    const url = new URL(window.location.href);
+    url.hash = `seed=${encodeURIComponent(seed)}`;
+    history.replaceState(null, "", url);
+  } catch {
+    // Some embedded viewers do not allow changing the address; the seed field is enough.
+  }
   ctx = setupCanvas(canvas, game.map.width, game.map.height);
   render();
   fillLegend();

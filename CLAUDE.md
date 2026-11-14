@@ -1,6 +1,6 @@
 # Empires
 
-Browser turn-based strategy in the style of Civilization 1, built by Michal with Claude. The full brief lives in the claude.ai project "Empires"; AI design notes are in the project doc `claude/ai-poznamky-unciv-freeciv.md`.
+Browser turn-based strategy in the style of Civilization 1, built by Michal with Claude. The full brief lives in the claude.ai project "Empires"; AI design notes are in the project doc `claude/ai-poznamky-unciv-freeciv.md`. Decisions agreed with Michal are logged in `docs/rozhodnuti.md` (newest first); add every new one there.
 
 ## Commands
 

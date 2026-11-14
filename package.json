@@ -1,0 +1,35 @@
+{
+  "name": "empires",
+  "version": "0.0.1",
+  "description": "Tahová strategie do prohlížeče ve stylu Civilizace 1",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.core.json",
+    "check-maps": "tsx tools/check-maps.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yf257n6vkj-arch/empires.git"
+  },
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/yf257n6vkj-arch/empires/issues"
+  },
+  "homepage": "https://github.com/yf257n6vkj-arch/empires#readme",
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.6",
+    "vitest": "^3.2.7"
+  },
+  "private": true,
+  "type": "module"
+}

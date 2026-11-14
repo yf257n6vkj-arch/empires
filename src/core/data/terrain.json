@@ -1,0 +1,12 @@
+{
+  "_comment": "Výnosy a pohyb podle Civilizace 1, obranné bonusy jsou zatím provizorní a doladíme je ve fázi pravidel. defenseBonus je v procentech.",
+  "terrains": [
+    { "id": "ocean",     "name": "Oceán",  "food": 1, "shields": 0, "trade": 2, "moveCost": 1, "defenseBonus": 0,   "land": false },
+    { "id": "grassland", "name": "Louka",  "food": 2, "shields": 0, "trade": 0, "moveCost": 1, "defenseBonus": 0,   "land": true },
+    { "id": "plains",    "name": "Pláně",  "food": 1, "shields": 1, "trade": 0, "moveCost": 1, "defenseBonus": 0,   "land": true },
+    { "id": "forest",    "name": "Les",    "food": 1, "shields": 2, "trade": 0, "moveCost": 2, "defenseBonus": 25,  "land": true },
+    { "id": "hills",     "name": "Kopce",  "food": 1, "shields": 0, "trade": 0, "moveCost": 2, "defenseBonus": 50,  "land": true },
+    { "id": "mountains", "name": "Hory",   "food": 0, "shields": 1, "trade": 0, "moveCost": 3, "defenseBonus": 100, "land": true },
+    { "id": "desert",    "name": "Poušť",  "food": 0, "shields": 1, "trade": 0, "moveCost": 1, "defenseBonus": 0,   "land": true }
+  ]
+}

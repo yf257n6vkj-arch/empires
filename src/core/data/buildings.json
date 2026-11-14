@@ -1,0 +1,6 @@
+{
+  "_comment": "keepFoodOnGrowth = podíl zásoby jídla, který město po růstu podrží (sýpka).",
+  "buildings": [
+    { "id": "granary", "name": "Sýpka", "cost": 60, "upkeep": 1, "keepFoodOnGrowth": 0.5 }
+  ]
+}

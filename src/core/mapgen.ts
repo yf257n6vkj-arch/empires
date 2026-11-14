@@ -52,7 +52,15 @@ export function generateMap(rng: Rng, options: MapOptions = DEFAULT_MAP_OPTIONS)
     const land = generateLandMask(rng, size, options);
     const landCount = land.reduce((n, v) => n + (v ? 1 : 0), 0);
     if (landCount >= targetLand * MIN_LAND_RATIO) {
-      return { width: size.width, height: size.height, terrain: assignTerrain(rng, size, land, options) };
+      const empty = () => new Array<number>(size.width * size.height).fill(0);
+      return {
+        width: size.width,
+        height: size.height,
+        terrain: assignTerrain(rng, size, land, options),
+        road: empty(),
+        irrigation: empty(),
+        mine: empty(),
+      };
     }
   }
   throw new Error("generateMap: could not create a large enough continent");

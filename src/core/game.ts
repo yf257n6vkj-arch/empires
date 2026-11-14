@@ -1,51 +1,91 @@
 /**
- * Creating a game and advancing turns. Everything here is pure: the input
- * state is never modified, a new state is returned.
+ * Creating a game. Everything in the core is pure: the input state is never
+ * modified, a new state is returned.
  */
-import { tilesInRadius } from "./geometry";
+import { applyCommand } from "./commands";
+import type { GameEvent } from "./events";
 import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
+import { RULES } from "./rules";
 import { chooseStartPositions } from "./start";
-import { STATE_VERSION, type GameState, type Player } from "./state";
+import { STATE_VERSION, type GameState, type Player, type Unit } from "./state";
+import { fullMoves, reveal } from "./world";
 
 export interface NewGameOptions {
   seed: string;
   /** Number of players including the human, who is always player 0. */
   playerCount: number;
   map?: MapOptions;
+  /**
+   * Whether computer players get starting units. Off until the AI exists,
+   * so in phase 1 the human explores the continent alone.
+   */
+  opponentUnits?: boolean;
 }
-
-/** Radius a starting player has already seen (a unit sees 1 tile around it). */
-export const START_SIGHT = 1;
 
 export function newGame(options: NewGameOptions): GameState {
   const rng = Rng.fromSeed(options.seed);
   const map = generateMap(rng.fork("map"), options.map ?? DEFAULT_MAP_OPTIONS);
   const starts = chooseStartPositions(map, options.playerCount, rng.fork("starts"));
 
-  const players: Player[] = starts.map((start, id) => {
-    const explored = new Array<number>(map.width * map.height).fill(0);
-    for (const i of tilesInRadius(map, start, START_SIGHT)) explored[i] = 1;
-    return {
-      id,
-      name: id === 0 ? "Hráč" : `Soupeř ${id}`,
-      isHuman: id === 0,
-      start,
-      explored,
-    };
-  });
+  const players: Player[] = starts.map((start, id) => ({
+    id,
+    name: id === 0 ? "Hráč" : `Soupeř ${id}`,
+    isHuman: id === 0,
+    start,
+    explored: new Array<number>(map.width * map.height).fill(0),
+    citiesFounded: 0,
+  }));
 
-  return {
+  const state: GameState = {
     version: STATE_VERSION,
     seed: options.seed,
     rng: rng.getState(),
     turn: 1,
+    currentPlayer: 0,
+    nextId: 1,
     map,
     players,
+    units: [],
+    cities: [],
   };
+
+  for (const player of players) {
+    reveal(state, player.id, player.start, RULES.unitSight);
+    if (!player.isHuman && !options.opponentUnits) continue;
+    for (const type of RULES.startingUnits) {
+      const unit: Unit = {
+        id: state.nextId++,
+        owner: player.id,
+        type,
+        x: player.start.x,
+        y: player.start.y,
+        movesLeft: 0,
+        homeCity: null,
+        fortified: false,
+        work: null,
+        goto: null,
+      };
+      unit.movesLeft = fullMoves(unit);
+      state.units.push(unit);
+    }
+  }
+  return state;
 }
 
-/** Placeholder for the turn function; phase 1 adds units, cities and commands. */
-export function endTurn(state: GameState): GameState {
-  return { ...state, turn: state.turn + 1 };
+/**
+ * Ends the turns of all computer players until a human is on turn again.
+ * Placeholder until the AI exists: computer players do nothing yet.
+ */
+export function passComputerTurns(state: GameState): { state: GameState; events: GameEvent[] } {
+  let current = state;
+  const events: GameEvent[] = [];
+  let guard = current.players.length;
+  while (!current.players[current.currentPlayer]?.isHuman && guard-- > 0) {
+    const result = applyCommand(current, { type: "endTurn" });
+    if (!result.ok) break;
+    current = result.state;
+    events.push(...result.events);
+  }
+  return { state: current, events };
 }

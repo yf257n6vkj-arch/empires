@@ -10,34 +10,47 @@
   <body>
     <header>
       <h1>Empires</h1>
-      <span class="phase">fáze 0 · generátor mapy</span>
+      <span class="phase">fáze 1 · průzkum a první města</span>
+      <span class="spacer"></span>
+      <span id="turn" class="turn"></span>
+      <button id="end-turn" type="button" class="primary">Konec tahu</button>
     </header>
+    <div id="status" class="status" aria-live="polite"></div>
     <main>
       <div class="map-wrap">
         <canvas id="map"></canvas>
         <div id="tooltip" hidden></div>
       </div>
       <aside>
+        <section id="selection"></section>
         <section>
-          <label for="seed">Semeno mapy</label>
-          <div class="row">
-            <input id="seed" type="text" spellcheck="false" />
-            <button id="generate" type="button">Vytvořit</button>
-          </div>
-          <button id="random" type="button" class="wide">Nová náhodná mapa</button>
+          <h2>Co se stalo</h2>
+          <ol id="log" class="log"></ol>
         </section>
         <section>
-          <label for="view">Co vidím</label>
-          <select id="view"></select>
-          <p class="hint">Pohled hráče ukazuje jen to, co hráč na začátku zná. Přesně tohle dostane i AI.</p>
+          <details>
+            <summary>Ovládání</summary>
+            <ul class="help">
+              <li>Klikni na svou jednotku nebo město a vyber ho.</li>
+              <li>Klik na sousední políčko jednotku posune, klik dál ji tam pošle i na víc tahů.</li>
+              <li>Šipky nebo číslice 1 až 9 posouvají vybranou jednotku.</li>
+              <li><kbd>B</kbd> založit město, <kbd>R</kbd> cesta, <kbd>I</kbd> zavlažování, <kbd>M</kbd> důl</li>
+              <li><kbd>F</kbd> opevnit, <kbd>mezerník</kbd> nechat jednotku do příštího tahu, <kbd>N</kbd> další jednotka</li>
+              <li><kbd>Enter</kbd> konec tahu, <kbd>Esc</kbd> zrušit výběr</li>
+            </ul>
+          </details>
         </section>
         <section>
-          <h2>Terén</h2>
-          <table id="legend"></table>
-        </section>
-        <section>
-          <h2>Mapa</h2>
-          <dl id="stats"></dl>
+          <details>
+            <summary>Hra</summary>
+            <p class="hint">Hra se ukládá sama po každém kroku. Semeno této mapy: <b id="seed-label"></b></p>
+            <label for="seed">Nová hra se semenem (prázdné = náhodné)</label>
+            <div class="row">
+              <input id="seed" type="text" spellcheck="false" />
+              <button id="new-game" type="button">Nová hra</button>
+            </div>
+            <label class="check"><input id="show-all" type="checkbox" /> Ukázat celou mapu (ladění)</label>
+          </details>
         </section>
       </aside>
     </main>

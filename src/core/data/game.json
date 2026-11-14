@@ -1,0 +1,13 @@
+{
+  "_comment": "Obecné konstanty pravidel. movesFraction: pohyb se počítá v třetinách, cesta stojí jednu třetinu.",
+  "maxTurns": 120,
+  "movesFraction": 3,
+  "roadMoveCost": 1,
+  "unitSight": 1,
+  "citySight": 2,
+  "minCityDistance": 2,
+  "foodPerCitizen": 2,
+  "growthFoodBase": 10,
+  "cityCenterMinShields": 1,
+  "startingUnits": ["settlers", "warriors"]
+}

@@ -20,12 +20,44 @@ export const PLAYER_COLORS = ["#f2f2f2", "#e0533d", "#4aa3df", "#e3b23c"];
 
 const UNKNOWN = "#121417";
 
+export interface DrawUnit {
+  id: number;
+  owner: number;
+  type: "settlers" | "warriors";
+  x: number;
+  y: number;
+  fortified: boolean;
+  working: boolean;
+  hasMoves: boolean;
+}
+
+export interface DrawCity {
+  id: number;
+  owner: number;
+  name: string;
+  x: number;
+  y: number;
+  size: number;
+}
+
 export interface DrawInput {
   width: number;
   height: number;
   /** null = not explored by the viewer */
   terrain: (TerrainId | null)[];
+  road: number[];
+  irrigation: number[];
+  mine: number[];
+  units: DrawUnit[];
+  cities: DrawCity[];
+  /** Start markers, only used by the map preview. */
   starts: { point: Point; playerId: number }[];
+  selectedUnitId?: number | null;
+  selectedCityId?: number | null;
+  /** Tiles to outline, e.g. tiles worked by the selected city. */
+  highlight?: number[];
+  /** Planned route of the selected unit. */
+  path?: Point[];
 }
 
 export function setupCanvas(canvas: HTMLCanvasElement, width: number, height: number): CanvasRenderingContext2D {
@@ -56,6 +88,7 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   }
 
   drawCoast(ctx, input);
+  drawImprovements(ctx, input);
 
   // Faint grid so single tiles can be counted.
   ctx.strokeStyle = "rgba(0, 0, 0, 0.12)";
@@ -71,7 +104,177 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   }
   ctx.stroke();
 
+  for (const i of input.highlight ?? []) {
+    const x = (i % width) * TILE;
+    const y = Math.floor(i / width) * TILE;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 2, y + 2, TILE - 4, TILE - 4);
+  }
+
+  if (input.path && input.path.length > 0) drawPath(ctx, input);
   for (const s of input.starts) drawStart(ctx, s.point, s.playerId);
+  for (const c of input.cities) drawCity(ctx, c, c.id === input.selectedCityId);
+  drawUnits(ctx, input);
+  for (const c of input.cities) drawCityLabel(ctx, c, width);
+}
+
+function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void {
+  const { width, height } = input;
+  const cityTiles = new Set(input.cities.map((c) => c.y * width + c.x));
+  const roadAt = (x: number, y: number) =>
+    x >= 0 && y >= 0 && x < width && y < height && (input.road[y * width + x] === 1 || cityTiles.has(y * width + x));
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = y * width + x;
+      const px = x * TILE;
+      const py = y * TILE;
+      if (input.irrigation[i]) {
+        ctx.strokeStyle = "rgba(60, 140, 220, 0.85)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (const off of [6, 12, 18]) {
+          ctx.moveTo(px + 3, py + off);
+          ctx.lineTo(px + TILE - 3, py + off);
+        }
+        ctx.stroke();
+      }
+      if (input.mine[i]) {
+        ctx.fillStyle = "#2b2b2b";
+        ctx.beginPath();
+        ctx.moveTo(px + 12, py + 13);
+        ctx.lineTo(px + 18, py + 21);
+        ctx.lineTo(px + 6, py + 21);
+        ctx.closePath();
+        ctx.fill();
+      }
+      if (input.road[i] && !cityTiles.has(i)) {
+        ctx.strokeStyle = "#7a5530";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        let connected = false;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if ((dx || dy) && roadAt(x + dx, y + dy)) {
+              ctx.moveTo(px + TILE / 2, py + TILE / 2);
+              ctx.lineTo(px + TILE / 2 + (dx * TILE) / 2, py + TILE / 2 + (dy * TILE) / 2);
+              connected = true;
+            }
+          }
+        }
+        ctx.stroke();
+        if (!connected) {
+          ctx.fillStyle = "#7a5530";
+          ctx.fillRect(px + TILE / 2 - 2, py + TILE / 2 - 2, 4, 4);
+        }
+      }
+    }
+  }
+}
+
+function drawPath(ctx: CanvasRenderingContext2D, input: DrawInput): void {
+  const unit = input.units.find((u) => u.id === input.selectedUnitId);
+  if (!unit || !input.path) return;
+  ctx.strokeStyle = "rgba(255, 230, 120, 0.9)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(unit.x * TILE + TILE / 2, unit.y * TILE + TILE / 2);
+  for (const p of input.path) ctx.lineTo(p.x * TILE + TILE / 2, p.y * TILE + TILE / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  const end = input.path[input.path.length - 1]!;
+  ctx.fillStyle = "rgba(255, 230, 120, 0.9)";
+  ctx.beginPath();
+  ctx.arc(end.x * TILE + TILE / 2, end.y * TILE + TILE / 2, 3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawCity(ctx: CanvasRenderingContext2D, c: DrawCity, selected: boolean): void {
+  const px = c.x * TILE;
+  const py = c.y * TILE;
+  ctx.fillStyle = PLAYER_COLORS[c.owner % PLAYER_COLORS.length] ?? "#fff";
+  ctx.strokeStyle = selected ? "#ffd84a" : "#111";
+  ctx.lineWidth = selected ? 3 : 2;
+  ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+  ctx.strokeRect(px + 2, py + 2, TILE - 4, TILE - 4);
+  // Simple wall battlements on top.
+  ctx.fillStyle = "#111";
+  for (const bx of [4, 10, 16]) ctx.fillRect(px + bx, py + 2, 4, 3);
+  ctx.font = "bold 12px ui-sans-serif, system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(String(c.size), px + TILE / 2, py + TILE / 2 + 2);
+}
+
+function drawCityLabel(ctx: CanvasRenderingContext2D, c: DrawCity, width: number): void {
+  ctx.font = "600 11px ui-sans-serif, system-ui, sans-serif";
+  const text = c.name;
+  const w = ctx.measureText(text).width + 8;
+  let x = c.x * TILE + TILE / 2 - w / 2;
+  x = Math.max(1, Math.min(x, width * TILE - w - 1));
+  const y = c.y * TILE + TILE + 1;
+  ctx.fillStyle = "rgba(15, 17, 20, 0.8)";
+  ctx.fillRect(x, y, w, 14);
+  ctx.fillStyle = "#f1eee8";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, x + 4, y + 7.5);
+}
+
+const UNIT_LETTER: Record<DrawUnit["type"], string> = { settlers: "O", warriors: "V" };
+
+function drawUnits(ctx: CanvasRenderingContext2D, input: DrawInput): void {
+  const byTile = new Map<number, DrawUnit[]>();
+  for (const u of input.units) {
+    const key = u.y * input.width + u.x;
+    byTile.set(key, [...(byTile.get(key) ?? []), u]);
+  }
+  for (const [, units] of byTile) {
+    // Show the selected unit on top of its stack, otherwise the first one.
+    const top = units.find((u) => u.id === input.selectedUnitId) ?? units[0]!;
+    const inCity = input.cities.some((c) => c.x === top.x && c.y === top.y);
+    const size = inCity ? 13 : 17;
+    const px = top.x * TILE + (inCity ? TILE - size - 1 : (TILE - size) / 2);
+    const py = top.y * TILE + (inCity ? TILE - size - 1 : (TILE - size) / 2);
+    const selected = top.id === input.selectedUnitId;
+
+    ctx.fillStyle = PLAYER_COLORS[top.owner % PLAYER_COLORS.length] ?? "#fff";
+    ctx.globalAlpha = top.hasMoves || selected ? 1 : 0.75;
+    ctx.beginPath();
+    ctx.roundRect(px, py, size, size, 3);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = selected ? "#ffd84a" : "#111";
+    ctx.lineWidth = selected ? 2.5 : 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = "#111";
+    ctx.font = `bold ${inCity ? 9 : 11}px ui-sans-serif, system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(UNIT_LETTER[top.type], px + size / 2, py + size / 2 + 0.5);
+
+    if (top.fortified) {
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(px - 2, py - 2, size + 4, size + 4);
+    }
+    if (top.working) {
+      ctx.fillStyle = "#ffd84a";
+      ctx.fillRect(px + 2, py + size - 3, size - 4, 2);
+    }
+    if (units.length > 1) {
+      ctx.fillStyle = "#111";
+      ctx.beginPath();
+      ctx.arc(px + size, py, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 8px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText(String(units.length), px + size, py + 0.5);
+    }
+  }
 }
 
 /** Small deterministic jitter so symbols do not look stamped. */

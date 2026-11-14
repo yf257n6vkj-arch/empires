@@ -10,7 +10,7 @@
  * The camera (see camera.ts) zooms and moves the view. Only the tiles in view
  * are drawn into the background, so moving a zoomed map stays fast.
  */
-import type { Point, TerrainId } from "../core";
+import type { Point, TerrainId, UnitTypeId } from "../core";
 import { DEFAULT_CAMERA, type Camera } from "./camera";
 
 /** Tile size in design units. */
@@ -34,7 +34,7 @@ const INK = "#1c1a17";
 export interface DrawUnit {
   id: number;
   owner: number;
-  type: "settlers" | "warriors";
+  type: UnitTypeId;
   x: number;
   y: number;
   fortified: boolean;
@@ -51,6 +51,8 @@ export interface DrawCity {
   x: number;
   y: number;
   size: number;
+  /** The city has built its walls. */
+  walls: boolean;
 }
 
 export interface DrawInput {
@@ -1149,9 +1151,22 @@ function drawCity(ctx: CanvasRenderingContext2D, c: DrawCity, selected: boolean)
   const ox = c.x * TILE + TILE / 2;
   const oy = c.y * TILE + TILE - 2;
   const color = playerColor(c.owner);
-  const layout = cityLayout(c.size);
   const rx = c.size >= 6 ? 15 : c.size >= 3 ? 14 : 11;
   const ry = c.size >= 6 ? 7 : 6;
+  // Stone walls with towers only when the city has built them, otherwise a palisade.
+  const base = cityLayout(c.size);
+  const layout: CityLayout = c.walls
+    ? {
+        ...base,
+        wall: "stone",
+        frontTowers: base.frontTowers.length
+          ? base.frontTowers
+          : [
+              { x: -rx - 0.5, y: -1.5, r: 2.4, h: 8 },
+              { x: rx + 0.5, y: -1.5, r: 2.4, h: 8 },
+            ],
+      }
+    : { ...base, wall: "palisade", frontTowers: [], buildings: base.buildings.filter((b) => b.kind !== "tower") };
   const cy = oy - ry - 1;
 
   ctx.save();
@@ -1584,7 +1599,7 @@ function drawMiniature(
   stack: number,
 ): void {
   const color = playerColor(u.owner);
-  const wide = u.type === "settlers";
+  const wide = WIDE_UNITS.includes(u.type);
   const brx = (wide ? 10.5 : 7.2) * s;
   const bry = (wide ? 3 : 2.6) * s;
   const bcx = fx + (wide ? -1.2 * s : 0);
@@ -1633,8 +1648,7 @@ function drawMiniature(
   ctx.save();
   ctx.translate(fx, fy);
   ctx.scale(s, s);
-  if (u.type === "warriors") drawWarriorFigure(ctx, color);
-  else drawSettlerFigure(ctx, color, u.working);
+  drawUnitFigure(ctx, u, color);
   ctx.restore();
 
   if (u.fortified) {
@@ -1672,6 +1686,38 @@ function drawMiniature(
 }
 
 /** Warrior in a tunic of the player's colour, with a club and a wooden shield. Origin at the feet. */
+/** Units drawn on a wide base: wagons, riders and machines. */
+const WIDE_UNITS: UnitTypeId[] = ["settlers", "horsemen", "knights", "catapult", "cannon", "tank"];
+
+function drawUnitFigure(ctx: CanvasRenderingContext2D, u: DrawUnit, color: string): void {
+  switch (u.type) {
+    case "settlers":
+      return drawSettlerFigure(ctx, color, u.working);
+    case "warriors":
+      return drawWarriorFigure(ctx, color);
+    case "spearmen":
+      return drawSpearmanFigure(ctx, color);
+    case "archers":
+      return drawArcherFigure(ctx, color);
+    case "swordsmen":
+      return drawSwordsmanFigure(ctx, color);
+    case "musketeers":
+      return drawGunFigure(ctx, color, false);
+    case "riflemen":
+      return drawGunFigure(ctx, color, true);
+    case "horsemen":
+      return drawHorsemanFigure(ctx, color);
+    case "knights":
+      return drawKnightFigure(ctx, color);
+    case "catapult":
+      return drawCatapultFigure(ctx, color);
+    case "cannon":
+      return drawCannonFigure(ctx, color);
+    case "tank":
+      return drawTankFigure(ctx, color);
+  }
+}
+
 function drawWarriorFigure(ctx: CanvasRenderingContext2D, color: string): void {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -1924,4 +1970,660 @@ function drawSettlerFigure(ctx: CanvasRenderingContext2D, color: string, working
     ctx.closePath();
     ctx.fill();
   }
+}
+
+// ---------- figures for the other unit types ----------
+
+const IRON = "#8d939a";
+const IRON_DARK = "#4d5359";
+const BRONZE = "#c08a3e";
+const LEATHER = "#7a5432";
+const OUTLINE = "rgba(25, 20, 15, 0.85)";
+
+type Helmet = "none" | "bronze" | "crest" | "hood" | "hat" | "steel";
+
+/** Legs, body and head of a foot soldier; origin at the feet. */
+function drawFootSoldier(
+  ctx: CanvasRenderingContext2D,
+  color: string,
+  opts: { helmet: Helmet; coat?: boolean; armor?: boolean; trousers?: string },
+): void {
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  // Legs.
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(-1.3, -6);
+  ctx.lineTo(-1.7, -0.6);
+  ctx.moveTo(1.3, -6);
+  ctx.lineTo(1.8, -0.6);
+  ctx.stroke();
+  ctx.strokeStyle = opts.trousers ?? SKIN;
+  ctx.lineWidth = 1.3;
+  ctx.stroke();
+  ctx.fillStyle = WOOD_DARK;
+  ctx.fillRect(-2.8, -1, 2, 1);
+  ctx.fillRect(1, -1, 2, 1);
+  // Body.
+  const body = ctx.createLinearGradient(-3.5, 0, 3.5, 0);
+  body.addColorStop(0, opts.armor ? "#c3c8cc" : shade(color, 1.05));
+  body.addColorStop(1, opts.armor ? "#7c8288" : shade(color, 0.72));
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(-2.8, -13);
+  ctx.lineTo(2.8, -13);
+  ctx.lineTo(opts.coat ? 4.2 : 3.6, opts.coat ? -3.6 : -5.4);
+  ctx.lineTo(opts.coat ? -4.2 : -3.6, opts.coat ? -3.6 : -5.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.55;
+  ctx.stroke();
+  if (opts.armor) {
+    // A sash in the player's colour over the armour.
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-2.6, -12.6);
+    ctx.lineTo(3, -6.2);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = opts.coat ? "#e9e1cc" : WOOD_DARK;
+  ctx.lineWidth = opts.coat ? 0.6 : 0.9;
+  ctx.beginPath();
+  if (opts.coat) {
+    ctx.moveTo(-2.6, -12.8);
+    ctx.lineTo(2.6, -8);
+    ctx.moveTo(2.6, -12.8);
+    ctx.lineTo(-2.6, -8);
+  } else {
+    ctx.moveTo(-3.2, -8.6);
+    ctx.lineTo(3.2, -8.6);
+  }
+  ctx.stroke();
+  // Head.
+  ctx.fillStyle = SKIN;
+  ctx.beginPath();
+  ctx.arc(0, -15.4, 2.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.fillStyle = "#2a1d14";
+  ctx.fillRect(-1.1, -15.3, 0.5, 0.5);
+  ctx.fillRect(0.6, -15.3, 0.5, 0.5);
+  drawHelmet(ctx, opts.helmet, color);
+}
+
+function drawHelmet(ctx: CanvasRenderingContext2D, helmet: Helmet, color: string): void {
+  switch (helmet) {
+    case "none":
+      ctx.fillStyle = HAIR;
+      ctx.beginPath();
+      ctx.arc(0, -15.6, 2.35, Math.PI * 1.05, Math.PI * 1.95);
+      ctx.closePath();
+      ctx.fill();
+      return;
+    case "bronze":
+    case "crest": {
+      ctx.fillStyle = helmet === "bronze" ? BRONZE : IRON;
+      ctx.beginPath();
+      ctx.arc(0, -15.8, 2.5, Math.PI, 0);
+      ctx.lineTo(2.5, -15);
+      ctx.lineTo(-2.5, -15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = OUTLINE;
+      ctx.lineWidth = 0.4;
+      ctx.stroke();
+      if (helmet === "crest") {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(-2.4, -17.6);
+        ctx.quadraticCurveTo(0, -20.6, 2.4, -17.6);
+        ctx.quadraticCurveTo(0, -18.6, -2.4, -17.6);
+        ctx.fill();
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
+      }
+      return;
+    }
+    case "hood":
+      ctx.fillStyle = "#5e6b3a";
+      ctx.beginPath();
+      ctx.arc(0, -15.6, 2.7, Math.PI * 0.95, Math.PI * 2.05);
+      ctx.lineTo(1.8, -13.6);
+      ctx.lineTo(-1.8, -13.6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = SKIN;
+      ctx.beginPath();
+      ctx.arc(0, -15, 1.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#2a1d14";
+      ctx.fillRect(-0.8, -15.3, 0.45, 0.45);
+      ctx.fillRect(0.4, -15.3, 0.45, 0.45);
+      return;
+    case "hat":
+      ctx.fillStyle = "#2b2622";
+      ctx.beginPath();
+      ctx.ellipse(0, -17, 3.6, 1, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-2.1, -17);
+      ctx.lineTo(-1.6, -19.2);
+      ctx.lineTo(1.6, -19.2);
+      ctx.lineTo(2.1, -17);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.fillRect(-2, -17.8, 4, 0.7);
+      return;
+    case "steel":
+      ctx.fillStyle = "#6b7154";
+      ctx.beginPath();
+      ctx.ellipse(0, -16.4, 3.4, 0.9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, -16.4, 2.3, Math.PI, 0);
+      ctx.fill();
+      ctx.strokeStyle = OUTLINE;
+      ctx.lineWidth = 0.4;
+      ctx.stroke();
+      return;
+  }
+}
+
+function drawSpearmanFigure(ctx: CanvasRenderingContext2D, color: string): void {
+  // Spear behind the body.
+  ctx.strokeStyle = WOOD;
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(4.2, 0.5);
+  ctx.lineTo(4.2, -21);
+  ctx.stroke();
+  ctx.fillStyle = BRONZE;
+  ctx.beginPath();
+  ctx.moveTo(4.2, -24);
+  ctx.lineTo(5.1, -21);
+  ctx.lineTo(3.3, -21);
+  ctx.closePath();
+  ctx.fill();
+  drawFootSoldier(ctx, color, { helmet: "bronze" });
+  // Hand on the spear.
+  ctx.fillStyle = SKIN;
+  ctx.beginPath();
+  ctx.arc(4.2, -11, 0.8, 0, Math.PI * 2);
+  ctx.fill();
+  // Large round shield in the player's colour with a bronze rim.
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(-3.4, -9.6, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = BRONZE;
+  ctx.lineWidth = 0.9;
+  ctx.stroke();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.35;
+  ctx.beginPath();
+  ctx.arc(-3.4, -9.6, 4.45, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = shade(color, 0.6);
+  ctx.beginPath();
+  ctx.arc(-3.4, -9.6, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawArcherFigure(ctx: CanvasRenderingContext2D, color: string): void {
+  // Quiver on the back.
+  ctx.fillStyle = LEATHER;
+  ctx.save();
+  ctx.translate(2.4, -12.5);
+  ctx.rotate(0.35);
+  ctx.fillRect(-0.9, -1, 1.8, 6);
+  ctx.restore();
+  ctx.strokeStyle = "#e9e1cc";
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  for (const dx of [2.2, 2.9, 3.6]) {
+    ctx.moveTo(dx, -13);
+    ctx.lineTo(dx + 0.5, -15);
+  }
+  ctx.stroke();
+  drawFootSoldier(ctx, color, { helmet: "hood" });
+  // Bow held out in front, string drawn.
+  ctx.strokeStyle = WOOD;
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.arc(-3.6, -10.4, 5.4, -Math.PI * 0.42, Math.PI * 0.42, false);
+  ctx.stroke();
+  const top = { x: -3.6 + 5.4 * Math.cos(-Math.PI * 0.42), y: -10.4 + 5.4 * Math.sin(-Math.PI * 0.42) };
+  const bottom = { x: top.x, y: -10.4 - (top.y + 10.4) };
+  ctx.strokeStyle = "#efe6cf";
+  ctx.lineWidth = 0.35;
+  ctx.beginPath();
+  ctx.moveTo(top.x, top.y);
+  ctx.lineTo(0.2, -10.4);
+  ctx.lineTo(bottom.x, bottom.y);
+  ctx.stroke();
+  // Arrow.
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 0.45;
+  ctx.beginPath();
+  ctx.moveTo(0.2, -10.4);
+  ctx.lineTo(3.4, -10.4);
+  ctx.stroke();
+  ctx.fillStyle = SKIN;
+  ctx.beginPath();
+  ctx.arc(1.8, -10.4, 0.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.fillRect(-3.6, -6.4, 7.2, 0.9);
+}
+
+function drawSwordsmanFigure(ctx: CanvasRenderingContext2D, color: string): void {
+  // Raised sword.
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(2.2, -12);
+  ctx.lineTo(4.2, -14.4);
+  ctx.stroke();
+  ctx.strokeStyle = SKIN;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.strokeStyle = "#dfe3e6";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(4.4, -14.6);
+  ctx.lineTo(6.8, -21);
+  ctx.stroke();
+  ctx.strokeStyle = BRONZE;
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(3.2, -14.9);
+  ctx.lineTo(5.4, -14.1);
+  ctx.stroke();
+  drawFootSoldier(ctx, color, { helmet: "crest" });
+  // Tall rectangular shield in the player's colour.
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(-6.4, -14, 5, 9.6, 1.2);
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.45;
+  ctx.stroke();
+  ctx.strokeStyle = BRONZE;
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(-3.9, -13.4);
+  ctx.lineTo(-3.9, -5);
+  ctx.moveTo(-6, -9.2);
+  ctx.lineTo(-1.8, -9.2);
+  ctx.stroke();
+  ctx.fillStyle = "#d8c08a";
+  ctx.beginPath();
+  ctx.arc(-3.9, -9.2, 0.9, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawGunFigure(ctx: CanvasRenderingContext2D, color: string, rifle: boolean): void {
+  drawFootSoldier(ctx, color, rifle ? { helmet: "steel", trousers: "#5d6248" } : { helmet: "hat", coat: true, trousers: "#e9e1cc" });
+  // Gun held diagonally across the body.
+  ctx.strokeStyle = WOOD;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(-2.8, -6.5);
+  ctx.lineTo(0.8, -10.4);
+  ctx.stroke();
+  ctx.strokeStyle = IRON_DARK;
+  ctx.lineWidth = 0.75;
+  ctx.beginPath();
+  ctx.moveTo(0.5, -10);
+  ctx.lineTo(5.4, -16.4);
+  ctx.stroke();
+  if (rifle) {
+    ctx.strokeStyle = "#cfd4d8";
+    ctx.lineWidth = 0.45;
+    ctx.beginPath();
+    ctx.moveTo(5.4, -16.4);
+    ctx.lineTo(6.6, -18.2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = SKIN;
+  ctx.beginPath();
+  ctx.arc(-1.4, -8, 0.8, 0, Math.PI * 2);
+  ctx.arc(1.8, -11.6, 0.8, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** A horse facing left, origin at the base centre. */
+function drawHorse(ctx: CanvasRenderingContext2D, coat: string, cloth: string | null): void {
+  ctx.strokeStyle = shade(coat, 0.6);
+  ctx.lineWidth = 1;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  for (const [x, dx] of [
+    [-5.6, -0.6],
+    [-4.2, 0.4],
+    [3.2, -0.4],
+    [4.6, 0.6],
+  ] as const) {
+    ctx.moveTo(x, -5);
+    ctx.lineTo(x + dx, -0.5);
+  }
+  ctx.stroke();
+  // Tail.
+  ctx.strokeStyle = shade(coat, 0.45);
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(6, -8);
+  ctx.quadraticCurveTo(8, -6.5, 7.2, -3.6);
+  ctx.stroke();
+  // Body.
+  const g = ctx.createLinearGradient(0, -10, 0, -4);
+  g.addColorStop(0, shade(coat, 1.15));
+  g.addColorStop(1, shade(coat, 0.8));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.ellipse(0, -7, 6.6, 2.9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.45;
+  ctx.stroke();
+  // Neck and head.
+  ctx.fillStyle = coat;
+  ctx.beginPath();
+  ctx.moveTo(-4.6, -8.6);
+  ctx.lineTo(-7.4, -13.6);
+  ctx.lineTo(-9.8, -12.4);
+  ctx.lineTo(-10, -11.2);
+  ctx.lineTo(-7.6, -11.4);
+  ctx.lineTo(-5.6, -6.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = shade(coat, 0.45);
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(-7, -13.4);
+  ctx.lineTo(-4.8, -9.4);
+  ctx.stroke();
+  ctx.fillStyle = "#1a1410";
+  ctx.fillRect(-8.6, -12.9, 0.5, 0.5);
+  if (cloth) {
+    // Caparison in the player's colour.
+    ctx.fillStyle = cloth;
+    ctx.beginPath();
+    ctx.moveTo(-5.2, -9);
+    ctx.lineTo(5.6, -9);
+    ctx.lineTo(6.2, -3.4);
+    ctx.lineTo(-5.8, -3.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = OUTLINE;
+    ctx.lineWidth = 0.4;
+    ctx.stroke();
+    ctx.fillStyle = "#e8d58a";
+    for (let x = -5; x < 6; x += 2.2) ctx.fillRect(x, -3.9, 1, 0.5);
+  }
+}
+
+function drawRider(ctx: CanvasRenderingContext2D, color: string, armored: boolean): void {
+  ctx.fillStyle = armored ? "#aeb3b8" : color;
+  ctx.beginPath();
+  ctx.moveTo(-1.6, -9);
+  ctx.lineTo(1.8, -9);
+  ctx.lineTo(1.4, -15);
+  ctx.lineTo(-1.2, -15);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.45;
+  ctx.stroke();
+  // Leg along the horse's side.
+  ctx.strokeStyle = armored ? "#7c8288" : SKIN;
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(0.2, -9);
+  ctx.lineTo(-0.6, -5.6);
+  ctx.stroke();
+  ctx.fillStyle = armored ? "#c3c8cc" : SKIN;
+  ctx.beginPath();
+  ctx.arc(0.1, -17, 1.9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.4;
+  ctx.stroke();
+  if (armored) {
+    ctx.fillStyle = "#2a2622";
+    ctx.fillRect(-1.6, -17.3, 2.4, 0.5);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0.1, -18.9);
+    ctx.quadraticCurveTo(2.6, -21, 3.4, -18.6);
+    ctx.quadraticCurveTo(1.8, -19.4, 0.1, -18.9);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = HAIR;
+    ctx.beginPath();
+    ctx.arc(0.1, -17.2, 1.95, Math.PI * 1.05, Math.PI * 1.95);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function drawHorsemanFigure(ctx: CanvasRenderingContext2D, color: string): void {
+  drawHorse(ctx, "#8a5b36", null);
+  drawRider(ctx, color, false);
+  // Javelin.
+  ctx.strokeStyle = WOOD;
+  ctx.lineWidth = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(3, -10);
+  ctx.lineTo(-5.4, -20);
+  ctx.stroke();
+  ctx.fillStyle = IRON;
+  ctx.beginPath();
+  ctx.moveTo(-6.4, -21.2);
+  ctx.lineTo(-4.8, -20.2);
+  ctx.lineTo(-5.8, -19.4);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawKnightFigure(ctx: CanvasRenderingContext2D, color: string): void {
+  drawHorse(ctx, "#d9d2c4", color);
+  drawRider(ctx, color, true);
+  // Lance pointing forward.
+  ctx.strokeStyle = "#cdbb93";
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(4, -11);
+  ctx.lineTo(-12.5, -16);
+  ctx.stroke();
+  ctx.fillStyle = IRON;
+  ctx.beginPath();
+  ctx.moveTo(-13.6, -16.4);
+  ctx.lineTo(-11.6, -16.6);
+  ctx.lineTo(-11.9, -15.3);
+  ctx.closePath();
+  ctx.fill();
+  // Small pennant.
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(-9.5, -15.3);
+  ctx.lineTo(-7.4, -14.6);
+  ctx.lineTo(-9.8, -13.6);
+  ctx.closePath();
+  ctx.fill();
+  // Shield on the arm.
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(-2.4, -14.4);
+  ctx.lineTo(0.6, -14.4);
+  ctx.lineTo(0.6, -11.4);
+  ctx.quadraticCurveTo(-0.9, -9.6, -2.4, -11.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#e8d58a";
+  ctx.lineWidth = 0.4;
+  ctx.stroke();
+}
+
+function drawSpokedWheel(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
+  ctx.fillStyle = WOOD_DARK;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#a07a4a";
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  for (let k = 0; k < 4; k++) {
+    const a = (k * Math.PI) / 4;
+    ctx.moveTo(x - Math.cos(a) * r * 0.7, y - Math.sin(a) * r * 0.7);
+    ctx.lineTo(x + Math.cos(a) * r * 0.7, y + Math.sin(a) * r * 0.7);
+  }
+  ctx.stroke();
+}
+
+function drawCatapultFigure(ctx: CanvasRenderingContext2D, color: string): void {
+  // Base frame.
+  ctx.fillStyle = WOOD;
+  ctx.fillRect(-8, -5, 15, 2.2);
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 0.45;
+  ctx.strokeRect(-8, -5, 15, 2.2);
+  // Uprights and cross beam.
+  ctx.strokeStyle = WOOD;
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  ctx.moveTo(-1, -5);
+  ctx.lineTo(-0.2, -12);
+  ctx.moveTo(2.4, -5);
+  ctx.lineTo(1.4, -12);
+  ctx.stroke();
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-1.6, -12);
+  ctx.lineTo(3, -12);
+  ctx.stroke();
+  // Throwing arm, cocked back.
+  ctx.strokeStyle = "#8f6a3d";
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(-6.4, -5.6);
+  ctx.lineTo(4.6, -15.4);
+  ctx.stroke();
+  ctx.fillStyle = WOOD_DARK;
+  ctx.beginPath();
+  ctx.ellipse(5.2, -16, 1.8, 1.1, -0.7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#9a948a";
+  ctx.beginPath();
+  ctx.arc(5.4, -16.6, 1.1, 0, Math.PI * 2);
+  ctx.fill();
+  // Rope and the player's colour on the frame.
+  ctx.strokeStyle = "#d9c9a0";
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  ctx.moveTo(-6, -5.2);
+  ctx.lineTo(0.6, -11.6);
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.fillRect(-7.6, -4.6, 3.2, 1.4);
+  drawSpokedWheel(ctx, -5, -2, 2.1);
+  drawSpokedWheel(ctx, 4.6, -2, 2.1);
+}
+
+function drawCannonFigure(ctx: CanvasRenderingContext2D, color: string): void {
+  // Trail of the carriage.
+  ctx.fillStyle = WOOD;
+  ctx.beginPath();
+  ctx.moveTo(1, -6);
+  ctx.lineTo(8.6, -1.2);
+  ctx.lineTo(7.6, -0.4);
+  ctx.lineTo(-0.4, -4.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 0.4;
+  ctx.stroke();
+  // Barrel.
+  const g = ctx.createLinearGradient(0, -10, 0, -6);
+  g.addColorStop(0, "#6e757c");
+  g.addColorStop(1, "#2f3439");
+  ctx.fillStyle = g;
+  ctx.save();
+  ctx.translate(1, -7.6);
+  ctx.rotate(-0.25);
+  ctx.beginPath();
+  ctx.moveTo(1.6, -1.8);
+  ctx.lineTo(-10, -1.1);
+  ctx.lineTo(-10, 1.1);
+  ctx.lineTo(1.6, 1.8);
+  ctx.quadraticCurveTo(3, 0, 1.6, -1.8);
+  ctx.fill();
+  ctx.fillStyle = "#1c1f22";
+  ctx.fillRect(-10.6, -1.3, 0.8, 2.6);
+  ctx.fillStyle = color;
+  ctx.fillRect(-4, -1.5, 1.1, 3);
+  ctx.restore();
+  drawSpokedWheel(ctx, 0.6, -3.4, 3.2);
+}
+
+function drawTankFigure(ctx: CanvasRenderingContext2D, color: string): void {
+  const hull = shade(color, 0.75);
+  // Tracks.
+  ctx.fillStyle = "#33373a";
+  ctx.beginPath();
+  ctx.roundRect(-10, -4.6, 19, 4.4, 2.2);
+  ctx.fill();
+  ctx.fillStyle = "#5d6266";
+  for (let x = -8; x <= 6; x += 3.5) {
+    ctx.beginPath();
+    ctx.arc(x, -2.4, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Hull.
+  const g = ctx.createLinearGradient(0, -9, 0, -4);
+  g.addColorStop(0, shade(color, 0.95));
+  g.addColorStop(1, hull);
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-10.6, -4.6);
+  ctx.lineTo(-8.4, -8.4);
+  ctx.lineTo(7.4, -8.4);
+  ctx.lineTo(9.6, -4.6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.45;
+  ctx.stroke();
+  // Turret and gun.
+  ctx.fillStyle = shade(color, 0.85);
+  ctx.beginPath();
+  ctx.moveTo(-4.4, -8.4);
+  ctx.lineTo(-3.4, -12);
+  ctx.lineTo(3.6, -12);
+  ctx.lineTo(4.6, -8.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = "#2f3439";
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(-3.6, -10.4);
+  ctx.lineTo(-13, -10.4);
+  ctx.stroke();
+  ctx.fillStyle = "#2f3439";
+  ctx.beginPath();
+  ctx.arc(1, -12.4, 0.9, Math.PI, 0);
+  ctx.fill();
 }

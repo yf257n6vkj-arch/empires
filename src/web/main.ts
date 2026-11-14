@@ -4,7 +4,9 @@
  */
 import {
   applyCommand,
+  buildingUpkeep,
   BUILDINGS,
+  buyCost,
   canBuildImprovement,
   canFoundCity,
   cityRadiusTiles,
@@ -12,6 +14,7 @@ import {
   distance,
   findPath,
   IMPROVEMENTS,
+  migrateState,
   newGame,
   passComputerTurns,
   planPath,
@@ -19,9 +22,12 @@ import {
   productionCost,
   productionName,
   productionOptions,
+  researchableTechs,
+  researchCost,
   RULES,
   sameItem,
   STATE_VERSION,
+  TECHS,
   TERRAINS,
   tileYield,
   UNIT_TYPES,
@@ -32,6 +38,7 @@ import {
   type ImprovementId,
   type Point,
   type ProductionItem,
+  type TechId,
   type Unit,
 } from "../core";
 import {
@@ -64,6 +71,13 @@ const seedInput = $<HTMLInputElement>("#seed");
 const seedLabel = $<HTMLElement>("#seed-label");
 const newGameButton = $<HTMLButtonElement>("#new-game");
 const showAllBox = $<HTMLInputElement>("#show-all");
+const researchButton = $<HTMLButtonElement>("#research");
+const goldLabel = $<HTMLSpanElement>("#gold");
+const rateInput = $<HTMLInputElement>("#rate");
+const rateLabel = $<HTMLSpanElement>("#rate-label");
+const researchPanel = $<HTMLElement>("#research-pick");
+const techDialog = $<HTMLDialogElement>("#tech-dialog");
+const techTree = $<HTMLDivElement>("#tech-tree");
 const zoomInButton = $<HTMLButtonElement>("#zoom-in");
 const zoomOutButton = $<HTMLButtonElement>("#zoom-out");
 const zoomResetButton = $<HTMLButtonElement>("#zoom-reset");
@@ -98,9 +112,10 @@ function load(): boolean {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return false;
-    const data = JSON.parse(raw) as { version: number; state: GameState; log: LogEntry[] };
-    if (data.version !== STATE_VERSION) return false;
-    state = data.state;
+    const data = JSON.parse(raw) as { version: number; state: Record<string, unknown>; log: LogEntry[] };
+    const loaded = migrateState(data.state);
+    if (!loaded) return false;
+    state = loaded;
     log = data.log ?? [];
     return true;
   } catch {
@@ -288,7 +303,15 @@ function buildDrawInput(): DrawInput {
       workProgress: u.work ? workShare(u) : undefined,
       hasMoves: needsOrders(u),
     })),
-    cities: view.cities.map((c) => ({ id: c.id, owner: c.owner, name: c.name, x: c.x, y: c.y, size: c.size })),
+    cities: view.cities.map((c) => ({
+      id: c.id,
+      owner: c.owner,
+      name: c.name,
+      x: c.x,
+      y: c.y,
+      size: c.size,
+      walls: c.buildings.includes("walls"),
+    })),
     starts: showAll ? state.players.slice(1).map((p) => ({ point: p.start, playerId: p.id })) : [],
     selectedUnitId,
     selectedCityId,
@@ -361,10 +384,147 @@ function refresh(): void {
   turnLabel.textContent = `Tah ${state.turn} z ${RULES.maxTurns}`;
   seedLabel.textContent = state.seed;
   const waiting = state.units.some(needsOrders);
-  endTurnButton.classList.toggle("ready", !waiting);
+  const choose = needsResearchChoice();
+  endTurnButton.classList.toggle("ready", !waiting && !choose);
+  renderEconomy();
+  renderResearchPick();
   renderSelection();
   renderLog();
+  if (techDialog.open) renderTechTree();
 }
+
+// ---------- economy and research ----------
+
+const ERA_NAMES = ["", "Starověk", "Antika", "Středověk", "Novověk"];
+
+function me() {
+  return state.players[HUMAN]!;
+}
+
+/** Science and gold the empire collects next turn, after building upkeep. */
+function empireTotals(): { science: number; gold: number; upkeep: number } {
+  let science = 0;
+  let gold = 0;
+  for (const c of state.cities) {
+    if (c.owner !== HUMAN) continue;
+    const r = cityReport(state, c);
+    science += r.science;
+    gold += r.gold;
+  }
+  return { science, gold, upkeep: buildingUpkeep(state, HUMAN) };
+}
+
+function needsResearchChoice(): boolean {
+  return me().researching === null && researchableTechs(me()).length > 0;
+}
+
+/** Names of the units and buildings a technology unlocks. */
+function unlocks(tech: TechId): string[] {
+  return [
+    ...Object.values(UNIT_TYPES)
+      .filter((u) => u.requires === tech)
+      .map((u) => u.name),
+    ...Object.values(BUILDINGS)
+      .filter((b) => b.requires === tech)
+      .map((b) => (b.wonder ? `div ${b.name}` : b.name)),
+  ];
+}
+
+function renderEconomy(): void {
+  const p = me();
+  const t = empireTotals();
+  const net = t.gold - t.upkeep;
+  goldLabel.innerHTML = `Zlato <b>${p.gold}</b> <span class="${net < 0 ? "neg" : "muted"}">(${net >= 0 ? "+" : ""}${net} za tah)</span>`;
+  goldLabel.title = `Příjem ${t.gold}, údržba budov ${t.upkeep}`;
+  const cost = researchCost(p);
+  if (p.researching) {
+    const left = Math.max(0, cost - p.research);
+    const turns = t.science > 0 ? turnsText(Math.max(1, Math.ceil(left / t.science))) : "nikdy";
+    researchButton.innerHTML = `Výzkum: <b>${TECHS[p.researching].name}</b> <span class="muted">${Math.min(p.research, cost)}/${cost} · ${turns}</span>`;
+    researchButton.classList.remove("attention");
+  } else if (researchableTechs(p).length > 0) {
+    researchButton.innerHTML = `<b>Vyber výzkum</b> <span class="muted">${p.research}/${cost}</span>`;
+    researchButton.classList.add("attention");
+  } else {
+    researchButton.innerHTML = `Všechno je vyzkoumané`;
+    researchButton.classList.remove("attention");
+  }
+  rateInput.value = String(p.scienceRate);
+  rateLabel.textContent = `${p.scienceRate} % · zlato ${100 - p.scienceRate} %`;
+}
+
+function chooseResearch(tech: TechId): void {
+  if (run({ type: "setResearch", tech })) say(`Zkoumáme: ${TECHS[tech].name}.`);
+  refresh();
+}
+
+function renderResearchPick(): void {
+  if (!needsResearchChoice()) {
+    researchPanel.hidden = true;
+    return;
+  }
+  researchPanel.hidden = false;
+  const options = researchableTechs(me())
+    .sort((a, b) => TECHS[a].era - TECHS[b].era)
+    .map((t) => {
+      const what = unlocks(t);
+      return `<button type="button" class="tech-pick" data-tech="${t}"><b>${TECHS[t].name}</b><span>${escapeHtml(what.join(", ") || "otevře další technologie")}</span></button>`;
+    })
+    .join("");
+  researchPanel.innerHTML = `<h2>Vyber výzkum</h2><div class="tech-picks">${options}</div>
+    <button type="button" class="wide" data-tree>Ukázat celý strom technologií</button>`;
+  researchPanel.querySelectorAll<HTMLButtonElement>("button[data-tech]").forEach((b) =>
+    b.addEventListener("click", () => chooseResearch(b.dataset.tech as TechId)),
+  );
+  researchPanel.querySelector("button[data-tree]")?.addEventListener("click", openTechTree);
+}
+
+function openTechTree(): void {
+  renderTechTree();
+  techDialog.showModal();
+}
+
+function renderTechTree(): void {
+  const p = me();
+  const columns = [1, 2, 3, 4].map((era) => {
+    const cards = (Object.keys(TECHS) as TechId[])
+      .filter((t) => TECHS[t].era === era)
+      .map((t) => {
+        const known = p.techs.includes(t);
+        const current = p.researching === t;
+        const open = researchableTechs(p).includes(t);
+        const cls = known ? "known" : current ? "current" : open ? "open" : "locked";
+        const needs = TECHS[t].requires.filter((r) => !p.techs.includes(r)).map((r) => TECHS[r].name);
+        const what = unlocks(t);
+        return `<button type="button" class="tech ${cls}" data-tech="${t}" ${open && !current ? "" : "disabled"}>
+          <b>${TECHS[t].name}</b>
+          <span>${escapeHtml(what.join(", ") || "otevře další technologie")}</span>
+          ${!known && needs.length ? `<span class="needs">Potřebuje: ${escapeHtml(needs.join(", "))}</span>` : ""}
+          ${known ? `<span class="state">známá</span>` : current ? `<span class="state">zkoumá se</span>` : ""}
+        </button>`;
+      })
+      .join("");
+    return `<div class="era"><h3>${ERA_NAMES[era]}</h3>${cards}</div>`;
+  });
+  techTree.innerHTML = columns.join("");
+  techTree.querySelectorAll<HTMLButtonElement>("button[data-tech]:not([disabled])").forEach((b) =>
+    b.addEventListener("click", () => {
+      chooseResearch(b.dataset.tech as TechId);
+      techDialog.close();
+    }),
+  );
+}
+
+researchButton.addEventListener("click", openTechTree);
+techDialog.addEventListener("click", (e) => {
+  // A click on the backdrop closes the dialog.
+  if (e.target === techDialog) techDialog.close();
+});
+$<HTMLButtonElement>("#tech-close").addEventListener("click", () => techDialog.close());
+rateInput.addEventListener("input", () => {
+  run({ type: "setScienceRate", rate: Number(rateInput.value) });
+  refresh();
+});
 
 function renderLog(): void {
   logList.innerHTML = log
@@ -477,32 +637,58 @@ function renderCity(city: City): void {
   const foodPct = Math.min(100, (city.food / r.growthThreshold) * 100);
   const prodPct = Math.min(100, (city.shields / cost) * 100);
   const growth =
-    r.foodSurplus > 0 ? `roste za ${turnsText(r.turnsToGrow!)}` : r.foodSurplus === 0 ? "neroste" : "hladoví";
+    city.size >= r.maxSize && r.foodSurplus > 0
+      ? "dál neroste, potřebuje akvadukt"
+      : r.foodSurplus > 0
+        ? `roste za ${turnsText(r.turnsToGrow!)}`
+        : r.foodSurplus === 0
+          ? "neroste"
+          : "hladoví";
   const done = r.waitingForSize
     ? "čeká na druhého obyvatele"
-    : r.turnsToComplete
-      ? `hotovo za ${turnsText(r.turnsToComplete)}`
-      : "nevyrábí";
-  const options = productionOptions(city)
+    : city.shields >= cost
+      ? "hotovo na konci tahu"
+      : r.turnsToComplete
+        ? `hotovo za ${turnsText(r.turnsToComplete)}`
+        : "nevyrábí";
+  const options = productionOptions(state, city)
     .map((o) => {
       const selected = sameItem(o, city.production) ? "selected" : "";
-      return `<option value="${o.kind}:${o.id}" ${selected}>${productionName(o)} (${productionCost(o)} štítů)</option>`;
+      const turns = r.shieldSurplus > 0 ? `, ${turnsText(Math.max(1, Math.ceil((productionCost(o) - city.shields) / r.shieldSurplus)))}` : "";
+      const tag = o.kind === "building" && BUILDINGS[o.id].wonder ? "Div: " : "";
+      return `<option value="${o.kind}:${o.id}" ${selected}>${tag}${productionName(o)} (${productionCost(o)} štítů${turns})</option>`;
     })
     .join("");
   const unitsHere = state.units.filter((u) => u.x === city.x && u.y === city.y && u.owner === HUMAN);
-  const buildings = city.buildings.map((b) => BUILDINGS[b].name).join(", ") || "žádné";
+  const buildings =
+    city.buildings.map((b) => (BUILDINGS[b].upkeep ? `${BUILDINGS[b].name} (${BUILDINGS[b].upkeep})` : BUILDINGS[b].name)).join(", ") ||
+    "žádné";
   const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
+  const h = r.happiness;
+  const price = buyCost(city);
+  const gold = me().gold;
+  const buy =
+    price === 0
+      ? ""
+      : `<button type="button" class="wide" data-buy ${gold < price ? `disabled title="Máš jen ${gold} zlata."` : ""}>Koupit hned za ${price} zlata</button>`;
 
   selectionPanel.innerHTML = `
     <div class="panel-title"><h3>${escapeHtml(city.name)}</h3><span class="sub">velikost ${city.size}</span></div>
     <p class="facts">Jídlo ${city.food} z ${r.growthThreshold} (${signed(r.foodSurplus)} za tah), ${growth}</p>
     <div class="bar food"><div style="width:${foodPct}%"></div></div>
-    <p class="facts">${productionName(city.production)}: ${city.shields} z ${cost} (${signed(r.shieldSurplus)} za tah), ${done}</p>
+    <p class="facts">${productionName(city.production)}: ${Math.min(city.shields, cost)} z ${cost} (${signed(r.shieldSurplus)} za tah), ${done}</p>
     <div class="bar prod"><div style="width:${prodPct}%"></div></div>
     <label for="production">Co stavět</label>
     <select id="production">${options}</select>
-    <p class="facts" style="margin-top:8px">Obchod: ${r.production.trade}<br><span class="muted">Budovy: ${buildings}</span><br>
-    <span class="muted">Obyvatelé obdělávají políčka orámovaná na mapě.</span></p>
+    ${buy}
+    <p class="facts" style="margin-top:8px">${
+      h.disorder ? `<span class="neg">Nepokoje! Město nic nevyrábí.</span><br>` : ""
+    }Spokojení ${h.content} · nespokojení ${h.unhappy}${h.entertainers ? ` · baviči ${h.entertainers}` : ""}<br>
+    Obchod ${r.production.trade}: věda ${r.science}, zlato ${r.gold}<br>
+    <span class="muted">Budovy: ${buildings}</span><br>
+    <span class="muted">Obyvatelé obdělávají políčka orámovaná na mapě.${
+      h.entertainers ? " Baviči nepracují na poli, ale udržují ve městě klid." : ""
+    }</span></p>
     ${
       unitsHere.length
         ? `<h2>Jednotky ve městě</h2><ul class="unit-list">${unitsHere
@@ -515,6 +701,10 @@ function renderCity(city: City): void {
     }
     <div class="actions" style="margin-top:10px"><button type="button" data-close>Zavřít <kbd>Esc</kbd></button></div>`;
 
+  selectionPanel.querySelector("button[data-buy]")?.addEventListener("click", () => {
+    run({ type: "buy", cityId: city.id });
+    refresh();
+  });
   selectionPanel.querySelector<HTMLSelectElement>("#production")!.addEventListener("change", (e) => {
     const [kind, id] = (e.target as HTMLSelectElement).value.split(":");
     run({ type: "setProduction", cityId: city.id, item: { kind, id } as ProductionItem });
@@ -755,6 +945,11 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (techDialog.open) return;
+  if (e.key.toLowerCase() === "t") {
+    e.preventDefault();
+    return openTechTree();
+  }
   const unit = selectedUnit();
   const dir = DIRECTIONS[e.key];
   if (dir && unit) {

@@ -84,3 +84,33 @@ label.check { display: flex; align-items: center; gap: 6px; margin-top: 10px; co
 .zoom #zoom-reset { font-size: 12px; font-variant-numeric: tabular-nums; }
 canvas.zoomed { cursor: crosshair; }
 canvas.dragging { cursor: grabbing; }
+
+.economy { display: flex; align-items: center; gap: 14px; margin-left: 10px; font-size: 13px; }
+.economy .muted, .facts .muted { color: var(--muted); }
+.neg { color: #f0866b; }
+button.research { font-size: 13px; padding: 4px 10px; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+button.research.attention { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(217, 164, 65, 0.35); }
+.gold { white-space: nowrap; }
+.gold b { color: #f2cf6b; }
+label.rate { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); white-space: nowrap; }
+label.rate input { width: 90px; padding: 0; accent-color: var(--accent); }
+.tech-picks { display: flex; flex-direction: column; gap: 6px; }
+.tech-pick, .tech { text-align: left; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.tech-pick span, .tech span { font-size: 12px; color: var(--muted); }
+#research-pick { border-color: var(--accent); }
+dialog#tech-dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 14px; max-width: min(1100px, 96vw); width: 1100px; }
+dialog#tech-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.dialog-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.dialog-head h2 { margin: 0; }
+.dialog-head button { margin-left: auto; }
+.tech-tree { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.era h3 { margin: 0 0 8px; font-size: 13px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; }
+.era .tech { width: 100%; margin-bottom: 6px; }
+.tech.known { background: #2c3a2c; border-color: #4f7a45; }
+.tech.current { border-color: var(--accent); background: #3b3420; }
+.tech.open { border-color: #6fa84a; }
+.tech.open:hover { background: #33402f; }
+.tech.locked { opacity: 0.55; }
+.tech:disabled { cursor: default; }
+.tech .needs { color: #c9a26b; }
+.tech .state { color: #9fd08a; }

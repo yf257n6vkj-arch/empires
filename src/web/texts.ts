@@ -2,6 +2,7 @@
 import {
   BUILDINGS,
   IMPROVEMENTS,
+  TECHS,
   productionName,
   UNIT_TYPES,
   type CommandError,
@@ -28,6 +29,11 @@ export const ERROR_TEXT: Record<CommandError, string> = {
   onCityTile: "Ve městě je cesta i zavlažování automaticky.",
   noPath: "Na tohle místo nevede žádná známá cesta.",
   invalidProduction: "Tohle město teď postavit nemůže.",
+  alreadyComplete: "Výroba je už zaplacená, dokončí se na konci tahu.",
+  notEnoughGold: "Na nákup nemáš dost zlata.",
+  unknownTech: "Taková technologie neexistuje.",
+  cannotResearch: "Tuhle technologii teď zkoumat nejde. Buď ji už znáš, nebo ti chybí předchozí.",
+  invalidRate: "Poměr výzkumu a zlata jde nastavit jen po deseti procentech.",
 };
 
 export function cityName(state: GameState, id: number): string {
@@ -35,7 +41,7 @@ export function cityName(state: GameState, id: number): string {
 }
 
 /** Text for the event log, or null for events the player does not need to read. */
-export function eventText(state: GameState, e: GameEvent): string | null {
+export function eventText(state: GameState, e: GameEvent, viewer = 0): string | null {
   switch (e.type) {
     case "cityFounded":
       return `Založil jsi město ${cityName(state, e.cityId)}.`;
@@ -49,8 +55,24 @@ export function eventText(state: GameState, e: GameEvent): string | null {
       return `${cityName(state, e.cityId)} postavilo jednotku ${UNIT_TYPES[e.unitType].name}.`;
     case "buildingBuilt":
       return `${cityName(state, e.cityId)} postavilo budovu ${BUILDINGS[e.building].name}.`;
-    case "productionNeeded":
-      return `${cityName(state, e.cityId)} potřebuje novou výrobu, zatím staví válečníka.`;
+    case "productionNeeded": {
+      const city = state.cities.find((c) => c.id === e.cityId);
+      return city ? `${city.name} potřebuje novou výrobu, zatím staví: ${productionName(city.production)}.` : null;
+    }
+    case "wonderBuilt":
+      return e.owner === viewer
+        ? `${cityName(state, e.cityId)} dostavělo div světa ${BUILDINGS[e.building].name}!`
+        : `Jiná říše dostavěla div světa ${BUILDINGS[e.building].name}.`;
+    case "buildingSold":
+      return `Nemáš na údržbu, a tak ${cityName(state, e.cityId)} prodalo budovu ${BUILDINGS[e.building].name}.`;
+    case "cityDisorder":
+      return `V ${cityName(state, e.cityId)} jsou nepokoje, město tento tah nic nevyrobilo.`;
+    case "cityAtMaxSize":
+      return `${cityName(state, e.cityId)} dál neroste, na velikost nad ${e.size} potřebuje akvadukt.`;
+    case "techLearned":
+      return e.player === viewer ? `Tvoji učenci objevili: ${TECHS[e.tech].name}.` : null;
+    case "researchNeeded":
+      return e.player === viewer ? "Vyber, co se bude zkoumat dál." : null;
     case "improvementDone":
       return `Osadník dokončil: ${IMPROVEMENTS[e.improvement].name}.`;
     case "gotoBlocked":

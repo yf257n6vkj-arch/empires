@@ -10,7 +10,12 @@
   <body>
     <header>
       <h1>Empires</h1>
-      <span class="phase">fáze 1 · průzkum a první města</span>
+      <span class="phase">fáze 2 · technologie a hospodářství</span>
+      <div class="economy">
+        <button id="research" type="button" class="research" title="Strom technologií"></button>
+        <span id="gold" class="gold"></span>
+        <label class="rate" title="Kolik obchodu jde do výzkumu, zbytek je zlato">Věda <input id="rate" type="range" min="0" max="100" step="10" /> <span id="rate-label"></span></label>
+      </div>
       <span class="spacer"></span>
       <span id="turn" class="turn"></span>
       <button id="end-turn" type="button" class="primary">Konec tahu</button>
@@ -27,6 +32,7 @@
         </div>
       </div>
       <aside>
+        <section id="research-pick" hidden></section>
         <section id="selection"></section>
         <section>
           <h2>Co se stalo</h2>
@@ -41,7 +47,7 @@
               <li>Šipky nebo číslice 1 až 9 posouvají vybranou jednotku.</li>
               <li><kbd>B</kbd> založit město, <kbd>R</kbd> cesta, <kbd>I</kbd> zavlažování, <kbd>M</kbd> důl</li>
               <li><kbd>F</kbd> opevnit, <kbd>mezerník</kbd> nechat jednotku do příštího tahu, <kbd>N</kbd> další jednotka</li>
-              <li><kbd>Enter</kbd> konec tahu, <kbd>Esc</kbd> zrušit výběr</li>
+              <li><kbd>Enter</kbd> konec tahu, <kbd>Esc</kbd> zrušit výběr, <kbd>T</kbd> strom technologií</li>
               <li>Přiblížení: roztažení dvěma prsty na trackpadu, <kbd>Ctrl</kbd> + kolečko myši nebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Klávesa <kbd>0</kbd> vrátí celou mapu.</li>
               <li>Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením.</li>
             </ul>
@@ -61,6 +67,14 @@
         </section>
       </aside>
     </main>
+    <dialog id="tech-dialog">
+      <div class="dialog-head">
+        <h2>Strom technologií</h2>
+        <span class="hint">Klikni na zelenou technologii a začni ji zkoumat.</span>
+        <button id="tech-close" type="button">Zavřít</button>
+      </div>
+      <div id="tech-tree" class="tech-tree"></div>
+    </dialog>
     <script type="module" src="/src/web/main.ts"></script>
   </body>
 </html>

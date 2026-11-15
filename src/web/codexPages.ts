@@ -27,13 +27,13 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     when: "od pravěku",
     text: "První bojovníci neměli žádné brnění ani kovové zbraně. Bránili své tlupy kyji a oštěpy s kamenným hrotem. Válčilo se o lovecká území a o vodu. Ze zkušených válečníků se časem stali náčelníci a později i první králové.",
     fact: "Archeologové našli pravěké lebky se stopami po úderech kyjem. Prozrazují, že se lidé bili už dávno předtím, než vznikla první města.",
-    wiki: "Válečník",
+    wiki: "Bojovník",
   },
   "unit-spearmen": {
     when: "asi od 7. století př. n. l.",
     text: "Řečtí hoplité byli pěšáci s velkým kulatým štítem a dlouhým kopím. Stáli v těsných řadách, kterým se říká falanga, a štíty se navzájem kryli. Nepřítel před sebou viděl zeď ze štítů a ostnů. Výzbroj si každý voják kupoval sám, a tak sloužili hlavně svobodní občané, kteří na ni měli.",
     fact: "Slovo hoplíta pochází z řeckého hoplon, jak se říkalo velkému štítu. Vojáka tedy pojmenovali podle jeho štítu.",
-    wiki: "Hoplíté",
+    wiki: "Hoplita",
   },
   "unit-horsemen": {
     when: "asi od roku 1000 př. n. l.",
@@ -45,7 +45,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     when: "asi před 20 000 lety",
     text: "Luk dovolil zasáhnout zvíře nebo nepřítele na velkou vzdálenost. Lučištníci stáli za řadami pěšáků a stříleli šípy přes jejich hlavy. Dobrý lučištník trénoval od dětství, protože napnout silný luk chce hodně síly. Angličtí lučištníci s dlouhými luky vyhrávali ve středověku i bitvy proti rytířům.",
     fact: "V Anglii platil ve středověku zákon, podle kterého museli muži každou neděli po mši cvičit střelbu z luku.",
-    wiki: "Lučištník",
+    wiki: "Lukostřelba",
   },
   "unit-swordsmen": {
     when: "od 4. století př. n. l.",
@@ -62,8 +62,8 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   "unit-catapult": {
     when: "od 4. století př. n. l.",
     text: "Katapult je obléhací stroj, který vrhá kameny nebo oštěpy. Sílu mu dávají zkroucená lana ze šlach nebo vlasů, která se po uvolnění prudce narovnají. S katapulty se bořily hradby a útočilo na obránce z bezpečné vzdálenosti. Vymysleli je Řekové a Římané je zdokonalili.",
-    fact: "Ve středověku se obléhací stroje jmenovaly třeba trebuchet. Dokázal přehodit přes hradby i kámen těžký jako malé auto.",
-    wiki: "Katapult",
+    fact: "Ve středověku vznikl ještě větší obléhací stroj, trebuchet. Sílu mu dávalo těžké protizávaží a přes hradby dokázal přehodit kámen vážící přes sto kilogramů.",
+    wiki: "Katapult (stroj)",
   },
   "unit-knights": {
     when: "od 10. století",
@@ -98,7 +98,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   "unit-mechInf": {
     when: "od druhé poloviny 20. století",
     text: "Mechanizovaná pěchota jezdí do boje v obrněných vozidlech. Vozidlo vojáky chrání před střelbou, a když dojedou na místo, vystoupí zadními dveřmi. Mívá i vlastní kanón nebo kulomet, takže pěšákům pomáhá. Pěchota tak stačí tempu tanků.",
-    fact: "Československá armáda měla bojové vozidlo pěchoty BVP. Vyrábělo se mimo jiné v Podpolianských strojírnách na Slovensku.",
+    fact: "Československá armáda používala bojové vozidlo pěchoty, kterému vojáci říkali bévépéčko podle zkratky BVP.",
     wiki: "Bojové vozidlo pěchoty",
   },
   "unit-tank": {
@@ -134,14 +134,14 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   "unit-frigate": {
     when: "od 17. století",
     text: "Fregata byla rychlá válečná plachetnice se třemi stěžni a jednou palubou děl. Byla menší než řadové lodě, ale rychlejší, a tak sloužila jako průzkumník a lovkyně pirátů. Na palubě žilo i přes dvě stě námořníků. Fregaty doprovázely obchodní lodě přes oceány.",
-    fact: "Americká fregata USS Constitution je stále ve službě americké armády. Spustili ji na vodu v roce 1797 a je to nejstarší loď na světě, která ještě dokáže vyplout.",
+    fact: "Americkou fregatu USS Constitution spustili na vodu v roce 1797. Pořád patří k námořnictvu a je to nejstarší válečná loď na světě, která je ve službě a na vodě.",
     wiki: "Fregata",
   },
   "unit-ironclad": {
     when: "od roku 1859",
     text: "Pancéřové lodě dostaly místo dřevěných boků kovové pláty. Poháněl je parní stroj, takže už nepotřebovaly vítr. Dělové koule se od pancíře odrážely a dřevěné válečné lodě byly najednou zastaralé. Vznikla tak úplně nová éra válečného loďstva.",
     fact: "V roce 1862 se v Americe utkaly dvě pancéřové lodě, Monitor a Merrimack. Hodiny po sobě střílely a ani jedna druhou nepotopila.",
-    wiki: "Pancéřová loď",
+    wiki: "Obrněná loď",
   },
   "unit-cruiser": {
     when: "od konce 19. století",
@@ -200,7 +200,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   },
   "gov-despotism": {
     text: "Despota je vládce, který má neomezenou moc a nikomu se nezodpovídá. Takhle vládli první náčelníci a králové starověku. Co despota řekl, to platilo, a kdo nesouhlasil, byl potrestán. Země pod despotou se často nerozvíjela, protože lidé pracovali hlavně pro vládce.",
-    fact: "Slovo despota pochází z řečtiny a znamenalo původně pán domu, který vládne svým otrokům.",
+    fact: "Slovo despota pochází z řečtiny a původně znamenalo pán domu.",
     wiki: "Despocie",
   },
   "gov-monarchy": {
@@ -242,18 +242,18 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   },
   "bld-walls": {
     text: "Hradby chránily města před nepřáteli. Byly vysoké a silné a stály na nich věže, odkud obránci stříleli. Brány se na noc zavíraly a hlídali je strážní. Když přišla děla, musely se hradby stavět nižší a tlustší.",
-    fact: "Pražské Nové Město obehnal Karel IV. hradbou dlouhou asi tři a půl kilometru. Část jejích zbytků stojí dodnes na Vyšehradě.",
+    fact: "Na Petříně v Praze stojí Hladová zeď, kterou dal postavit Karel IV. Podle pověsti tak dal v době hladu práci chudým lidem.",
     wiki: "Hradby",
   },
   "bld-barracks": {
     text: "Kasárna jsou budovy, kde bydlí a cvičí vojáci. Mají ubikace, jídelnu, zbrojnici, stáje a velký dvůr na výcvik. Vojáci z kasáren jsou lépe připravení a disciplinovaní. Stálé armády s kasárnami se rozšířily hlavně od 17. století.",
-    fact: "Slovo kasárna pochází přes italštinu z latinského casa, což znamená dům.",
+    fact: "Slovo kasárna k nám přišlo z francouzského caserne. Původně tak říkali malé strážnici pro čtyři vojáky.",
     wiki: "Kasárna",
   },
   "bld-library": {
     text: "Knihovna uchovává knihy a dovoluje lidem z nich čerpat vědění. Dřív se knihy opisovaly ručně a byly velmi drahé, proto byly knihovny vzácné. Učenci v nich studovali a psali nová díla. S knihovnou se nové poznatky nezapomenou a mohou se šířit dál.",
     fact: "Klementinum v Praze má jeden z nejkrásnějších barokních knihovních sálů na světě.",
-    wiki: "Knihovna",
+    wiki: "Knihovna (instituce)",
   },
   "bld-marketplace": {
     text: "Tržiště je místo, kde se lidé scházejí, aby prodávali a kupovali. Rolníci sem vozili obilí a zeleninu, řemeslníci své výrobky. Na trhu se vybíraly poplatky, které plnily pokladnu města. Kolem tržišť rostla města, protože kde se obchoduje, tam se daří.",
@@ -267,7 +267,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   },
   "bld-harbour": {
     text: "Přístav je místo na pobřeží, kde lodě bezpečně kotví a nakládají zboží. Chrání ho hráze a vlnolamy před bouří. Kolem přístavů vznikla velká obchodní města. Rybáři v nich vykládají úlovek a z moře tak do města přichází spousta jídla.",
-    fact: "Největší přístav Evropy je v nizozemském Rotterdamu. Jeho přístavní plocha je větší než celé některé české okresy.",
+    fact: "Největší přístav Evropy je v nizozemském Rotterdamu. Jeho nábřeží a doky se táhnou přes čtyřicet kilometrů od města až k moři.",
     wiki: "Přístav",
   },
   "bld-amphitheater": {
@@ -307,7 +307,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   },
   "bld-hydroPlant": {
     text: "Vodní elektrárna vyrábí elektřinu z padající vody. Přehrada zadrží řeku a voda pak protéká turbínami, které roztočí generátory. Nevzniká při tom kouř ani popel. Přehrady navíc chrání krajinu před povodněmi.",
-    fact: "Největší vodní elektrárna v Česku stojí na Vltavě v Orlíku. Přehrada má hráz vysokou přes devadesát metrů.",
+    fact: "Nejvíc vody zadržuje u nás přehrada Orlík na Vltavě. Její hráz je vysoká přes devadesát metrů.",
     wiki: "Vodní elektrárna",
   },
   "bld-nuclearPlant": {
@@ -318,16 +318,16 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   "bld-manufacturingPlant": {
     text: "Moderní továrny pracují s roboty. Robotická ramena svařují a lakují rychleji a přesněji než lidé. Lidé roboty programují a opravují. Díky nim se vyrobí víc aut nebo elektroniky za kratší dobu.",
     fact: "Slovo robot vymyslel Josef Čapek pro hru svého bratra Karla Čapka R.U.R. z roku 1920. Dnes ho zná celý svět.",
-    wiki: "Průmyslový robot",
+    wiki: "Robot",
   },
   "bld-massTransit": {
     text: "Městská hromadná doprava vozí lidi po městě tramvajemi, autobusy, metrem nebo trolejbusy. Jeden autobus odveze tolik lidí jako desítky aut. Ve městě je pak méně zácp i smogu. Velká města by bez hromadné dopravy nemohla fungovat.",
-    fact: "Pražské metro jezdí od roku 1974. Nejhlouběji leží stanice Náměstí Míru, skoro padesát metrů pod zemí.",
+    fact: "Pražské metro jezdí od roku 1974. Nejhlouběji leží stanice Náměstí Míru, přes padesát metrů pod zemí.",
     wiki: "Městská hromadná doprava",
   },
   "bld-recyclingCenter": {
     text: "Recyklace znamená, že se z odpadu vyrobí něco nového. Ze starého papíru vznikne nový papír, z plastových lahví vlákna na oblečení a ze skla nové sklo. Šetří se tím suroviny a méně odpadu skončí na skládkách. Proto se odpad třídí do barevných kontejnerů.",
-    fact: "Hliníková plechovka se dá recyklovat znovu a znovu. Z recyklovaného hliníku může být nová plechovka v obchodě už za pár týdnů.",
+    fact: "Hliníková plechovka se dá recyklovat znovu a znovu. Z vyhozené plechovky může být nová v obchodě zhruba za dva měsíce.",
     wiki: "Recyklace",
   },
   "bld-researchLab": {
@@ -338,7 +338,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   "bld-coastalFortress": {
     text: "Pobřežní pevnosti chránily přístavy a města u moře před nepřátelskými loďmi. Stály na skalách nad vjezdem do přístavu a měly těžká děla, která mířila na moře. Silné zdi odolaly i palbě z lodí. Kdo ovládal pobřežní pevnosti, ovládal i přístav.",
     fact: "Pevnost na skále Gibraltar u jižního cípu Španělska hlídá vjezd do Středozemního moře už stovky let.",
-    wiki: "Pobřežní dělostřelectvo",
+    wiki: "Pobřežní baterie",
   },
   "bld-sdiDefense": {
     text: "Protiraketová obrana má zachytit nepřátelskou raketu dřív, než dopadne. Radary sledují oblohu a při útoku vystřelí obranné střely, které raketu zničí ve vzduchu. Jde o velmi složitou techniku, protože rakety letí obrovskou rychlostí. Ve hře chrání město a okolí před jadernými útoky.",
@@ -376,7 +376,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   },
   "wdr-colossus": {
     when: "kolem roku 280 př. n. l.",
-    text: "Rhódský kolos byla obrovská bronzová socha boha slunce Hélia na ostrově Rhodos. Měřila asi třicet metrů, skoro jako desetipatrový dům. Stavěli ji dvanáct let z peněz za prodané zbraně nepřátel. Po padesáti letech ji povalilo zemětřesení.",
+    text: "Rhódský kolos byla obrovská bronzová socha boha slunce Hélia na ostrově Rhodos. Měřila asi třicet metrů, skoro jako desetipatrový dům. Stavěli ji dvanáct let z peněz za obléhací stroje, které tu nechal poražený nepřítel. Už po 54 letech ji povalilo zemětřesení.",
     fact: "Obrázky, kde kolos stojí rozkročený nad vjezdem do přístavu, jsou nejspíš výmysl. Tak velkou sochu by nikdo neudržel nad vodou.",
     wiki: "Rhódský kolos",
   },
@@ -396,7 +396,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     when: "kolem roku 280 př. n. l.",
     text: "Maják na ostrově Faros u Alexandrie byl jednou z nejvyšších staveb starověku. Měl tři patra a nahoře hořel oheň, který ukazoval lodím cestu do přístavu. Ve dne prý světlo odráželo velké kovové zrcadlo. Maják stál přes tisíc let, než ho zničila zemětřesení.",
     fact: "Podle ostrova Faros se maják řekne v italštině i ve francouzštině skoro stejně, faro a phare.",
-    wiki: "Alexandrijský maják",
+    wiki: "Maják na Faru",
   },
   "wdr-oracle": {
     when: "od 8. století př. n. l.",
@@ -426,7 +426,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     when: "1519 až 1522",
     text: "Fernão de Magalhães vyplul s pěti loďmi na západ, aby našel cestu k ostrovům koření. Proplul úžinou u jihu Ameriky, která dnes nese jeho jméno, a přeplul Tichý oceán. Sám zahynul na Filipínách. Domů se vrátila jen jedna loď s osmnácti muži, kteří jako první obepluli celý svět.",
     fact: "Námořníci po návratu zjistili, že jim v kalendáři chybí jeden den. Obepluli Zemi na západ a jeden den tak ztratili.",
-    wiki: "Magalhãesova výprava",
+    wiki: "Fernão de Magalhães",
   },
   "wdr-sistineChapel": {
     when: "1508 až 1512",
@@ -444,12 +444,12 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     when: "1599",
     text: "Divadlo Globe v Londýně byla dřevěná kruhová stavba s doškovou střechou. Hrála v něm divadelní společnost Williama Shakespeara a uváděla jeho hry jako Hamlet nebo Romeo a Julie. Chudí diváci stáli přímo před jevištěm pod širým nebem. Bohatší seděli na lavicích v patrech.",
     fact: "V roce 1613 vystřelilo při představení divadelní dělo a od jiskry chytla doškovou střechu. Divadlo vyhořelo, nikdo ale nezemřel.",
-    wiki: "Globe Theatre",
+    wiki: "Divadlo Globe",
   },
   "wdr-grandBazaar": {
     when: "od roku 1455",
     text: "Velký bazar v Istanbulu je jedno z největších krytých tržišť na světě. Pod klenbami se skrývá spleť desítek uliček a tisíce obchůdků. Prodávají se tu koberce, šperky, koření i lampy. Obchodníci si tu zboží předávali celá staletí.",
-    fact: "Velký bazar každý den navštíví desítky tisíc lidí. Je to jedno z nejnavštěvovanějších míst na světě.",
+    fact: "Velký bazar navštíví každý den statisíce lidí. Je to jedno z nejnavštěvovanějších míst na světě.",
     wiki: "Velký bazar",
   },
   "wdr-royalSociety": {
@@ -467,7 +467,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   "wdr-womensSuffrage": {
     when: "od konce 19. století",
     text: "Dlouho mohli volit jen muži. Ženy se za volební právo musely zasadit samy, psaly petice a pořádaly demonstrace. Jako první dostaly volební právo ženy na Novém Zélandu v roce 1893. Postupně je získaly ženy na celém světě.",
-    fact: "První ženou zvolenou do poslanecké sněmovny v Evropě byla Češka Božena Viková-Kunětická. Zvolili ji v roce 1912 do českého zemského sněmu.",
+    fact: "Spisovatelku Boženu Vikovou-Kunětickou zvolili v roce 1912 do českého zemského sněmu. Byla první poslankyní ve střední Evropě.",
     wiki: "Volební právo žen",
   },
   "wdr-hooverDam": {
@@ -572,7 +572,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   "imp-fortress": {
     when: "od starověku",
     text: "Pevnost je opevněné místo, kde se vojáci mohou bránit přesile. Mívá valy a bašty, odkud se dá střílet na útočníky ze všech stran. Pevnosti hlídaly hranice a důležité cesty. Ve hře v ní jednotky dostanou silnou obranu.",
-    fact: "Terezín a Josefov postavila Marie Terezie a Josef II. jako pevnosti proti Prusku. Mají hvězdicový tvar s mnoha baštami.",
+    fact: "Pevnosti Terezín a Josefov dal proti Prusku postavit císař Josef II. Terezín pojmenoval po své matce Marii Terezii.",
     wiki: "Pevnost",
   },
 };

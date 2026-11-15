@@ -1,11 +1,11 @@
 unit-settlers	Kolonizace
-unit-warriors	Válečník
-unit-spearmen	Hoplíté
+unit-warriors	Bojovník
+unit-spearmen	Hoplita
 unit-horsemen	Jízda
-unit-archers	Lučištník
+unit-archers	Lukostřelba
 unit-swordsmen	Římská legie
 unit-chariot	Válečný vůz
-unit-catapult	Katapult
+unit-catapult	Katapult (stroj)
 unit-knights	Rytíř
 unit-musketeers	Mušketýr
 unit-cannon	Kanón
@@ -18,7 +18,7 @@ unit-caravan	Karavana
 unit-trireme	Triéra
 unit-sail	Karavela
 unit-frigate	Fregata
-unit-ironclad	Pancéřová loď
+unit-ironclad	Obrněná loď
 unit-cruiser	Křižník
 unit-battleship	Bitevní loď
 unit-submarine	Ponorka
@@ -38,7 +38,7 @@ bld-granary	Sýpka
 bld-temple	Chrám
 bld-walls	Hradby
 bld-barracks	Kasárna
-bld-library	Knihovna
+bld-library	Knihovna (instituce)
 bld-marketplace	Tržiště
 bld-courthouse	Soud
 bld-harbour	Přístav
@@ -51,11 +51,11 @@ bld-factory	Továrna
 bld-powerPlant	Tepelná elektrárna
 bld-hydroPlant	Vodní elektrárna
 bld-nuclearPlant	Jaderná elektrárna
-bld-manufacturingPlant	Průmyslový robot
+bld-manufacturingPlant	Robot
 bld-massTransit	Městská hromadná doprava
 bld-recyclingCenter	Recyklace
 bld-researchLab	Laboratoř
-bld-coastalFortress	Pobřežní dělostřelectvo
+bld-coastalFortress	Pobřežní baterie
 bld-sdiDefense	Protiraketová obrana
 bld-ssStructural	Mezinárodní vesmírná stanice
 bld-ssComponent	Raketový motor
@@ -65,15 +65,15 @@ wdr-pyramids	Pyramidy v Gíze
 wdr-colossus	Rhódský kolos
 wdr-hangingGardens	Visuté zahrady Semiramidiny
 wdr-greatWall	Velká čínská zeď
-wdr-lighthouse	Alexandrijský maják
+wdr-lighthouse	Maják na Faru
 wdr-oracle	Delfská věštírna
 wdr-greatLibrary	Alexandrijská knihovna
 wdr-hallOfScholars	Platónská Akademie
 wdr-greatObservatory	Hvězdárna
-wdr-circumnavigation	Magalhãesova výprava
+wdr-circumnavigation	Fernão de Magalhães
 wdr-sistineChapel	Sixtinská kaple
 wdr-stVitus	Katedrála svatého Víta, Václava a Vojtěcha
-wdr-globeTheatre	Globe Theatre
+wdr-globeTheatre	Divadlo Globe
 wdr-grandBazaar	Velký bazar
 wdr-royalSociety	Královská společnost
 wdr-darwinVoyage	HMS Beagle

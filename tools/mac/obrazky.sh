@@ -22,8 +22,8 @@ while IFS=$'\t' read -r id prompt; do
     echo "[$n/$total] $id už je hotový"
     continue
   fi
-  printf '{"model":"%s","input":"%s","response_format":{"type":"image","mime_type":"image/jpeg","aspect_ratio":"4:3","image_size":"1K"}}' \
-    "$MODEL" "$prompt" > /tmp/empires-request.json
+  printf '{"model":"%s","input":"%s","response_format":{"type":"image","mime_type":"image/jpeg","aspect_ratio":"%s","image_size":"1K"}}' \
+    "$MODEL" "$prompt" "${ASPECT:-4:3}" > /tmp/empires-request.json
   ok=0
   for attempt in 1 2 3 4; do
     code=$(curl -s -o /tmp/empires-response.json -w '%{http_code}' \

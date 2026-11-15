@@ -179,6 +179,33 @@ export function canBuildUnitType(player: Player, id: UnitTypeId): boolean {
   return next === null || !knowsTech(player, UNIT_TYPES[next].requires);
 }
 
+/**
+ * The newest unit this one can be upgraded to: follows the chain of
+ * replacements (obsoleteBy) as far as the player knows the technologies.
+ * Only needs the player's technologies, so the AI can ask the same question.
+ */
+export function upgradeTarget(player: Pick<Player, "techs">, type: UnitTypeId): UnitTypeId | null {
+  let target: UnitTypeId | null = null;
+  let next = UNIT_TYPES[type].obsoleteBy;
+  while (next !== null) {
+    const rule = UNIT_TYPES[next];
+    if (rule.requiresWonder || !player.techs.includes(rule.requires as TechId)) break;
+    target = next;
+    next = rule.obsoleteBy;
+  }
+  return target;
+}
+
+export function upgradeCost(from: UnitTypeId, to: UnitTypeId): number {
+  const diff = Math.max(0, UNIT_TYPES[to].cost - UNIT_TYPES[from].cost);
+  return RULES.upgradeGoldBase + RULES.upgradeGoldPerShield * diff;
+}
+
+/** Shields a unit adds to a city's production when it is disbanded there. */
+export function disbandShields(type: UnitTypeId): number {
+  return Math.floor((UNIT_TYPES[type].cost * RULES.disbandShieldsPct) / 100);
+}
+
 /** True when the city stands next to the ocean. */
 export function isCoastal(state: GameState, city: City): boolean {
   return neighbors8(state.map, city.y * state.map.width + city.x).some((i) => state.map.terrain[i] === "ocean");

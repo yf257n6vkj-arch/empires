@@ -2,6 +2,22 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Hraje se za národy z Civilizace 1 a za Čechy
+
+Michal chtěl národy podle Civilizace 1 a k nim Čechy. Na výběr je patnáct národů: Římané, Babyloňané, Němci, Egypťané, Američané, Řekové, Indové, Rusové, Zuluové, Francouzi, Aztékové, Číňané, Angličané, Mongolové a Češi s Karlem IV. Původní zadání počítalo s tím, že jména národů vymyslí syn, tohle ho nahrazuje. Syn může dál vymýšlet jména jednotek a divů.
+
+Národy nemají žádné zvláštní bonusy, stejně jako v Civilizaci 1. Liší se jménem, vládcem, barvou, jmény měst a povahou, podle které bude hrát počítač. Mongolové třeba spoléhají na armádu a Češi sázejí na vědu. Národy jsou rozdělené do barevných dvojic jako v Civilizaci 1 a dva národy stejné barvy se v jedné hře nepotkají. Každý národ má šestnáct skutečných jmen měst, pak hra bere obecná česká jména.
+
+Místo Stalina vede Rusy Petr Veliký a místo Maa Číňany první císař Čchin Š'-chuang-ti. Hru bude hrát i syn a nechtěli jsme mu jako vládce nabízet diktátory dvacátého století. Když to Michal bude chtít jinak, je to změna v jednom datovém souboru.
+
+Novou hru začíná okno, ve kterém si hráč národ vybere. Soupeři dostanou náhodné národy z jiných barev. Uložené hry dostanou národy samy.
+
+## 15. 11. 2026: Jednotky jde rozpustit a povýšit
+
+Rozpustit jde jakoukoli jednotku. Ve vlastním městě dá polovinu své ceny do výroby, jinde prostě zmizí. Loď s jednotkami na palubě jde rozpustit jen ve městě, aby se nikdo neutopil.
+
+Povýšit jde jednotku jen ve vlastním městě, a to na nejnovější typ v její řadě, na který má hráč technologie. Řady vedou podle toho, co v Civilizaci 1 kterou jednotku nahradilo, třeba válečník, kopiník, mušketýr a střelec. Povýšení stojí 10 zlata a 2 zlata za každý štít rozdílu v ceně a zabere jednotce zbytek tahu. Válečník na mušketýra tak vyjde na 30 zlata, kdežto koupit mušketýra v městě, které ještě nic nevyrobilo, stojí přes 80. Obě akce jsou běžné příkazy, takže je bude moct používat i počítač.
+
 ## 15. 11. 2026: Encyklopedie popisuje všechno, co ve hře je
 
 Michal chtěl, aby každá jednotka, budova, div, vláda, terén i úprava krajiny měla popis a obrázek. Encyklopedie má 98 hesel a otevírá se tlačítkem v horní liště nebo klávesou E. Do hesla se dá skočit i ze stromu technologií nebo kliknutím na budovu ve městě.

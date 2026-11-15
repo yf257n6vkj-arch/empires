@@ -21,6 +21,9 @@ import {
   nextStepToGoal,
   spaceshipFlight,
   spaceshipLaunchProblem,
+  disbandShields,
+  upgradeCost,
+  upgradeTarget,
   wonderFlag,
 } from "./economy";
 import { cityReport } from "./city";
@@ -70,6 +73,8 @@ export type Command =
   | { type: "tradeRoute"; unitId: UnitId; cityId: CityId }
   | { type: "diplomat"; unitId: UnitId; cityId: CityId; action: DiplomatAction }
   | { type: "detonate"; unitId: UnitId; at: Point }
+  | { type: "disband"; unitId: UnitId }
+  | { type: "upgrade"; unitId: UnitId }
   | { type: "endTurn" };
 
 export type DiplomatAction = "embassy" | "stealTech" | "sabotage" | "incite";
@@ -121,7 +126,9 @@ export type CommandError =
   | "isCapital"
   | "tooFar"
   | "needsTech"
-  | "needsRoad";
+  | "needsRoad"
+  | "carriesUnits"
+  | "nothingToUpgrade";
 
 export type CommandResult =
   | { ok: true; state: GameState; events: GameEvent[] }
@@ -167,6 +174,17 @@ export function canBuildImprovement(
     );
     if (!watered) return "needsWater";
   }
+  return null;
+}
+
+/** Why the unit cannot be upgraded right now, or null when it can. */
+export function canUpgrade(state: GameState, unit: Unit): CommandError | null {
+  const target = upgradeTarget(getPlayer(state, unit.owner), unit.type);
+  if (!target) return "nothingToUpgrade";
+  const city = cityAt(state, unit);
+  if (!city || city.owner !== unit.owner) return "notInCity";
+  if (unit.movesLeft <= 0) return "noMovesLeft";
+  if (getPlayer(state, unit.owner).gold < upgradeCost(unit.type, target)) return "notEnoughGold";
   return null;
 }
 
@@ -431,6 +449,45 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
 
     case "detonate":
       return detonateCommand(state, command.unitId, command.at);
+
+    case "disband": {
+      const unit = ownUnit(state, command.unitId);
+      if (typeof unit === "string") return { ok: false, error: unit };
+      const city = cityAt(state, unit);
+      const inOwnCity = city !== undefined && city.owner === unit.owner;
+      const cargo = state.units.filter((u) => u.carriedBy === unit.id);
+      // A ship at sea cannot be disbanded with units on board, they would drown.
+      if (cargo.length > 0 && !inOwnCity) return { ok: false, error: "carriesUnits" };
+      const draft = cloneState(state);
+      for (const u of draft.units) if (u.carriedBy === unit.id) u.carriedBy = null;
+      draft.units = draft.units.filter((u) => u.id !== unit.id);
+      let shields = 0;
+      if (inOwnCity) {
+        shields = disbandShields(unit.type);
+        draft.cities.find((c) => c.id === city.id)!.shields += shields;
+      }
+      events.push({ type: "unitDismissed", unitType: unit.type, owner: unit.owner, cityId: inOwnCity ? city.id : null, shields });
+      return { ok: true, state: draft, events };
+    }
+
+    case "upgrade": {
+      const unit = ownUnit(state, command.unitId);
+      if (typeof unit === "string") return { ok: false, error: unit };
+      const error = canUpgrade(state, unit);
+      if (error) return { ok: false, error };
+      const target = upgradeTarget(getPlayer(state, unit.owner), unit.type)!;
+      const cost = upgradeCost(unit.type, target);
+      const draft = cloneState(state);
+      const u = draft.units.find((x) => x.id === unit.id)!;
+      getPlayer(draft, unit.owner).gold -= cost;
+      u.type = target;
+      // Retraining takes the rest of the turn.
+      u.movesLeft = 0;
+      u.fortified = false;
+      u.goto = null;
+      events.push({ type: "unitUpgraded", unitId: u.id, owner: unit.owner, from: unit.type, to: target, cost });
+      return { ok: true, state: draft, events };
+    }
 
     case "endTurn": {
       const draft = cloneState(state);

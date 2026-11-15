@@ -3,10 +3,10 @@
  * A turn is a function from the old state and commands to a new state.
  */
 import type { Point } from "./geometry";
-import type { BuildingId, GovernmentId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
+import type { BuildingId, CivId, GovernmentId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 6;
+export const STATE_VERSION = 7;
 
 export interface GameMap {
   width: number;
@@ -31,6 +31,9 @@ export type CityId = number;
 
 export interface Player {
   id: PlayerId;
+  /** The nation the player leads; it gives the name, colour and city names. */
+  civ: CivId;
+  /** Name of the nation in plural, "Češi". */
   name: string;
   isHuman: boolean;
   /** Where the player starts. */

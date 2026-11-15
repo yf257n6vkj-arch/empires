@@ -4,7 +4,7 @@
  * `cloneState`, never on a state somebody else holds.
  */
 import { cityRadiusTiles, distance, inBounds, neighbors8, tilesInRadius, type Point } from "./geometry";
-import { IMPROVEMENTS, RULES, TERRAINS, UNIT_TYPES, type ImprovementId, type UnitDomain, type Yield } from "./rules";
+import { CIVS, IMPROVEMENTS, RULES, TERRAINS, UNIT_TYPES, type ImprovementId, type UnitDomain, type Yield } from "./rules";
 import type { City, GameMap, GameState, Player, PlayerId, Unit } from "./state";
 
 export function cloneState(state: GameState): GameState {
@@ -139,9 +139,16 @@ export function workableTiles(state: GameState, city: City): number[] {
   );
 }
 
+/**
+ * Name for the player's next city: the nation's own list first, then the
+ * shared list of made-up names, then numbered repeats.
+ */
 export function cityName(player: Player, index: number, names: readonly string[]): string {
+  const own = CIVS[player.civ]?.cities ?? [];
+  if (index < own.length) return own[index]!;
+  const rest = index - own.length;
   const offset = player.id * 6;
-  const base = names[(offset + index) % names.length] ?? `Město ${index + 1}`;
-  const round = Math.floor((offset + index) / names.length);
+  const base = names[(offset + rest) % names.length] ?? `Město ${index + 1}`;
+  const round = Math.floor((offset + rest) / names.length);
   return round === 0 ? base : `${base} ${round + 1}`;
 }

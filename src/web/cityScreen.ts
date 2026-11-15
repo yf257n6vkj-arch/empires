@@ -27,7 +27,7 @@ import {
   type UnitId,
 } from "../core";
 import { BUILDING_WIDTH, buildingPortraitCanvas, drawBuilding, drawHouse, tone } from "./buildingArt";
-import { drawTerrainPatch, drawUnitPortrait, PLAYER_COLORS, unitPortraitCanvas, type DrawInput } from "./render";
+import { drawTerrainPatch, drawUnitPortrait, playerColor, unitPortraitCanvas, type DrawInput } from "./render";
 import { describeBuilding, describeUnit, escapeHtml } from "./texts";
 
 export interface CityHost {
@@ -224,7 +224,7 @@ function drawPanorama(ctx: CanvasRenderingContext2D, w: number, h: number, state
   // Everything that stands in the city, drawn from the back to the front.
   type Item = { y: number; draw: () => void };
   const items: Item[] = [];
-  const color = PLAYER_COLORS[city.owner % PLAYER_COLORS.length]!;
+  const color = playerColor(city.owner);
   const scale = Math.min(2.1, h / 120);
   const placeRow = (ids: BuildingId[], y: number, s: number) => {
     if (!ids.length) return;

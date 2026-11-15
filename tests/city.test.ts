@@ -15,7 +15,7 @@ describe("founding cities", () => {
     const s = foundAt(GRASS);
     expect(s.units).toHaveLength(0);
     expect(s.cities).toHaveLength(1);
-    expect(s.cities[0]).toMatchObject({ size: 1, x: 3, y: 2, name: "Lipník" });
+    expect(s.cities[0]).toMatchObject({ size: 1, x: 3, y: 2, name: "Praha" });
     expect(s.cities[0]!.worked).toHaveLength(1);
   });
 

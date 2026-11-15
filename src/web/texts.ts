@@ -1,6 +1,7 @@
 /** Czech texts for the screen: error reasons and event messages. */
 import {
   BUILDINGS,
+  CIVS,
   GOVERNMENTS,
   IMPROVEMENTS,
   RULES,
@@ -63,7 +64,17 @@ export const ERROR_TEXT: Record<CommandError, string> = {
   tooFar: "Tak daleko raketa v tomhle tahu nedoletí.",
   needsTech: "Na tohle ti chybí technologie.",
   needsRoad: "Železnice se staví na cestu.",
+  carriesUnits: "Na palubě jsou jednotky. Na moři by se utopily, loď rozpusť až ve městě.",
+  nothingToUpgrade: "Na novější typ zatím nejde povýšit, chybí ti technologie.",
 };
+
+/** "Římská říše": the realm of a player, for sentences with a feminine subject. */
+export function realmName(state: GameState, player: number): string {
+  const p = state.players[player];
+  if (!p) return "Jiná říše";
+  const adj = CIVS[p.civ].adjective;
+  return `${adj.charAt(0).toUpperCase()}${adj.slice(1)} říše`;
+}
 
 export function cityName(state: GameState, id: number): string {
   return state.cities.find((c) => c.id === id)?.name ?? "Zaniklé město";
@@ -110,6 +121,14 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
       return null;
     case "unitDisbanded":
       return `${cityName(state, e.cityId)} nemá štíty na údržbu jednotek, a tak rozpustilo jednotku ${UNIT_TYPES[e.unitType].name}.`;
+    case "unitDismissed":
+      if (e.owner !== viewer) return null;
+      return e.cityId !== null && e.shields > 0
+        ? `Rozpustil jsi jednotku ${UNIT_TYPES[e.unitType].name}. ${cityName(state, e.cityId)} z ní dostalo ${e.shields} štítů do výroby.`
+        : `Rozpustil jsi jednotku ${UNIT_TYPES[e.unitType].name}.`;
+    case "unitUpgraded":
+      if (e.owner !== viewer) return null;
+      return `Jednotku ${UNIT_TYPES[e.from].name} jsi povýšil na ${UNIT_TYPES[e.to].name} za ${e.cost} zlata.`;
     case "unitLost":
       if (e.owner !== viewer) return null;
       return e.reason === "fuel"
@@ -120,10 +139,12 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
     case "spaceshipLaunched":
       return e.player === viewer
         ? `Tvoje vesmírná loď odstartovala a přistane v tahu ${e.arrivalTurn}.`
-        : `${state.players[e.player]?.name ?? "Jiná říše"} vypustila vesmírnou loď, přistane v tahu ${e.arrivalTurn}.`;
+        : `${realmName(state, e.player)} vypustila vesmírnou loď, přistane v tahu ${e.arrivalTurn}.`;
     case "spaceshipArrived": {
-      const who = e.player === viewer ? "Tvoje" : `Loď hráče ${state.players[e.player]?.name ?? "?"}`;
-      return e.success ? `${who} vesmírná loď přistála u cizí hvězdy!` : `${who} vesmírná loď se při přistání ztratila.`;
+      if (e.player === viewer) return e.success ? "Tvoje vesmírná loď přistála u cizí hvězdy!" : "Tvoje vesmírná loď se při přistání ztratila.";
+      return e.success
+        ? `${realmName(state, e.player)} přistála se svou vesmírnou lodí u cizí hvězdy!`
+        : `${realmName(state, e.player)} přišla o vesmírnou loď při přistání.`;
     }
     case "revolutionStarted":
       return e.player === viewer
@@ -136,7 +157,7 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
     case "wonderHelped":
       return `Karavana přidala ${e.shields} štítů na div v ${cityName(state, e.cityId)}.`;
     case "embassyOpened":
-      return e.player === viewer ? `Otevřel jsi velvyslanectví u hráče ${state.players[e.with]?.name ?? "?"}.` : null;
+      return e.player === viewer ? `Otevřel jsi velvyslanectví. ${realmName(state, e.with)} ti teď neutají, co zkoumá a kolik má zlata.` : null;
     case "techStolen":
       return e.player === viewer
         ? `Diplomat ukradl technologii ${TECHS[e.tech].name}.`

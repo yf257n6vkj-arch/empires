@@ -6,6 +6,11 @@ import {
   applyCommand,
   buildingUpkeep,
   canOpenTradeRoute,
+  canUpgrade,
+  CIVS,
+  disbandShields,
+  upgradeCost,
+  upgradeTarget,
   GOVERNMENTS,
   inciteCost,
   knowsTech,
@@ -39,6 +44,7 @@ import {
   tileYield,
   UNIT_TYPES,
   type City,
+  type CivId,
   type Command,
   type GameEvent,
   type GameState,
@@ -58,13 +64,14 @@ import {
   ZOOM_STEP,
   type Camera,
 } from "./camera";
-import { draw, setupCanvas, tileSize, type DrawInput } from "./render";
+import { draw, setPlayerColors, setupCanvas, tileSize, type DrawInput } from "./render";
 import { ERROR_TEXT, escapeHtml, eventText } from "./texts";
 import { createTechTree, unlockNames } from "./techTree";
 import { techIconSvg } from "./techIcons";
 import { createCityScreen } from "./cityScreen";
 import { createEmpireDialogs } from "./empire";
 import { createCodex, entryKey } from "./codex";
+import { createNewGameDialog } from "./newGame";
 
 const HUMAN = 0;
 const PLAYER_COUNT = 4;
@@ -79,7 +86,6 @@ const logList = $<HTMLOListElement>("#log");
 const statusLine = $<HTMLDivElement>("#status");
 const turnLabel = $<HTMLSpanElement>("#turn");
 const endTurnButton = $<HTMLButtonElement>("#end-turn");
-const seedInput = $<HTMLInputElement>("#seed");
 const seedLabel = $<HTMLElement>("#seed-label");
 const newGameButton = $<HTMLButtonElement>("#new-game");
 const showAllBox = $<HTMLInputElement>("#show-all");
@@ -111,6 +117,8 @@ let camera: Camera = DEFAULT_CAMERA;
 let followed = "";
 /** A missile waiting for the player to click its target. */
 let targetingUnitId: number | null = null;
+/** Unit whose "Rozpustit" button was pressed once and now asks for confirmation. */
+let disbandConfirmUnitId: number | null = null;
 
 // ---------- saving ----------
 
@@ -144,9 +152,16 @@ function randomSeed(): string {
   return `${w}-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
-function startNewGame(seed: string): void {
-  state = newGame({ seed, playerCount: PLAYER_COUNT });
-  log = [{ turn: 1, text: "Začíná nová hra. Najdi osadníkem dobré místo a založ první město (klávesa B)." }];
+function startNewGame(seed: string, civ?: CivId): void {
+  state = newGame({ seed, playerCount: PLAYER_COUNT, civ });
+  const nation = CIVS[state.players[HUMAN]!.civ];
+  const rivals = state.players.filter((p) => p.id !== HUMAN).map((p) => p.name).join(", ");
+  log = [
+    {
+      turn: 1,
+      text: `Jsi ${nation.leader} a vedeš ${nation.adjective.slice(0, -1)}ou říši. Na kontinentu žijí i ${rivals}. Najdi osadníkem dobré místo a založ hlavní město (klávesa B). Bude se jmenovat ${nation.cities[0]}.`,
+    },
+  ];
   selectedCityId = null;
   selectedUnitId = null;
   targetingUnitId = null;
@@ -392,6 +407,7 @@ function followSelection(): void {
 }
 
 function refresh(): void {
+  setPlayerColors(state.players.map((p) => CIVS[p.civ].color));
   followSelection();
   // The selection or the units may have changed, so the hovered route is computed again.
   if (hoverTile) {
@@ -483,6 +499,11 @@ const empire = createEmpireDialogs($<HTMLDialogElement>("#empire-dialog"), {
 governmentButton.addEventListener("click", () => empire.openGovernment());
 const codex = createCodex($<HTMLDialogElement>("#codex-dialog"), { openTech: (t) => techTree.openPage(t) });
 $<HTMLButtonElement>("#codex").addEventListener("click", () => codex.open());
+const newGameDialog = createNewGameDialog($<HTMLDialogElement>("#new-game-dialog"), {
+  start: (seed, civ) => startNewGame(seed, civ),
+  randomSeed,
+  showNation: (civ) => codex.show(entryKey("civ", civ)),
+});
 spaceshipButton.addEventListener("click", () => empire.openSpaceship());
 
 function chooseResearch(tech: TechId): void {
@@ -661,6 +682,19 @@ function renderUnit(unit: Unit): void {
   }
   button("skip", "Počkat", "mezera", unit.movesLeft > 0 ? null : "Jednotka už nemá pohyb.");
   if (unit.goto || unit.work || unit.fortified) button("cancel", "Zrušit rozkaz", "C", null);
+  const upgradeTo = upgradeTarget(me(), unit.type);
+  if (upgradeTo) {
+    const err = canUpgrade(state, unit);
+    button("upgrade", `Povýšit: ${UNIT_TYPES[upgradeTo].name} (${upgradeCost(unit.type, upgradeTo)} zlata)`, "U", err ? ERROR_TEXT[err] : null);
+  }
+  const ownCity = here && here.owner === HUMAN;
+  const disbandLabel =
+    disbandConfirmUnitId === unit.id
+      ? "Opravdu rozpustit?"
+      : ownCity
+        ? `Rozpustit (+${disbandShields(unit.type)} štítů do výroby)`
+        : "Rozpustit";
+  button("disband", disbandLabel, "D", null);
   button("next", "Další jednotka", "N", null);
 
   const home = unit.homeCity !== null ? state.cities.find((c) => c.id === unit.homeCity)?.name : undefined;
@@ -678,6 +712,7 @@ function renderUnit(unit: Unit): void {
 
 function doUnitAction(action: string): void {
   const unit = selectedUnit();
+  if (action !== "disband") disbandConfirmUnitId = null;
   if (action === "next") {
     selectNextUnit();
     return refresh();
@@ -694,6 +729,23 @@ function doUnitAction(action: string): void {
     return unitAction({ type: "buildImprovement", unitId: unit.id, improvement: action.slice(6) as ImprovementId });
   }
   if (action === "board") return unitAction({ type: "board", unitId: unit.id });
+  if (action === "upgrade") {
+    run({ type: "upgrade", unitId: unit.id });
+    return refresh();
+  }
+  if (action === "disband") {
+    // Disbanding cannot be undone, so the first press only asks.
+    if (disbandConfirmUnitId !== unit.id) {
+      disbandConfirmUnitId = unit.id;
+      return refresh();
+    }
+    disbandConfirmUnitId = null;
+    if (run({ type: "disband", unitId: unit.id })) {
+      selectedUnitId = null;
+      selectNextUnit();
+    }
+    return refresh();
+  }
   if (action === "help") return unitAction({ type: "helpWonder", unitId: unit.id });
   if (action.startsWith("route:")) return unitAction({ type: "tradeRoute", unitId: unit.id, cityId: Number(action.slice(6)) });
   if (action.startsWith("dip:")) {
@@ -1034,6 +1086,8 @@ const KEY_ACTIONS: Record<string, string> = {
   p: "build:fortress",
   l: "board",
   h: "help",
+  u: "upgrade",
+  d: "disband",
   x: "aim",
   f: "fortify",
   " ": "skip",
@@ -1045,7 +1099,7 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen()) return;
+  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || newGameDialog.isOpen()) return;
   if (e.key.toLowerCase() === "t") {
     e.preventDefault();
     return techTree.open();
@@ -1097,23 +1151,7 @@ document.addEventListener("keydown", (e) => {
 endTurnButton.addEventListener("click", endTurn);
 showAllBox.addEventListener("change", refresh);
 
-let confirmTimer: number | undefined;
-newGameButton.addEventListener("click", () => {
-  if (newGameButton.dataset.confirm !== "1") {
-    newGameButton.dataset.confirm = "1";
-    newGameButton.textContent = "Opravdu?";
-    confirmTimer = window.setTimeout(() => {
-      newGameButton.dataset.confirm = "";
-      newGameButton.textContent = "Nová hra";
-    }, 3000);
-    return;
-  }
-  window.clearTimeout(confirmTimer);
-  newGameButton.dataset.confirm = "";
-  newGameButton.textContent = "Nová hra";
-  startNewGame(seedInput.value.trim() || randomSeed());
-  seedInput.value = "";
-});
+newGameButton.addEventListener("click", () => newGameDialog.open());
 
 // ---------- start ----------
 
@@ -1124,4 +1162,5 @@ if (load()) {
   refresh();
 } else {
   startNewGame(randomSeed());
+  newGameDialog.open(true);
 }

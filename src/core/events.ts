@@ -36,4 +36,6 @@ export type GameEvent =
   | { type: "techStolen"; player: PlayerId; from: PlayerId; tech: TechId }
   | { type: "citySabotaged"; cityId: CityId; building: BuildingId | null }
   | { type: "cityIncited"; cityId: CityId; from: PlayerId; to: PlayerId }
-  | { type: "nuclearStrike"; at: Point; owner: PlayerId; intercepted: boolean };
+  | { type: "nuclearStrike"; at: Point; owner: PlayerId; intercepted: boolean }
+  | { type: "unitDismissed"; unitType: UnitTypeId; owner: PlayerId; cityId: CityId | null; shields: number }
+  | { type: "unitUpgraded"; unitId: UnitId; owner: PlayerId; from: UnitTypeId; to: UnitTypeId; cost: number };

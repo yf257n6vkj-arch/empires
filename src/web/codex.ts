@@ -1,11 +1,13 @@
 /**
  * The encyclopedia of everything in the game besides technologies: units,
- * buildings, wonders, governments, terrain and improvements. Every entry has
+ * buildings, wonders, governments, terrain, improvements and nations. Every entry has
  * a picture, a short story for a curious child, a surprising fact, what it
  * does in the game and a link to the Czech Wikipedia.
  */
 import {
   BUILDINGS,
+  CIV_IDS,
+  CIVS,
   GOVERNMENT_IDS,
   GOVERNMENTS,
   IMPROVEMENT_IDS,
@@ -25,7 +27,7 @@ import { unitPortraitCanvas } from "./render";
 import { techIconSvg } from "./techIcons";
 import { describeBuilding, describeGovernment, describeUnit, escapeHtml } from "./texts";
 
-export type EntryKind = "unit" | "bld" | "wdr" | "gov" | "ter" | "imp";
+export type EntryKind = "civ" | "unit" | "bld" | "wdr" | "gov" | "ter" | "imp";
 
 interface Entry {
   key: string;
@@ -40,7 +42,8 @@ const PICTURES = import.meta.glob<string>("./codex/*.{webp,jpg,jpeg,png}", {
   import: "default",
 });
 
-function pictureOf(key: string): string | null {
+/** URL of the encyclopedia picture for an entry, or null when there is none yet. */
+export function pictureOf(key: string): string | null {
   for (const [path, url] of Object.entries(PICTURES)) {
     if (path.split("/").pop()!.replace(/\.[a-z]+$/, "") === key) return url;
   }
@@ -48,7 +51,8 @@ function pictureOf(key: string): string | null {
 }
 
 /** Key of the entry for a thing in the game, e.g. ("unit", "trireme") → "unit-trireme". */
-export function entryKey(kind: "unit" | "building" | "government" | "terrain" | "improvement", id: string): string {
+export function entryKey(kind: "civ" | "unit" | "building" | "government" | "terrain" | "improvement", id: string): string {
+  if (kind === "civ") return `civ-${id}`;
   if (kind === "unit") return `unit-${id}`;
   if (kind === "government") return `gov-${id}`;
   if (kind === "terrain") return `ter-${id}`;
@@ -87,6 +91,11 @@ const CATEGORIES: { kind: EntryKind; title: string; entries: Entry[] }[] = [
     title: "Úpravy krajiny",
     entries: IMPROVEMENT_IDS.map((id) => ({ key: `imp-${id}`, kind: "imp" as const, id, name: IMPROVEMENTS[id].name })),
   },
+  {
+    kind: "civ",
+    title: "Národy",
+    entries: CIV_IDS.map((id) => ({ key: `civ-${id}`, kind: "civ" as const, id, name: CIVS[id].name })),
+  },
 ];
 
 const ALL: Entry[] = CATEGORIES.flatMap((c) => c.entries);
@@ -123,11 +132,13 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
     if (e.kind === "unit") {
       const u = UNIT_TYPES[e.id as keyof typeof UNIT_TYPES];
       const next = u.obsoleteBy ? entryLink(`unit-${u.obsoleteBy}`, UNIT_TYPES[u.obsoleteBy].name) : "";
+      const older = UNIT_TYPE_IDS.filter((o) => UNIT_TYPES[o].obsoleteBy === u.id).map((o) => entryLink(`unit-${o}`, UNIT_TYPES[o].name));
       return (
         row("Co umí", escapeHtml(describeUnit(u))) +
         row("Odemyká ji", techLink(u.requires)) +
         (u.requiresWonder ? row("Potřebuje div", entryLink(entryKey("building", u.requiresWonder), BUILDINGS[u.requiresWonder].name)) : "") +
-        (next ? row("Nahradí ji", next) : "")
+        (next ? row("Povýšíš ji na", next) : "") +
+        (older.length ? row("Povýšíš na ni", older.join(" ")) : "")
       );
     }
     if (e.kind === "bld" || e.kind === "wdr") {
@@ -137,6 +148,16 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
         row("Odemyká", techLink(b.requires)) +
         (b.requiresBuilding ? row("Potřebuje", entryLink(entryKey("building", b.requiresBuilding), BUILDINGS[b.requiresBuilding].name)) : "") +
         (b.obsoleteBy ? row("Přestane působit s", techLink(b.obsoleteBy)) : "")
+      );
+    }
+    if (e.kind === "civ") {
+      const c = CIVS[e.id as keyof typeof CIVS];
+      const nature = { expansion: "rád zakládá nová města", war: "spoléhá na armádu", science: "sází na vědu a výzkum" }[c.personality];
+      return (
+        row("Vládce", escapeHtml(c.leader)) +
+        row("Barva", `<span class="cx-color" style="background:${c.color}"></span>`) +
+        row("Když hraje počítač", nature) +
+        row("První města", escapeHtml(c.cities.slice(0, 6).join(", ")))
       );
     }
     if (e.kind === "gov") {
@@ -181,7 +202,7 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
   function fallbackPicture(e: Entry): HTMLElement {
     if (e.kind === "unit") return unitPortraitCanvas(e.id as never, 0, 400, 300);
     if (e.kind === "bld" || e.kind === "wdr") return buildingPortraitCanvas(e.id as never, 400, 300);
-    if (e.kind === "gov") return buildingPortraitCanvas("palace", 400, 300);
+    if (e.kind === "gov" || e.kind === "civ") return buildingPortraitCanvas("palace", 400, 300);
     const div = document.createElement("div");
     div.className = "cx-swatch";
     div.dataset.kind = e.id;

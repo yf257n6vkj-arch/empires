@@ -9,12 +9,14 @@
  */
 import type { Point } from "./geometry";
 import { builtWonders, researchCost, wonderFlag } from "./economy";
-import type { BuildingId, GovernmentId, TechId, TerrainId } from "./rules";
+import type { BuildingId, CivId, GovernmentId, TechId, TerrainId } from "./rules";
 import type { City, GameState, PlayerId, Spaceship, Unit } from "./state";
 
 /** What a player knows about another empire. */
 export interface RivalView {
   id: PlayerId;
+  /** Nation, so the AI and the screen know the leader, colour and nature. */
+  civ: CivId;
   name: string;
   /** Details only an embassy reveals. */
   embassy: { techs: TechId[]; gold: number; government: GovernmentId } | null;
@@ -24,6 +26,7 @@ export interface RivalView {
 
 export interface PlayerView {
   playerId: PlayerId;
+  civ: CivId;
   turn: number;
   isMyTurn: boolean;
   width: number;
@@ -74,6 +77,7 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
   const seesAll = wonderFlag(state, playerId, "seesAllCities");
   return {
     playerId,
+    civ: player.civ,
     turn: state.turn,
     isMyTurn: state.currentPlayer === playerId,
     width: state.map.width,
@@ -96,6 +100,7 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
       .filter((p) => p.id !== playerId)
       .map((p) => ({
         id: p.id,
+        civ: p.civ,
         name: p.name,
         embassy: player.embassies.includes(p.id) ? { techs: [...p.techs], gold: p.gold, government: p.government } : null,
         spaceshipArrival: p.spaceship.arrivalTurn,

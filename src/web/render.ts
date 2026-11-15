@@ -27,7 +27,14 @@ export const TERRAIN_COLORS: Record<TerrainId, string> = {
   desert: "#e6d29c",
 };
 
-export const PLAYER_COLORS = ["#f4f1ea", "#d9483b", "#3f8fd6", "#e2ac2f"];
+/** Colours by player id until a game sets its nations' colours. */
+const DEFAULT_COLORS = ["#f4f1ea", "#d9483b", "#3f8fd6", "#e2ac2f"];
+let colors: string[] = DEFAULT_COLORS;
+
+/** Every player draws in the colour of their nation. */
+export function setPlayerColors(next: string[]): void {
+  colors = next.length > 0 ? next : DEFAULT_COLORS;
+}
 
 const UNKNOWN = "#101215";
 const INK = "#1c1a17";
@@ -151,8 +158,8 @@ function shade(hex: string, factor: number, alpha = 1): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function playerColor(owner: number): string {
-  return PLAYER_COLORS[owner % PLAYER_COLORS.length] ?? "#ffffff";
+export function playerColor(owner: number): string {
+  return colors[owner % colors.length] ?? "#ffffff";
 }
 
 /** Colour of the player's figures: dark ink on light player colours, white on dark ones. */

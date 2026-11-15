@@ -4,6 +4,7 @@
  */
 import buildingData from "./data/buildings.json";
 import cityNameData from "./data/city-names.json";
+import civData from "./data/civs.json";
 import gameData from "./data/game.json";
 import governmentData from "./data/governments.json";
 import improvementData from "./data/improvements.json";
@@ -418,6 +419,11 @@ export interface GameConstants {
   tradeRoutesPerCity: number;
   /** Nuclear attack: radius of destruction and of the protection of a missile shield. */
   nuclearRadius: number;
+  /** A unit disbanded in its owner's city adds this percent of its cost to production. */
+  disbandShieldsPct: number;
+  /** Upgrading a unit costs upgradeGoldBase + upgradeGoldPerShield × the difference in shield cost. */
+  upgradeGoldBase: number;
+  upgradeGoldPerShield: number;
   spaceship: {
     maxStructural: number;
     maxComponent: number;
@@ -485,6 +491,45 @@ export const GOVERNMENTS: Readonly<Record<GovernmentId, GovernmentRule>> = index
 
 export const CITY_NAMES: readonly string[] = cityNameData.names;
 
+export const CIV_IDS = [
+  "romans",
+  "babylonians",
+  "germans",
+  "egyptians",
+  "americans",
+  "greeks",
+  "indians",
+  "russians",
+  "zulus",
+  "french",
+  "aztecs",
+  "chinese",
+  "english",
+  "mongols",
+  "czechs",
+] as const;
+export type CivId = (typeof CIV_IDS)[number];
+
+/** What the computer player is inclined to do; read by the AI. */
+export type Personality = "expansion" | "war" | "science";
+
+export interface CivRule {
+  id: CivId;
+  /** The people, in plural: "Češi". */
+  name: string;
+  /** Adjective for a feminine noun, as in "česká říše". */
+  adjective: string;
+  leader: string;
+  color: string;
+  /** Two nations of the same group never meet in one game, so colours stay apart. */
+  colorGroup: string;
+  personality: Personality;
+  /** Names for new cities, in order; the first one is the capital. */
+  cities: string[];
+}
+
+export const CIVS: Readonly<Record<CivId, CivRule>> = indexById("civs.json", CIV_IDS, civData.civs as CivRule[]);
+
 export function isLand(terrain: TerrainId): boolean {
   return TERRAINS[terrain].land;
 }
@@ -517,5 +562,9 @@ function checkReferences(): void {
     }
   }
   for (const t of RULES.pollutionTechs) tech("game.json pollutionTechs", t);
+  for (const c of Object.values(CIVS)) {
+    if (c.cities.length === 0) throw new Error(`civs.json ${c.id}: no city names`);
+    if (!["expansion", "war", "science"].includes(c.personality)) throw new Error(`civs.json ${c.id}: unknown personality "${c.personality}"`);
+  }
 }
 checkReferences();

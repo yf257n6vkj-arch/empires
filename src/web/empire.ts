@@ -13,7 +13,7 @@ import {
   type GameState,
 } from "../core";
 import { buildingPortraitCanvas } from "./buildingArt";
-import { describeGovernment, escapeHtml } from "./texts";
+import { describeGovernment, escapeHtml, realmName } from "./texts";
 
 export interface EmpireHost {
   state(): GameState;
@@ -89,7 +89,7 @@ export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost)
         : `<p>Kdyby loď odstartovala teď, letěla by ${flight.turns} tahů a přistála by se šancí ${flight.successPct} %.</p>`;
     const rivals = s.players
       .filter((x) => x.id !== p.id && x.spaceship.arrivalTurn !== null)
-      .map((x) => `<p class="warn">${escapeHtml(x.name)} má loď ve vzduchu, přistane v tahu ${x.spaceship.arrivalTurn}.</p>`)
+      .map((x) => `<p class="warn">${escapeHtml(realmName(host.state(), x.id))} má loď ve vzduchu, přistane v tahu ${x.spaceship.arrivalTurn}.</p>`)
       .join("");
     frame(
       "Vesmírná loď",
@@ -117,7 +117,7 @@ export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost)
       mine ? "Vyhrál jsi!" : "Konec závodu",
       mine
         ? `<p>Tvoje vesmírná loď přistála u cizí hvězdy v tahu ${v.turn}. Lidé z tvé říše založili první osadu mimo Zemi.</p><p class="small">Můžeš hrát dál, výsledek už zůstane.</p>`
-        : `<p>${escapeHtml(host.state().players[v.player]?.name ?? "Jiná říše")} přistála u cizí hvězdy v tahu ${v.turn} a vyhrála.</p>`,
+        : `<p>${escapeHtml(realmName(host.state(), v.player))} přistála u cizí hvězdy v tahu ${v.turn} a vyhrála.</p>`,
     );
   }
 

@@ -6,7 +6,7 @@ import { applyCommand } from "./commands";
 import type { GameEvent } from "./events";
 import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
-import { BUILDING_IDS, RULES, TECH_IDS, type TechId } from "./rules";
+import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, type CivId, type TechId } from "./rules";
 import { chooseStartPositions } from "./start";
 import { canResearch, clampRate, fallbackProduction, startingEconomy } from "./economy";
 import { emptySpaceship, STATE_VERSION, type GameState, type Player } from "./state";
@@ -22,6 +22,24 @@ export interface NewGameOptions {
    * so in phase 1 the human explores the continent alone.
    */
   opponentUnits?: boolean;
+  /** Nation of the human player; a random one when omitted. */
+  civ?: CivId;
+}
+
+/**
+ * Nations for a game: the human's choice first, then random nations whose
+ * colours differ from all chosen ones, the way Civilization 1 kept colours apart.
+ */
+export function chooseCivs(human: CivId | undefined, count: number, rng: Rng): CivId[] {
+  const chosen: CivId[] = [];
+  const first = human ?? rng.pick(CIV_IDS);
+  chosen.push(first);
+  for (const civ of rng.shuffle(CIV_IDS)) {
+    if (chosen.length >= count) break;
+    if (chosen.some((c) => CIVS[c].colorGroup === CIVS[civ].colorGroup)) continue;
+    chosen.push(civ);
+  }
+  return chosen;
 }
 
 export function newGame(options: NewGameOptions): GameState {
@@ -29,9 +47,11 @@ export function newGame(options: NewGameOptions): GameState {
   const map = generateMap(rng.fork("map"), options.map ?? DEFAULT_MAP_OPTIONS);
   const starts = chooseStartPositions(map, options.playerCount, rng.fork("starts"));
 
+  const civs = chooseCivs(options.civ, starts.length, rng.fork("civs"));
   const players: Player[] = starts.map((start, id) => ({
     id,
-    name: id === 0 ? "Hráč" : `Soupeř ${id}`,
+    civ: civs[id]!,
+    name: CIVS[civs[id]!].name,
     isHuman: id === 0,
     start,
     explored: new Array<number>(map.width * map.height).fill(0),
@@ -141,6 +161,15 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
       }
     }
     state.victory ??= null;
+  }
+  if (version <= 6) {
+    // Version 7 adds nations. Old games get fixed ones with different colours;
+    // cities keep the names they already have.
+    const fixed: CivId[] = ["czechs", "romans", "germans", "egyptians", "greeks", "zulus", "indians", "chinese"];
+    state.players = state.players.map((p, i) => {
+      const civ = p.civ ?? fixed[i % fixed.length]!;
+      return { ...p, civ, name: CIVS[civ].name };
+    });
   }
   state.version = STATE_VERSION;
   return state;

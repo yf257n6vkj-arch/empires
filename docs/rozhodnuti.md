@@ -14,7 +14,7 @@ V detailu města jde hranici mezi obrázkem a panely táhnout myší, hra si vý
 
 ## 15. 11. 2026: Detail města kreslí Gemini a terén má přírodní hranice
 
-Michal chtěl, aby detail města vypadal dobře a všechny budovy nakreslil Gemini. Gemini nakreslí každou budovu a každý div jako samostatný obrázek z mírného nadhledu, k tomu tři typy domů pro každou éru a dvě krajiny do pozadí, jednu s mořem pro přístavní města. Město v detailu staví budovy na louku do řad, divy dostanou nejlepší místa a zbytek zaplní domy podle počtu obyvatel. Hradby stojí vepředu. Dokud obrázky nejsou ve hře, zůstává pohled kreslený kódem.
+Michal chtěl, aby detail města vypadal dobře a všechny budovy nakreslil Gemini. Gemini nakreslí každou budovu a každý div jako samostatný obrázek z mírného nadhledu, k tomu tři typy domů pro každou éru a dvě krajiny do pozadí, jednu s mořem pro přístavní města. Město v detailu staví budovy na louku do řad, divy dostanou nejlepší místa a zbytek zaplní domy podle počtu obyvatel. Vepředu vede hradba s věžemi. Široké okno doplní krajinu po stranách zrcadlenými kusy louky. Obrázky budov slouží i jako ikony v seznamech města.
 
 Detail města se teď vejde na obrazovku bez posouvání. Nahoře je pohled do města s obyvateli, dole okolí města, výroba a přehled města. Nabídka toho, co stavět, je seznam rozdělený na jednotky, budovy a divy.
 

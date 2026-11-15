@@ -31,7 +31,7 @@ import {
 import { BUILDING_WIDTH, buildingPortraitCanvas, drawBuilding, drawHouse, tone } from "./buildingArt";
 import { drawTerrainPatch, drawUnitPortrait, playerColor, unitPortraitCanvas, type DrawInput } from "./render";
 import { describeBuilding, describeUnit, escapeHtml } from "./texts";
-import { drawCityView, hasCityArt, loadCityArt } from "./cityView";
+import { buildingArtCanvas, drawCityView, hasCityArt, loadCityArt } from "./cityView";
 
 export interface CityHost {
   state(): GameState;
@@ -800,7 +800,8 @@ export function createCityScreen(host: CityHost) {
     );
     setUpSplit();
     dialog.querySelectorAll<HTMLButtonElement>(".cs-building").forEach((d) => {
-      d.querySelector(".pic")!.append(buildingPortraitCanvas(d.dataset.b as BuildingId, 36, 28));
+      const id = d.dataset.b as BuildingId;
+      d.querySelector(".pic")!.append(buildingArtCanvas(id, 36, 28) ?? buildingPortraitCanvas(id, 36, 28));
       d.addEventListener("click", () => host.openEntry(`${BUILDINGS[d.dataset.b as BuildingId].wonder ? "wdr" : "bld"}-${d.dataset.b}`));
     });
     dialog.querySelectorAll<HTMLButtonElement>(".cs-unit").forEach((b) => {
@@ -865,7 +866,8 @@ export function createCityScreen(host: CityHost) {
   }
 
   function pictureOf(item: ProductionItem, w: number, h: number, owner: number): HTMLCanvasElement {
-    return item.kind === "unit" ? unitPortraitCanvas(item.id, owner, w, h) : buildingPortraitCanvas(item.id, w, h);
+    if (item.kind === "unit") return unitPortraitCanvas(item.id, owner, w, h);
+    return buildingArtCanvas(item.id, w, h) ?? buildingPortraitCanvas(item.id, w, h);
   }
 
   function renderMap(holder: HTMLDivElement, s: GameState, c: City): void {

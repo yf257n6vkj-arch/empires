@@ -176,6 +176,10 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
     for (const u of state.units) u.orders ??= null;
     for (const c of state.cities) c.queue ??= [];
   }
+  if (version <= 8) {
+    // Version 9 adds special resources and more terrains; old maps have no specials.
+    state.map.special ??= new Array<number>(state.map.width * state.map.height).fill(0);
+  }
   state.version = STATE_VERSION;
   return state;
 }

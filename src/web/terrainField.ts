@@ -21,8 +21,28 @@ const TERRAIN_INDEX: Record<TerrainId, number> = {
   hills: 5,
   mountains: 6,
   desert: 7,
+  tundra: 8,
+  arctic: 9,
+  jungle: 10,
+  swamp: 11,
+  river: 12,
 };
-const INDEX_TERRAIN: (TerrainId | null)[] = [null, "ocean", "grassland", "plains", "forest", "hills", "mountains", "desert"];
+const INDEX_TERRAIN: (TerrainId | null)[] = [
+  null,
+  "ocean",
+  "grassland",
+  "plains",
+  "forest",
+  "hills",
+  "mountains",
+  "desert",
+  "tundra",
+  "arctic",
+  "jungle",
+  "swamp",
+  "river",
+];
+const ARCTIC = 9;
 
 /** How far (in tiles) borders may move: between land terrains and at the coast. */
 const LAND_WARP = 0.48;
@@ -402,7 +422,7 @@ function paintRegion(
         r = c[0]! * k;
         g = c[1]! * k;
         b = c[2]! * k;
-        if (d <= beach + 1) {
+        if (d <= beach + 1 && ti !== ARCTIC) {
           const a = d <= beach ? 0.9 : 0.45;
           r += (SAND[0] - r) * a;
           g += (SAND[1] - g) * a;

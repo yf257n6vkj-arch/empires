@@ -117,6 +117,12 @@ export function tileYield(map: GameMap, index: number, isCityCenter: boolean): Y
     result.shields += bonus.shields ?? 0;
     result.trade += bonus.trade ?? 0;
   };
+  const special = TERRAINS[terrain].special;
+  if (special && map.special?.[index]) {
+    result.food += special.food ?? 0;
+    result.shields += special.shields ?? 0;
+    result.trade += special.trade ?? 0;
+  }
   if (map.road[index] || isCityCenter) add("road");
   if (map.irrigation[index] || (isCityCenter && !map.mine[index])) add("irrigation");
   if (map.mine[index]) add("mine");

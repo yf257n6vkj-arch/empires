@@ -8,7 +8,11 @@
  *     and fill enclosed water, so there is exactly one continent and no lakes.
  *  4. Hand out terrain types by ranking land tiles by independent noise
  *     fields (ruggedness, moisture, vegetation) so each type gets a
- *     predictable share of the land.
+ *     predictable share of the land. Tundra lies towards the poles, jungle
+ *     and swamp in wet lowland nearer the equator.
+ *  5. Rivers run from hills and mountains down to the sea.
+ *  6. Polar ice along the top and bottom edges, as in Civilization 1.
+ *  7. Special resources on some tiles, never two side by side.
  */
 import { neighbors8, toIndex, type GridSize } from "./geometry";
 import type { TerrainId } from "./rules";
@@ -29,7 +33,15 @@ export interface MapOptions {
     desert: number;
     forest: number;
     plains: number;
+    jungle: number;
+    swamp: number;
   };
+  /** Distance from the equator (0 = middle row, 1 = top or bottom edge) beyond which flat land turns to tundra. */
+  tundraLatitude: number;
+  /** How many rivers to try, the actual number varies by one. */
+  rivers: number;
+  /** Chance that a land tile, or a sea tile next to the continent, gets a special resource. */
+  specialChance: number;
 }
 
 export const DEFAULT_MAP_OPTIONS: MapOptions = {
@@ -37,7 +49,10 @@ export const DEFAULT_MAP_OPTIONS: MapOptions = {
   height: 28,
   landShare: 0.42,
   seaBorder: 2,
-  shares: { mountains: 0.07, hills: 0.12, desert: 0.08, forest: 0.2, plains: 0.25 },
+  shares: { mountains: 0.07, hills: 0.12, desert: 0.07, forest: 0.16, plains: 0.22, jungle: 0.06, swamp: 0.05 },
+  tundraLatitude: 0.7,
+  rivers: 4,
+  specialChance: 0.1,
 };
 
 /** Land must not shrink below this share of the target after cleanup. */
@@ -53,10 +68,14 @@ export function generateMap(rng: Rng, options: MapOptions = DEFAULT_MAP_OPTIONS)
     const landCount = land.reduce((n, v) => n + (v ? 1 : 0), 0);
     if (landCount >= targetLand * MIN_LAND_RATIO) {
       const empty = () => new Array<number>(size.width * size.height).fill(0);
+      const terrain = assignTerrain(rng, size, land, options);
+      addRivers(rng, size, terrain, options.rivers);
+      addPolarIce(rng, size, terrain);
       return {
         width: size.width,
         height: size.height,
-        terrain: assignTerrain(rng, size, land, options),
+        terrain,
+        special: placeSpecials(rng, size, terrain, options.specialChance),
         road: empty(),
         irrigation: empty(),
         mine: empty(),
@@ -190,33 +209,148 @@ function assignTerrain(rng: Rng, size: GridSize, land: boolean[], options: MapOp
   );
   const moisture = valueNoise(rng, size, [{ cell: 8, weight: 1 }, { cell: 3, weight: 0.4 }]);
   const vegetation = valueNoise(rng, size, [{ cell: 3, weight: 1 }, { cell: 1.5, weight: 0.4 }]);
+  const wobble = valueNoise(rng, size, [{ cell: 4, weight: 1 }]);
+  const cy = (size.height - 1) / 2;
+  const latitude = (i: number) => Math.abs(Math.floor(i / size.width) - cy) / (size.height / 2) + ((wobble[i] ?? 0.5) - 0.5) * 0.16;
 
   const terrain: TerrainId[] = land.map((isLandTile) => (isLandTile ? "grassland" : "ocean"));
   const landTiles = land.flatMap((v, i) => (v ? [i] : []));
   const total = landTiles.length;
   const { shares } = options;
+  const take = (from: number[], share: number, to: TerrainId) => {
+    const n = Math.round(total * share);
+    from.slice(0, n).forEach((i) => (terrain[i] = to));
+    return from.slice(n);
+  };
 
   // Mountains and hills: the most rugged tiles.
   const byRugged = [...landTiles].sort((a, b) => (rugged[b] ?? 0) - (rugged[a] ?? 0));
-  const nMountains = Math.round(total * shares.mountains);
-  const nHills = Math.round(total * shares.hills);
-  byRugged.slice(0, nMountains).forEach((i) => (terrain[i] = "mountains"));
-  byRugged.slice(nMountains, nMountains + nHills).forEach((i) => (terrain[i] = "hills"));
+  take(take(byRugged, shares.mountains, "mountains"), shares.hills, "hills");
 
-  // Flat land by moisture: driest is desert, then plains, wettest stays grassland.
+  // Flat land near the poles is tundra.
+  for (const i of landTiles) if (terrain[i] === "grassland" && latitude(i) > options.tundraLatitude) terrain[i] = "tundra";
+
+  // Flat land by moisture: driest is desert (away from the poles), then plains, wettest stays grassland.
   const flat = landTiles.filter((i) => terrain[i] === "grassland");
-  const byDry = [...flat].sort((a, b) => (moisture[a] ?? 0) - (moisture[b] ?? 0));
-  const nDesert = Math.round(total * shares.desert);
-  const nPlains = Math.round(total * shares.plains);
-  byDry.slice(0, nDesert).forEach((i) => (terrain[i] = "desert"));
-  byDry.slice(nDesert, nDesert + nPlains).forEach((i) => (terrain[i] = "plains"));
+  const byDry = [...flat].sort((a, b) => (moisture[a] ?? 0) + latitude(a) * 0.3 - ((moisture[b] ?? 0) + latitude(b) * 0.3));
+  take(take(byDry, shares.desert, "desert"), shares.plains, "plains");
+
+  // The wettest lowland: jungle nearer the equator, swamp elsewhere.
+  const wet = landTiles.filter((i) => terrain[i] === "grassland").sort((a, b) => (moisture[b] ?? 0) - (moisture[a] ?? 0));
+  const byHeat = [...wet.slice(0, Math.round(wet.length * 0.45))].sort((a, b) => latitude(a) - latitude(b));
+  take(byHeat, shares.jungle, "jungle");
+  const marsh = landTiles.filter((i) => terrain[i] === "grassland").sort((a, b) => (moisture[b] ?? 0) - (moisture[a] ?? 0));
+  take(marsh, shares.swamp, "swamp");
 
   // Forest grows on grassland and plains with the highest vegetation.
   const green = landTiles.filter((i) => terrain[i] === "grassland" || terrain[i] === "plains");
   const byVegetation = [...green].sort((a, b) => (vegetation[b] ?? 0) - (vegetation[a] ?? 0));
-  byVegetation.slice(0, Math.round(total * shares.forest)).forEach((i) => (terrain[i] = "forest"));
+  take(byVegetation, shares.forest, "forest");
 
   return terrain;
+}
+
+/** Terrain a river may run through; it replaces it. */
+const RIVER_BED: TerrainId[] = ["grassland", "plains", "desert", "forest", "tundra", "jungle", "swamp"];
+
+/**
+ * Rivers start next to hills or mountains and run downhill, which here means
+ * towards the nearest sea, until they reach the coast (mutates `terrain`).
+ */
+function addRivers(rng: Rng, size: GridSize, terrain: TerrainId[], count: number): void {
+  const { width, height } = size;
+  // Distance from the sea over land, 4-neighbour steps.
+  const dist = new Array<number>(width * height).fill(Infinity);
+  const queue: number[] = [];
+  terrain.forEach((t, i) => {
+    if (t === "ocean") {
+      dist[i] = 0;
+      queue.push(i);
+    }
+  });
+  const near4 = (i: number) => {
+    const x = i % width;
+    const y = Math.floor(i / width);
+    return [x > 0 ? i - 1 : -1, x < width - 1 ? i + 1 : -1, y > 0 ? i - width : -1, y < height - 1 ? i + width : -1].filter((n) => n >= 0);
+  };
+  for (let q = 0; q < queue.length; q++) {
+    const i = queue[q]!;
+    for (const n of near4(i)) {
+      if (dist[n]! > dist[i]! + 1) {
+        dist[n] = dist[i]! + 1;
+        queue.push(n);
+      }
+    }
+  }
+  const sources = rng.shuffle(
+    terrain.flatMap((t, i) =>
+      RIVER_BED.includes(t) && dist[i]! >= 4 && near4(i).some((n) => terrain[n] === "hills" || terrain[n] === "mountains") ? [i] : [],
+    ),
+  );
+  const wanted = count - 1 + rng.int(3);
+  let made = 0;
+  for (const source of sources) {
+    if (made >= wanted) break;
+    // Keep rivers apart from each other.
+    if (terrain[source] === "river" || near4(source).some((n) => terrain[n] === "river")) continue;
+    const path: number[] = [source];
+    let at = source;
+    while (dist[at]! > 1 && path.length < 16) {
+      const bed = near4(at).filter((n) => RIVER_BED.includes(terrain[n]!) && !path.includes(n) && !near4(n).some((m) => m !== at && path.includes(m)));
+      const down = bed.filter((n) => dist[n]! < dist[at]!);
+      // Now and then the river wanders sideways before it falls again, so it bends.
+      const level = bed.filter((n) => dist[n] === dist[at]);
+      const options = level.length && rng.next() < 0.45 ? level : down;
+      if (options.length === 0) break;
+      at = options[rng.int(options.length)]!;
+      path.push(at);
+    }
+    // Only rivers that reach the coast and are long enough.
+    if (dist[at] !== 1 || path.length < 3) continue;
+    for (const i of path) terrain[i] = "river";
+    made++;
+  }
+}
+
+/** Ice along the top and bottom edge of the map, ragged where it meets the sea (mutates `terrain`). */
+function addPolarIce(rng: Rng, size: GridSize, terrain: TerrainId[]): void {
+  const { width, height } = size;
+  for (const [edge, inner] of [
+    [0, 1],
+    [height - 1, height - 2],
+  ] as const) {
+    for (let x = 0; x < width; x++) {
+      if (rng.next() < 0.8) terrain[edge * width + x] = "arctic";
+    }
+    for (let x = 0; x < width; x++) {
+      // Ice never touches the continent, so the coast and river mouths stay open.
+      const beyond = inner + (inner - edge);
+      const clear = [x - 1, x, x + 1].every((bx) => bx < 0 || bx >= width || terrain[beyond * width + bx] === "ocean");
+      if (terrain[edge * width + x] === "arctic" && terrain[inner * width + x] === "ocean" && clear && rng.next() < 0.22) terrain[inner * width + x] = "arctic";
+    }
+  }
+}
+
+/**
+ * Special resources: a share of land tiles and of the sea next to the
+ * continent, never two on neighbouring tiles. Rivers have none.
+ */
+function placeSpecials(rng: Rng, size: GridSize, terrain: TerrainId[], chance: number): number[] {
+  const special = new Array<number>(size.width * size.height).fill(0);
+  for (let i = 0; i < terrain.length; i++) {
+    const t = terrain[i]!;
+    if (t === "river") continue;
+    const neighbours = neighbors8(size, i);
+    if (t === "ocean" && !neighbours.some((n) => terrain[n] !== "ocean" && terrain[n] !== "arctic")) {
+      // Fish only next to the continent, where cities can reach it.
+      rng.next();
+      continue;
+    }
+    if (rng.next() >= chance) continue;
+    if (neighbours.some((n) => special[n])) continue;
+    special[i] = 1;
+  }
+  return special;
 }
 
 interface Octave {

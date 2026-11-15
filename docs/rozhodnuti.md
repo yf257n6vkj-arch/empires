@@ -2,6 +2,16 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Mapa má všechny terény z Civilizace 1 a suroviny
+
+Michal chtěl všechny terény z Civilizace 1. K oceánu, louce, pláním, lesu, kopcům, horám a poušti přibyla tundra, ledovec, džungle, bažina a řeka. Výnosy a pohyb odpovídají Civilizaci 1. Michal poslal seznam, kde měla louka 2/1/0 a řeka 2/1/1, ale v Civilizaci 1 má louka 2/0/0 a řeka 1/0/1 a jeden štít navíc dává až surovina na louce. Držíme hodnoty z Civilizace 1.
+
+Řeka je samostatný terén jako v Civilizaci 1 a teče od kopců a hor k moři. Cestu nebo železnici přes ni jde postavit až se stavbou mostů. Tundra leží k pólům, džungle a bažina ve vlhkých nížinách, u horního a dolního okraje mapy je polární led. Džungli a bažinu zatím nejde zavlažit ani přeměnit na jiný terén.
+
+Každý terén kromě řeky má surovinu z Civilizace 1, třeba ryby v moři, koně na pláních, uhlí v kopcích nebo zlato v horách. Objeví se asi na desetině políček a dvě nikdy nesousedí. Ryby jsou jen u pobřeží kontinentu. Hra je ukazuje malou značkou na políčku a počítá je do výnosu, takže je vidí i AI.
+
+Město může místo stavby vydělávat zlato. Každý štít se pak změní na jeden kus zlata a uložené štíty počkají na další stavbu. Do plánu staveb tahle volba nejde, protože nikdy neskončí.
+
 ## 15. 11. 2026: Město má plán staveb, osadníci pracují sami a hra má rádce
 
 Michal chtěl ve městě frontu práce. Město si teď může naplánovat až osm dalších staveb. Když dokončí tu současnou, vezme další z plánu a přeskočí, co už postavit nejde. Bez plánu dál vyrábí stejnou jednotku, nebo po dokončené budově přejde na obránce. Plán je obyčejný příkaz, takže ho bude používat i AI.

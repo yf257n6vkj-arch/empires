@@ -1,12 +1,180 @@
 {
-  "_comment": "Výnosy a pohyb podle Civilizace 1, obranné bonusy jsou zatím provizorní a doladíme je ve fázi pravidel. defenseBonus je v procentech.",
+  "_comment": "Výnosy a pohyb podle Civilizace 1, obranné bonusy jsou zatím provizorní a doladíme je ve fázi pravidel. defenseBonus je v procentech. special je surovina, která se na části políček objeví a přidá k výnosu uvedené jídlo, štíty a obchod (Civilizace 1). Řeka je v Civilizaci 1 samostatný terén; cesta přes ni potřebuje stavbu mostů (viz improvements.json).",
   "terrains": [
-    { "id": "ocean",     "name": "Oceán",  "food": 1, "shields": 0, "trade": 2, "moveCost": 1, "defenseBonus": 0,   "land": false },
-    { "id": "grassland", "name": "Louka",  "food": 2, "shields": 0, "trade": 0, "moveCost": 1, "defenseBonus": 0,   "land": true },
-    { "id": "plains",    "name": "Pláně",  "food": 1, "shields": 1, "trade": 0, "moveCost": 1, "defenseBonus": 0,   "land": true },
-    { "id": "forest",    "name": "Les",    "food": 1, "shields": 2, "trade": 0, "moveCost": 2, "defenseBonus": 25,  "land": true },
-    { "id": "hills",     "name": "Kopce",  "food": 1, "shields": 0, "trade": 0, "moveCost": 2, "defenseBonus": 50,  "land": true },
-    { "id": "mountains", "name": "Hory",   "food": 0, "shields": 1, "trade": 0, "moveCost": 3, "defenseBonus": 100, "land": true },
-    { "id": "desert",    "name": "Poušť",  "food": 0, "shields": 1, "trade": 0, "moveCost": 1, "defenseBonus": 0,   "land": true }
+    {
+      "id": "ocean",
+      "name": "Oceán",
+      "food": 1,
+      "shields": 0,
+      "trade": 2,
+      "moveCost": 1,
+      "defenseBonus": 0,
+      "land": false,
+      "special": {
+        "id": "fish",
+        "name": "Ryby",
+        "food": 2
+      }
+    },
+    {
+      "id": "grassland",
+      "name": "Louka",
+      "food": 2,
+      "shields": 0,
+      "trade": 0,
+      "moveCost": 1,
+      "defenseBonus": 0,
+      "land": true,
+      "special": {
+        "id": "resources",
+        "name": "Úrodná půda",
+        "shields": 1
+      }
+    },
+    {
+      "id": "plains",
+      "name": "Pláně",
+      "food": 1,
+      "shields": 1,
+      "trade": 0,
+      "moveCost": 1,
+      "defenseBonus": 0,
+      "land": true,
+      "special": {
+        "id": "horses",
+        "name": "Koně",
+        "shields": 2
+      }
+    },
+    {
+      "id": "forest",
+      "name": "Les",
+      "food": 1,
+      "shields": 2,
+      "trade": 0,
+      "moveCost": 2,
+      "defenseBonus": 25,
+      "land": true,
+      "special": {
+        "id": "pheasant",
+        "name": "Bažanti",
+        "food": 2
+      }
+    },
+    {
+      "id": "hills",
+      "name": "Kopce",
+      "food": 1,
+      "shields": 0,
+      "trade": 0,
+      "moveCost": 2,
+      "defenseBonus": 50,
+      "land": true,
+      "special": {
+        "id": "coal",
+        "name": "Uhlí",
+        "shields": 2
+      }
+    },
+    {
+      "id": "mountains",
+      "name": "Hory",
+      "food": 0,
+      "shields": 1,
+      "trade": 0,
+      "moveCost": 3,
+      "defenseBonus": 100,
+      "land": true,
+      "special": {
+        "id": "gold",
+        "name": "Zlato",
+        "trade": 6
+      }
+    },
+    {
+      "id": "desert",
+      "name": "Poušť",
+      "food": 0,
+      "shields": 1,
+      "trade": 0,
+      "moveCost": 1,
+      "defenseBonus": 0,
+      "land": true,
+      "special": {
+        "id": "oasis",
+        "name": "Oáza",
+        "food": 3
+      }
+    },
+    {
+      "id": "tundra",
+      "name": "Tundra",
+      "food": 1,
+      "shields": 0,
+      "trade": 0,
+      "moveCost": 1,
+      "defenseBonus": 0,
+      "land": true,
+      "special": {
+        "id": "game",
+        "name": "Zvěř",
+        "food": 2
+      }
+    },
+    {
+      "id": "arctic",
+      "name": "Ledovec",
+      "food": 0,
+      "shields": 0,
+      "trade": 0,
+      "moveCost": 2,
+      "defenseBonus": 0,
+      "land": true,
+      "special": {
+        "id": "seals",
+        "name": "Tuleni",
+        "food": 2
+      }
+    },
+    {
+      "id": "jungle",
+      "name": "Džungle",
+      "food": 1,
+      "shields": 0,
+      "trade": 0,
+      "moveCost": 2,
+      "defenseBonus": 25,
+      "land": true,
+      "special": {
+        "id": "gems",
+        "name": "Drahokamy",
+        "trade": 4
+      }
+    },
+    {
+      "id": "swamp",
+      "name": "Bažina",
+      "food": 1,
+      "shields": 0,
+      "trade": 0,
+      "moveCost": 2,
+      "defenseBonus": 25,
+      "land": true,
+      "special": {
+        "id": "peat",
+        "name": "Rašelina",
+        "shields": 4
+      }
+    },
+    {
+      "id": "river",
+      "name": "Řeka",
+      "food": 1,
+      "shields": 0,
+      "trade": 1,
+      "moveCost": 1,
+      "defenseBonus": 25,
+      "land": true
+    }
   ]
 }

@@ -10,6 +10,7 @@ import { cityRadiusTiles, distance, fromIndex, type GridSize, type Point } from 
 import { TERRAINS } from "./rules";
 import type { Rng } from "./rng";
 import type { GameMap } from "./state";
+import { tileYield } from "./world";
 
 /** How many of the best-scoring tiles may become a start. */
 const CANDIDATE_SHARE = 0.4;
@@ -20,12 +21,13 @@ const MIN_LAND_IN_RADIUS = 14;
 export function siteScore(map: GameMap, center: Point): number {
   const centerTerrain = map.terrain[center.y * map.width + center.x];
   if (!centerTerrain || !TERRAINS[centerTerrain].land) return -Infinity;
-  if (centerTerrain === "mountains") return -Infinity;
+  if (centerTerrain === "mountains" || centerTerrain === "arctic") return -Infinity;
   let score = 0;
   let landTiles = 0;
   for (const i of cityRadiusTiles(map, center)) {
     const t = TERRAINS[map.terrain[i] ?? "ocean"];
-    const value = t.food * 1.5 + t.shields + t.trade * 0.5;
+    const y = tileYield(map, i, false);
+    const value = y.food * 1.5 + y.shields + y.trade * 0.5;
     // Sea is worth less: without ships it gives no room to expand.
     score += t.land ? value : value * 0.5;
     if (t.land) landTiles++;

@@ -182,6 +182,13 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
       return (
         row("Výnos", `jídlo ${t.food}, štíty ${t.shields}, obchod ${t.trade}`) +
         (t.land ? row("Pohyb", `stojí ${t.moveCost === 1 ? "jeden pohyb" : `${t.moveCost} pohyby`}${t.defenseBonus ? `, obrana +${t.defenseBonus} %` : ""}`) : row("Pohyb", "jen lodě a letadla")) +
+        (t.special
+          ? row(
+              "Surovina",
+              `${t.special.name}: ${[t.special.food ? `+${t.special.food} jídla` : "", t.special.shields ? `+${t.special.shields} štíty` : "", t.special.trade ? `+${t.special.trade} obchodu` : ""].filter(Boolean).join(", ")}, objeví se jen na některých políčkách`,
+            )
+          : "") +
+        (t.id === "river" ? row("Most", "cestu přes řeku postavíš, až objevíš stavbu mostů") : "") +
         (works.length ? row("Osadník tu postaví", works.map((i) => entryLink(`imp-${i}`, IMPROVEMENTS[i].name)).join(" ")) : "")
       );
     }

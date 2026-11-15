@@ -43,6 +43,8 @@ export interface PlayerView {
   mine: number[];
   railroad: number[];
   fortress: number[];
+  /** Special resources on explored tiles. */
+  special: number[];
   start: Point;
   /** Names of all players. Contact and diplomacy rules come later. */
   playerNames: string[];
@@ -88,6 +90,7 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     mine: known(state.map.mine),
     railroad: known(state.map.railroad),
     fortress: known(state.map.fortress),
+    special: known(state.map.special),
     start: { ...player.start },
     playerNames: state.players.map((p) => p.name),
     // Only own units and cities until other players can be met.

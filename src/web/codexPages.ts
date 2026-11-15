@@ -543,6 +543,31 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     fact: "Největší horkou pouští světa je Sahara v Africe. Je skoro tak velká jako celé Spojené státy.",
     wiki: "Poušť",
   },
+  "ter-tundra": {
+    text: "Tundra je studená pláň daleko na severu, kde léto trvá jen pár týdnů. Půda je pod povrchem zmrzlá celý rok, takže tu nerostou stromy. Roste tu mech, lišejníky a nízké keříky. Žijí tu sobi, polární lišky a sovy sněžné.",
+    fact: "Pod tundrou leží věčně zmrzlá půda, které se říká permafrost. Na některých místech sahá do hloubky přes kilometr.",
+    wiki: "Tundra",
+  },
+  "ter-arctic": {
+    text: "Ledovec je obrovská vrstva ledu, která vzniká ze sněhu napadaného za tisíce let. Na ledu skoro nic neroste a lidé tu trvale žít nemohou. Na okrajích ledu loví lední medvědi tuleně. Největší ledovce pokrývají Antarktidu a Grónsko.",
+    fact: "Antarktický ledovec je místy silný přes čtyři kilometry. Kdyby celý roztál, hladina moří by stoupla zhruba o 58 metrů.",
+    wiki: "Ledovec",
+  },
+  "ter-jungle": {
+    text: "Džungle je hustý tropický prales, kde je celý rok teplo a často prší. Stromy rostou vysoko a pod nimi je šero. Žije tu víc druhů zvířat a rostlin než kdekoli jinde na Zemi. Lidé tu sbírali ovoce a koření a hledali drahé kameny.",
+    fact: "Největším tropickým pralesem je Amazonský prales v Jižní Americe. Je asi sedmdesátkrát větší než Česko.",
+    wiki: "Tropický deštný les",
+  },
+  "ter-swamp": {
+    text: "Bažina je podmáčená krajina, kde voda stojí mezi trávou, rákosím a keři. Chodí se tu těžko, člověk se boří až po kolena. Žijí tu žáby, ptáci a spousta hmyzu. Z odumřelých rostlin tu vzniká rašelina, kterou lidé sušili a topili s ní.",
+    fact: "V rašeliništích se našla těla lidí stará přes dva tisíce let, která rašelina zakonzervovala. Říká se jim bažinní lidé.",
+    wiki: "Mokřad",
+  },
+  "ter-river": {
+    text: "Řeka přivádí vodu z hor a kopců až do moře. U řek vznikaly první velké civilizace, protože voda zavlažovala pole a lodě po ní vozily zboží. Řeka ale taky rozděluje krajinu a přes velkou řeku vede cesta jen po mostě. Při povodni se z klidné řeky stane nebezpečný proud.",
+    fact: "Nejdelší českou řekou je Vltava. Měří 430 kilometrů a v Mělníku se vlévá do Labe.",
+    wiki: "Řeka",
+  },
 
   // ---------- improvements ----------
   "imp-road": {

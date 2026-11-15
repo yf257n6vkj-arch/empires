@@ -173,6 +173,8 @@ export function improvementProblemAt(state: GameState, owner: number, i: number,
   if (!terrain || rule.turns[terrain] === undefined) return "terrainNotSuitable";
   if (state.map[improvement][i]) return "alreadyBuilt";
   if (rule.requires && !knowsTech(getPlayer(state, owner), rule.requires)) return "needsTech";
+  const onTerrain = rule.requiresOn?.[terrain];
+  if (onTerrain && !knowsTech(getPlayer(state, owner), onTerrain)) return "needsTech";
   if (rule.requiresImprovement && !state.map[rule.requiresImprovement][i]) return "needsRoad";
   if (improvement === "irrigation") {
     const watered = neighbors4(state.map, i).some(

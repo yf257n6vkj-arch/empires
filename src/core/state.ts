@@ -6,7 +6,7 @@ import type { Point } from "./geometry";
 import type { BuildingId, CivId, GovernmentId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 8;
+export const STATE_VERSION = 9;
 
 export interface GameMap {
   width: number;
@@ -23,6 +23,8 @@ export interface GameMap {
   railroad: number[];
   /** 1 = the tile has a fortress. */
   fortress: number[];
+  /** 1 = the tile has its terrain's special resource (fish, horses, gold...). */
+  special: number[];
 }
 
 export type PlayerId = number;

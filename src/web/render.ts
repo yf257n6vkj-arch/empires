@@ -10,7 +10,7 @@
  * The camera (see camera.ts) zooms and moves the view. Only the tiles in view
  * are drawn into the background, so moving a zoomed map stays fast.
  */
-import type { Point, TerrainId, UnitTypeId } from "../core";
+import { TERRAINS, type Point, type TerrainId, type UnitTypeId } from "../core";
 import { drawUnitArt, WIDE_UNITS } from "./unitArt";
 import { DEFAULT_CAMERA, type Camera } from "./camera";
 import { FIELD_RES, fieldTerrainAt, terrainField, type Field } from "./terrainField";
@@ -26,6 +26,11 @@ export const TERRAIN_COLORS: Record<TerrainId, string> = {
   hills: "#8a9450",
   mountains: "#857d72",
   desert: "#e6d29c",
+  tundra: "#a9ad8c",
+  arctic: "#e8eff2",
+  jungle: "#2f6f2c",
+  swamp: "#6c7a4e",
+  river: "#76ae4a",
 };
 
 /** Colours by player id until a game sets its nations' colours. */
@@ -96,6 +101,8 @@ export interface DrawInput {
   mine: number[];
   railroad?: number[];
   fortress?: number[];
+  /** Special resources, 1 where the tile has one. */
+  special?: number[];
   units: DrawUnit[];
   cities: DrawCity[];
   /** Start markers, only used by the map preview. */
@@ -198,8 +205,8 @@ function inputKey(input: DrawInput): string {
     h ^= v;
     h = Math.imul(h, 16777619);
   };
-  for (const t of input.terrain) mix(t ? t.charCodeAt(0) + t.length : 0);
-  for (const arr of [input.road, input.irrigation, input.mine, input.railroad ?? [], input.fortress ?? []]) for (const v of arr) mix(v);
+  for (const t of input.terrain) mix(t ? t.charCodeAt(0) * 31 + t.charCodeAt(1) : 0);
+  for (const arr of [input.road, input.irrigation, input.mine, input.railroad ?? [], input.fortress ?? [], input.special ?? []]) for (const v of arr) mix(v);
   for (const c of input.cities) mix(c.x * 1000 + c.y);
   for (const [owner, tiles] of input.territory ?? []) {
     mix(owner + 7);
@@ -338,7 +345,9 @@ function drawBackground(ctx: CanvasRenderingContext2D, input: DrawInput): void {
       if (t) drawTerrainDetail(ctx, field, t, x, y, depth[y * width + x] ?? 0);
     }
   }
+  drawRivers(ctx, input);
   drawImprovements(ctx, input);
+  drawSpecials(ctx, input);
   if (input.territory) drawTerritory(ctx, input);
   drawFogEdge(ctx, input);
 }
@@ -386,6 +395,11 @@ const SPECKLE: Record<Exclude<TerrainId, "ocean">, { light: string; dark: string
   hills: { light: "#a7ae66", dark: "#6c733a", n: 14 },
   mountains: { light: "#aaa398", dark: "#665f56", n: 18 },
   desert: { light: "#f2e4ba", dark: "#c9b077", n: 16 },
+  tundra: { light: "#c4c7a8", dark: "#7f8467", n: 16 },
+  arctic: { light: "#ffffff", dark: "#bfd3dc", n: 12 },
+  jungle: { light: "#4f9a3d", dark: "#1d4a1d", n: 14 },
+  swamp: { light: "#8a9a62", dark: "#4a5636", n: 16 },
+  river: { light: "#8dc45a", dark: "#558f34", n: 16 },
 };
 
 /** Small light and dark flecks in the colours of the ground they lie on. */
@@ -495,6 +509,46 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
       case "hills":
         if (t !== "hills" && roll < 0.4) drawGrassTuft(ctx, gx, gy, 2.2, "#5c6a2c", "#a7ae66");
         break;
+      case "river":
+        if (roll < 0.45) drawGrassTuft(ctx, gx, gy, 2 + r(260 + k), "#3f7a28", "#7fbd4f");
+        break;
+      case "tundra":
+        if (roll < 0.35) drawGrassTuft(ctx, gx, gy, 1.6, "#6b7058", "#c9cbb0");
+        else if (roll < 0.6) {
+          ctx.fillStyle = r(280 + k) > 0.5 ? "rgba(120, 128, 96, 0.8)" : "rgba(200, 196, 170, 0.8)";
+          ctx.beginPath();
+          ctx.ellipse(gx, gy, 1.3, 0.7, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      case "arctic":
+        if (roll < 0.35) {
+          ctx.strokeStyle = "rgba(140, 175, 195, 0.7)";
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(gx - 2.5, gy - 0.5);
+          ctx.lineTo(gx - 0.5, gy + 0.4);
+          ctx.lineTo(gx + 2, gy - 0.3);
+          ctx.stroke();
+        }
+        break;
+      case "jungle":
+        if (r(300 + k) > 0.35) drawJungleTree(ctx, gx, gy, 0.9 + r(320 + k) * 0.2);
+        else drawPalm(ctx, gx, gy, 0.9);
+        break;
+      case "swamp":
+        if (roll < 0.4) {
+          ctx.fillStyle = "rgba(70, 110, 120, 0.75)";
+          ctx.beginPath();
+          ctx.ellipse(gx, gy, 2.6, 1.1, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(200, 225, 230, 0.5)";
+          ctx.lineWidth = 0.35;
+          ctx.beginPath();
+          ctx.ellipse(gx - 0.4, gy - 0.2, 1.4, 0.5, 0, Math.PI, Math.PI * 2);
+          ctx.stroke();
+        } else if (roll < 0.8) drawReeds(ctx, gx, gy);
+        break;
       default:
         break;
     }
@@ -596,6 +650,60 @@ function drawConifer(ctx: CanvasRenderingContext2D, x: number, y: number, s: num
     ctx.closePath();
     ctx.fill();
   }
+}
+
+/** A broad, dark tropical tree. */
+function drawJungleTree(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+  ctx.beginPath();
+  ctx.ellipse(x + 1, y + 3.6 * s, 3.8 * s, 1.2 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#4a3320";
+  ctx.fillRect(x - 0.5 * s, y + 0.6 * s, 1 * s, 3 * s);
+  ctx.fillStyle = "#1f4f22";
+  ctx.beginPath();
+  ctx.ellipse(x, y - 0.6 * s, 4 * s, 2.6 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#33803a";
+  ctx.beginPath();
+  ctx.ellipse(x - 1 * s, y - 1.4 * s, 2.4 * s, 1.4 * s, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#58a84e";
+  ctx.beginPath();
+  ctx.ellipse(x - 1.4 * s, y - 2 * s, 1 * s, 0.6 * s, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** A palm with a few fronds. */
+function drawPalm(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
+  ctx.strokeStyle = "#6b4a2a";
+  ctx.lineWidth = 0.9 * s;
+  ctx.beginPath();
+  ctx.moveTo(x, y + 3.5 * s);
+  ctx.quadraticCurveTo(x + 0.8 * s, y, x + 0.3 * s, y - 2.5 * s);
+  ctx.stroke();
+  ctx.strokeStyle = "#2f7a32";
+  ctx.lineWidth = 0.8 * s;
+  ctx.beginPath();
+  for (const a of [-2.6, -1.9, -1.2, -0.5, 0.2]) {
+    ctx.moveTo(x + 0.3 * s, y - 2.5 * s);
+    ctx.quadraticCurveTo(x + 0.3 * s + Math.cos(a) * 2 * s, y - 2.5 * s + Math.sin(a) * 2 * s - 0.6 * s, x + 0.3 * s + Math.cos(a) * 3.2 * s, y - 2.5 * s + Math.sin(a) * 1.4 * s + 1.2 * s);
+  }
+  ctx.stroke();
+}
+
+/** A clump of reeds in the swamp. */
+function drawReeds(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.strokeStyle = "#4e5a2a";
+  ctx.lineWidth = 0.45;
+  ctx.beginPath();
+  for (const dx of [-1, -0.3, 0.4, 1.1]) {
+    ctx.moveTo(x + dx, y);
+    ctx.lineTo(x + dx * 1.4, y - 3.2 - Math.abs(dx));
+  }
+  ctx.stroke();
+  ctx.fillStyle = "#6b4a2a";
+  ctx.fillRect(x - 0.6, y - 3.6, 0.6, 1.2);
 }
 
 function drawLeafTree(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
@@ -788,6 +896,202 @@ function drawCactus(ctx: CanvasRenderingContext2D, x: number, y: number): void {
 }
 
 /** Sandy beaches and a line of surf where land meets the sea. */
+/**
+ * A river runs through the middle of each river tile and on to the
+ * neighbouring river tiles and to the sea, with a lighter line in the middle.
+ */
+function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
+  const { width, height, terrain } = input;
+  const at = (x: number, y: number) => (x < 0 || y < 0 || x >= width || y >= height ? null : (terrain[y * width + x] ?? null));
+  const paths = new Path2D();
+  for (let y = view.y0; y <= view.y1; y++) {
+    for (let x = view.x0; x <= view.x1; x++) {
+      if (at(x, y) !== "river") continue;
+      const cx = x * TILE + TILE / 2 + (hash(x, y, 70) - 0.5) * 4;
+      const cy = y * TILE + TILE / 2 + (hash(x, y, 71) - 0.5) * 4;
+      let links = 0;
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ] as const) {
+        const n = at(x + dx, y + dy);
+        if (n !== "river" && n !== "ocean") continue;
+        links++;
+        // Meet the neighbour on the shared edge, or run a little into the sea.
+        const ex = x * TILE + TILE / 2 + dx * (n === "ocean" ? TILE * 0.75 : TILE / 2);
+        const ey = y * TILE + TILE / 2 + dy * (n === "ocean" ? TILE * 0.75 : TILE / 2);
+        const bend = (hash(x + dx * 0.5, y + dy * 0.5, 72) - 0.5) * 5;
+        paths.moveTo(cx, cy);
+        paths.quadraticCurveTo((cx + ex) / 2 + bend * dy, (cy + ey) / 2 + bend * dx, ex, ey);
+      }
+      if (links === 0) {
+        paths.moveTo(cx - 5, cy);
+        paths.lineTo(cx + 5, cy);
+      }
+    }
+  }
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#2f6f9c";
+  ctx.lineWidth = 4.2;
+  ctx.stroke(paths);
+  ctx.strokeStyle = "#4f97c6";
+  ctx.lineWidth = 3;
+  ctx.stroke(paths);
+  ctx.strokeStyle = "rgba(200, 232, 245, 0.55)";
+  ctx.lineWidth = 0.8;
+  ctx.stroke(paths);
+  ctx.restore();
+}
+
+/** A small picture of the special resource in a corner of the tile. */
+function drawSpecials(ctx: CanvasRenderingContext2D, input: DrawInput): void {
+  const { width, terrain } = input;
+  const special = input.special;
+  if (!special) return;
+  for (let y = view.y0; y <= view.y1; y++) {
+    for (let x = view.x0; x <= view.x1; x++) {
+      const i = y * width + x;
+      const t = terrain[i];
+      if (!t || !special[i]) continue;
+      const id = TERRAINS[t].special?.id;
+      if (id) drawSpecial(ctx, id, x * TILE + TILE * 0.3, y * TILE + TILE * 0.72);
+    }
+  }
+}
+
+function drawSpecial(ctx: CanvasRenderingContext2D, id: string, x: number, y: number): void {
+  ctx.save();
+  // A soft round plate so the sign reads on any ground.
+  ctx.fillStyle = "rgba(255, 250, 235, 0.82)";
+  ctx.strokeStyle = "rgba(40, 32, 20, 0.7)";
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.arc(x, y, 3.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.lineWidth = 0.6;
+  switch (id) {
+    case "fish": {
+      ctx.fillStyle = "#3a7fb0";
+      ctx.beginPath();
+      ctx.ellipse(x - 0.4, y, 1.8, 1, 0, 0, Math.PI * 2);
+      ctx.moveTo(x + 1.2, y);
+      ctx.lineTo(x + 2.6, y - 1);
+      ctx.lineTo(x + 2.6, y + 1);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case "horses": {
+      ctx.fillStyle = "#7a4a26";
+      ctx.beginPath();
+      ctx.ellipse(x - 0.2, y + 0.3, 1.8, 0.9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(x + 1, y - 1.8, 0.8, 2);
+      ctx.fillRect(x - 1.6, y + 0.8, 0.5, 1.6);
+      ctx.fillRect(x + 0.9, y + 0.8, 0.5, 1.6);
+      break;
+    }
+    case "pheasant":
+    case "game": {
+      ctx.fillStyle = id === "game" ? "#8a6a44" : "#a8552a";
+      ctx.beginPath();
+      ctx.ellipse(x, y + 0.4, 1.7, 1.1, 0, 0, Math.PI * 2);
+      ctx.arc(x + 1.5, y - 0.8, 0.7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.beginPath();
+      if (id === "game") {
+        ctx.moveTo(x + 1.4, y - 1.4);
+        ctx.lineTo(x + 0.8, y - 2.8);
+        ctx.moveTo(x + 1.8, y - 1.4);
+        ctx.lineTo(x + 2.4, y - 2.8);
+      } else {
+        ctx.moveTo(x - 1.5, y);
+        ctx.lineTo(x - 3, y - 1.2);
+      }
+      ctx.stroke();
+      break;
+    }
+    case "coal": {
+      ctx.fillStyle = "#2b2b2b";
+      for (const [dx, dy] of [
+        [-1, 0.6],
+        [0.9, 0.5],
+        [0, -0.8],
+      ] as const) {
+        ctx.beginPath();
+        ctx.arc(x + dx, y + dy, 1.1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
+    case "gold":
+    case "gems": {
+      ctx.fillStyle = id === "gold" ? "#e3b62c" : "#c0398f";
+      ctx.strokeStyle = id === "gold" ? "#8a6612" : "#6b1d50";
+      ctx.beginPath();
+      ctx.moveTo(x, y - 2);
+      ctx.lineTo(x + 1.8, y - 0.3);
+      ctx.lineTo(x, y + 2);
+      ctx.lineTo(x - 1.8, y - 0.3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      break;
+    }
+    case "oasis": {
+      ctx.fillStyle = "#3f8fc0";
+      ctx.beginPath();
+      ctx.ellipse(x, y + 1, 2.2, 0.9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#2f7a32";
+      ctx.beginPath();
+      ctx.moveTo(x, y + 0.6);
+      ctx.lineTo(x, y - 1.6);
+      ctx.moveTo(x - 1.6, y - 1.2);
+      ctx.quadraticCurveTo(x, y - 2.6, x + 1.6, y - 1.2);
+      ctx.stroke();
+      break;
+    }
+    case "resources": {
+      // A small shield: the land gives more shields.
+      ctx.fillStyle = "#6f8aa6";
+      ctx.beginPath();
+      ctx.moveTo(x - 1.6, y - 1.8);
+      ctx.lineTo(x + 1.6, y - 1.8);
+      ctx.lineTo(x + 1.6, y);
+      ctx.quadraticCurveTo(x + 1.6, y + 1.4, x, y + 2);
+      ctx.quadraticCurveTo(x - 1.6, y + 1.4, x - 1.6, y);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case "peat": {
+      ctx.fillStyle = "#5a3d24";
+      ctx.fillRect(x - 1.8, y - 0.4, 1.6, 1.4);
+      ctx.fillRect(x + 0.2, y - 0.4, 1.6, 1.4);
+      ctx.fillRect(x - 0.8, y - 1.9, 1.6, 1.4);
+      break;
+    }
+    case "seals": {
+      ctx.fillStyle = "#6c7b86";
+      ctx.beginPath();
+      ctx.ellipse(x, y + 0.5, 2.2, 1, -0.2, 0, Math.PI * 2);
+      ctx.arc(x + 1.8, y - 0.4, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    default:
+      break;
+  }
+  ctx.restore();
+}
+
 function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height } = input;
   const cityTiles = new Set(input.cities.map((c) => c.y * width + c.x));

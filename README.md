@@ -2,7 +2,7 @@
 
 Tahová strategie do prohlížeče ve stylu Civilizace 1. Jedna partie má trvat 45 až 60 minut proti třem počítačovým soupeřům, kteří hrají rozumně a nepodvádějí. Celé zadání je v projektu Empires v Claudovi.
 
-Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti národů (čtrnáct z Civilizace 1 a Češi), zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají vlastní obrazovku s pohledem na město, spokojenost, korupci a znečištění, 27 budov a 24 divů světa a jde vyrábět 29 typů jednotek včetně lodí a letadel. Starší jednotky jde ve městě za zlato povýšit na novější typ a každou jednotku jde rozpustit. Říše si volí ze šesti vlád a může vyhrát vesmírnou lodí. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče a navíc jde uložit pod jménem nebo do souboru.
+Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti národů (čtrnáct z Civilizace 1 a Češi), zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají vlastní obrazovku s pohledem na město, spokojenost, korupci a znečištění, 27 budov a 24 divů světa a jde vyrábět 29 typů jednotek včetně lodí a letadel. Starší jednotky jde ve městě za zlato povýšit na novější typ a každou jednotku jde rozpustit. Říše si volí ze šesti vlád a může vyhrát vesmírnou lodí. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče a navíc jde uložit pod jménem nebo do souboru. Mapa má dvanáct terénů z Civilizace 1 včetně řek a polárního ledu a na části políček leží suroviny jako ryby, koně nebo zlato.
 
 ## Jak se hra ovládá
 
@@ -18,7 +18,8 @@ Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti náro
 - `T` otevře strom technologií. Na výzkum klikneš i v hlavičce a posuvníkem vedle nastavíš, kolik obchodu jde do výzkumu a kolik do zlata.
 - Klik na technologii ve stromu otevře její stránku. Vzdálenou technologii jde nastavit jako cíl a hra k ní bude zkoumat sama.
 - Dvojklik na město nebo tlačítko `Otevřít město` ukáže obrazovku města. Klikem na políčko v okolí města přesuneš obyvatele. Tlačítkem + u stavby ji přidáš do plánu a hranici mezi obrázkem a panely jde táhnout myší.
-- Rádce vlevo nahoře radí začátečníkům, co dělat dál. Vypnout jde v menu.
+- Rádce vlevo radí začátečníkům, co dělat dál. Křížkem ho schováš, tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.
+- Ve městě můžeš místo stavby zvolit Vydělávat zlato. Otazník u stavby nebo klik na budovu v obrázku města otevře encyklopedii.
 - Mapu přiblížíš roztažením prstů na trackpadu, `Ctrl` a kolečkem myši, tlačítky v rohu mapy nebo klávesami `+` a `−`. Nula vrátí celou mapu.
 - Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením. Klik do malé mapy vpravo dole tě přenese na to místo.
 - Záznam událostí vpravo nahoře rozbalíš šipkou.

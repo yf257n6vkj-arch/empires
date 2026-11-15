@@ -343,6 +343,7 @@ function buildDrawInput(): DrawInput {
     mine: showAll ? state.map.mine : view.mine,
     railroad: showAll ? state.map.railroad : view.railroad,
     fortress: showAll ? state.map.fortress : view.fortress,
+    special: showAll ? state.map.special : view.special,
     units: view.units.map((u) => ({
       id: u.id,
       owner: u.owner,
@@ -1131,8 +1132,9 @@ canvas.addEventListener("mousemove", (e) => {
       state.map.fortress[i] ? "pevnost" : "",
     ].filter(Boolean);
     const r = TERRAINS[t];
+    const special = r.special && state.map.special[i] ? ` · ${r.special.name}` : "";
     tooltip.innerHTML =
-      `<b>${city ? escapeHtml(city.name) + " · " : ""}${r.name}</b> [${p.x}, ${p.y}]<br>` +
+      `<b>${city ? escapeHtml(city.name) + " · " : ""}${r.name}${special}</b> [${p.x}, ${p.y}]<br>` +
       `jídlo ${y.food} · štíty ${y.shields} · obchod ${y.trade}` +
       (extras.length ? `<br>${extras.join(", ")}` : "") +
       (r.land ? `<br>pohyb ${r.moveCost}${r.defenseBonus ? ` · obrana +${r.defenseBonus} %` : ""}` : "");
@@ -1295,6 +1297,11 @@ const MINI_COLORS: Record<string, string> = {
   hills: "#8c9a55",
   mountains: "#9a958c",
   desert: "#dcc98d",
+  tundra: "#a3a888",
+  arctic: "#e6eef2",
+  jungle: "#25612a",
+  swamp: "#5f6e45",
+  river: "#4f8fc4",
 };
 
 function drawMinimap(): void {

@@ -20,6 +20,11 @@ export const TERRAIN_IDS = [
   "hills",
   "mountains",
   "desert",
+  "tundra",
+  "arctic",
+  "jungle",
+  "swamp",
+  "river",
 ] as const;
 export type TerrainId = (typeof TERRAIN_IDS)[number];
 
@@ -204,6 +209,13 @@ export interface TerrainRule extends Yield {
   /** Percent bonus for the defender, e.g. 50 means x1.5. */
   defenseBonus: number;
   land: boolean;
+  /** Special resource that appears on some tiles of this terrain and adds to their yield. */
+  special?: SpecialRule;
+}
+
+export interface SpecialRule extends Partial<Yield> {
+  id: string;
+  name: string;
 }
 
 export interface UnitRule {
@@ -340,6 +352,8 @@ export interface ImprovementRule {
   /** Work turns per terrain; terrain missing here cannot get the improvement. */
   turns: Partial<Record<TerrainId, number>>;
   bonus: Partial<Record<TerrainId, Partial<Yield>>>;
+  /** Technology needed on a particular terrain, e.g. bridge building for a road over a river. */
+  requiresOn?: Partial<Record<TerrainId, TechId>>;
 }
 
 export interface GovernmentRule {
@@ -560,7 +574,10 @@ function checkReferences(): void {
   };
   for (const u of Object.values(UNIT_TYPES)) building(`units.json ${u.id}`, u.requiresWonder);
   for (const g of Object.values(GOVERNMENTS)) tech(`governments.json ${g.id}`, g.requires);
-  for (const i of Object.values(IMPROVEMENTS)) tech(`improvements.json ${i.id}`, i.requires ?? null);
+  for (const i of Object.values(IMPROVEMENTS)) {
+    tech(`improvements.json ${i.id}`, i.requires ?? null);
+    for (const t of Object.values(i.requiresOn ?? {})) tech(`improvements.json ${i.id} requiresOn`, t ?? null);
+  }
   for (const b of Object.values(BUILDINGS)) {
     tech(`buildings.json ${b.id}`, b.requires);
     tech(`buildings.json ${b.id}`, b.obsoleteBy ?? null);

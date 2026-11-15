@@ -16,7 +16,7 @@ import {
   type UnitTypeId,
 } from "../core";
 import { buildingPortraitCanvas } from "./buildingArt";
-import { ERA_NAMES, TECH_PAGES, wikiUrl } from "./encyclopedia";
+import { ERA_NAMES, TECH_PAGES, techPicture, wikiUrl } from "./encyclopedia";
 import { unitPortraitCanvas } from "./render";
 import { ERA_COLORS, techIconSvg } from "./techIcons";
 import { describeBuilding, escapeHtml } from "./texts";
@@ -304,11 +304,12 @@ export function createTechTree(host: TreeHost) {
     const needs = rule.requires.map(link).join("") || `<span class="muted">Nic, s touhle technologií začínali už pravěcí lidé.</span>`;
     const next = leadsTo(t).map(link).join("") || `<span class="muted">Tady strom končí.</span>`;
     const unlocks = unlocksOf(t);
+    const picture = techPicture(t);
 
     page.innerHTML = `
       <div class="tp">
-        <div class="tp-picture" style="--era:${ERA_COLORS[rule.era]}">
-          <div class="tp-medal">${techIconSvg(t, rule.era, 168)}</div>
+        <div class="tp-picture ${picture ? "has-photo" : ""}" style="--era:${ERA_COLORS[rule.era]}">
+          ${picture ? `<img class="tp-photo" src="${picture}" alt="${escapeHtml(rule.name)}"><div class="tp-medal small">${techIconSvg(t, rule.era, 64)}</div>` : `<div class="tp-medal">${techIconSvg(t, rule.era, 168)}</div>`}
           <div class="tp-when">${escapeHtml(info.when)}</div>
           <div class="tp-era">${ERA_NAMES[rule.era]}</div>
         </div>

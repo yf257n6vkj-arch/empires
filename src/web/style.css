@@ -172,6 +172,9 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   border-right: 1px solid rgba(60, 40, 20, 0.2);
 }
 .tp-medal { filter: drop-shadow(0 6px 12px rgba(40, 25, 10, 0.35)); }
+.tp-picture.has-photo { justify-content: flex-start; padding: 0 0 18px; }
+.tp-photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; border-bottom: 1px solid rgba(60, 40, 20, 0.25); }
+.tp-medal.small { margin-top: -40px; }
 .tp-when { font: 700 18px Georgia, "Times New Roman", serif; color: #3a2a18; text-align: center; }
 .tp-era { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #4d3a24; }
 .tp-main { padding: 20px 26px 18px; display: flex; flex-direction: column; gap: 10px; }

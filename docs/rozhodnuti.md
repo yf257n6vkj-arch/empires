@@ -2,6 +2,10 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Obrázky k technologiím vygenerujeme, z Wikipedie bereme jen texty
+
+Michal rozhodl, že obrázky na stránky technologií vygenerujeme, místo abychom stahovali fotky z Wikimedia Commons. Odpadne tím uvádění autorů a licencí. Každá stránka má místo na jeden obrázek v poměru 4 : 3, soubor se jmenuje podle zkratky technologie a patří do `src/web/techs/`. Zadání pro generátor ke všem 68 technologiím jsou v `docs/obrazky-technologii.md` a mají společný styl dětské encyklopedie. Dokud obrázek chybí, stránka ukáže velkou ikonu. Pro hru samotnou dál platí, že grafiku kreslíme kódem.
+
 ## 15. 11. 2026: Strom technologií má všech 67 objevů z Civilizace 1 a lukostřelbu
 
 Michal chtěl celý strom jako v Civilizaci 1, a to hned. Strom má 68 technologií v pěti érách: pravěk a starověk, antika, středověk a renesance, novověk a moderní doba. Vychází z plakátu Civilizace 1 a liší se ve dvou věcech. Písmo je před abecedou, protože lidé psali klínovým písmem a hieroglyfy dávno před vznikem abecedy, takže zákony a matematika navazují na písmo. A přibyla lukostřelba, aby lučištníci měli vlastní objev. Jednotky, budovy a divy se navázaly na nejbližší technologii z Civilizace 1, tank odemyká automobil a akvadukt stavitelství. Náboženství odemyká novou budovu katedrálu, která uklidní tři nespokojené.
@@ -14,7 +18,7 @@ Ze 68 technologií zatím 45 nic neodemyká a jen otvírá cestu dál. Hlavně o
 
 Michal chtěl, aby se ze hry něco naučil i syn. Každá technologie má kreslenou ikonu, kdy vznikla, krátké vyprávění, zajímavost s nadpisem Věděl jsi? a odkaz na článek v české Wikipedii. Kde to jde, zajímavosti míří do Česka, třeba Únětice, Karlův most, píšťala a pistole, tolar a dolar, Mendel nebo Čapkův robot. Strom technologií je teď plakát s ikonami a šipkami, kde je vidět, co hráč zná, co zkoumá a kudy vede cesta k cíli.
 
-Michal chce na stránkách i fotografie a obrázky z internetu, čímž mění pravidlo ze zadání, že cizí obrázky v první verzi nebudou. Pravidlo platí dál pro samotnou hru, fotky budou jen v encyklopedii a s uvedeným autorem a licencí. Zatím je stáhnout nejde, protože prostředí, ve kterém Claude pracuje, nemá Wikimedia Commons mezi povolenými weby. Michal je může povolit v nastavení Clauda pod Settings > Capabilities.
+Michal chce na stránkách i fotografie a obrázky z internetu, čímž mění pravidlo ze zadání, že cizí obrázky v první verzi nebudou. Pravidlo platí dál pro samotnou hru, fotky budou jen v encyklopedii a s uvedeným autorem a licencí. Zatím je stáhnout nejde, protože prostředí, ve kterém Claude pracuje, nemá Wikimedia Commons mezi povolenými weby. Michal je může povolit v nastavení Clauda pod Settings > Capabilities. Později jsme se rozhodli obrázky generovat, viz záznam výš.
 
 ## 15. 11. 2026: Město má vlastní obrazovku a obyvatele jde přesouvat ručně
 

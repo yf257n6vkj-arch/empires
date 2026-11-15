@@ -1,7 +1,8 @@
 /**
  * Encyclopedia pages for the technologies: when it happened, a short story
  * for a curious child, one surprising fact and a Czech Wikipedia article.
- * Texts are written for this game; facts were checked against Wikipedia.
+ * Texts are written for this game; each page links the Czech Wikipedia article
+ * where the reader can check and continue.
  */
 import type { TechId } from "../core";
 
@@ -150,7 +151,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
   bridgeBuilding: {
     when: "od starověku po rok 1357",
     text: "Most přes řeku je těžká stavba, protože pilíře stojí ve vodě a proud je podemílá. Římané stavěli kamenné mosty s oblouky, které rozloží váhu do stran. V Praze stál od roku 1172 Juditin most a po jeho zřícení začal císař Karel IV. stavět Karlův most.",
-    fact: "Podle pověsti se do malty na Karlův most přidávala vejce. Základní kámen položili v roce 1357, 9. 7. v 5:31, a číslice tvoří řadu 1-3-5-7-9-7-5-3-1.",
+    fact: "Podle pověsti se do malty na Karlův most přidávala vejce. Základní kámen podle tradice položili v roce 1357, 9. 7. v 5:31, a číslice tvoří řadu 1-3-5-7-9-7-5-3-1.",
     wiki: "Karlův most",
   },
   engineering: {
@@ -174,7 +175,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
   medicine: {
     when: "kolem roku 400 př. n. l.",
     text: "Řecký lékař Hippokratés tvrdil, že nemoci mají přirozené příčiny, a ne že je posílají bohové. Lékaři začali pozorovat nemocné a zapisovat, co pomáhá. Perský učenec Avicenna sepsal velkou knihu o medicíně, podle které se učilo stovky let. Lidské tělo pak podrobně popsal Andreas Vesalius.",
-    fact: "Lékař Jan Jesenius provedl v roce 1600 v Praze první veřejnou pitvu v Čechách. Trvala pět dní a dívaly se na ni stovky lidí.",
+    fact: "Lékař Jan Jesenius v roce 1600 v Praze veřejně pitval tělo popraveného muže, aby studenti viděli, jak je člověk uvnitř uspořádaný.",
     wiki: "Dějiny lékařství",
   },
   university: {
@@ -366,7 +367,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
   computers: {
     when: "1945",
     text: "Počítač provádí miliony výpočtů podle programu, který mu člověk napíše. Jeden z prvních elektronických počítačů ENIAC vážil 27 tun a zabral celou místnost. Dnes je mnohem výkonnější počítač v každém telefonu. První program napsala už v roce 1843 Ada Lovelace pro stroj, který se tehdy nepodařilo dostavět.",
-    fact: "První československý počítač SAPO sestavil Antonín Svoboda v roce 1957. Měl přes sedm tisíc relé, která cvakala jako stovky hodin.",
+    fact: "První československý počítač SAPO postavil tým Antonína Svobody a pracoval od roku 1957. Měl sedm tisíc relé, která cvakala jako stovky hodin.",
     wiki: "Počítač",
   },
   rocketry: {
@@ -430,4 +431,23 @@ export const ERA_NAMES = ["", "Pravěk a starověk", "Antika", "Středověk a re
 
 export function wikiUrl(title: string): string {
   return `https://cs.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`;
+}
+
+/**
+ * Pictures for the encyclopedia, one per technology, kept in src/web/techs/
+ * and named by the technology id (pottery.webp, bronze.jpg …). Pages without
+ * a picture show the large icon instead.
+ */
+const PICTURE_FILES = import.meta.glob<string>("./techs/*.{webp,jpg,jpeg,png}", {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+
+export function techPicture(tech: TechId): string | null {
+  for (const [path, url] of Object.entries(PICTURE_FILES)) {
+    const name = path.split("/").pop()!.replace(/\.[a-z]+$/, "");
+    if (name === tech) return url;
+  }
+  return null;
 }

@@ -14,6 +14,8 @@ Opevněnou jednotku teď obklopuje kamenná hradba s cimbuřím a nad ní je št
 
 Každý vládce má v encyklopedii heslo s portrétem od Gemini. Michal chtěl, aby texty kromě obecného popisu přinesly i skutečnosti ze života a nevyhýbaly se temným stránkám. U Caesara, Čingischána, Stalina, Maa a dalších proto heslo říká, kolik lidí za jejich vlády nebo v jejich válkách zemřelo, a u Karla IV. připomíná pogrom v Norimberku. Čísla jsou podle odhadů historiků a tam, kde se odhady liší, to text přizná.
 
+Gemini odmítl nakreslit Gándhího, Stalina a Maa, a to i zezadu nebo bez jména. Jejich portréty proto Michal nechal nakreslit v Groku ve stejném malířském stylu. Ostatní obrázky v encyklopedii a na mapě dál kreslí Gemini.
+
 ## 15. 11. 2026: Hraje se za národy z Civilizace 1 a za Čechy
 
 Michal chtěl národy podle Civilizace 1 a k nim Čechy. Na výběr je patnáct národů: Římané, Babyloňané, Němci, Egypťané, Američané, Řekové, Indové, Rusové, Zuluové, Francouzi, Aztékové, Číňané, Angličané, Mongolové a Češi s Karlem IV. Původní zadání počítalo s tím, že jména národů vymyslí syn, tohle ho nahrazuje. Syn může dál vymýšlet jména jednotek a divů.

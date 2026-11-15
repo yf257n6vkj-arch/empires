@@ -26,7 +26,6 @@ type Ctx = CanvasRenderingContext2D;
 const STONE = "#d9ccb0";
 const LIMESTONE = "#e8e0cc";
 const BRICK = "#a65a3e";
-const WOOD = "#8a5a34";
 const ROOF_RED = "#b24a30";
 const ROOF_SLATE = "#5d6772";
 const ROOF_COPPER = "#5f9c88";

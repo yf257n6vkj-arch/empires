@@ -25,7 +25,7 @@ import {
   type ProductionItem,
   type UnitId,
 } from "../core";
-import { BUILDING_HEIGHT, BUILDING_WIDTH, buildingPortraitCanvas, drawBuilding, drawHouse, tone } from "./buildingArt";
+import { BUILDING_WIDTH, buildingPortraitCanvas, drawBuilding, drawHouse, tone } from "./buildingArt";
 import { drawTerrainPatch, drawUnitPortrait, PLAYER_COLORS, unitPortraitCanvas, type DrawInput } from "./render";
 import { describeBuilding, escapeHtml } from "./texts";
 

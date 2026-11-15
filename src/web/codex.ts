@@ -167,7 +167,7 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
     }
     if (e.kind === "lead") {
       const c = CIVS[e.id as keyof typeof CIVS];
-      return row("Ve hře vede", entryLink(`civ-${c.id}`, c.name)) + row("Hlavní město", escapeHtml(c.cities[0]!));
+      return row("Vede národ", entryLink(`civ-${c.id}`, c.name)) + row("Hlavní město", escapeHtml(c.cities[0]!));
     }
     if (e.kind === "gov") {
       const g = GOVERNMENTS[e.id as keyof typeof GOVERNMENTS];

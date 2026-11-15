@@ -77,6 +77,8 @@ export interface DrawCity {
   size: number;
   /** The city has built its walls. */
   walls: boolean;
+  /** Era of the owner's most advanced technology, 0 to 5; picks the look of the city. */
+  era?: number;
 }
 
 export interface DrawInput {
@@ -1293,7 +1295,10 @@ function drawCity(ctx: CanvasRenderingContext2D, c: DrawCity, selected: boolean)
     ctx.stroke();
   }
 
-  const citySprite = sprites.get(`city-${c.size >= 8 ? "modern" : c.size >= 4 ? "medieval" : "ancient"}`);
+  const stage = (c.era ?? 0) >= 5 ? "modern" : (c.era ?? 0) >= 4 ? "industrial" : (c.era ?? 0) >= 2 ? "medieval" : "ancient";
+  const big = c.size >= 6;
+  const citySprite =
+    sprites.get(`city-${stage}-${big ? "large" : "small"}`) ?? sprites.get(`city-${stage}-${big ? "small" : "large"}`);
   if (citySprite) {
     // The owner's colour as a ring around the city, since the painting has none.
     ctx.strokeStyle = color;
@@ -1787,6 +1792,7 @@ function drawMiniature(
     ctx.stroke();
   }
 
+  if (u.fortified) drawRampart(ctx, bcx, fy, brx, bry, s, "back");
   const unitSprite = sprites.get(`unit-${u.type}`);
   if (unitSprite) {
     drawSprite(ctx, unitSprite, fx, fy + bry * 0.4, 21 * s);
@@ -1799,18 +1805,8 @@ function drawMiniature(
   }
 
   if (u.fortified) {
-    // A low stone wall in front of the base.
-    ctx.fillStyle = "#9b9485";
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 0.5;
-    for (let k = -3; k <= 3; k++) {
-      const wx = bcx + k * 2.4 * s;
-      const wy = fy + bry * 0.9 + Math.abs(k) * -0.35 * s;
-      ctx.beginPath();
-      ctx.rect(wx - 1.2 * s, wy - 2.6 * s, 2.4 * s, 2.6 * s);
-      ctx.fill();
-      ctx.stroke();
-    }
+    drawRampart(ctx, bcx, fy, brx, bry, s, "front");
+    drawFortifiedBadge(ctx, bcx + brx + 0.5 * s, fy - 15 * s, s);
   }
 
   if (stack > 1) {
@@ -1829,6 +1825,81 @@ function drawMiniature(
     ctx.textBaseline = "middle";
     ctx.fillText(String(stack), bx, by + 0.3);
   }
+  ctx.restore();
+}
+
+/**
+ * A ring of stone wall with battlements around a fortified unit's base.
+ * The back half is drawn before the unit, the front half after it.
+ */
+function drawRampart(ctx: CanvasRenderingContext2D, cx: number, cy: number, rx: number, ry: number, s: number, half: "back" | "front"): void {
+  const wallRx = rx + 2.4 * s;
+  const wallRy = ry + 1.8 * s;
+  const h = (half === "front" ? 3 : 2.2) * s;
+  const [from, to] = half === "front" ? [0, Math.PI] : [Math.PI, Math.PI * 2];
+  const at = (a: number, lift: number) => ({ x: cx + Math.cos(a) * wallRx, y: cy + Math.sin(a) * wallRy - lift });
+  const n = 24;
+  ctx.save();
+  ctx.lineJoin = "round";
+  // The wall as one band: bottom edge along the ellipse, top edge lifted by its height.
+  ctx.beginPath();
+  for (let k = 0; k <= n; k++) {
+    const p = at(from + ((to - from) * k) / n, 0);
+    if (k === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  for (let k = n; k >= 0; k--) {
+    const p = at(from + ((to - from) * k) / n, h);
+    ctx.lineTo(p.x, p.y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = half === "front" ? "#a9a08a" : "#7d7666";
+  ctx.fill();
+  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = INK;
+  ctx.stroke();
+  // Battlements on top.
+  const merlons = half === "front" ? 7 : 5;
+  ctx.fillStyle = half === "front" ? "#c9c1aa" : "#958d7b";
+  for (let k = 0; k < merlons; k++) {
+    const a = from + ((to - from) * (k + 0.5)) / merlons;
+    const p = at(a, h);
+    const w = 1.6 * s;
+    ctx.beginPath();
+    ctx.rect(p.x - w / 2, p.y - 1.3 * s, w, 1.3 * s);
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/** A small shield badge that marks a fortified unit at a glance. */
+function drawFortifiedBadge(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
+  const w = 5 * s;
+  const h = 6 * s;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x - w / 2, y - h / 2);
+  ctx.lineTo(x + w / 2, y - h / 2);
+  ctx.lineTo(x + w / 2, y + h * 0.05);
+  ctx.quadraticCurveTo(x + w / 2, y + h * 0.4, x, y + h / 2);
+  ctx.quadraticCurveTo(x - w / 2, y + h * 0.4, x - w / 2, y + h * 0.05);
+  ctx.closePath();
+  ctx.fillStyle = "#2f3b4a";
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#f3efe6";
+  ctx.stroke();
+  // A white tower with battlements on the shield.
+  ctx.fillStyle = "#f3efe6";
+  const tw = w * 0.46;
+  const th = h * 0.38;
+  const top = y - th / 2 + 0.3 * s;
+  ctx.fillRect(x - tw / 2, top, tw, th);
+  const m = tw / 5;
+  for (const k of [0, 2, 4]) ctx.fillRect(x - tw / 2 + k * m, top - 0.9 * s, m, 0.9 * s);
+  ctx.fillStyle = "#2f3b4a";
+  ctx.fillRect(x - m / 2, top + th - 1.2 * s, m, 1.2 * s);
   ctx.restore();
 }
 

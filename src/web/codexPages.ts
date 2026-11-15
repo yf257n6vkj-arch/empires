@@ -1,7 +1,7 @@
 /**
  * Encyclopedia pages for everything in the game except technologies (those
- * live in encyclopedia.ts): units, buildings, wonders, governments, terrain
- * and improvements. Keys match the picture files in src/web/codex/ and the
+ * live in encyclopedia.ts): units, buildings, wonders, governments, terrain,
+ * improvements, nations and their leaders. Keys match the picture files in src/web/codex/ and the
  * lists in tools/mac/encyklopedie-*.tsv. Each text is written for a curious
  * child and checked against the linked article on the Czech Wikipedia.
  */
@@ -665,5 +665,96 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     text: "Češi žijí v srdci Evropy. České království patřilo ve středověku k nejbohatším zemím, hlavně díky stříbru z Kutné Hory. Karel IV. byl českým králem a římským císařem. Za jeho vlády se Praha stala jedním z největších měst Evropy a vznikla tu první univerzita ve střední Evropě.",
     fact: "Karel IV. ve svém životopisu napsal, že mluví a píše pěti jazyky: česky, německy, francouzsky, italsky a latinsky.",
     wiki: "České království",
+  },
+  // ---------- leaders ----------
+  "lead-romans": {
+    when: "100 až 44 př. n. l.",
+    text: "Caesar pocházel ze staré římské rodiny a do politiky vstoupil jako mladý muž. Slavným vojevůdcem se stal, když v letech 58 až 50 př. n. l. dobyl Galii, dnešní Francii. Podle starověkých autorů v galských válkách zemřel asi milion lidí a další milion skončil v otroctví. Roku 49 př. n. l. překročil s vojskem řeku Rubikon, a tím začal občanskou válku proti senátu. Válku vyhrál a dal se zvolit doživotním diktátorem. O březnových idách roku 44 př. n. l. ho senátoři v čele s Brutem ubodali přímo v senátu.",
+    fact: "Caesar zavedl kalendář s přestupným rokem, kterému se po něm říká juliánský. Měsíc červenec se v mnoha jazycích jmenuje po něm, anglicky třeba July.",
+    wiki: "Julius Caesar",
+  },
+  "lead-babylonians": {
+    when: "vládl 1792 až 1750 př. n. l.",
+    text: "Chammurapi byl šestým králem Babylonu. Z malého městského státu vybudoval říši, která ovládla skoro celou Mezopotámii. Nepřátele porážel ve válkách a když se mu to hodilo, obrátil se i proti dřívějším spojencům. Proslavil se zákoníkem s 282 ustanoveními o obchodu, rodině, majetku a trestech. Tresty byly tvrdé a za stejný čin čekal pána jiný trest než otroka. Za mnoho provinění hrozila smrt.",
+    fact: "Chammurapi tvrdil, že vládne z vůle boha Marduka. Kdo se mu postavil, vzpíral se tak i bohům a čekal ho tvrdý trest.",
+    wiki: "Chammurapi",
+  },
+  "lead-germans": {
+    when: "1712 až 1786",
+    text: "Fridrich měl přísného otce, který nesnášel jeho lásku k hudbě a knihám. V osmnácti se pokusil se svým přítelem Hansem von Katte utéct do Anglie. Otec je oba nechal zatknout a Katteho popravit, Fridrich se na popravu musel dívat. Jako král udělal z Pruska evropskou velmoc. Zrušil mučení, prosazoval náboženskou snášenlivost a dopisoval si s filozofem Voltairem. Zároveň vedl tři války o Slezsko, ve kterých zemřely statisíce vojáků i civilistů.",
+    fact: "Fridrich nutil sedláky pěstovat brambory, kterým tehdy nikdo nevěřil. Lidé mu dodnes nosí brambory na hrob v Postupimi.",
+    wiki: "Fridrich II. Veliký",
+  },
+  "lead-egyptians": {
+    when: "vládl 1279 až 1213 př. n. l.",
+    text: "Ramesse II. usedl na trůn asi v šestnácti letech a vládl celých 66 let. Bojoval s Chetity o Sýrii a v bitvě u Kadeše jen o vlásek unikl porážce. Na zdech chrámů ji pak dal vylíčit jako své velké vítězství. Nakonec s Chetity uzavřel jednu z nejstarších mírových smluv na světě. Stavěl obří chrámy a sochy a na sochy starších faraonů nechával tesat své jméno. Měl asi dvě stě manželek a vedlejších žen a přes sto dětí.",
+    fact: "Mumie Ramesse II. se dochovala. V roce 1976 ji odvezli do Paříže, kde ji vědci zachránili před plísní.",
+    wiki: "Ramesse II.",
+  },
+  "lead-americans": {
+    when: "1809 až 1865",
+    text: "Lincoln se narodil v chudé rodině v Kentucky a do školy skoro nechodil. Učil se sám z půjčených knih, vystřídal mnoho povolání a stal se právníkem. V roce 1860 ho zvolili prezidentem a jižní státy se kvůli tomu odtrhly. V občanské válce, která následovala, padlo přes 600 tisíc vojáků. Lincoln válku vyhrál a prosadil zrušení otroctví. Pět dní po jejím konci ho v divadle zastřelil herec John Wilkes Booth.",
+    fact: "Lincoln měřil 193 centimetrů a je nejvyšším americkým prezidentem. Jako jediný prezident má i patent na vynález, zařízení, které pomáhalo lodím přes mělčiny.",
+    wiki: "Abraham Lincoln",
+  },
+  "lead-greeks": {
+    when: "356 až 323 př. n. l.",
+    text: "Alexandr se stal makedonským králem ve dvaceti letech, když zavraždili jeho otce Filipa. Hned na začátku vlády srovnal se zemí vzbouřené město Théby a jeho obyvatele prodal do otroctví. Pak vytáhl proti Perské říši a za deset let ji celou dobyl. Došel až do Indie, kde ho vlastní vojáci donutili obrátit se zpátky. Po cestě založil mnoho měst, kterým dal jméno Alexandrie. Zemřel v Babylonu ve dvaatřiceti letech, nejspíš na nemoc.",
+    fact: "Jedno z měst pojmenoval Bukefala po svém koni Bukefalovi, který s ním prošel celé tažení.",
+    wiki: "Alexandr Veliký",
+  },
+  "lead-indians": {
+    when: "1869 až 1948",
+    text: "Gándhí vystudoval práva v Londýně a přes dvacet let žil v Jižní Africe. Tam zažil, jak se s Indy zachází jako s lidmi druhé kategorie, a začal se tomu bránit bez násilí. Po návratu vedl miliony Indů v odporu proti britské nadvládě. Lidé bojkotovali britské zboží a odmítali poslouchat nespravedlivé zákony a Gándhí za to strávil roky ve vězení. O domorodých Afričanech se v mládí vyjadřoval s předsudky a historici se o tom dodnes přou. Půl roku po vzniku nezávislé Indie ho zastřelil hinduistický radikál Nathuram Gódsé.",
+    fact: "Gándhího pětkrát navrhli na Nobelovu cenu míru a nikdy ji nedostal.",
+    wiki: "Mahátma Gándhí",
+  },
+  "lead-russians": {
+    when: "1878 až 1953",
+    text: "Stalin se narodil v Gruzii jako syn ševce a studoval v semináři na kněze. Dal se k revolucionářům a po Leninově smrti ovládl celý Sovětský svaz. Z chudé zemědělské země udělal průmyslovou velmoc a zaplatily to miliony životů. Rolníkům vzal půdu a při hladomoru na začátku 30. let zemřely miliony lidí, nejvíc na Ukrajině. Při Velké čistce v letech 1937 a 1938 nechal zastřelit kolem 700 tisíc lidí a další miliony poslal do pracovních táborů, gulagů. Ve druhé světové válce porazil nacistické Německo, Sovětský svaz v ní ale přišel o víc než 20 milionů lidí.",
+    fact: "V Praze na Letné stál od roku 1955 obří Stalinův pomník, největší sousoší v Evropě. Po sedmi letech ho odstřelili.",
+    wiki: "Josif Stalin",
+  },
+  "lead-zulus": {
+    when: "asi 1787 až 1828",
+    text: "Šaka byl nemanželský syn zulského náčelníka a jako dítě se mu vrstevníci posmívali. Vyrostl z něj výborný bojovník a nakonec náčelník Zuluů. Svým vojákům vzal sandály, aby byli rychlejší, a naučil je bojovat krátkým bodným kopím. Z malého kmene udělal mocné království, které si podmanilo desítky sousedních kmenů. Jeho války vyhnaly z domovů celé národy a zemřely v nich desetitisíce lidí. Nakonec ho ubodali jeho nevlastní bratři Dingane a Mhlangane.",
+    fact: "Evropští cestovatelé mu kvůli jeho vojenským úspěchům říkali Černý Napoleon.",
+    wiki: "Šaka",
+  },
+  "lead-french": {
+    when: "1769 až 1821",
+    text: "Napoleon se narodil na Korsice a jako mladý dělostřelecký důstojník se proslavil za Francouzské revoluce. V roce 1799 se chopil moci a v roce 1804 se sám korunoval císařem. Vydal občanský zákoník, podle kterého se ve Francii soudí dodnes. V roce 1802 znovu zavedl otroctví ve francouzských koloniích. Jeho války stály život miliony lidí po celé Evropě. Do Ruska vytáhl s více než půl milionem vojáků a vrátila se jen malá část. Po porážce u Waterloo zemřel ve vyhnanství na ostrově Svatá Helena.",
+    fact: "Napoleon tak malý nebyl. Měřil asi 169 centimetrů, což byla tehdy běžná výška, a pověst o malém císaři rozšířily hlavně britské karikatury.",
+    wiki: "Napoleon Bonaparte",
+  },
+  "lead-aztecs": {
+    when: "asi 1465 až 1520",
+    text: "Moctezuma byl před zvolením generálem a veleknězem. Aztéckým vládcem se stal kolem pětatřiceti let a vládl říši s asi 11 miliony obyvatel. Podrobené národy musely Aztékům odvádět daně a zajatce, které kněží obětovali bohům. Proto Aztéky sousedé nenáviděli a později pomáhali Španělům. V roce 1519 přišel do Tenochtitlánu Hernán Cortés a Moctezumu zajal. Když se pak Moctezuma snažil uklidnit vzbouřené Aztéky, začali po něm házet kamení a za dva dny na zranění zemřel.",
+    fact: "Když Moctezuma jedl, postavili před něj dřevěnou zástěnu, aby ho nikdo neviděl. Pil ze zlatých pohárů.",
+    wiki: "Moctezuma II.",
+  },
+  "lead-chinese": {
+    when: "1893 až 1976",
+    text: "Mao byl syn bohatého sedláka z jihu Číny a patřil k zakladatelům čínské komunistické strany. Po dlouhé občanské válce vyhlásil v roce 1949 Čínskou lidovou republiku a vládl jí až do smrti. Jeho Velký skok vpřed měl z Číny rychle udělat průmyslovou zemi. Skončil hladomorem, ve kterém podle odhadů zemřely desítky milionů lidí. Za kulturní revoluce od roku 1966 mladí rudí gardisté ponižovali a bili učitele a úředníky a statisíce lidí přišly o život.",
+    fact: "Citáty z Maových projevů vyšly v Rudé knížce. Vytiskli jich přes miliardu a za kulturní revoluce ji u sebe musel mít skoro každý Číňan.",
+    wiki: "Mao Ce-tung",
+  },
+  "lead-english": {
+    when: "1533 až 1603",
+    text: "Alžběta byla dcerou krále Jindřicha VIII. a Anny Boleynové. Když jí byly dva roky, otec nechal její matku popravit. Za vlády své sestry Marie strávila dva měsíce jako vězeňkyně v londýnském Toweru. Královnou se stala v pětadvaceti a vládla 45 let. Nikdy se nevdala, a proto se jí říkalo panenská královna. Za její vlády porazili Angličané španělskou Armadu a rozkvetlo divadlo. Svou příbuznou, skotskou královnu Marii Stuartovnu, nechala po devatenácti letech věznění popravit a katolíky tvrdě pronásledovala.",
+    fact: "Americký stát Virginie dostal jméno po ní, po panenské královně.",
+    wiki: "Alžběta I.",
+  },
+  "lead-mongols": {
+    when: "asi 1162 až 1227",
+    text: "Čingischán se narodil jako Temüdžin. Ještě jako chlapci mu Tataři zavraždili otce a rodinu opustil celý kmen. Temüdžin vyrůstal v bídě a jako mladík byl i v zajetí. Postupně si získal spojence a v roce 1206 ho sjednocené mongolské kmeny zvolily Čingischánem, nejvyšším vládcem. Jeho jezdci pak dobyli severní Čínu a velkou část Asie. Města, která se nevzdala, nechával vyvraždit. Podle některých odhadů zemřelo při výbojích Čingischána a jeho potomků 37 až 60 milionů lidí.",
+    fact: "Kde je Čingischán pohřbený, dodnes nikdo neví. Podle legendy zabili každého, kdo potkal jeho pohřební průvod.",
+    wiki: "Čingischán",
+  },
+  "lead-czechs": {
+    when: "1316 až 1378",
+    text: "Karel se narodil v Praze jako Václav. V sedmi letech ho otec Jan Lucemburský poslal na výchovu do Francie a tam přijal jméno Karel po svém kmotrovi, francouzském králi. Českým králem se stal v roce 1346 a římským císařem v roce 1355. Založil univerzitu a Nové Město pražské a začal stavět kamenný most přes Vltavu. Má ale i temné stránky. Když v německých městech za morové epidemie vraždili Židy, Karel Norimberským předem odpustil všechno násilí na nich a jejich domy rozdával. V Norimberku pak zavraždili 560 Židů.",
+    fact: "Vědci, kteří zkoumali jeho kostru, zjistili, že si v roce 1350 nejspíš na rytířském turnaji poranil páteř. Několik měsíců byl ochrnutý a kronikáři to přísně tajili.",
+    wiki: "Karel IV.",
   },
 };

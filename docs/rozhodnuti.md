@@ -8,7 +8,7 @@ Michal chtěl národy podle Civilizace 1 a k nim Čechy. Na výběr je patnáct 
 
 Národy nemají žádné zvláštní bonusy, stejně jako v Civilizaci 1. Liší se jménem, vládcem, barvou, jmény měst a povahou, podle které bude hrát počítač. Mongolové třeba spoléhají na armádu a Češi sázejí na vědu. Národy jsou rozdělené do barevných dvojic jako v Civilizaci 1 a dva národy stejné barvy se v jedné hře nepotkají. Každý národ má šestnáct skutečných jmen měst, pak hra bere obecná česká jména.
 
-Místo Stalina vede Rusy Petr Veliký a místo Maa Číňany první císař Čchin Š'-chuang-ti. Hru bude hrát i syn a nechtěli jsme mu jako vládce nabízet diktátory dvacátého století. Když to Michal bude chtít jinak, je to změna v jednom datovém souboru.
+Vládci jsou stejní jako v Civilizaci 1, včetně Stalina a Maa. Claude je nejdřív nahradil Petrem Velikým a prvním čínským císařem, protože hru bude hrát i syn. Michal chtěl originál a o vládcích je v encyklopedii poctivé heslo, které nezamlčí, kolik lidí za jejich vlády zemřelo.
 
 Novou hru začíná okno, ve kterém si hráč národ vybere. Soupeři dostanou náhodné národy z jiných barev. Uložené hry dostanou národy samy.
 

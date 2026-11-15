@@ -8,6 +8,7 @@ import {
   canOpenTradeRoute,
   canUpgrade,
   CIVS,
+  currentEra,
   disbandShields,
   upgradeCost,
   upgradeTarget,
@@ -344,6 +345,7 @@ function buildDrawInput(): DrawInput {
       y: c.y,
       size: c.size,
       walls: c.buildings.includes("walls"),
+      era: currentEra(state.players[c.owner]!),
     })),
     starts: showAll ? state.players.slice(1).map((p) => ({ point: p.start, playerId: p.id })) : [],
     selectedUnitId,
@@ -1155,15 +1157,8 @@ newGameButton.addEventListener("click", () => newGameDialog.open());
 
 // ---------- start ----------
 
-// Graphics trial: painted sprites from Gemini replace the drawn figures of a few units and the cities.
-const SPRITES_KEY = "empires.sprites";
-const spritesBox = $<HTMLInputElement>("#sprites");
-function applySprites(on: boolean): void {
-  if (!on) {
-    setSprites(new Map());
-    refresh();
-    return;
-  }
+// Units and cities are painted sprites; anything without a sprite keeps its drawn figure.
+function loadSprites(): void {
   const files = import.meta.glob<string>("./sprites/*.webp", { eager: true, query: "?url", import: "default" });
   const loaded = new Map<string, HTMLImageElement>();
   let pending = Object.keys(files).length;
@@ -1182,19 +1177,6 @@ function applySprites(on: boolean): void {
     img.src = url;
   }
 }
-try {
-  spritesBox.checked = localStorage.getItem(SPRITES_KEY) === "1" || new URLSearchParams(location.search).has("sprity");
-} catch {
-  spritesBox.checked = false;
-}
-spritesBox.addEventListener("change", () => {
-  try {
-    localStorage.setItem(SPRITES_KEY, spritesBox.checked ? "1" : "0");
-  } catch {
-    // Storage may be unavailable; the switch still works for this visit.
-  }
-  applySprites(spritesBox.checked);
-});
 
 updateZoomButtons();
 if (load()) {
@@ -1205,4 +1187,4 @@ if (load()) {
   startNewGame(randomSeed());
   newGameDialog.open(true);
 }
-if (spritesBox.checked) applySprites(true);
+loadSprites();

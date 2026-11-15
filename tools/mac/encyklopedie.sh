@@ -12,11 +12,11 @@ if [ -z "$KEY" ]; then
 fi
 echo "1/4 Stahuju články z Wikipedie"
 bash wiki.sh encyklopedie-wiki.tsv encyklopedie/wiki
-bash wiki.sh encyklopedie-vladci.tsv encyklopedie/wiki
 echo "2/4 Generuju obrázky"
 bash obrazky.sh "$KEY" encyklopedie-zadani.tsv encyklopedie/obrazky || exit 1
 echo "3/4 Kreslím znovu obrázky, které se napoprvé nepovedly"
 bash obrazky.sh "$KEY" encyklopedie-oprava.tsv encyklopedie/oprava || exit 1
-echo "4/4 Kreslím zkušební obrázky pro novou grafiku mapy"
+echo "4/4 Kreslím jednotky a města pro mapu"
 ASPECT=1:1 bash obrazky.sh "$KEY" grafika-test.tsv encyklopedie/grafika || exit 1
+ASPECT=1:1 bash obrazky.sh "$KEY" grafika.tsv encyklopedie/grafika || exit 1
 echo "Všechno hotovo. Napiš Claudovi."

@@ -27,7 +27,7 @@ import { unitPortraitCanvas } from "./render";
 import { techIconSvg } from "./techIcons";
 import { describeBuilding, describeGovernment, describeUnit, escapeHtml } from "./texts";
 
-export type EntryKind = "civ" | "unit" | "bld" | "wdr" | "gov" | "ter" | "imp";
+export type EntryKind = "civ" | "lead" | "unit" | "bld" | "wdr" | "gov" | "ter" | "imp";
 
 interface Entry {
   key: string;
@@ -96,6 +96,11 @@ const CATEGORIES: { kind: EntryKind; title: string; entries: Entry[] }[] = [
     title: "Národy",
     entries: CIV_IDS.map((id) => ({ key: `civ-${id}`, kind: "civ" as const, id, name: CIVS[id].name })),
   },
+  {
+    kind: "lead",
+    title: "Vládci",
+    entries: CIV_IDS.map((id) => ({ key: `lead-${id}`, kind: "lead" as const, id, name: CIVS[id].leader })),
+  },
 ];
 
 const ALL: Entry[] = CATEGORIES.flatMap((c) => c.entries);
@@ -154,11 +159,15 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
       const c = CIVS[e.id as keyof typeof CIVS];
       const nature = { expansion: "rád zakládá nová města", war: "spoléhá na armádu", science: "sází na vědu a výzkum" }[c.personality];
       return (
-        row("Vládce", escapeHtml(c.leader)) +
+        row("Vládce", entryLink(`lead-${c.id}`, c.leader)) +
         row("Barva", `<span class="cx-color" style="background:${c.color}"></span>`) +
         row("Když hraje počítač", nature) +
         row("První města", escapeHtml(c.cities.slice(0, 6).join(", ")))
       );
+    }
+    if (e.kind === "lead") {
+      const c = CIVS[e.id as keyof typeof CIVS];
+      return row("Ve hře vede", entryLink(`civ-${c.id}`, c.name)) + row("Hlavní město", escapeHtml(c.cities[0]!));
     }
     if (e.kind === "gov") {
       const g = GOVERNMENTS[e.id as keyof typeof GOVERNMENTS];
@@ -202,7 +211,7 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
   function fallbackPicture(e: Entry): HTMLElement {
     if (e.kind === "unit") return unitPortraitCanvas(e.id as never, 0, 400, 300);
     if (e.kind === "bld" || e.kind === "wdr") return buildingPortraitCanvas(e.id as never, 400, 300);
-    if (e.kind === "gov" || e.kind === "civ") return buildingPortraitCanvas("palace", 400, 300);
+    if (e.kind === "gov" || e.kind === "civ" || e.kind === "lead") return buildingPortraitCanvas("palace", 400, 300);
     const div = document.createElement("div");
     div.className = "cx-swatch";
     div.dataset.kind = e.id;

@@ -114,6 +114,8 @@ let camera: Camera = DEFAULT_CAMERA;
 let followed = "";
 /** A missile waiting for the player to click its target. */
 let targetingUnitId: number | null = null;
+/** The unit waiting for a click that says where to send it, whatever is on the tile. */
+let sendingUnitId: number | null = null;
 /** Unit whose "Rozpustit" button was pressed once and now asks for confirmation. */
 let disbandConfirmUnitId: number | null = null;
 
@@ -252,8 +254,12 @@ function moveSelected(to: Point): void {
     distance(unit, to) === 1
       ? run({ type: "move", unitId: unit.id, to })
       : run({ type: "goto", unitId: unit.id, to });
-  if (ok) afterUnitAction();
-  else refresh();
+  sendingUnitId = null;
+  if (ok) {
+    const moved = state.units.find((u) => u.id === unit.id);
+    if (moved?.goto) say(`${UNIT_TYPES[unit.type].name} je na cestě. Cestu zrušíš klávesou C, až jednotku znovu vybereš.`);
+    afterUnitAction();
+  } else refresh();
 }
 
 function unitAction(command: Command): void {
@@ -282,7 +288,7 @@ interface Route {
 /** What a click on `p` would do with the selected unit: move or send it there. */
 function clickWouldMove(unit: Unit, p: Point): boolean {
   if (unit.x === p.x && unit.y === p.y) return false;
-  if (distance(unit, p) === 1) return true;
+  if (distance(unit, p) === 1 || sendingUnitId === unit.id) return true;
   const ownCity = state.cities.some((c) => c.x === p.x && c.y === p.y && c.owner === HUMAN);
   const ownUnits = state.units.some((u) => u.x === p.x && u.y === p.y && u.owner === HUMAN);
   return !ownCity && !ownUnits;
@@ -332,6 +338,7 @@ function buildDrawInput(): DrawInput {
       x: u.x,
       y: u.y,
       fortified: u.fortified,
+      onRoute: u.owner === HUMAN && state.units.some((x) => x.id === u.id && x.goto !== null),
       working: u.work !== null,
       workProgress: u.work ? workShare(u) : undefined,
       hasMoves: needsOrders(u),
@@ -683,8 +690,11 @@ function renderUnit(unit: Unit): void {
   if (rule.special === "nuclear") {
     button("aim", targetingUnitId === unit.id ? "Klikni na cíl na mapě" : "Zamířit a odpálit", "X", unit.movesLeft > 0 ? null : ERROR_TEXT.noMovesLeft);
   }
+  button("send", sendingUnitId === unit.id ? "Klikni na cíl na mapě" : "Poslat na místo", "G", null);
   button("skip", "Počkat", "mezera", unit.movesLeft > 0 ? null : "Jednotka už nemá pohyb.");
-  if (unit.goto || unit.work || unit.fortified) button("cancel", "Zrušit rozkaz", "C", null);
+  if (unit.goto) button("cancel", "Zrušit cestu", "C", null);
+  else if (unit.work) button("cancel", "Přestat pracovat", "C", null);
+  else if (unit.fortified) button("cancel", "Zrušit opevnění", "C", null);
   const upgradeTo = upgradeTarget(me(), unit.type);
   if (upgradeTo) {
     const err = canUpgrade(state, unit);
@@ -704,7 +714,7 @@ function renderUnit(unit: Unit): void {
   selectionPanel.innerHTML = `
     <div class="panel-title"><h3><button type="button" class="linklike" data-codex="${entryKey("unit", unit.type)}" title="Co je to za jednotku? (klávesa E)">${rule.name}</button></h3><span class="sub">[${unit.x}, ${unit.y}] ${TERRAINS[terrain].name}</span></div>
     <p class="facts">Pohyb: ${moves}${home ? ` · domov: ${escapeHtml(home)}` : ""}<br>
-    <span class="muted">${status || "Klikni na mapu, kam má jít."}</span></p>
+    <span class="muted">${status || (sendingUnitId === unit.id ? "Klikni na políčko, kam má jít. Může to být i město nebo jiná jednotka." : "Klikni na mapu, kam má jít. Do města ji pošleš pravým klikem nebo klávesou G.")}</span></p>
     <div class="actions">${buttons.join("")}</div>`;
 
   selectionPanel.querySelectorAll<HTMLButtonElement>("button[data-action]").forEach((b) =>
@@ -725,7 +735,13 @@ function doUnitAction(action: string): void {
   if (action === "fortify") return unitAction({ type: "fortify", unitId: unit.id });
   if (action === "skip") return unitAction({ type: "skipTurn", unitId: unit.id });
   if (action === "cancel") {
-    run({ type: "cancelOrders", unitId: unit.id });
+    const hadRoute = unit.goto !== null;
+    if (run({ type: "cancelOrders", unitId: unit.id }) && hadRoute) say("Cesta je zrušená. Jednotka čeká na nový rozkaz.");
+    return refresh();
+  }
+  if (action === "send") {
+    sendingUnitId = sendingUnitId === unit.id ? null : unit.id;
+    say(sendingUnitId ? "Klikni na políčko, kam má jednotka jít. Esc to zruší." : "");
     return refresh();
   }
   if (action.startsWith("build:")) {
@@ -976,6 +992,16 @@ canvas.addEventListener("dblclick", (e) => {
   if (city) cityScreen.open(city.id);
 });
 
+// A right click (two-finger click on a trackpad) sends the selected unit anywhere, cities included.
+canvas.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  const p = tileFromEvent(e);
+  const unit = selectedUnit();
+  if (!p || !unit || targetingUnitId !== null) return;
+  if (unit.x === p.x && unit.y === p.y) return;
+  moveSelected(p);
+});
+
 canvas.addEventListener("click", (e) => {
   if (suppressClick) {
     suppressClick = false;
@@ -988,6 +1014,14 @@ canvas.addEventListener("click", (e) => {
     const missile = targetingUnitId;
     targetingUnitId = null;
     return unitAction({ type: "detonate", unitId: missile, at: p });
+  }
+  if (unit && sendingUnitId === unit.id) {
+    if (unit.x === p.x && unit.y === p.y) {
+      sendingUnitId = null;
+      say("");
+      return refresh();
+    }
+    return moveSelected(p);
   }
   const myCity = state.cities.find((c) => c.x === p.x && c.y === p.y && c.owner === HUMAN);
   const myUnits = state.units.filter((u) => u.x === p.x && u.y === p.y && u.owner === HUMAN);
@@ -1094,6 +1128,7 @@ const KEY_ACTIONS: Record<string, string> = {
   x: "aim",
   f: "fortify",
   " ": "skip",
+  g: "send",
   c: "cancel",
   n: "next",
 };
@@ -1140,8 +1175,9 @@ document.addEventListener("keydown", (e) => {
     return zoomTo(1);
   }
   if (e.key === "Escape") {
-    if (targetingUnitId !== null) {
+    if (targetingUnitId !== null || sendingUnitId !== null) {
       targetingUnitId = null;
+      sendingUnitId = null;
       say("");
       return refresh();
     }

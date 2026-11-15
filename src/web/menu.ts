@@ -77,7 +77,7 @@ export function createMenus(
           <button type="button" data-act="codex">Encyklopedie</button>
           <button type="button" data-act="help">Ovládání</button>
         </nav>
-        <p class="st-foot">fáze 2 · hra se ukládá sama po každém kroku</p>
+        <p class="st-foot">fáze 2 · hra se průběžně ukládá sama</p>
       </div>`;
     start.querySelector('[data-act="continue"]')!.addEventListener("click", () => {
       hideStart();

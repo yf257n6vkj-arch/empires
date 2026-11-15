@@ -13,6 +13,7 @@
 import type { Point, TerrainId, UnitTypeId } from "../core";
 import { drawUnitArt, WIDE_UNITS } from "./unitArt";
 import { DEFAULT_CAMERA, type Camera } from "./camera";
+import { FIELD_RES, fieldTerrainAt, terrainField, type Field } from "./terrainField";
 
 /** Tile size in design units. */
 export const TILE = 24;
@@ -62,6 +63,8 @@ export interface DrawUnit {
   x: number;
   y: number;
   fortified: boolean;
+  /** The unit follows a route over several turns. */
+  onRoute?: boolean;
   working: boolean;
   /** Share of the current work done, 0..1. */
   workProgress?: number;
@@ -310,18 +313,27 @@ function drawBackground(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   ctx.fillRect(0, 0, width * TILE, height * TILE);
 
   const depth = seaDepth(input);
+  const field = terrainField(width, height, terrain, TERRAIN_COLORS, depth, seaRgb);
+  // Only the part in view, with a tile of slack, scaled up smoothly.
+  const r = FIELD_RES;
+  const fx0 = view.x0;
+  const fy0 = view.y0;
+  const fw = view.x1 - view.x0 + 1;
+  const fh = view.y1 - view.y0 + 1;
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(field.canvas, fx0 * r, fy0 * r, fw * r, fh * r, fx0 * TILE, fy0 * TILE, fw * TILE, fh * TILE);
+  ctx.restore();
   for (let y = view.y0; y <= view.y1; y++) {
     for (let x = view.x0; x <= view.x1; x++) {
-      const t = terrain[y * width + x] ?? null;
-      if (t) drawTerrainBase(ctx, t, x, y, depth[y * width + x] ?? 0);
+      if (terrain[y * width + x]) drawSpeckles(ctx, field, x, y);
     }
   }
-  drawTerrainBlend(ctx, input, depth);
-  drawCoast(ctx, input);
   for (let y = view.y0; y <= view.y1; y++) {
     for (let x = view.x0; x <= view.x1; x++) {
       const t = terrain[y * width + x] ?? null;
-      if (t) drawTerrainDetail(ctx, t, x, y, depth[y * width + x] ?? 0);
+      if (t) drawTerrainDetail(ctx, field, t, x, y, depth[y * width + x] ?? 0);
     }
   }
   drawImprovements(ctx, input);
@@ -374,36 +386,38 @@ const SPECKLE: Record<Exclude<TerrainId, "ocean">, { light: string; dark: string
   desert: { light: "#f2e4ba", dark: "#c9b077", n: 16 },
 };
 
-/**
- * Base fills reach slightly under the next tile, so no hairline seams appear
- * when tile edges fall between device pixels.
- */
-const BLEED = 0.5;
-
-function drawTerrainBase(ctx: CanvasRenderingContext2D, t: TerrainId, x: number, y: number, depth: number): void {
+/** Small light and dark flecks in the colours of the ground they lie on. */
+function drawSpeckles(ctx: CanvasRenderingContext2D, field: Field, x: number, y: number): void {
   const px = x * TILE;
   const py = y * TILE;
-  if (t === "ocean") {
-    const base = groundColor(t, depth);
-    ctx.fillStyle = shade(base, 0.99 + hash(x, y, 1) * 0.02);
-    ctx.fillRect(px, py, TILE + BLEED, TILE + BLEED);
-    return;
-  }
-  ctx.fillStyle = shade(TERRAIN_COLORS[t], 0.985 + hash(x, y, 2) * 0.03);
-  ctx.fillRect(px, py, TILE + BLEED, TILE + BLEED);
-  const sp = SPECKLE[t];
-  const light = new Path2D();
-  const dark = new Path2D();
-  for (let k = 0; k < sp.n; k++) {
+  const groups = new Map<string, Path2D>();
+  for (let k = 0; k < 18; k++) {
     const sx = px + hash(x, y, 40 + k) * TILE;
     const sy = py + hash(x, y, 80 + k) * TILE;
+    const t = fieldTerrainAt(field, sx / TILE, sy / TILE);
+    if (!t || t === "ocean") continue;
+    const sp = SPECKLE[t];
+    if (k >= sp.n) continue;
+    const color = k % 2 === 0 ? shade(sp.light, 1, 0.55) : shade(sp.dark, 1, 0.45);
+    let path = groups.get(color);
+    if (!path) groups.set(color, (path = new Path2D()));
     const w = 0.8 + hash(x, y, 120 + k) * 1.6;
-    (k % 2 === 0 ? light : dark).rect(sx - w / 2, sy - 0.4, w, 0.8 + hash(x, y, 160 + k) * 0.6);
+    path.rect(sx - w / 2, sy - 0.4, w, 0.8 + hash(x, y, 160 + k) * 0.6);
   }
-  ctx.fillStyle = shade(sp.light, 1, 0.55);
-  ctx.fill(light);
-  ctx.fillStyle = shade(sp.dark, 1, 0.45);
-  ctx.fill(dark);
+  for (const [color, path] of groups) {
+    ctx.fillStyle = color;
+    ctx.fill(path);
+  }
+}
+
+/** Sea colour for a depth that may fall between whole tiles. */
+function seaRgb(d: number): [number, number, number] {
+  const c = Math.max(0, Math.min(SEA_BY_DEPTH.length - 1, d - 1));
+  const i = Math.floor(c);
+  const a = rgb(SEA_BY_DEPTH[i]!);
+  const b = rgb(SEA_BY_DEPTH[Math.min(SEA_BY_DEPTH.length - 1, i + 1)]!);
+  const f = c - i;
+  return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
 }
 
 /** Base colour of a tile, with the sea shaded by its distance from land. */
@@ -413,161 +427,78 @@ function groundColor(t: TerrainId, depth: number): string {
 }
 
 /**
- * Soft transitions: every tile takes a little of each different neighbour's
- * colour along the shared edge and corner, so borders are not hard squares.
- * The sea also blends between depths, and water next to land gets a lighter
- * shallow band.
+ * Details on a tile. Hills, mountains and dunes belong to the tile. Small
+ * things (grass, flowers, trees, pebbles) sit on a jittered grid and follow
+ * the ground they land on, so a forest that reaches into the next tile
+ * brings its trees along.
  */
-function drawTerrainBlend(ctx: CanvasRenderingContext2D, input: DrawInput, depth: number[]): void {
-  const { width, height, terrain } = input;
-  const inMap = (x: number, y: number) => x >= 0 && y >= 0 && x < width && y < height;
-  const at = (x: number, y: number) => (inMap(x, y) ? (terrain[y * width + x] ?? null) : null);
-  const colorAt = (x: number, y: number): string | null => {
-    const t = at(x, y);
-    return t ? groundColor(t, depth[y * width + x] ?? 0) : null;
-  };
-  /** Colour that the tile (x, y) should borrow from its neighbour, or null. */
-  const borrow = (x: number, y: number, nx: number, ny: number): { color: string; alpha: number; reach: number } | null => {
-    const t = at(x, y);
-    const n = at(nx, ny);
-    if (!t || !n) return null;
-    if (t === "ocean" && n !== "ocean") return { color: "#7cc8cf", alpha: 0.5, reach: 9 };
-    if (t !== "ocean" && n === "ocean") return null;
-    const own = colorAt(x, y);
-    const other = colorAt(nx, ny);
-    if (!other || other === own) return null;
-    return t === "ocean" ? { color: other, alpha: 0.5, reach: 12 } : { color: other, alpha: 0.6, reach: 7 };
-  };
-  const sides = [
-    [0, -1],
-    [0, 1],
-    [-1, 0],
-    [1, 0],
-  ] as const;
-  const corners = [
-    [-1, -1],
-    [1, -1],
-    [-1, 1],
-    [1, 1],
-  ] as const;
-  for (let y = view.y0; y <= view.y1; y++) {
-    for (let x = view.x0; x <= view.x1; x++) {
-      if (!at(x, y)) continue;
-      const px = x * TILE;
-      const py = y * TILE;
-      for (const [dx, dy] of sides) {
-        const b = borrow(x, y, x + dx, y + dy);
-        if (!b) continue;
-        // Gradient from the shared edge into this tile.
-        const ex = dx === 1 ? px + TILE : px;
-        const ey = dy === 1 ? py + TILE : py;
-        const g =
-          dx !== 0
-            ? ctx.createLinearGradient(ex, 0, ex - dx * b.reach, 0)
-            : ctx.createLinearGradient(0, ey, 0, ey - dy * b.reach);
-        g.addColorStop(0, shade(b.color, 1, b.alpha));
-        g.addColorStop(1, shade(b.color, 1, 0));
-        ctx.fillStyle = g;
-        if (dx !== 0) ctx.fillRect(dx === 1 ? px + TILE - b.reach : px, py, b.reach, TILE);
-        else ctx.fillRect(px, dy === 1 ? py + TILE - b.reach : py, TILE, b.reach);
-      }
-      // Corners where only the diagonal neighbour differs.
-      for (const [dx, dy] of corners) {
-        if (borrow(x, y, x + dx, y) || borrow(x, y, x, y + dy)) continue;
-        const b = borrow(x, y, x + dx, y + dy);
-        if (!b) continue;
-        const cx = dx === 1 ? px + TILE : px;
-        const cy = dy === 1 ? py + TILE : py;
-        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, b.reach);
-        g.addColorStop(0, shade(b.color, 1, b.alpha));
-        g.addColorStop(1, shade(b.color, 1, 0));
-        ctx.fillStyle = g;
-        ctx.fillRect(dx === 1 ? px + TILE - b.reach : px, dy === 1 ? py + TILE - b.reach : py, b.reach, b.reach);
-      }
-    }
-  }
-}
-
-function drawTerrainDetail(ctx: CanvasRenderingContext2D, t: TerrainId, x: number, y: number, depth: number): void {
+function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: TerrainId, x: number, y: number, depth: number): void {
   const px = x * TILE;
   const py = y * TILE;
   const r = (k: number) => hash(x, y, k);
+  const ground = (gx: number, gy: number) => fieldTerrainAt(field, gx / TILE, gy / TILE);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
+
+  if (t === "ocean") {
+    // Small wave crests; fewer and fainter far from the coast.
+    const count = depth <= 2 ? 3 : 2;
+    ctx.strokeStyle = `rgba(255, 255, 255, ${depth <= 1 ? 0.28 : 0.16})`;
+    ctx.lineWidth = 0.7;
+    for (let k = 0; k < count; k++) {
+      const wx = px + 2 + r(k + 3) * 15;
+      const wy = py + 5 + k * 7 + r(k + 5) * 3;
+      if (ground(wx, wy) !== "ocean" || ground(wx + 8, wy) !== "ocean") continue;
+      ctx.beginPath();
+      ctx.moveTo(wx, wy + 1);
+      ctx.quadraticCurveTo(wx + 2, wy - 1, wx + 4, wy + 0.6);
+      ctx.quadraticCurveTo(wx + 6, wy - 1, wx + 8, wy + 1);
+      ctx.stroke();
+    }
+    return;
+  }
+
+  // Small things on a 3 x 3 jittered grid, drawn top to bottom.
+  for (let k = 0; k < 9; k++) {
+    const gx = px + ((k % 3) + 0.5) * 8 + (r(200 + k) - 0.5) * 5;
+    const gy = py + (Math.floor(k / 3) + 0.5) * 8 + (r(220 + k) - 0.5) * 5;
+    const here = ground(gx, gy);
+    const roll = r(240 + k);
+    switch (here) {
+      case "grassland":
+        if (roll < 0.6) drawGrassTuft(ctx, gx, gy, 2 + r(260 + k), "#3f7a28", "#7fbd4f");
+        else if (roll < 0.78) {
+          ctx.fillStyle = r(280 + k) > 0.5 ? "#f4d44c" : "#f6f1e6";
+          ctx.beginPath();
+          ctx.arc(gx, gy, 0.65, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      case "plains":
+        if (roll < 0.66) drawGrassTuft(ctx, gx, gy, 3 + r(260 + k) * 1.2, "#8a7a2e", "#dccd7c");
+        else if (roll > 0.94) drawShrub(ctx, gx, gy);
+        break;
+      case "forest":
+        if (r(300 + k) > 0.45) drawConifer(ctx, gx, gy, 0.85 + r(320 + k) * 0.15);
+        else drawLeafTree(ctx, gx, gy, 0.85 + r(320 + k) * 0.15);
+        break;
+      case "desert":
+        if (roll < 0.45) {
+          ctx.fillStyle = "rgba(140, 110, 60, 0.55)";
+          ctx.beginPath();
+          ctx.ellipse(gx, gy, 0.7, 0.45, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (roll > 0.97) drawCactus(ctx, gx, gy);
+        break;
+      case "hills":
+        if (t !== "hills" && roll < 0.4) drawGrassTuft(ctx, gx, gy, 2.2, "#5c6a2c", "#a7ae66");
+        break;
+      default:
+        break;
+    }
+  }
+
   switch (t) {
-    case "ocean": {
-      // Small wave crests; fewer and fainter far from the coast.
-      const count = depth <= 2 ? 3 : 2;
-      ctx.strokeStyle = `rgba(255, 255, 255, ${depth <= 1 ? 0.28 : 0.16})`;
-      ctx.lineWidth = 0.7;
-      for (let k = 0; k < count; k++) {
-        const wx = px + 2 + r(k + 3) * 15;
-        const wy = py + 5 + k * 7 + r(k + 5) * 3;
-        ctx.beginPath();
-        ctx.moveTo(wx, wy + 1);
-        ctx.quadraticCurveTo(wx + 2, wy - 1, wx + 4, wy + 0.6);
-        ctx.quadraticCurveTo(wx + 6, wy - 1, wx + 8, wy + 1);
-        ctx.stroke();
-      }
-      break;
-    }
-    case "grassland": {
-      for (let k = 0; k < 5; k++) {
-        drawGrassTuft(ctx, px + 3 + r(k) * 18, py + 5 + r(k + 9) * 16, 2 + r(k + 20), "#3f7a28", "#7fbd4f");
-      }
-      // A few wild flowers.
-      const flowers = r(30) > 0.45 ? 2 + Math.floor(r(31) * 3) : 0;
-      for (let k = 0; k < flowers; k++) {
-        ctx.fillStyle = r(40 + k) > 0.5 ? "#f4d44c" : "#f6f1e6";
-        ctx.beginPath();
-        ctx.arc(px + 3 + r(50 + k) * 18, py + 3 + r(60 + k) * 18, 0.65, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      break;
-    }
-    case "plains": {
-      // Dry, golden grassland with tall tufts and the odd shrub.
-      for (let k = 0; k < 6; k++) {
-        drawGrassTuft(ctx, px + 3 + r(k) * 18, py + 6 + r(k + 9) * 16, 3 + r(k + 20) * 1.2, "#8a7a2e", "#dccd7c");
-      }
-      if (r(33) > 0.4) {
-        const bx = px + 5 + r(34) * 14;
-        const by = py + 8 + r(35) * 12;
-        ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
-        ctx.beginPath();
-        ctx.ellipse(bx + 0.6, by + 1.6, 2.6, 0.9, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#6f7d35";
-        ctx.beginPath();
-        ctx.arc(bx - 0.8, by, 1.7, 0, Math.PI * 2);
-        ctx.arc(bx + 1, by - 0.3, 1.9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#93a24a";
-        ctx.beginPath();
-        ctx.arc(bx - 0.2, by - 1, 1.1, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      break;
-    }
-    case "forest": {
-      const spots: [number, number, number][] = [
-        [5, 7, 0.85],
-        [13, 5, 0.9],
-        [20, 8, 0.85],
-        [9, 13, 1],
-        [17, 14, 0.95],
-        [4, 19, 0.9],
-        [12, 21, 1],
-        [20, 20, 0.9],
-      ];
-      for (const [k, [tx, ty, s]] of spots.entries()) {
-        const ox = px + tx + (r(k) - 0.5) * 2.4;
-        const oy = py + ty + (r(k + 10) - 0.5) * 2;
-        if (r(k + 20) > 0.45) drawConifer(ctx, ox, oy, s);
-        else drawLeafTree(ctx, ox, oy, s);
-      }
-      break;
-    }
     case "hills": {
       drawHill(ctx, px + 7, py + 19, 7.5, 7, r(1));
       drawHill(ctx, px + 16.5, py + 14, 8, 8, r(2));
@@ -583,16 +514,28 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, t: TerrainId, x: numbe
     case "desert": {
       drawDune(ctx, px + 2 + r(1) * 3, py + 9 + r(2) * 2, 13);
       drawDune(ctx, px + 8 + r(3) * 3, py + 18 + r(4) * 2, 14);
-      ctx.fillStyle = "rgba(140, 110, 60, 0.55)";
-      for (let k = 0; k < 4; k++) {
-        ctx.beginPath();
-        ctx.ellipse(px + 2 + r(k + 7) * 20, py + 2 + r(k + 11) * 20, 0.7, 0.45, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      if (r(20) > 0.72) drawCactus(ctx, px + 5 + r(21) * 14, py + 8 + r(22) * 12);
       break;
     }
+    default:
+      break;
   }
+}
+
+/** A low bush on the plains. */
+function drawShrub(ctx: CanvasRenderingContext2D, bx: number, by: number): void {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+  ctx.beginPath();
+  ctx.ellipse(bx + 0.6, by + 1.6, 2.6, 0.9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#6f7d35";
+  ctx.beginPath();
+  ctx.arc(bx - 0.8, by, 1.7, 0, Math.PI * 2);
+  ctx.arc(bx + 1, by - 0.3, 1.9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#93a24a";
+  ctx.beginPath();
+  ctx.arc(bx - 0.2, by - 1, 1.1, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 /** A tuft of grass blades growing from (x, y). */
@@ -843,56 +786,6 @@ function drawCactus(ctx: CanvasRenderingContext2D, x: number, y: number): void {
 }
 
 /** Sandy beaches and a line of surf where land meets the sea. */
-function drawCoast(ctx: CanvasRenderingContext2D, input: DrawInput): void {
-  const { width, height, terrain } = input;
-  const at = (x: number, y: number) =>
-    x < 0 || y < 0 || x >= width || y >= height ? null : (terrain[y * width + x] ?? null);
-  for (let y = view.y0; y <= view.y1; y++) {
-    for (let x = view.x0; x <= view.x1; x++) {
-      const t = at(x, y);
-      if (!t || t === "ocean") continue;
-      const px = x * TILE;
-      const py = y * TILE;
-      const sides = [
-        [0, -1],
-        [0, 1],
-        [-1, 0],
-        [1, 0],
-      ] as const;
-      for (const [dx, dy] of sides) {
-        if (at(x + dx, y + dy) !== "ocean") continue;
-        const ex = dx === 1 ? px + TILE : px;
-        const ey = dy === 1 ? py + TILE : py;
-        const reach = 4.5;
-        const g =
-          dx !== 0
-            ? ctx.createLinearGradient(ex, 0, ex - dx * reach, 0)
-            : ctx.createLinearGradient(0, ey, 0, ey - dy * reach);
-        g.addColorStop(0, "rgba(236, 220, 170, 1)");
-        g.addColorStop(0.55, "rgba(230, 212, 160, 0.85)");
-        g.addColorStop(1, "rgba(230, 212, 160, 0)");
-        ctx.fillStyle = g;
-        if (dx !== 0) ctx.fillRect(dx === 1 ? px + TILE - reach : px, py, reach, TILE);
-        else ctx.fillRect(px, dy === 1 ? py + TILE - reach : py, TILE, reach);
-        // Surf just off the beach.
-        ctx.strokeStyle = "rgba(245, 252, 255, 0.6)";
-        ctx.lineWidth = 0.9;
-        ctx.beginPath();
-        if (dx === 0) {
-          const sy = ey + dy * 1;
-          ctx.moveTo(px, sy);
-          for (let k = 1; k <= 4; k++) ctx.lineTo(px + (k * TILE) / 4, sy + (k % 2 ? 0.5 : -0.3) * dy);
-        } else {
-          const sx = ex + dx * 1;
-          ctx.moveTo(sx, py);
-          for (let k = 1; k <= 4; k++) ctx.lineTo(sx + (k % 2 ? 0.5 : -0.3) * dx, py + (k * TILE) / 4);
-        }
-        ctx.stroke();
-      }
-    }
-  }
-}
-
 function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height } = input;
   const cityTiles = new Set(input.cities.map((c) => c.y * width + c.x));
@@ -1807,6 +1700,8 @@ function drawMiniature(
   if (u.fortified) {
     drawRampart(ctx, bcx, fy, brx, bry, s, "front");
     drawFortifiedBadge(ctx, bcx + brx + 0.5 * s, fy - 15 * s, s);
+  } else if (u.onRoute) {
+    drawRouteBadge(ctx, bcx + brx + 0.5 * s, fy - 15 * s, s);
   }
 
   if (stack > 1) {
@@ -1870,6 +1765,31 @@ function drawRampart(ctx: CanvasRenderingContext2D, cx: number, cy: number, rx: 
     ctx.fill();
     ctx.stroke();
   }
+  ctx.restore();
+}
+
+/** A round badge with an arrow for a unit that is on its way somewhere. */
+function drawRouteBadge(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
+  const r = 2.9 * s;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = "#2d6cdf";
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#f3efe6";
+  ctx.stroke();
+  ctx.fillStyle = "#f3efe6";
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.55, y - r * 0.18);
+  ctx.lineTo(x + r * 0.05, y - r * 0.18);
+  ctx.lineTo(x + r * 0.05, y - r * 0.5);
+  ctx.lineTo(x + r * 0.62, y);
+  ctx.lineTo(x + r * 0.05, y + r * 0.5);
+  ctx.lineTo(x + r * 0.05, y + r * 0.18);
+  ctx.lineTo(x - r * 0.55, y + r * 0.18);
+  ctx.closePath();
+  ctx.fill();
   ctx.restore();
 }
 

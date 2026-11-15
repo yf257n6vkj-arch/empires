@@ -10,6 +10,7 @@ Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti náro
 - Tlačítko `Menu` vlevo nahoře nebo `Esc` bez vybrané jednotky otevře nabídku ve hře. Tam hru uložíš, nahraješ jinou nebo se vrátíš do hlavní nabídky.
 - Klikni na svou jednotku nebo město a vyber ho.
 - Klik na sousední políčko jednotku posune, klik dál ji tam pošle i na víc tahů. Cestu ukáže přerušovaná čára.
+- Do města nebo k jiné jednotce ji pošleš pravým klikem (na trackpadu dvěma prsty) nebo klávesou `G` a klikem na cíl. Jednotka na cestě má u sebe modrou šipku. Když ji vybereš, cestu zrušíš klávesou `C`.
 - Šipky nebo číslice 1 až 9 posouvají vybranou jednotku.
 - `B` založí město, `R` postaví cestu, `I` zavlažování, `M` důl, `F` opevní jednotku, mezerník ji nechá do příštího tahu, `N` vybere další jednotku, `U` ji povýší a `D` rozpustí.
 - `Enter` ukončí tah, `Esc` zruší výběr. Druhé `Esc` otevře nabídku.
@@ -31,7 +32,7 @@ npm install
 npm run dev
 ```
 
-Poslední příkaz vypíše adresu, typicky `http://localhost:5173`. Otevři ji v prohlížeči. Semeno mapy je v adrese za `#seed=`, takže konkrétní mapu jde poslat odkazem.
+Poslední příkaz vypíše adresu, typicky `http://localhost:5173`. Otevři ji v prohlížeči. Kód mapy je v adrese za `#seed=`, takže konkrétní mapu jde poslat odkazem.
 
 ## Příkazy
 
@@ -69,6 +70,8 @@ src/web/         vykreslení do Canvasu, ovládání a české texty
   render.ts      mapa, terén, města
   unitArt.ts     figurky jednotek
   newGame.ts     výběr národa pro novou hru
+  terrainField.ts terén jako souvislá plocha s přírodními hranicemi
+  cityView.ts    pohled do města z obrázků od Gemini
   menu.ts        hlavní nabídka, nabídka ve hře a dialog uložených her
   saves.ts       automatické ukládání, pojmenované uložené hry a soubory
   buildingArt.ts budovy a divy pro obrazovku města a encyklopedii

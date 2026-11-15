@@ -2,6 +2,16 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Detail města kreslí Gemini a terén má přírodní hranice
+
+Michal chtěl, aby detail města vypadal dobře a všechny budovy nakreslil Gemini. Gemini nakreslí každou budovu a každý div jako samostatný obrázek z mírného nadhledu, k tomu tři typy domů pro každou éru a dvě krajiny do pozadí, jednu s mořem pro přístavní města. Město v detailu staví budovy na louku do řad, divy dostanou nejlepší místa a zbytek zaplní domy podle počtu obyvatel. Hradby stojí vepředu. Dokud obrázky nejsou ve hře, zůstává pohled kreslený kódem.
+
+Detail města se teď vejde na obrazovku bez posouvání. Nahoře je pohled do města s obyvateli, dole okolí města, výroba a přehled města. Nabídka toho, co stavět, je seznam rozdělený na jednotky, budovy a divy.
+
+Terén na mapě dál kreslí kód. Hranice mezi terény se ale vlní podle hladkého šumu, takže se louka, pláně a les potkávají v křivkách a pobřeží nemá schody. Pobřeží se vlní méně, aby políčko pevniny vždycky vypadalo jako pevnina. Stromy a tráva rostou podle toho, na jaké zemi zrovna leží. Pravidla se nemění, každé políčko má dál jeden terén.
+
+Jednotku jde poslat do města nebo k jiné jednotce pravým klikem nebo klávesou G. Dřív klik na vlastní město jen vybral město. Jednotka na cestě má modrou šipku a cestu jí zruší klávesa C.
+
 ## 15. 11. 2026: Hra má hlavní nabídku a mapa zabírá celé okno
 
 Michal chtěl rozhraní podle Civilizace 3. Po spuštění se ukáže hlavní nabídka s obrázky z encyklopedie, které se pomalu prolínají. Z ní hráč pokračuje v rozehrané hře, začne novou, nahraje uloženou nebo otevře encyklopedii a přehled ovládání.

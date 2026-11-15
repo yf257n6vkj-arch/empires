@@ -39,7 +39,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
               ? `Hraješ za národ <b>${escapeHtml(c.name)}</b> a vládne ${escapeHtml(c.leader)}, první město bude ${escapeHtml(c.cities[0]!)}. <button type="button" class="linklike" data-act="read">Přečíst o národu</button>`
               : "Národ hra vybere náhodně."
           }</div>
-          <label class="ng-seed">Semeno mapy <input type="text" spellcheck="false" placeholder="náhodné" data-seed></label>
+          <label class="ng-seed">Kód mapy <input type="text" spellcheck="false" placeholder="náhodný" data-seed></label>
           <button type="button" class="primary" data-act="start">Začít hru</button>
         </div>
       </div>`;

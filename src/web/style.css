@@ -256,12 +256,17 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .cs-opt-turns { color: var(--muted); font-size: 12px; text-align: right; }
 .cs-trade { display: grid; gap: 4px; font-size: 13.5px; }
 .cs-trade b { color: #f2cf6b; }
-.cs-buildings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.cs-buildings { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
 .cs-building { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 6px; font-size: 12.5px; padding: 2px 6px 2px 2px; text-align: left; background: #2a2520; border-color: #3d3328; }
 .cs-building .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cs-building.wonder .name { color: #f2cf6b; }
 .cs-building .pic { line-height: 0; }
 .cs-building canvas { border-radius: 4px; }
+.cs-building-wrap { display: flex; gap: 2px; min-width: 0; }
+.cs-building-wrap .cs-building { flex: 1; min-width: 0; }
+.cs-sell { font-size: 11px; padding: 0 6px; background: #2a2520; border-color: #3d3328; color: #c9b896; white-space: nowrap; }
+.cs-sell.confirm { background: #6b2a1f; border-color: #a8452f; color: #fff; }
+.pos { color: #8fd16a; }
 .cs-units { display: flex; flex-wrap: wrap; gap: 6px; }
 .cs-unit { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; padding: 2px 8px 2px 2px; }
 .cs-unit .pic { line-height: 0; }
@@ -517,3 +522,6 @@ label.rate input#lux { width: 60px; } .rate.tax { color: var(--muted); white-spa
 .tp-fact-next:hover { background: #e8cf8d; }
 .cx-guide { display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 40%, #f7e7bd, #d9b46a); min-height: 260px; }
 .cx-guide-icon { font-size: 120px; line-height: 1; filter: drop-shadow(0 6px 10px rgba(80, 50, 10, 0.35)); }
+
+.warming { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: #f2c66b; white-space: nowrap; cursor: help; }
+.warming .sun { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #fff6c8, color-mix(in srgb, #f0d04a calc((1 - var(--heat)) * 100%), #e2452b)); box-shadow: 0 0 calc(4px + var(--heat) * 8px) color-mix(in srgb, #f0d04a calc((1 - var(--heat)) * 100%), #e2452b); }

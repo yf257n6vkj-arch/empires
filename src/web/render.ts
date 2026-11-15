@@ -103,6 +103,8 @@ export interface DrawInput {
   fortress?: number[];
   /** Special resources, 1 where the tile has one. */
   special?: number[];
+  /** Polluted tiles. */
+  pollution?: number[];
   units: DrawUnit[];
   cities: DrawCity[];
   /** Start markers, only used by the map preview. */
@@ -206,7 +208,7 @@ function inputKey(input: DrawInput): string {
     h = Math.imul(h, 16777619);
   };
   for (const t of input.terrain) mix(t ? t.charCodeAt(0) * 31 + t.charCodeAt(1) : 0);
-  for (const arr of [input.road, input.irrigation, input.mine, input.railroad ?? [], input.fortress ?? [], input.special ?? []]) for (const v of arr) mix(v);
+  for (const arr of [input.road, input.irrigation, input.mine, input.railroad ?? [], input.fortress ?? [], input.special ?? [], input.pollution ?? []]) for (const v of arr) mix(v);
   for (const c of input.cities) mix(c.x * 1000 + c.y);
   for (const [owner, tiles] of input.territory ?? []) {
     mix(owner + 7);
@@ -1192,6 +1194,7 @@ function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void
           }
         }
       }
+      if (input.pollution?.[i]) drawPollution(ctx, px, py);
       if (input.fortress?.[i]) {
         ctx.strokeStyle = "#8a7f6a";
         ctx.lineWidth = 2.2;
@@ -1203,6 +1206,42 @@ function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void
       }
     }
   }
+}
+
+/** Grey smog with a few dark blots of soot over a polluted tile. */
+function drawPollution(ctx: CanvasRenderingContext2D, px: number, py: number): void {
+  ctx.save();
+  ctx.fillStyle = "rgba(55, 52, 46, 0.45)";
+  ctx.fillRect(px, py, TILE, TILE);
+  const puffs: [number, number, number][] = [
+    [0.3, 0.38, 0.2],
+    [0.55, 0.3, 0.24],
+    [0.72, 0.5, 0.18],
+    [0.42, 0.6, 0.22],
+  ];
+  for (const [fx, fy, fr] of puffs) {
+    const g = ctx.createRadialGradient(px + fx * TILE, py + fy * TILE, 0, px + fx * TILE, py + fy * TILE, fr * TILE);
+    g.addColorStop(0, "rgba(30, 27, 24, 0.85)");
+    g.addColorStop(1, "rgba(38, 34, 30, 0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(px + fx * TILE, py + fy * TILE, fr * TILE, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // A small warning mark: a yellow triangle.
+  ctx.fillStyle = "#e0c341";
+  ctx.strokeStyle = "#3a2f10";
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(px + TILE * 0.78, py + TILE * 0.12);
+  ctx.lineTo(px + TILE * 0.94, py + TILE * 0.38);
+  ctx.lineTo(px + TILE * 0.62, py + TILE * 0.38);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#3a2f10";
+  ctx.fillRect(px + TILE * 0.775, py + TILE * 0.2, TILE * 0.03, TILE * 0.1);
+  ctx.restore();
 }
 
 /**

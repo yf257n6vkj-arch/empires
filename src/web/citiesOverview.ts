@@ -94,7 +94,7 @@ export function createCitiesOverview(dialog: HTMLDialogElement, host: CitiesHost
       <td class="num">${r.production.trade}</td>
       <td class="num">${r.science}</td>
       <td class="num">${r.gold + r.wealthGold}</td>
-      <td>${h.disorder ? `<b class="neg">${t("nepokoje")}</b>` : `${h.content} / <span class="${h.unhappy ? "neg" : ""}">${h.unhappy}</span>`}</td>
+      <td>${h.disorder ? `<b class="neg">${t("nepokoje")}</b>` : `${h.happy ? `<span class="pos">${h.happy}</span> / ` : ""}${h.content} / <span class="${h.unhappy ? "neg" : ""}">${h.unhappy}</span>${c.celebrating ? ` <span class="pos" title="${t("Město slaví")}">★</span>` : ""}`}</td>
       <td class="co-make"><select data-city="${c.id}" aria-label="${t("Co stavět")}">${options}</select><div class="muted small">${progress} ${queue}</div></td>
       <td>${buy}</td>
       <td class="num" title="${escapeHtml(buildings)}">${c.buildings.length}</td>
@@ -126,7 +126,7 @@ export function createCitiesOverview(dialog: HTMLDialogElement, host: CitiesHost
             <th class="num">${t("Obchod")}</th>
             <th class="num">${t("Věda")}</th>
             <th class="num">${t("Zlato")}</th>
-            <th title="${t("Spokojení / nespokojení obyvatelé")}">${t("Nálada")}</th>
+            <th title="${t("Šťastní / spokojení / nespokojení obyvatelé, hvězdička znamená, že město slaví")}">${t("Nálada")}</th>
             <th>${t("Vyrábí")}</th>
             <th>${t("Koupit")}</th>
             <th class="num" title="${t("Počet budov")}">${t("Budovy")}</th>

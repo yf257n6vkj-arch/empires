@@ -14,6 +14,7 @@ export * from "./rng";
 export * from "./rules";
 export * from "./start";
 export * from "./state";
+export { workTurns } from "./turn";
 export * from "./units";
 export * from "./view";
 export * from "./world";

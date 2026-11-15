@@ -81,6 +81,7 @@ export function generateMap(rng: Rng, options: MapOptions = DEFAULT_MAP_OPTIONS)
         mine: empty(),
         railroad: empty(),
         fortress: empty(),
+        pollution: empty(),
       };
     }
   }

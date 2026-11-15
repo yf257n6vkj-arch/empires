@@ -31,7 +31,7 @@ export function stateFromAscii(rows: string[], players = 1): GameState {
     turn: 1,
     currentPlayer: 0,
     nextId: 100,
-    map: { width, height, terrain, road: zeros(), irrigation: zeros(), mine: zeros(), railroad: zeros(), fortress: zeros(), special: zeros() },
+    map: { width, height, terrain, road: zeros(), irrigation: zeros(), mine: zeros(), railroad: zeros(), fortress: zeros(), special: zeros(), pollution: zeros() },
     players: Array.from({ length: players }, (_, id) => ({
       id,
       civ: (["czechs", "romans", "germans", "egyptians", "greeks", "zulus"] as const)[id % 6]!,
@@ -44,6 +44,7 @@ export function stateFromAscii(rows: string[], players = 1): GameState {
     })),
     units: [],
     cities: [],
+    warming: 0,
     victory: null,
   };
 }

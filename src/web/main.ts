@@ -43,6 +43,9 @@ import {
   TERRAINS,
   tileYield,
   UNIT_TYPES,
+  canCleanPollution,
+  canJoinCity,
+  workTurns,
   type City,
   type CivId,
   type Command,
@@ -66,7 +69,7 @@ import {
   type Camera,
 } from "./camera";
 import { draw, setPlayerColors, setSprites, setupCanvas, tileSize, type DrawInput } from "./render";
-import { ERROR_TEXT, escapeHtml, eventText } from "./texts";
+import { ERROR_TEXT, escapeHtml, eventText, moodLine } from "./texts";
 import { createTechTree, unlockNames } from "./techTree";
 import { techIconSvg } from "./techIcons";
 import { createCityScreen } from "./cityScreen";
@@ -126,6 +129,7 @@ const zoomInButton = $<HTMLButtonElement>("#zoom-in");
 const zoomOutButton = $<HTMLButtonElement>("#zoom-out");
 const zoomResetButton = $<HTMLButtonElement>("#zoom-reset");
 const governmentButton = $<HTMLButtonElement>("#government");
+const warmingLabel = $<HTMLSpanElement>("#warming");
 const spaceshipButton = $<HTMLButtonElement>("#spaceship");
 
 let state!: GameState;
@@ -380,6 +384,7 @@ function buildDrawInput(): DrawInput {
     railroad: showAll ? state.map.railroad : view.railroad,
     fortress: showAll ? state.map.fortress : view.fortress,
     special: showAll ? state.map.special : view.special,
+    pollution: showAll ? state.map.pollution : view.pollution,
     units: view.units.map((u) => ({
       id: u.id,
       owner: u.owner,
@@ -419,7 +424,8 @@ function buildDrawInput(): DrawInput {
 function workShare(u: Unit): number {
   if (!u.work) return 0;
   const terrain = state.map.terrain[u.y * state.map.width + u.x]!;
-  const need = IMPROVEMENTS[u.work.improvement].turns[terrain] ?? 1;
+  const need = workTurns(state.map, u.y * state.map.width + u.x, u.work.improvement) ?? 1;
+  void terrain;
   return u.work.progress / need;
 }
 
@@ -548,6 +554,12 @@ function renderEconomy(): void {
   spaceshipButton.hidden = !apollo && ship.structural + ship.component + ship.module === 0 && !state.players.some((x) => x.spaceship.arrivalTurn !== null);
   spaceshipButton.innerHTML =
     ship.arrivalTurn !== null ? t("Loď letí, přistání v tahu <b>{arrivalTurn}</b>", { arrivalTurn: ship.arrivalTurn }) : `${t("Vesmírná loď")} <span class="muted">${ship.structural}/${ship.component}/${ship.module}</span>`;
+  // Global warming: the whole world sees how close it is.
+  const polluted = state.map.pollution.reduce((n, x) => n + x, 0);
+  const warming = Math.min(100, Math.round((100 * state.warming) / RULES.warmingLimit));
+  warmingLabel.hidden = polluted === 0 && warming === 0;
+  warmingLabel.innerHTML = `<span class="sun" style="--heat:${warming / 100}"></span>${warming} %`;
+  warmingLabel.title = t("Globální oteplování je na {pct} %. Na světě je {n} znečištěných políček. Až počítadlo dojde na 100 %, změní se krajina: u moře vzniknou bažiny a džungle, ve vnitrozemí poušť. Pomůže vyčistit znečištění osadníky.", { pct: warming, n: polluted });
   empire.checkVictory();
 }
 
@@ -705,8 +717,16 @@ function renderUnit(unit: Unit): void {
   const moves = t("{left} z {all}", { left: Number.isInteger(left) ? left : left.toFixed(1).replace(".", t(",")), all: rule.moves });
   let status = "";
   if (unit.work) {
-    const need = IMPROVEMENTS[unit.work.improvement].turns[terrain] ?? 0;
-    status = t("Staví: {improvement}, hotovo za {turns}.", { improvement: inSentence(improvementName(unit.work.improvement)), turns: turnsText(need - unit.work.progress) });
+    const need = workTurns(state.map, unit.y * state.map.width + unit.x, unit.work.improvement) ?? 0;
+    const left = turnsText(need - unit.work.progress);
+    const kind = unit.work.improvement;
+    const into = kind === "clean" ? undefined : IMPROVEMENTS[kind].transform?.[terrain];
+    status =
+      kind === "clean"
+        ? t("Čistí znečištění, hotovo za {turns}.", { turns: left })
+        : into
+          ? t("Mění terén na: {terrain}, hotovo za {turns}.", { terrain: inSentence(terrainName(into)), turns: left })
+          : t("Staví: {improvement}, hotovo za {turns}.", { improvement: inSentence(improvementName(kind)), turns: left });
     if (unit.orders?.kind === "auto") status += t(" Pak si sám najde další práci.");
     if (unit.orders?.kind === "route") status += t(" Pak pokračuje k políčku [{x}, {y}].", { x: unit.orders.to.x, y: unit.orders.to.y });
   } else if (unit.orders?.kind === "auto") {
@@ -737,7 +757,11 @@ function renderUnit(unit: Unit): void {
       `<button type="button" data-action="${action}" ${error ? `disabled title="${escapeHtml(error)}"` : ""}>${label}${key ? `<kbd>${key}</kbd>` : ""}</button>`,
     );
 
-  if (rule.foundsCity) {
+  const standsInOwnCity = state.cities.some((c) => c.x === unit.x && c.y === unit.y && c.owner === HUMAN);
+  if (rule.foundsCity && standsInOwnCity) {
+    const err = canJoinCity(state, unit);
+    button("join", t("Přidat se k městu"), "B", err ? ERROR_TEXT[err] : null);
+  } else if (rule.foundsCity) {
     const err = canFoundCity(state, unit);
     button("found", t("Založit město"), "B", err ? ERROR_TEXT[err] : null);
   }
@@ -748,8 +772,14 @@ function renderUnit(unit: Unit): void {
       if (needs && !knowsTech(me(), needs)) continue;
       const err = canBuildImprovement(state, unit, imp);
       const turns = IMPROVEMENTS[imp].turns[terrain];
-      const label = turns ? `${improvementName(imp)} (${turnsText(turns)})` : improvementName(imp);
+      const into = IMPROVEMENTS[imp].transform?.[terrain];
+      const name = into ? t("Změnit na: {terrain}", { terrain: inSentence(terrainName(into)) }) : improvementName(imp);
+      const label = turns ? `${name} (${turnsText(turns)})` : name;
       button(`build:${imp}`, label, keys[imp], err ? ERROR_TEXT[err] : null);
+    }
+    if (state.map.pollution[unit.y * state.map.width + unit.x]) {
+      const err = canCleanPollution(state, unit);
+      button("clean", t("Vyčistit znečištění ({turns})", { turns: turnsText(RULES.pollutionCleanTurns) }), "V", err ? ERROR_TEXT[err] : null);
     }
     const choosing = (mode: "road" | "railroad") => sendingUnitId === unit.id && sendMode === mode;
     button("lay:road", choosing("road") ? t("Klikni, kam má cesta vést") : t("Cesta až na místo"), "K", null);
@@ -827,7 +857,11 @@ function doUnitAction(action: string): void {
     return refresh();
   }
   if (!unit) return;
+  // In its own city B lets the settler join instead of founding.
+  if (action === "found" && state.cities.some((c) => c.x === unit.x && c.y === unit.y && c.owner === HUMAN)) return unitAction({ type: "joinCity", unitId: unit.id });
   if (action === "found") return unitAction({ type: "foundCity", unitId: unit.id });
+  if (action === "join") return unitAction({ type: "joinCity", unitId: unit.id });
+  if (action === "clean") return unitAction({ type: "cleanPollution", unitId: unit.id });
   if (action === "fortify") return unitAction({ type: "fortify", unitId: unit.id });
   if (action === "skip") return unitAction({ type: "skipTurn", unitId: unit.id });
   if (action === "cancel") {
@@ -944,9 +978,9 @@ function renderCity(city: City): void {
     ${buy}
     <p class="facts" style="margin-top:8px">${
       h.disorder ? `<span class="neg">${t("Nepokoje! Město nic nevyrábí.")}</span><br>` : ""
-    }${t("Spokojení {content} · nespokojení {unhappy}", { content: h.content, unhappy: h.unhappy })}${h.entertainers ? t(" · baviči {entertainers}", { entertainers: h.entertainers }) : ""}<br>
-    ${t("Obchod {trade}", { trade: r.production.trade })}${r.corruption ? t(", korupce −{corruption}", { corruption: r.corruption }) : ""}: ${t("věda {science}, zlato {gold}", { science: r.science, gold: r.gold + r.wealthGold })}${r.luxury ? t(", zábava {luxury}", { luxury: r.luxury }) : ""}}<br>${
-      r.pollution.unhappy ? `<span class="neg">${t("Znečištěný vzduch rozladí {n} obyvatel.", { n: r.pollution.unhappy })}</span><br>` : ""
+    }${city.celebrating ? `<span class="pos">${t("Město slaví!")}</span> ` : ""}${moodLine(h)}<br>
+    ${t("Obchod {trade}", { trade: r.production.trade })}${r.corruption ? t(", korupce −{corruption}", { corruption: r.corruption }) : ""}: ${t("věda {science}, zlato {gold}", { science: r.science, gold: r.gold + r.wealthGold })}${r.luxury ? t(", zábava {luxury}", { luxury: r.luxury }) : ""}<br>${
+      r.pollution.chancePct ? `<span class="neg">${t("Šance na znečištění okolí: {pct} % za tah.", { pct: r.pollution.chancePct })}</span><br>` : ""
     }
     <span class="muted">${t("Budovy: {list}", { list: buildings })}</span><br>
     <span class="muted">${t("Obyvatelé obdělávají políčka orámovaná na mapě.")}${
@@ -1181,6 +1215,7 @@ canvas.addEventListener("mousemove", (e) => {
       state.map.mine[i] ? t("důl") : "",
       state.map.railroad[i] ? t("železnice") : "",
       state.map.fortress[i] ? t("pevnost") : "",
+      state.map.pollution[i] ? t("znečištění, dává polovinu") : "",
     ].filter(Boolean);
     const r = TERRAINS[ter];
     const special = r.special && state.map.special[i] ? ` · ${specialName(ter)}` : "";
@@ -1231,6 +1266,7 @@ const DIRECTIONS: Record<string, Point> = {
 
 const KEY_ACTIONS: Record<string, string> = {
   b: "found",
+  v: "clean",
   r: "build:road",
   i: "build:irrigation",
   m: "build:mine",

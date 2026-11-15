@@ -194,20 +194,16 @@ describe("pollution", () => {
     let s = stateFromAscii(FOREST);
     const settler = addUnit(s, "settlers", 3, 2);
     s = apply(s, { type: "foundCity", unitId: settler.id });
-    expect(cityPollution(s, s.cities[0]!).unhappy).toBe(0);
+    expect(cityPollution(s, s.cities[0]!).chancePct).toBe(0);
   });
 
-  it("makes citizens unhappy in a busy factory city", () => {
+  it("gives a busy factory city a chance to pollute the land around it", () => {
     const { s, city } = industrialCity();
     city.buildings.push("factory");
     const p = cityPollution(s, city);
     // 17 shields x 1.5 = 25, five over the limit.
     expect(p.industry).toBe(25);
-    expect(p.unhappy).toBe(1);
-    const calm = { ...city, buildings: ["palace" as const] };
-    expect(cityHappiness(s, city).unhappy + cityHappiness(s, city).entertainers).toBeGreaterThan(
-      cityHappiness(s, calm).unhappy + cityHappiness(s, calm).entertainers,
-    );
+    expect(p.chancePct).toBe(5 * RULES.pollutionPctPerPoint);
   });
 
   it("adds pollution from citizens with industrial technologies, and mass transit removes it", () => {

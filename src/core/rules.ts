@@ -291,8 +291,10 @@ export interface BuildingEffects {
   techsFromOthers?: number;
   /** Technologies given at once when the wonder is finished. */
   freeTechs?: number;
-  /** A change of government takes one turn of anarchy. */
-  fastRevolution?: boolean;
+  /** A change of government needs no anarchy. */
+  noAnarchy?: boolean;
+  /** Every government can be chosen, even without its technology. */
+  allGovernments?: boolean;
   /** The owner sees every city in the world. */
   seesAllCities?: boolean;
   /** Military units abroad make this many fewer citizens unhappy each. */
@@ -354,6 +356,8 @@ export interface ImprovementRule {
   bonus: Partial<Record<TerrainId, Partial<Yield>>>;
   /** Technology needed on a particular terrain, e.g. bridge building for a road over a river. */
   requiresOn?: Partial<Record<TerrainId, TechId>>;
+  /** On these terrains the work changes the terrain instead of adding a bonus. */
+  transform?: Partial<Record<TerrainId, TerrainId>>;
 }
 
 export interface GovernmentRule {
@@ -380,6 +384,22 @@ export interface GovernmentRule {
   settlerFood: number;
   /** A senate forces peace (diplomacy comes in phase 3). */
   senate: boolean;
+  /** What a celebrating city gains: no despotism penalty, more trade, or growth every turn. */
+  celebration: "none" | "noTilePenalty" | "tradeBonus" | "rapture";
+  /** Cities in disorder for two turns running may bring the government down. */
+  collapsesInDisorder: boolean;
+}
+
+export type DisasterId = "earthquake" | "fire" | "flood" | "famine" | "piracy" | "plague" | "volcano";
+
+export interface DisasterRule {
+  id: DisasterId;
+  /** Terrain the city must stand on or next to, null = any city. */
+  near: TerrainId | null;
+  /** building = one building burns down, population = citizens die, famine = the food box empties and a citizen dies, piracy = food box and production are lost. */
+  hit: "building" | "population" | "famine" | "piracy";
+  preventBuilding?: BuildingId;
+  preventTech?: TechId;
 }
 
 export interface GameConstants {
@@ -393,8 +413,22 @@ export interface GameConstants {
   queueLength: number;
   /** Gold per shield when a city builds nothing and earns gold instead. */
   wealthGoldPerShield: number;
-  /** Luxury points that turn one unhappy citizen content. */
+  /** Luxury points that turn one unhappy citizen content, or a content one happy. */
   luxuryPerContent: number;
+  /** Smallest city that can celebrate. */
+  celebrationMinSize: number;
+  /** Luxury, gold or science points from one entertainer, taxman or scientist. */
+  specialistYield: number;
+  /** Smallest city that can have taxmen and scientists. */
+  specialistMinSize: number;
+  /** Cities a player can have before every city loses a content citizen. */
+  empireSizeBase: number;
+  /** Every further this many cities cost one more content citizen. */
+  empireSizeStep: number;
+  /** Settlers cannot join a city of this size or larger. */
+  joinCityMaxSize: number;
+  /** Chance per turn in percent that a government which collapses in disorder falls. */
+  collapseChancePct: number;
   /** Name of that choice in the production list. */
   wealthName: string;
   /** How far (in tiles) an automatic settler looks for work around its owner's cities. */
@@ -430,12 +464,29 @@ export interface GameConstants {
   corruptionMaxPct: number;
   /** Pollution a city produces before its air bothers anyone. */
   pollutionFree: number;
-  /** Every started step of this size above pollutionFree makes one citizen unhappy. */
-  pollutionPerUnhappy: number;
+  /** Chance in percent per point of pollution above pollutionFree that a tile gets polluted this turn. */
+  pollutionPctPerPoint: number;
+  /** Turns of settler work to clean a polluted tile. */
+  pollutionCleanTurns: number;
+  /** Polluted tiles the world can have without bringing global warming closer. */
+  warmingSafeTiles: number;
+  /** Global warming happens when the warming counter reaches this. */
+  warmingLimit: number;
+  /** Chance in percent that a tile changes in global warming. */
+  warmingTilePct: number;
+  /** Chance in percent that a nuclear plant in a city in disorder melts down. */
+  meltdownPct: number;
   /** Each known technology here makes every fourth citizen add one point of pollution. */
   pollutionTechs: TechId[];
-  /** Turns of anarchy after a revolution (one with the pyramids). */
+  /** Turns of anarchy after a revolution (none with the pyramids). */
   anarchyTurns: number;
+  /** Chance in percent per turn that a disaster strikes one of the player's cities. */
+  disasterPct: number;
+  /** No disasters before this turn. */
+  disasterStartTurn: number;
+  /** Share of citizens a disaster that hits population takes, at least one. */
+  populationLossPct: number;
+  disasters: DisasterRule[];
   /** Chance in percent that a trireme sinks when it ends a turn away from the coast. */
   triremeLossPct: number;
   /** Shortest distance between two cities joined by a trade route. */
@@ -589,6 +640,18 @@ function checkReferences(): void {
     }
   }
   for (const t of RULES.pollutionTechs) tech("game.json pollutionTechs", t);
+  const terrain = (where: string, id: string | null | undefined) => {
+    if (id && !(TERRAIN_IDS as readonly string[]).includes(id)) throw new Error(`${where}: unknown terrain "${id}"`);
+  };
+  for (const i of Object.values(IMPROVEMENTS)) for (const [from, to] of Object.entries(i.transform ?? {})) {
+    terrain(`improvements.json ${i.id} transform`, from);
+    terrain(`improvements.json ${i.id} transform`, to);
+  }
+  for (const d of RULES.disasters) {
+    terrain(`game.json disasters ${d.id}`, d.near);
+    building(`game.json disasters ${d.id}`, d.preventBuilding);
+    tech(`game.json disasters ${d.id}`, d.preventTech ?? null);
+  }
   for (const c of Object.values(CIVS)) {
     if (c.cities.length === 0) throw new Error(`civs.json ${c.id}: no city names`);
     if (!["expansion", "war", "science"].includes(c.personality)) throw new Error(`civs.json ${c.id}: unknown personality "${c.personality}"`);

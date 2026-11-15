@@ -1,5 +1,5 @@
 {
- "_comment": "turns = počet tahů práce osadníka, bonus se přičte k výnosu políčka. Hodnoty podle Civilizace 1. Železnice potřebuje cestu, přidá polovinu štítů políčka a pohyb po ní nic nestojí. Pevnost zdvojí obranu jednotek na políčku, až přibude boj ve fázi 3. requiresOn: na některém terénu potřebuje stavba ještě technologii, cesta přes řeku například stavbu mostů. Džungli a bažinu zatím zavlažovat ani přeměnit nejde.",
+ "_comment": "turns = počet tahů práce osadníka, bonus se přičte k výnosu políčka. Hodnoty podle Civilizace 1. Železnice potřebuje cestu, přidá polovinu štítů políčka a pohyb po ní nic nestojí. Pevnost zdvojí obranu jednotek na políčku, až přibude boj ve fázi 3. requiresOn: na některém terénu potřebuje stavba ještě technologii, cesta přes řeku například stavbu mostů. transform: na tomhle terénu stavba nepřidá výnos, ale změní terén (zavlažováním se z lesa stanou pláně a z džungle a bažiny louka, dolem se z louky, plání, džungle a bažiny stane les), jako v Civilizaci 1. Přeměna nepotřebuje vodu a zruší zavlažování nebo důl, který na políčku byl.",
  "improvements": [
   {
    "id": "road",
@@ -41,7 +41,10 @@
     "desert": 5,
     "hills": 10,
     "tundra": 5,
-    "river": 5
+    "river": 5,
+    "forest": 5,
+    "jungle": 15,
+    "swamp": 15
    },
    "bonus": {
     "grassland": {
@@ -62,6 +65,11 @@
     "river": {
      "food": 1
     }
+   },
+   "transform": {
+    "forest": "plains",
+    "jungle": "grassland",
+    "swamp": "grassland"
    }
   },
   {
@@ -70,7 +78,11 @@
    "turns": {
     "desert": 5,
     "hills": 10,
-    "mountains": 10
+    "mountains": 10,
+    "grassland": 10,
+    "plains": 10,
+    "jungle": 15,
+    "swamp": 15
    },
    "bonus": {
     "desert": {
@@ -82,6 +94,12 @@
     "mountains": {
      "shields": 1
     }
+   },
+   "transform": {
+    "grassland": "forest",
+    "plains": "forest",
+    "jungle": "forest",
+    "swamp": "forest"
    }
   },
   {

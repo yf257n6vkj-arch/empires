@@ -1,5 +1,5 @@
 {
-  "_comment": "Obecné konstanty pravidel. movesFraction: pohyb se počítá v třetinách, cesta stojí jednu třetinu. contentBase: kolik obyvatel je spokojených bez pomoci. maxCitySize: největší město bez akvaduktu. Růst a ceny jsou zrychlené proti Civilizaci 1, aby se partie vešla do 120 tahů (ověřeno nástrojem npm run pace). Cena výzkumu = researchCostBase + researchCostPerTech × počet známých technologií, zaokrouhleno. Strom má 68 technologií, takže jednotlivý objev je levný. Nákup zbytku výroby stojí buyPerShield × r + r² / buyQuadratic zlata (r = chybějící štíty), dvojnásobek, když město ještě nic nevyrobilo, a dvojnásobek u divů. Korupce: město ztratí corruptionPerTile procent obchodu za každé políčko vzdálenosti od paláce, nejvýš corruptionMaxPct procent, a tolik ztratí i všechna města hráče bez paláce. Znečištění = štíty po bonusech (zmenšené elektrárnou a recyklací) + čtvrtina obyvatel za každou známou technologii z pollutionTechs. Nad pollutionFree rozladí každých započatých pollutionPerUnhappy bodů jednoho obyvatele. anarchyTurns: kolik tahů trvá anarchie po revoluci (s pyramidami jeden). triremeLossPct: šance, že se triéra mimo pobřeží potopí. Obchodní cesta vede jen do města aspoň tradeRouteMinDistance políček daleko, město jich má nejvýš tradeRoutesPerCity. nuclearRadius: kolik políček kolem cíle zničí jaderná raketa, protiraketový štít chrání třikrát tak daleko. spaceship: vesmírná loď potřebuje aspoň jednu nosnou konstrukci na každý motor a modul, let trvá baseTurns − turnsPerComponent × motory (nejméně minTurns) a přistane se šancí successPerModule × moduly procent. Rozpuštěná jednotka ve vlastním městě dá do výroby disbandShieldsPct procent své ceny. Povýšení jednotky na novější typ stojí upgradeGoldBase + upgradeGoldPerShield × rozdíl cen ve štítech a jde jen ve vlastním městě. Město si může naplánovat nejvýš queueLength dalších staveb. Osadník s automatickou prací hledá práci nejvýš autoWorkRange políček daleko. Když město nic nestaví a vydělává zlato, dá každý štít wealthGoldPerShield zlata. Obchod se dělí na vědu, daně a zábavu. Každých luxuryPerContent bodů zábavy ve městě udělá z jednoho nespokojeného spokojeného. Tržiště a ostatní budovy, které zvyšují zlato, zvyšují stejně i zábavu. Za anarchie jde všechen obchod do zábavy.",
+  "_comment": "Obecné konstanty pravidel. movesFraction: pohyb se počítá v třetinách, cesta stojí jednu třetinu. contentBase: kolik obyvatel je spokojených bez pomoci. maxCitySize: největší město bez akvaduktu. Růst a ceny jsou zrychlené proti Civilizaci 1, aby se partie vešla do 120 tahů (ověřeno nástrojem npm run pace). Cena výzkumu = researchCostBase + researchCostPerTech × počet známých technologií, zaokrouhleno. Strom má 68 technologií, takže jednotlivý objev je levný. Nákup zbytku výroby stojí buyPerShield × r + r² / buyQuadratic zlata (r = chybějící štíty), dvojnásobek, když město ještě nic nevyrobilo, a dvojnásobek u divů. Korupce: město ztratí corruptionPerTile procent obchodu za každé políčko vzdálenosti od paláce, nejvýš corruptionMaxPct procent, a tolik ztratí i všechna města hráče bez paláce. Znečištění = štíty po bonusech (zmenšené elektrárnou a recyklací) + čtvrtina obyvatel za každou známou technologii z pollutionTechs. Každý bod znečištění nad pollutionFree přidá pollutionPctPerPoint procent šance, že se tento tah znečistí jedno políčko v okolí města. Znečištěné políčko dává polovinu jídla, štítů i obchodu, dokud ho osadník pollutionCleanTurns tahů nečistí. Každý tah se k počítadlu oteplování přičte počet znečištěných políček na světě minus warmingSafeTiles, počítadlo neklesne pod nulu. Když počítadlo dosáhne warmingLimit, nastane globální oteplování: každé políčko louky, plání, pouště a lesa se se šancí warmingTilePct procent změní (u moře na bažinu nebo džungli, ve vnitrozemí na poušť) a počítadlo se vynuluje. Jaderná elektrárna ve městě v nepokojích se se šancí meltdownPct procent roztaví, dokud hráč nezná jadernou fúzi. anarchyTurns: kolik tahů trvá anarchie po revoluci (s pyramidami žádná). triremeLossPct: šance, že se triéra mimo pobřeží potopí. Obchodní cesta vede jen do města aspoň tradeRouteMinDistance políček daleko, město jich má nejvýš tradeRoutesPerCity. nuclearRadius: kolik políček kolem cíle zničí jaderná raketa, protiraketový štít chrání třikrát tak daleko. spaceship: vesmírná loď potřebuje aspoň jednu nosnou konstrukci na každý motor a modul, let trvá baseTurns − turnsPerComponent × motory (nejméně minTurns) a přistane se šancí successPerModule × moduly procent. Rozpuštěná jednotka ve vlastním městě dá do výroby disbandShieldsPct procent své ceny. Povýšení jednotky na novější typ stojí upgradeGoldBase + upgradeGoldPerShield × rozdíl cen ve štítech a jde jen ve vlastním městě. Město si může naplánovat nejvýš queueLength dalších staveb. Osadník s automatickou prací hledá práci nejvýš autoWorkRange políček daleko. Když město nic nestaví a vydělává zlato, dá každý štít wealthGoldPerShield zlata. Obchod se dělí na vědu, daně a zábavu. Každých luxuryPerContent bodů zábavy ve městě udělá z jednoho nespokojeného spokojeného. Tržiště a ostatní budovy, které zvyšují zlato, zvyšují stejně i zábavu. Za anarchie jde všechen obchod do zábavy. Zábava nejdřív uklidní nespokojené, potom každé luxuryPerContent body udělají ze spokojeného šťastného. Nepokoje vypuknou, když je nespokojených víc než spokojených a šťastných dohromady. Město s aspoň celebrationMinSize obyvateli slaví, když v něm nikdo není nespokojený a šťastných je aspoň tolik co spokojených; co oslava přinese, říká vláda. Obyvatel, který nepracuje na poli, je specialista: bavič dá specialistYield bodů zábavy, výběrčí daní tolik zlata a vědec tolik vědy. Výběrčí a vědci jdou zvolit až ve městě s aspoň specialistMinSize obyvateli. Velká říše má méně spokojených: za každých empireSizeStep měst nad empireSizeBase je v každém městě o jednoho spokojeného méně. Osadník se může připojit k vlastnímu městu, které má méně než joinCityMaxSize obyvatel a může ještě růst. Budovu jde ve městě prodat jednou za tah za tolik zlata, kolik stála štítů. Katastrofy: na konci tahu postihne se šancí disasterPct procent jedno město hráče katastrofa (nejdřív v tahu disasterStartTurn). near říká, u jakého terénu město musí ležet, hit co katastrofa udělá (building zničí budovu, population vezme populationLossPct procent obyvatel, nejméně jednoho, famine vyprázdní sýpku a vezme obyvatele, piracy vyprázdní sýpku a zničí rozestavěnou výrobu), preventBuilding a preventTech ji odvrátí.",
   "maxTurns": 120,
   "movesFraction": 3,
   "roadMoveCost": 1,
@@ -9,12 +9,22 @@
   "queueLength": 8,
   "wealthGoldPerShield": 1,
   "luxuryPerContent": 2,
+  "celebrationMinSize": 3,
+  "specialistYield": 2,
+  "specialistMinSize": 5,
+  "empireSizeBase": 6,
+  "empireSizeStep": 6,
+  "joinCityMaxSize": 10,
+  "collapseChancePct": 50,
   "wealthName": "Vydělávat zlato",
   "autoWorkRange": 10,
   "foodPerCitizen": 2,
   "growthFoodBase": 5,
   "cityCenterMinShields": 1,
-  "startingUnits": ["settlers", "warriors"],
+  "startingUnits": [
+    "settlers",
+    "warriors"
+  ],
   "contentBase": 4,
   "martialLawMax": 3,
   "maxCitySize": 8,
@@ -30,9 +40,66 @@
   "corruptionPerTile": 3,
   "corruptionMaxPct": 50,
   "pollutionFree": 20,
-  "pollutionPerUnhappy": 10,
-  "pollutionTechs": ["industrialization", "automobile", "massProduction", "plastics"],
+  "pollutionPctPerPoint": 2,
+  "pollutionCleanTurns": 3,
+  "warmingSafeTiles": 3,
+  "warmingLimit": 60,
+  "warmingTilePct": 30,
+  "meltdownPct": 50,
+  "pollutionTechs": [
+    "industrialization",
+    "automobile",
+    "massProduction",
+    "plastics"
+  ],
   "anarchyTurns": 2,
+  "disasterPct": 4,
+  "disasterStartTurn": 20,
+  "populationLossPct": 25,
+  "disasters": [
+    {
+      "id": "earthquake",
+      "near": "hills",
+      "hit": "building"
+    },
+    {
+      "id": "fire",
+      "near": null,
+      "hit": "building",
+      "preventBuilding": "aqueduct"
+    },
+    {
+      "id": "flood",
+      "near": "river",
+      "hit": "population",
+      "preventBuilding": "walls"
+    },
+    {
+      "id": "famine",
+      "near": null,
+      "hit": "famine",
+      "preventBuilding": "granary"
+    },
+    {
+      "id": "piracy",
+      "near": "ocean",
+      "hit": "piracy",
+      "preventBuilding": "barracks"
+    },
+    {
+      "id": "plague",
+      "near": null,
+      "hit": "population",
+      "preventBuilding": "aqueduct",
+      "preventTech": "medicine"
+    },
+    {
+      "id": "volcano",
+      "near": "mountains",
+      "hit": "population",
+      "preventBuilding": "temple"
+    }
+  ],
   "triremeLossPct": 50,
   "tradeRouteMinDistance": 9,
   "tradeRoutesPerCity": 3,

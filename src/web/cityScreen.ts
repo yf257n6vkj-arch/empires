@@ -5,6 +5,11 @@
 import {
   BUILDINGS,
   buyCost,
+  calmedByLuxury,
+  canSellBuilding,
+  contentLimit,
+  GOVERNMENTS,
+  militaryUnhappiness,
   cityEffects,
   cityRadiusTiles,
   cityReport,
@@ -30,7 +35,7 @@ import {
 } from "../core";
 import { BUILDING_WIDTH, buildingPortraitCanvas, drawBuilding, drawHouse, tone } from "./buildingArt";
 import { drawTerrainPatch, drawUnitPortrait, playerColor, unitPortraitCanvas, type DrawInput } from "./render";
-import { describeBuilding, describeUnit, escapeHtml } from "./texts";
+import { describeBuilding, describeUnit, escapeHtml, moodLine } from "./texts";
 import { buildingArtCanvas, drawCityView, hasCityArt, hitAt, loadCityArt } from "./cityView";
 import { t, tn } from "./i18n";
 import { buildingName, cityLabel, productionLabel, terrainName, unitName } from "./i18n/names";
@@ -347,10 +352,19 @@ function drawPanorama(ctx: CanvasRenderingContext2D, w: number, h: number, state
 
 // ---------- citizens ----------
 
-type CitizenKind = "content" | "unhappy" | "entertainer";
+type CitizenKind = "happy" | "content" | "unhappy" | "entertainer" | "taxman" | "scientist";
+
+const TUNIC: Record<CitizenKind, string> = {
+  happy: "#d9a72e",
+  content: "#4f8a4a",
+  unhappy: "#a83a2c",
+  entertainer: "#7a4fa8",
+  taxman: "#3d6a9e",
+  scientist: "#e8e4da",
+};
 
 function drawCitizen(ctx: CanvasRenderingContext2D, x: number, y: number, kind: CitizenKind, k: number): void {
-  const tunic = kind === "content" ? "#4f8a4a" : kind === "unhappy" ? "#a83a2c" : "#7a4fa8";
+  const tunic = TUNIC[kind];
   const skin = ["#e2b48c", "#c98f62", "#f0c9a4", "#a8744e"][k % 4]!;
   ctx.save();
   ctx.translate(x, y);
@@ -388,6 +402,17 @@ function drawCitizen(ctx: CanvasRenderingContext2D, x: number, y: number, kind: 
     ctx.lineTo(-9, -18);
     ctx.moveTo(6, -25);
     ctx.lineTo(4, -17);
+  } else if (kind === "happy") {
+    // Both arms up in joy.
+    ctx.moveTo(-6, -25);
+    ctx.lineTo(-10, -34);
+    ctx.moveTo(6, -25);
+    ctx.lineTo(10, -34);
+  } else if (kind === "taxman" || kind === "scientist") {
+    ctx.moveTo(-6, -25);
+    ctx.lineTo(-8, -14);
+    ctx.moveTo(6, -25);
+    ctx.lineTo(7, -17);
   } else {
     ctx.moveTo(-6, -25);
     ctx.lineTo(-8, -14);
@@ -407,6 +432,28 @@ function drawCitizen(ctx: CanvasRenderingContext2D, x: number, y: number, kind: 
     ctx.moveTo(4, -19);
     ctx.lineTo(11, -25);
     ctx.stroke();
+  }
+  if (kind === "taxman") {
+    // A bag of coins.
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.arc(8, -14, 3.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#8a6a14";
+    ctx.fillRect(7, -19, 2, 2);
+  }
+  if (kind === "scientist") {
+    // A flask with something green.
+    ctx.fillStyle = "rgba(200, 230, 255, 0.9)";
+    ctx.beginPath();
+    ctx.moveTo(6, -21);
+    ctx.lineTo(10, -21);
+    ctx.lineTo(12, -13);
+    ctx.lineTo(4, -13);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#59c25a";
+    ctx.fillRect(5, -16, 6, 3);
   }
   if (kind === "content") {
     // Raised hand holds a sickle of wheat.
@@ -444,8 +491,17 @@ function drawCitizen(ctx: CanvasRenderingContext2D, x: number, y: number, kind: 
   ctx.lineWidth = 0.9;
   ctx.beginPath();
   if (kind === "unhappy") ctx.arc(0, -27.6, 2, Math.PI * 1.15, Math.PI * 1.85);
-  else ctx.arc(0, -30.6, 2, Math.PI * 0.15, Math.PI * 0.85);
+  else ctx.arc(0, -30.6, kind === "happy" ? 2.6 : 2, Math.PI * 0.15, Math.PI * 0.85);
   ctx.stroke();
+  if (kind === "scientist") {
+    // Spectacles.
+    ctx.strokeStyle = "#2a1d14";
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(-1.8, -32, 1.6, 0, Math.PI * 2);
+    ctx.arc(1.8, -32, 1.6, 0, Math.PI * 2);
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -547,6 +603,8 @@ export function createCityScreen(host: CityHost) {
   const PANEL_KEY = "empires.cityPanel";
   /** Height of the panels below the picture chosen by dragging, null for the default. */
   let panelHeight: number | null = null;
+  /** "cityId:building" waiting for a second click to be sold. */
+  let sellConfirm: string | null = null;
   try {
     const stored = Number(localStorage.getItem(PANEL_KEY));
     if (stored > 0) panelHeight = stored;
@@ -658,11 +716,22 @@ export function createCityScreen(host: CityHost) {
         : r.turnsToComplete
           ? t("hotovo za {turns}", { turns: turns(r.turnsToComplete) })
           : t("nevyrábí");
-    const crowd = Math.max(0, c.size - RULES.contentBase);
-    const unhappyBase = Math.min(c.size, crowd + r.pollution.unhappy);
+    const limit = contentLimit(s, c.owner);
+    const crowd = Math.max(0, c.size - limit);
+    const unhappyBase = Math.min(c.size, crowd + militaryUnhappiness(s, c, effects));
     const calmedByBuildings = Math.min(unhappyBase, effects.content);
     const calmedBySoldiers = Math.min(unhappyBase - calmedByBuildings, martialLaw(s, c));
-    const calmedByLuxury = Math.min(unhappyBase - calmedByBuildings - calmedBySoldiers, Math.floor(r.luxury / RULES.luxuryPerContent));
+    const calmed = calmedByLuxury(s, c, effects);
+    const idle = c.size - c.worked.length;
+    const party = GOVERNMENTS[s.players[c.owner]!.government].celebration;
+    const partyGain =
+      party === "noTilePenalty"
+        ? t("Políčka nemají postih despocie.")
+        : party === "tradeBonus"
+          ? t("Políčka s obchodem dají o jeden obchod víc.")
+          : party === "rapture"
+            ? t("Město roste každý tah, dokud má přebytek jídla.")
+            : "";
     const unitsHere = s.units.filter((u) => u.x === c.x && u.y === c.y && u.owner === c.owner);
     const supported = s.units.filter((u) => u.homeCity === c.id);
     const options = productionOptions(s, c);
@@ -711,8 +780,9 @@ export function createCityScreen(host: CityHost) {
             <div class="cs-people"></div>
             <div class="cs-mood">
               ${h.disorder ? `<b class="neg">${t("Nepokoje! Město tento tah nic nevyrobí.")}</b><br>` : ""}
-              <span>${t("Spokojení {n}", { n: h.content })}</span> · <span class="${h.unhappy ? "neg" : ""}">${t("nespokojení {n}", { n: h.unhappy })}</span>${h.entertainers ? t(" · baviči {entertainers}", { entertainers: h.entertainers }) : ""}
-              <div class="small">${t("Bez pomoci je spokojených {n} obyvatel.", { n: RULES.contentBase })}${r.pollution.unhappy ? tn(" Znečištěný vzduch rozladí jednoho dalšího.| Znečištěný vzduch rozladí {n} další.| Znečištěný vzduch rozladí {n} dalších.", r.pollution.unhappy) : ""}${unhappyBase ? t(" Z {unhappyBase} nespokojených uklidní budovy {calmedByBuildings} a vojáci ve městě {calmedBySoldiers}.", { unhappyBase, calmedByBuildings, calmedBySoldiers }) : ""}${calmedByLuxury ? t(" Zábava uklidní {n}.", { n: calmedByLuxury }) : ""}</div>
+              ${c.celebrating && h.celebrate ? `<b class="pos">${t("Město slaví!")}</b> <span class="small">${partyGain}</span><br>` : h.celebrate ? `<b class="pos">${t("Obyvatelé se chystají slavit, oslava začne příští tah.")}</b><br>` : ""}
+              <span>${moodLine(h)}</span>
+              <div class="small">${t("Bez pomoci je spokojených {n} obyvatel.", { n: limit })}${limit < RULES.contentBase ? tn(" Tvoje říše je velká, proto o jednoho méně než obvykle.| Tvoje říše je velká, proto o {n} méně než obvykle.| Tvoje říše je velká, proto o {n} méně než obvykle.", RULES.contentBase - limit) : ""}${unhappyBase ? t(" Z {unhappyBase} nespokojených uklidní budovy {calmedByBuildings} a vojáci ve městě {calmedBySoldiers}.", { unhappyBase, calmedByBuildings, calmedBySoldiers }) : ""}${calmed ? t(" Zábava uklidní {n}.", { n: calmed }) : ""}${h.happy ? tn(" Zábava udělá šťastným jednoho.| Zábava udělá šťastnými {n}.| Zábava udělá šťastnými {n}.", h.happy) : ""}${!h.celebrate && !h.disorder && party !== "none" && c.size >= RULES.celebrationMinSize ? t(" Město bude slavit, až v něm nikdo nebude nespokojený a šťastných bude aspoň tolik co spokojených.") : ""}${idle > 0 ? (c.size >= RULES.specialistMinSize ? t(" Klikni na obyvatele mimo pole a změň ho na výběrčího daní nebo vědce.") : t(" Výběrčí daní a vědce může mít město od {n} obyvatel.", { n: RULES.specialistMinSize })) : ""}</div>
             </div>
           </div>
         </div>
@@ -765,7 +835,7 @@ export function createCityScreen(host: CityHost) {
             <div class="cs-trade">
               <div>${yieldIcon("trade")} ${t("obchod <b>{n}</b>", { n: r.production.trade })}${r.routes ? ` <span class="muted">${t("(z toho obchodní cesty {n})", { n: r.routes })}</span>` : ""}</div>
               ${r.corruption ? `<div>${t("korupce")} <b class="neg">−${r.corruption}</b> <span class="muted">(${corruptionPct(s, c, effects)} % ${effects.corruptionCutPct ? t("i se soudním dvorem") : t("kvůli vzdálenosti od paláce")})</span></div>` : effects.capital ? `<div class="muted small">${t("Tady sídlí vláda, korupce tu není.")}</div>` : ""}
-              <div>${t("věda <b>{n}</b>", { n: r.science })}${effects.sciencePct ? ` <span class="muted">${t("(+{pct} % z budov)", { pct: effects.sciencePct })}</span>` : ""} · ${t("zlato <b>{n}</b>", { n: r.gold + r.wealthGold })}${effects.goldPct ? ` <span class="muted">(+${effects.goldPct} %)</span>` : ""}${r.luxury ? ` · ${t("zábava <b>{n}</b>", { n: r.luxury })} <span class="muted">${t("(uklidní {calm})", { calm: Math.floor(r.luxury / RULES.luxuryPerContent) })}</span>` : ""}</div>
+              <div>${t("věda <b>{n}</b>", { n: r.science })}${effects.sciencePct ? ` <span class="muted">${t("(+{pct} % z budov)", { pct: effects.sciencePct })}</span>` : ""} · ${t("zlato <b>{n}</b>", { n: r.gold + r.wealthGold })}${effects.goldPct ? ` <span class="muted">(+${effects.goldPct} %)</span>` : ""}${r.luxury ? ` · ${t("zábava <b>{n}</b>", { n: r.luxury })} <span class="muted">${t("(uklidní nebo rozveselí {calm})", { calm: Math.floor(r.luxury / RULES.luxuryPerContent) })}</span>` : ""}</div>
             </div>
             ${r.pollution.industry + r.pollution.population > 0 ? `<p class="small">${t("Znečištění {n}, bez potíží město snese {free}", { n: r.pollution.industry + r.pollution.population, free: RULES.pollutionFree })} <span class="muted">${t("(z výroby {industry}, od obyvatel {people})", { industry: r.pollution.industry, people: r.pollution.population })}</span></p>` : ""}
             ${c.tradeRoutes.length ? `<p class="small">${t("Obchodní cesty do: {list}", { list: c.tradeRoutes.map((id) => escapeHtml(cityLabel(s.cities.find((x) => x.id === id)?.name ?? "?"))).join(", ") })}</p>` : ""}
@@ -774,8 +844,15 @@ export function createCityScreen(host: CityHost) {
               c.buildings.length
                 ? c.buildings
                     .map(
-                      (b) =>
-                        `<button type="button" class="cs-building ${BUILDINGS[b].wonder ? "wonder" : ""}" data-b="${b}" title="${escapeHtml(describeBuilding(BUILDINGS[b]))}"><span class="pic"></span><span class="name">${escapeHtml(buildingName(b))}</span>${BUILDINGS[b].upkeep ? `<span class="muted">${t("{gold} zl.", { gold: BUILDINGS[b].upkeep })}</span>` : ""}</button>`,
+                      (b) => {
+                        const sellError = canSellBuilding(s, c, b);
+                        const confirming = sellConfirm === `${c.id}:${b}`;
+                        const sell =
+                          BUILDINGS[b].wonder || BUILDINGS[b].onePerPlayer
+                            ? ""
+                            : `<button type="button" class="cs-sell ${confirming ? "confirm" : ""}" data-sell="${b}" ${sellError ? `disabled title="${escapeHtml(t("V tomhle tahu už jsi tu jednu budovu prodal."))}"` : `title="${escapeHtml(t("Prodat za {gold} zlata", { gold: BUILDINGS[b].cost }))}"`}>${confirming ? t("Prodat za {gold}?", { gold: BUILDINGS[b].cost }) : t("Prodat")}</button>`;
+                        return `<span class="cs-building-wrap"><button type="button" class="cs-building ${BUILDINGS[b].wonder ? "wonder" : ""}" data-b="${b}" title="${escapeHtml(describeBuilding(BUILDINGS[b]))}"><span class="pic"></span><span class="name">${escapeHtml(buildingName(b))}</span>${BUILDINGS[b].upkeep ? `<span class="muted">${t("{gold} zl.", { gold: BUILDINGS[b].upkeep })}</span>` : ""}</button>${sell}</span>`;
+                      },
                     )
                     .join("")
                 : `<span class="muted small">${t("Zatím tu nestojí žádná budova.")}</span>`
@@ -832,14 +909,44 @@ export function createCityScreen(host: CityHost) {
     // Citizens.
     const people = dialog.querySelector<HTMLDivElement>(".cs-people")!;
     const kinds: CitizenKind[] = [
+      ...Array<CitizenKind>(h.happy).fill("happy"),
       ...Array<CitizenKind>(h.content).fill("content"),
       ...Array<CitizenKind>(h.unhappy).fill("unhappy"),
       ...Array<CitizenKind>(h.entertainers).fill("entertainer"),
+      ...Array<CitizenKind>(h.taxmen).fill("taxman"),
+      ...Array<CitizenKind>(h.scientists).fill("scientist"),
     ];
     const [cc, cctx, cdpr] = hiDpiCanvas(Math.max(40, kinds.length * 26 + 8), 48);
     cctx.scale(cdpr, cdpr);
     kinds.forEach((k, n) => drawCitizen(cctx, 16 + n * 26, 46, k, n + c.id));
     people.append(cc);
+    // A click on a specialist turns an entertainer into a taxman, a taxman into a scientist and back.
+    const NAMES: Record<CitizenKind, string> = {
+      happy: t("šťastný obyvatel"),
+      content: t("spokojený obyvatel"),
+      unhappy: t("nespokojený obyvatel"),
+      entertainer: t("bavič: +{n} zábavy", { n: RULES.specialistYield }),
+      taxman: t("výběrčí daní: +{n} zlata", { n: RULES.specialistYield }),
+      scientist: t("vědec: +{n} vědy", { n: RULES.specialistYield }),
+    };
+    const kindAt = (e: MouseEvent): CitizenKind | null => {
+      const box = cc.getBoundingClientRect();
+      const n = Math.floor(((e.clientX - box.left) / box.width) * (cc.width / cdpr) / 26 - 3 / 26);
+      return kinds[Math.max(0, Math.min(kinds.length - 1, n))] ?? null;
+    };
+    cc.addEventListener("mousemove", (e) => {
+      const k = kindAt(e);
+      const special = k === "entertainer" || k === "taxman" || k === "scientist";
+      cc.title = k ? NAMES[k] + (special && c.size >= RULES.specialistMinSize ? t(" · klikni a změň ho") : "") : "";
+      cc.style.cursor = special && c.size >= RULES.specialistMinSize ? "pointer" : "";
+    });
+    cc.addEventListener("click", (e) => {
+      const k = kindAt(e);
+      if (c.size < RULES.specialistMinSize) return;
+      if (k === "entertainer") act({ type: "setSpecialists", cityId: c.id, taxmen: h.taxmen + 1, scientists: h.scientists });
+      else if (k === "taxman") act({ type: "setSpecialists", cityId: c.id, taxmen: h.taxmen - 1, scientists: h.scientists + 1 });
+      else if (k === "scientist") act({ type: "setSpecialists", cityId: c.id, taxmen: h.taxmen, scientists: h.scientists - 1 });
+    });
 
     // Land around the city.
     renderMap(dialog.querySelector<HTMLDivElement>(".cs-map")!, s, c);
@@ -888,6 +995,19 @@ export function createCityScreen(host: CityHost) {
       });
     });
     setUpSplit();
+    dialog.querySelectorAll<HTMLButtonElement>("[data-sell]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const key = `${c.id}:${b.dataset.sell}`;
+        // Selling cannot be undone, so the first click only asks.
+        if (sellConfirm !== key) {
+          sellConfirm = key;
+          render();
+          return;
+        }
+        sellConfirm = null;
+        act({ type: "sellBuilding", cityId: c.id, building: b.dataset.sell as BuildingId });
+      }),
+    );
     dialog.querySelectorAll<HTMLButtonElement>(".cs-building").forEach((d) => {
       const id = d.dataset.b as BuildingId;
       d.querySelector(".pic")!.append(buildingArtCanvas(id, 36, 28) ?? buildingPortraitCanvas(id, 36, 28));

@@ -127,6 +127,12 @@ export function tileYield(map: GameMap, index: number, isCityCenter: boolean): Y
   if (map.irrigation[index] || (isCityCenter && !map.mine[index])) add("irrigation");
   if (map.mine[index]) add("mine");
   if (map.railroad[index]) result.shields = Math.floor((result.shields * (100 + (IMPROVEMENTS.railroad.shieldsPct ?? 0))) / 100);
+  // Pollution halves everything the tile gives until a settler cleans it.
+  if (map.pollution?.[index]) {
+    result.food = Math.floor(result.food / 2);
+    result.shields = Math.floor(result.shields / 2);
+    result.trade = Math.floor(result.trade / 2);
+  }
   if (isCityCenter) result.shields = Math.max(result.shields, RULES.cityCenterMinShields);
   return result;
 }

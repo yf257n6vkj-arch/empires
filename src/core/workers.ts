@@ -11,7 +11,7 @@ import { cityRadiusTiles, distance, fromIndex, type Point } from "./geometry";
 import { IMPROVEMENTS, RULES, TERRAINS, type ImprovementId } from "./rules";
 import type { GameEvent } from "./events";
 import { findPath } from "./path";
-import type { GameMap, GameState, Unit } from "./state";
+import type { GameMap, GameState, Unit, WorkKind } from "./state";
 import { canMove, moveDraft } from "./units";
 import { getPlayer, idx, tileYield } from "./world";
 import { improvementProblemAt } from "./commands";
@@ -21,23 +21,36 @@ const AUTO_IMPROVEMENTS: ImprovementId[] = ["irrigation", "mine", "road", "railr
 
 export interface WorkerTask {
   at: Point;
-  improvement: ImprovementId;
+  improvement: WorkKind;
   score: number;
 }
 
-/** Yield of tile `i` after building `improvement` on it, as the rules would count it. */
-function improvedYield(map: GameMap, i: number, improvement: ImprovementId) {
-  const one = (arr: number[]) => ({ [i]: arr[i] ?? 0 }) as unknown as number[];
+/** Yield of tile `i` after the work is done, as the rules would count it. */
+function improvedYield(map: GameMap, i: number, work: WorkKind) {
+  const one = <T>(arr: T[]) => ({ [i]: arr[i] }) as unknown as T[];
   const stub = {
     ...map,
+    terrain: one(map.terrain),
     road: one(map.road),
     irrigation: one(map.irrigation),
     mine: one(map.mine),
     railroad: one(map.railroad),
+    pollution: one(map.pollution),
   };
-  stub[improvement][i] = 1;
-  if (improvement === "mine") stub.irrigation[i] = 0;
-  if (improvement === "irrigation") stub.mine[i] = 0;
+  if (work === "clean") {
+    stub.pollution[i] = 0;
+    return tileYield(stub, i, false);
+  }
+  const into = IMPROVEMENTS[work].transform?.[map.terrain[i]!];
+  if (into) {
+    stub.terrain[i] = into;
+    stub.irrigation[i] = 0;
+    stub.mine[i] = 0;
+    return tileYield(stub, i, false);
+  }
+  stub[work][i] = 1;
+  if (work === "mine") stub.irrigation[i] = 0;
+  if (work === "irrigation") stub.mine[i] = 0;
   return tileYield(stub, i, false);
 }
 
@@ -74,14 +87,22 @@ export function bestWorkerTask(state: GameState, unit: Unit): WorkerTask | null 
       const at = fromIndex(map, i);
       const dist = distance(unit, at);
       if (dist > RULES.autoWorkRange) continue;
-      const now = worth(tileYield(map, i, false));
+      const nowYield = tileYield(map, i, false);
+      const now = worth(nowYield);
+      const consider = (work: WorkKind, turns: number) => {
+        const after = improvedYield(map, i, work);
+        // Land is never changed into land that feeds fewer people.
+        if (work !== "clean" && IMPROVEMENTS[work].transform?.[terrain] && after.food <= nowYield.food) return;
+        // Pollution hurts the whole world through warming, so cleaning counts double.
+        const gain = (worth(after) - now) * (worked.has(i) ? 2 : 1) * (work === "clean" ? 2 : 1);
+        if (gain <= 0) return;
+        const score = gain / (turns + dist + 1);
+        if (!best || score > best.score) best = { at, improvement: work, score };
+      };
+      if (map.pollution[i]) consider("clean", RULES.pollutionCleanTurns);
       for (const improvement of AUTO_IMPROVEMENTS) {
         if (improvementProblemAt(state, unit.owner, i, improvement) !== null) continue;
-        const gain = (worth(improvedYield(map, i, improvement)) - now) * (worked.has(i) ? 2 : 1);
-        if (gain <= 0) continue;
-        const turns = IMPROVEMENTS[improvement].turns[terrain] ?? 1;
-        const score = gain / (turns + dist + 1);
-        if (!best || score > best.score) best = { at, improvement, score };
+        consider(improvement, IMPROVEMENTS[improvement].turns[terrain] ?? 1);
       }
     }
   }
@@ -89,7 +110,7 @@ export function bestWorkerTask(state: GameState, unit: Unit): WorkerTask | null 
 }
 
 /** Starts work on the unit's tile (mutates the draft). */
-function startWork(unit: Unit, improvement: ImprovementId): void {
+function startWork(unit: Unit, improvement: WorkKind): void {
   unit.work = { improvement, progress: 0 };
   unit.movesLeft = 0;
 }

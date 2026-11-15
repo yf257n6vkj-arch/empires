@@ -70,6 +70,7 @@ export function newGame(options: NewGameOptions): GameState {
     players,
     units: [],
     cities: [],
+    warming: 0,
     victory: null,
   };
 
@@ -188,6 +189,18 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
       const fitted = fitRates(p.scienceRate, p.luxuryRate, p.government, "luxury");
       p.scienceRate = fitted.science;
       p.luxuryRate = fitted.luxury;
+    }
+  }
+  if (version <= 10) {
+    // Version 11 adds happy citizens, specialists, tile pollution and global warming.
+    state.map.pollution ??= new Array<number>(state.map.width * state.map.height).fill(0);
+    state.warming ??= 0;
+    for (const c of state.cities) {
+      c.taxmen ??= 0;
+      c.scientists ??= 0;
+      c.celebrating ??= false;
+      c.disorderTurns ??= 0;
+      c.soldTurn ??= null;
     }
   }
   state.version = STATE_VERSION;

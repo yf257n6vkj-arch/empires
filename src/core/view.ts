@@ -9,7 +9,7 @@
  */
 import type { Point } from "./geometry";
 import { builtWonders, researchCost, wonderFlag } from "./economy";
-import type { BuildingId, CivId, GovernmentId, TechId, TerrainId } from "./rules";
+import { RULES, type BuildingId, type CivId, type GovernmentId, type TechId, type TerrainId } from "./rules";
 import type { City, GameState, PlayerId, Spaceship, Unit } from "./state";
 
 /** What a player knows about another empire. */
@@ -45,6 +45,10 @@ export interface PlayerView {
   fortress: number[];
   /** Special resources on explored tiles. */
   special: number[];
+  /** Polluted explored tiles. */
+  pollution: number[];
+  /** How close global warming is, 0 to 100 percent; the whole world sees it. */
+  warmingPct: number;
   start: Point;
   /** Names of all players. Contact and diplomacy rules come later. */
   playerNames: string[];
@@ -92,6 +96,8 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     railroad: known(state.map.railroad),
     fortress: known(state.map.fortress),
     special: known(state.map.special),
+    pollution: known(state.map.pollution),
+    warmingPct: Math.min(100, Math.round((100 * state.warming) / RULES.warmingLimit)),
     start: { ...player.start },
     playerNames: state.players.map((p) => p.name),
     // Only own units and cities until other players can be met.
@@ -99,7 +105,7 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     cities: state.cities.filter((c) => c.owner === playerId).map((c) => ({ ...c })),
     foreignCities: state.cities
       .filter((c) => c.owner !== playerId && (seesAll || player.explored[c.y * state.map.width + c.x]))
-      .map((c) => ({ ...c, worked: [], food: 0, shields: 0, queue: [], tradeRoutes: [], stolenBy: [] })),
+      .map((c) => ({ ...c, worked: [], food: 0, shields: 0, queue: [], tradeRoutes: [], stolenBy: [], taxmen: 0, scientists: 0, disorderTurns: 0, soldTurn: null })),
     rivals: state.players
       .filter((p) => p.id !== playerId)
       .map((p) => ({

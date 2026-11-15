@@ -2,9 +2,10 @@
  * Ending a player's turn and starting the next one. Players move one after
  * another; when the last player ends, a new game turn begins.
  */
-import { processCityDraft, removeUnitDraft } from "./city";
+import { assignWorkersDraft, processCityDraft, removeUnitDraft } from "./city";
 import {
   buildingUpkeep,
+  workingBuildings,
   fitRates,
   learnTechDraft,
   nextStepToGoal,
@@ -15,9 +16,9 @@ import {
 } from "./economy";
 import { aircraftSafe, continueGotoDraft, turnMoves } from "./units";
 import type { GameEvent } from "./events";
-import { BUILDINGS, IMPROVEMENTS, RULES, TECH_IDS, UNIT_TYPES, type ImprovementId } from "./rules";
+import { BUILDINGS, GOVERNMENTS, IMPROVEMENTS, RULES, TECH_IDS, UNIT_TYPES, type BuildingId, type ImprovementId, type TerrainId } from "./rules";
 import { Rng } from "./rng";
-import type { GameState, PlayerId, Unit } from "./state";
+import type { City, GameState, PlayerId, Unit, WorkKind } from "./state";
 import { workerStepDraft } from "./workers";
 import { cityAt, idx, touchesLand } from "./world";
 
@@ -37,11 +38,14 @@ export function endTurnDraft(draft: GameState, events: GameEvent[]): void {
     progressWorkDraft(draft, unit, events);
   }
   perilsDraft(draft, player, events);
+  collapseDraft(draft, player, events);
+  disasterDraft(draft, player, events);
 
   const next = (player + 1) % draft.players.length;
   if (next === 0) {
     draft.turn += 1;
     spaceshipsDraft(draft, events);
+    warmingDraft(draft, events);
   }
   draft.currentPlayer = next;
   startTurnDraft(draft, next, events);
@@ -157,26 +161,167 @@ function startTurnDraft(draft: GameState, player: PlayerId, events: GameEvent[])
   events.push({ type: "turnStarted", turn: draft.turn, player });
 }
 
+/** Turns of work the settler needs on its tile, undefined when the work cannot be done there. */
+export function workTurns(map: GameState["map"], i: number, work: WorkKind): number | undefined {
+  if (work === "clean") return map.pollution[i] ? RULES.pollutionCleanTurns : undefined;
+  const terrain = map.terrain[i];
+  return terrain ? IMPROVEMENTS[work].turns[terrain] : undefined;
+}
+
 function progressWorkDraft(draft: GameState, unit: Unit, events: GameEvent[]): void {
   const work = unit.work;
   if (!work) return;
   const i = idx(draft.map, unit);
-  const terrain = draft.map.terrain[i];
-  const needed = terrain ? IMPROVEMENTS[work.improvement].turns[terrain] : undefined;
+  // Several settlers on one tile work together.
+  const needed = workTurns(draft.map, i, work.improvement);
   if (needed === undefined) {
     unit.work = null;
     return;
   }
   work.progress += 1;
   if (work.progress < needed) return;
-  finishImprovement(draft, i, work.improvement);
   unit.work = null;
+  if (work.improvement === "clean") {
+    draft.map.pollution[i] = 0;
+    events.push({ type: "pollutionCleaned", unitId: unit.id, at: { x: unit.x, y: unit.y } });
+    return;
+  }
+  finishImprovement(draft, i, work.improvement);
   events.push({ type: "improvementDone", unitId: unit.id, at: { x: unit.x, y: unit.y }, improvement: work.improvement });
 }
 
 function finishImprovement(draft: GameState, i: number, improvement: ImprovementId): void {
+  const terrain = draft.map.terrain[i]!;
+  const into = IMPROVEMENTS[improvement].transform?.[terrain];
+  if (into) {
+    // Clearing a forest or draining a swamp changes the land; old irrigation or a mine go with it.
+    draft.map.terrain[i] = into;
+    draft.map.irrigation[i] = 0;
+    draft.map.mine[i] = 0;
+    return;
+  }
   draft.map[improvement][i] = 1;
   // A mine and irrigation cannot share a tile; the newer one replaces the older.
   if (improvement === "mine") draft.map.irrigation[i] = 0;
   if (improvement === "irrigation") draft.map.mine[i] = 0;
+}
+
+/**
+ * A government that cannot stand disorder (democracy) may fall when some
+ * city has been in disorder for two turns running (mutates the draft).
+ */
+function collapseDraft(draft: GameState, playerId: PlayerId, events: GameEvent[]): void {
+  const p = draft.players[playerId];
+  if (!p || p.revolution || !GOVERNMENTS[p.government].collapsesInDisorder) return;
+  if (!draft.cities.some((c) => c.owner === playerId && c.disorderTurns >= 2)) return;
+  const rng = Rng.fromState(draft.rng);
+  const falls = rng.int(100) < RULES.collapseChancePct;
+  draft.rng = rng.getState();
+  if (!falls) return;
+  events.push({ type: "governmentCollapsed", player: playerId, government: p.government });
+  // After the anarchy the people want the same government back.
+  p.revolution = { target: p.government, turnsLeft: RULES.anarchyTurns };
+  p.government = "anarchy";
+}
+
+/** Does the city stand on this terrain or next to it? */
+function cityNear(draft: GameState, city: City, terrain: TerrainId): boolean {
+  const map = draft.map;
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const x = city.x + dx;
+      const y = city.y + dy;
+      if (x < 0 || y < 0 || x >= map.width || y >= map.height) continue;
+      if (map.terrain[y * map.width + x] === terrain) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Now and then a disaster strikes one of the player's cities. The right
+ * building or technology keeps it away, and the player hears that it did.
+ */
+function disasterDraft(draft: GameState, playerId: PlayerId, events: GameEvent[]): void {
+  if (draft.turn < RULES.disasterStartTurn) return;
+  const cities = draft.cities.filter((c) => c.owner === playerId);
+  if (cities.length === 0) return;
+  const rng = Rng.fromState(draft.rng);
+  if (rng.int(100) >= RULES.disasterPct) {
+    draft.rng = rng.getState();
+    return;
+  }
+  const city = cities[rng.int(cities.length)]!;
+  const possible = RULES.disasters.filter((d) => d.near === null || cityNear(draft, city, d.near));
+  const disaster = possible[rng.int(possible.length)]!;
+  const player = draft.players[playerId]!;
+  const building = disaster.preventBuilding && workingBuildings(draft, city).includes(disaster.preventBuilding) ? disaster.preventBuilding : null;
+  const tech = disaster.preventTech && player.techs.includes(disaster.preventTech) ? disaster.preventTech : null;
+  if (building || tech) {
+    draft.rng = rng.getState();
+    events.push({ type: "disasterPrevented", cityId: city.id, disaster: disaster.id, building, tech });
+    return;
+  }
+  let lost: BuildingId | null = null;
+  if (disaster.hit === "building") {
+    const burnable = city.buildings.filter((b) => !BUILDINGS[b].wonder && !BUILDINGS[b].onePerPlayer);
+    lost = burnable.length ? burnable[rng.int(burnable.length)]! : null;
+    if (lost) city.buildings = city.buildings.filter((b) => b !== lost);
+  } else if (disaster.hit === "population") {
+    city.size = Math.max(1, city.size - Math.max(1, Math.floor((city.size * RULES.populationLossPct) / 100)));
+  } else if (disaster.hit === "famine") {
+    city.food = 0;
+    city.size = Math.max(1, city.size - 1);
+  } else {
+    city.food = 0;
+    city.shields = 0;
+  }
+  draft.rng = rng.getState();
+  city.manualTiles = false;
+  assignWorkersDraft(draft, city);
+  events.push({ type: "disaster", cityId: city.id, disaster: disaster.id, building: lost, size: city.size });
+}
+
+/**
+ * Global warming: every turn the counter grows by the polluted tiles above
+ * a safe number. When it is full, land all over the world changes: by the
+ * sea it turns into swamp and jungle, inland into desert (mutates the draft).
+ */
+function warmingDraft(draft: GameState, events: GameEvent[]): void {
+  const map = draft.map;
+  const polluted = map.pollution.reduce((n, x) => n + x, 0);
+  draft.warming = Math.max(0, draft.warming + polluted - RULES.warmingSafeTiles);
+  if (draft.warming < RULES.warmingLimit) return;
+  draft.warming = 0;
+  const rng = Rng.fromState(draft.rng);
+  const cityTiles = new Set(draft.cities.map((c) => idx(map, c)));
+  let changed = 0;
+  for (let i = 0; i < map.terrain.length; i++) {
+    const t = map.terrain[i]!;
+    if (cityTiles.has(i) || !["grassland", "plains", "desert", "forest"].includes(t)) continue;
+    if (rng.int(100) >= RULES.warmingTilePct) continue;
+    const coast = touchesOcean(map, i);
+    const into: TerrainId | null = coast ? (t === "forest" ? "jungle" : "swamp") : t === "desert" ? null : "desert";
+    if (!into) continue;
+    map.terrain[i] = into;
+    map.irrigation[i] = 0;
+    map.mine[i] = 0;
+    changed++;
+  }
+  draft.rng = rng.getState();
+  events.push({ type: "globalWarming", tiles: changed });
+}
+
+function touchesOcean(map: GameState["map"], i: number): boolean {
+  const x = i % map.width;
+  const y = Math.floor(i / map.width);
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= map.width || ny >= map.height) continue;
+      if (map.terrain[ny * map.width + nx] === "ocean") return true;
+    }
+  }
+  return false;
 }

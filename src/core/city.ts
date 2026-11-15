@@ -8,12 +8,15 @@ import {
   corruptionPct,
   fallbackProduction,
   freeTechChoice,
+  knowsTech,
   learnTechDraft,
+  workingBuildings,
   type CityEffects,
 } from "./economy";
 import type { GameEvent } from "./events";
-import { distance } from "./geometry";
-import { BUILDINGS, GOVERNMENTS, RULES, UNIT_TYPES, type GovernmentRule, type Yield } from "./rules";
+import { cityRadiusTiles, distance, fromIndex } from "./geometry";
+import { Rng } from "./rng";
+import { BUILDINGS, GOVERNMENTS, RULES, TERRAINS, UNIT_TYPES, type GovernmentRule, type Yield } from "./rules";
 import type { City, GameState, ProductionItem, Unit } from "./state";
 import { cityAt, idx, makeUnit, tileYield, workableTiles } from "./world";
 
@@ -47,14 +50,16 @@ export function cityTileYield(state: GameState, city: City, index: number, effec
   const y = tileYield(state.map, index, index === idx(state.map, city));
   if (state.map.terrain[index] === "ocean") y.food += effects.oceanFood;
   const gov = governmentOf(state, city);
+  const party = city.celebrating ? gov.celebration : "none";
   // Despotism wastes the best tiles: anything above 2 gives one less. The city
   // centre is spared, otherwise new cities would barely grow in a 120-turn game.
-  if (gov.tilePenalty && index !== idx(state.map, city)) {
+  // A celebrating city works its land as under a monarchy.
+  if (gov.tilePenalty && party !== "noTilePenalty" && index !== idx(state.map, city)) {
     if (y.food > 2) y.food -= 1;
     if (y.shields > 2) y.shields -= 1;
     if (y.trade > 2) y.trade -= 1;
   }
-  if (y.trade > 0) y.trade += effects.tradeOnTradeTiles + (gov.tradeBonus ? 1 : 0);
+  if (y.trade > 0) y.trade += effects.tradeOnTradeTiles + (gov.tradeBonus || party === "tradeBonus" ? 1 : 0);
   return y;
 }
 
@@ -119,14 +124,14 @@ export interface Pollution {
   industry: number;
   /** From citizens, growing with industrial technologies. */
   population: number;
-  /** Citizens the dirty air makes unhappy. */
-  unhappy: number;
+  /** Chance in percent that a tile around the city gets polluted this turn. */
+  chancePct: number;
 }
 
 /**
- * Pollution in a simple form: instead of dirty tiles as in Civilization 1,
- * a city with too much industry and too many people gets unhappy citizens.
- * It counts what the city could produce, so disorder does not clean the air.
+ * Pollution as in Civilization 1: a city with too much industry and too many
+ * people may pollute a tile around it every turn. It counts what the city
+ * could produce, so disorder does not clean the air.
  */
 export function cityPollution(state: GameState, city: City, effects = cityEffects(state, city)): Pollution {
   const shields = Math.floor((grossYield(state, city, effects).shields * (100 + effects.shieldsPct)) / 100);
@@ -135,8 +140,8 @@ export function cityPollution(state: GameState, city: City, effects = cityEffect
   const known = player ? RULES.pollutionTechs.filter((t) => player.techs.includes(t)).length : 0;
   const population = effects.noPopulationPollution ? 0 : Math.floor((city.size * known) / 4);
   const over = industry + population - RULES.pollutionFree;
-  const unhappy = over > 0 ? Math.min(city.size, Math.ceil(over / RULES.pollutionPerUnhappy)) : 0;
-  return { industry, population, unhappy };
+  const chancePct = over > 0 ? Math.min(100, over * RULES.pollutionPctPerPoint) : 0;
+  return { industry, population, chancePct };
 }
 
 /** Food surplus the automatic assignment tries to reach before it goes for shields. */
@@ -153,12 +158,37 @@ export function martialLaw(state: GameState, city: City): number {
 }
 
 export interface Happiness {
+  happy: number;
   content: number;
   unhappy: number;
-  /** Citizens who do not work a tile. They keep the city calm instead. */
+  /** Citizens who do not work a tile and keep the city calm instead. */
   entertainers: number;
-  /** More unhappy than content citizens: the city produces nothing. */
+  /** Citizens who do not work a tile and collect taxes or do research. */
+  taxmen: number;
+  scientists: number;
+  /** More unhappy than content and happy citizens together: the city produces nothing. */
   disorder: boolean;
+  /** Nobody unhappy, at least as many happy as content: the city celebrates. */
+  celebrate: boolean;
+}
+
+/**
+ * Citizens content without any help in each city of the owner. A large
+ * empire is harder to keep happy: every RULES.empireSizeStep cities above
+ * RULES.empireSizeBase cost one content citizen.
+ */
+export function contentLimit(state: GameState, owner: number): number {
+  const cities = state.cities.filter((c) => c.owner === owner).length;
+  const over = Math.max(0, cities - RULES.empireSizeBase);
+  return Math.max(0, RULES.contentBase - Math.ceil(over / RULES.empireSizeStep));
+}
+
+/** How many of the citizens off the fields entertain, collect taxes or do research. */
+export function specialists(city: City, idle = Math.max(0, city.size - city.worked.length)): { entertainers: number; taxmen: number; scientists: number } {
+  if (city.size < RULES.specialistMinSize) return { entertainers: idle, taxmen: 0, scientists: 0 };
+  const taxmen = Math.min(city.taxmen, idle);
+  const scientists = Math.min(city.scientists, idle - taxmen);
+  return { entertainers: idle - taxmen - scientists, taxmen, scientists };
 }
 
 /** Trade of the city after corruption, before it is split into science, luxuries and taxes. */
@@ -175,33 +205,59 @@ function rates(state: GameState, city: City): { science: number; luxury: number 
   return { science: p?.scienceRate ?? 0, luxury: p?.luxuryRate ?? 0 };
 }
 
-/** Luxury points of the city: its share of trade, raised by the buildings that raise gold. */
-export function cityLuxury(state: GameState, city: City, effects = cityEffects(state, city)): number {
+/**
+ * Luxury points of the city: its share of trade plus what entertainers add,
+ * raised by the buildings that raise gold.
+ */
+export function cityLuxury(state: GameState, city: City, effects = cityEffects(state, city), entertainers = specialists(city).entertainers): number {
   const share = rates(state, city).luxury;
-  if (share === 0) return 0;
-  const base = Math.round((netTrade(state, city, effects).trade * share) / 100);
+  const fromTrade = share === 0 ? 0 : Math.round((netTrade(state, city, effects).trade * share) / 100);
+  const base = fromTrade + entertainers * RULES.specialistYield;
   return Math.floor((base * (100 + effects.goldPct)) / 100);
 }
 
-/** Unhappy citizens the luxuries make content. */
-function calmedByLuxury(state: GameState, city: City, effects: CityEffects): number {
-  return Math.floor(cityLuxury(state, city, effects) / RULES.luxuryPerContent);
+/** Unhappy citizens before luxuries and specialists: the crowd and soldiers abroad, minus buildings and martial law. */
+function unhappyBeforeLuxury(state: GameState, city: City, effects: CityEffects): number {
+  if (effects.noUnhappy) return 0;
+  const crowd = Math.max(0, city.size - contentLimit(state, city.owner));
+  const unhappy = Math.min(city.size, crowd + militaryUnhappiness(state, city, effects));
+  return Math.max(0, unhappy - effects.content - martialLaw(state, city));
 }
 
-/** Unhappy citizens left after buildings, soldiers and luxuries have calmed whom they can, before entertainers. */
-function unhappyAfterHelp(state: GameState, city: City, effects: CityEffects): number {
-  if (effects.noUnhappy) return 0;
-  const crowd = Math.max(0, city.size - RULES.contentBase);
-  const extra = cityPollution(state, city, effects).unhappy + militaryUnhappiness(state, city, effects);
-  const unhappy = Math.min(city.size, crowd + extra);
-  return Math.max(0, unhappy - effects.content - martialLaw(state, city) - calmedByLuxury(state, city, effects));
+/** Moods of the city with `idle` citizens off the fields. */
+function moods(state: GameState, city: City, effects: CityEffects, idle: number): Happiness {
+  const kinds = specialists(city, idle);
+  // Specialists are taken from the unhappy first.
+  let unhappy = Math.max(0, unhappyBeforeLuxury(state, city, effects) - idle);
+  let content = city.size - idle - unhappy;
+  // Luxuries calm the unhappy first, then make content citizens happy.
+  let steps = Math.floor(cityLuxury(state, city, effects, kinds.entertainers) / RULES.luxuryPerContent);
+  const calmed = Math.min(steps, unhappy);
+  unhappy -= calmed;
+  content += calmed;
+  steps -= calmed;
+  const happy = Math.min(steps, content);
+  content -= happy;
+  const disorder = unhappy > content + happy;
+  const celebrate =
+    !disorder &&
+    governmentOf(state, city).celebration !== "none" &&
+    city.size >= RULES.celebrationMinSize &&
+    unhappy === 0 &&
+    happy > 0 &&
+    happy >= content;
+  return { happy, content, unhappy, ...kinds, disorder, celebrate };
 }
 
 export function cityHappiness(state: GameState, city: City, effects = cityEffects(state, city)): Happiness {
-  const entertainers = Math.max(0, city.size - city.worked.length);
-  const unhappy = Math.max(0, unhappyAfterHelp(state, city, effects) - entertainers);
-  const content = city.size - entertainers - unhappy;
-  return { content, unhappy, entertainers, disorder: unhappy > content };
+  return moods(state, city, effects, Math.max(0, city.size - city.worked.length));
+}
+
+/** Unhappy citizens the luxuries make content, for the city screen. */
+export function calmedByLuxury(state: GameState, city: City, effects = cityEffects(state, city)): number {
+  const idle = Math.max(0, city.size - city.worked.length);
+  const before = Math.max(0, unhappyBeforeLuxury(state, city, effects) - idle);
+  return before - moods(state, city, effects, idle).unhappy;
 }
 
 /**
@@ -219,10 +275,10 @@ export function assignWorkersDraft(draft: GameState, city: City): void {
     city.manualTiles = false;
   }
   const effects = cityEffects(draft, city);
-  const unhappy = unhappyAfterHelp(draft, city, effects);
-  // Smallest number of entertainers e with unhappy - e <= size - e - (unhappy - e).
-  const entertainers = Math.min(unhappy, Math.max(0, 2 * unhappy - city.size));
-  const workers = city.size - entertainers;
+  // As few citizens off the fields as the city needs to stay calm.
+  let idle = 0;
+  while (idle < city.size && moods(draft, city, effects, idle).disorder) idle++;
+  const workers = city.size - idle;
 
   const candidates = workableTiles(draft, city).map((i) => ({ i, y: cityTileYield(draft, city, i, effects) }));
   const settlerUpkeep = settlerFood(draft, city);
@@ -256,7 +312,7 @@ export interface CityReport {
   /** Trade split by the owner's shares, after corruption, buildings and disorder. */
   science: number;
   gold: number;
-  /** Luxury points; every RULES.luxuryPerContent of them calm one unhappy citizen. */
+  /** Luxury points; every RULES.luxuryPerContent of them calm one unhappy citizen or make a content one happy. */
   luxury: number;
   /** Gold from shields when the city earns gold instead of building. */
   wealthGold: number;
@@ -294,8 +350,11 @@ export function cityReport(state: GameState, city: City): CityReport {
   const shieldSurplus = calm ? Math.max(0, Math.floor((production.shields * (100 + effects.shieldsPct)) / 100) - unitUpkeep) : 0;
   // In anarchy trade only keeps people busy: no science and no gold.
   const paid = calm && gov.maxRate > 0;
-  const science = paid ? Math.floor((baseScience * (100 + effects.sciencePct)) / 100) : 0;
-  const gold = paid ? Math.floor((baseGold * (100 + effects.goldPct)) / 100) : 0;
+  // Taxmen and scientists add to the base, before libraries and marketplaces.
+  const extraScience = happiness.scientists * RULES.specialistYield;
+  const extraGold = happiness.taxmen * RULES.specialistYield;
+  const science = paid ? Math.floor(((baseScience + extraScience) * (100 + effects.sciencePct)) / 100) : 0;
+  const gold = paid ? Math.floor(((baseGold + extraGold) * (100 + effects.goldPct)) / 100) : 0;
 
   const threshold = growthThreshold(city.size);
   const cost = productionCost(city.production);
@@ -341,11 +400,25 @@ export function processCityDraft(draft: GameState, city: City, events: GameEvent
   assignWorkersDraft(draft, city);
   const report = cityReport(draft, city);
   const effects = cityEffects(draft, city);
+  const gov = governmentOf(draft, city);
+  const rng = Rng.fromState(draft.rng);
   if (report.happiness.disorder) events.push({ type: "cityDisorder", cityId: city.id });
+  meltdownDraft(draft, city, report, rng, events);
+  pollutionDraft(draft, city, report, rng, events);
+  draft.rng = rng.getState();
 
   // Food: growth or starvation. A city at its size limit keeps a full food box.
-  city.food += report.foodSurplus;
-  if (city.food < 0) {
+  // A city that celebrates under a republic or democracy grows every turn it has food to spare.
+  const rapture =
+    city.celebrating && gov.celebration === "rapture" && report.happiness.celebrate && report.foodSurplus > 0 && city.size < effects.maxSize;
+  if (rapture) {
+    city.size += 1;
+    city.manualTiles = false;
+    events.push({ type: "cityGrew", cityId: city.id, size: city.size });
+  } else city.food += report.foodSurplus;
+  if (rapture) {
+    // The food box stays as it is.
+  } else if (city.food < 0) {
     if (city.size > 1) {
       city.size -= 1;
       city.manualTiles = false;
@@ -384,13 +457,61 @@ export function processCityDraft(draft: GameState, city: City, events: GameEvent
   if (item.kind === "wealth") {
     // Nothing is built: this turn's shields become gold, stored shields wait.
     city.shields -= report.shieldSurplus;
-    assignWorkersDraft(draft, city);
+    endOfTurnMoodDraft(draft, city, events);
     return { science: report.science, gold: report.gold + report.wealthGold };
   }
   const cost = productionCost(item);
   if (city.shields >= cost) completeProductionDraft(draft, city, cost, events);
-  assignWorkersDraft(draft, city);
+  endOfTurnMoodDraft(draft, city, events);
   return { science: report.science, gold: report.gold };
+}
+
+/**
+ * Places the citizens for the next turn and notes how the city feels at the
+ * end of the turn: a celebration starts or ends, and turns of disorder count up.
+ */
+function endOfTurnMoodDraft(draft: GameState, city: City, events: GameEvent[]): void {
+  assignWorkersDraft(draft, city);
+  if (!draft.cities.includes(city)) return;
+  const h = cityHappiness(draft, city);
+  city.disorderTurns = h.disorder ? city.disorderTurns + 1 : 0;
+  if (h.celebrate !== city.celebrating) {
+    city.celebrating = h.celebrate;
+    events.push({ type: h.celebrate ? "celebrationStarted" : "celebrationEnded", cityId: city.id });
+  }
+}
+
+/** A tile in the city's reach the city may pollute: land, not the centre, not polluted yet. */
+function pollutableTiles(state: GameState, city: City): number[] {
+  const center = idx(state.map, city);
+  return cityRadiusTiles(state.map, city).filter((i) => i !== center && TERRAINS[state.map.terrain[i]!].land && !state.map.pollution[i]);
+}
+
+/** A dirty city may pollute one tile around it (mutates the draft). */
+function pollutionDraft(draft: GameState, city: City, report: CityReport, rng: Rng, events: GameEvent[]): void {
+  if (report.pollution.chancePct <= 0 || rng.int(100) >= report.pollution.chancePct) return;
+  const tiles = pollutableTiles(draft, city);
+  if (tiles.length === 0) return;
+  const i = tiles[rng.int(tiles.length)]!;
+  draft.map.pollution[i] = 1;
+  events.push({ type: "tilePolluted", cityId: city.id, at: fromIndex(draft.map, i) });
+}
+
+/**
+ * A nuclear plant in a city in disorder may melt down: half the citizens
+ * die and the land around is polluted. Fusion power removes the danger.
+ */
+function meltdownDraft(draft: GameState, city: City, report: CityReport, rng: Rng, events: GameEvent[]): void {
+  if (!report.happiness.disorder || !workingBuildings(draft, city).includes("nuclearPlant")) return;
+  if (knowsTech(draft.players[city.owner]!, "fusionPower")) return;
+  if (rng.int(100) >= RULES.meltdownPct) return;
+  city.size = Math.max(1, city.size - Math.floor(city.size / 2));
+  city.manualTiles = false;
+  const center = idx(draft.map, city);
+  for (const i of cityRadiusTiles(draft.map, city)) {
+    if (i !== center && distance(fromIndex(draft.map, i), city) <= 1 && TERRAINS[draft.map.terrain[i]!].land) draft.map.pollution[i] = 1;
+  }
+  events.push({ type: "nuclearMeltdown", cityId: city.id, size: city.size });
 }
 
 function completeProductionDraft(draft: GameState, city: City, cost: number, events: GameEvent[]): void {

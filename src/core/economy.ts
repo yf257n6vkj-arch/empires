@@ -167,9 +167,10 @@ export function fitRates(science: number, luxury: number, government: Government
   return { science: s, luxury: l };
 }
 
-export function canChooseGovernment(player: Player, government: GovernmentId): boolean {
+/** Whether the player may choose the government; `anyGovernment` is the gift of the pyramids. */
+export function canChooseGovernment(player: Player, government: GovernmentId, anyGovernment = false): boolean {
   if (government === "anarchy") return false;
-  return knowsTech(player, GOVERNMENTS[government].requires);
+  return anyGovernment || knowsTech(player, GOVERNMENTS[government].requires);
 }
 
 // ---------- wonders ----------
@@ -198,7 +199,7 @@ export function wonderEffect(state: GameState, player: PlayerId, key: "shipMoves
   return total;
 }
 
-export function wonderFlag(state: GameState, player: PlayerId, key: "safeTriremes" | "fastRevolution" | "seesAllCities"): boolean {
+export function wonderFlag(state: GameState, player: PlayerId, key: "safeTriremes" | "noAnarchy" | "allGovernments" | "seesAllCities"): boolean {
   return state.cities.some(
     (c) => c.owner === player && c.buildings.some((b) => BUILDINGS[b].effects[key] && wonderOwner(state, b) === player),
   );

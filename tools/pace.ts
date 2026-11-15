@@ -221,7 +221,7 @@ function wants(state: GameState, city: City): ProductionItem {
   if (report.corruption >= 3 && can(building("courthouse"))) return building("courthouse");
   const oceanWorked = city.worked.filter((i) => state.map.terrain[i] === "ocean").length;
   if (oceanWorked >= 2 && can(building("harbour"))) return building("harbour");
-  if (report.pollution.unhappy > 0) {
+  if (report.pollution.chancePct > 0) {
     const cleaner: BuildingId[] =
       report.pollution.population > report.pollution.industry / 2
         ? ["massTransit", "recyclingCenter", "nuclearPlant", "hydroPlant"]
@@ -288,8 +288,12 @@ interface Result {
   largest: number;
   /** Share of all trade lost to corruption at turn 120, in percent. */
   corruption: number;
-  /** Citizens unhappy from pollution at turn 120. */
+  /** Polluted tiles in the world at turn 120. */
   smog: number;
+  /** Times global warming struck. */
+  warmings: number;
+  /** Disasters that struck the player and ones its buildings kept away. */
+  disasters: [number, number];
   wonders: number;
   government: string;
 }
@@ -302,6 +306,8 @@ function playOne(seed: string): Result {
   const eraTurn: Record<number, number | null> = { 2: null, 3: null, 4: null, 5: null };
   const techsAt: Record<number, number> = {};
   let allTechsTurn: number | null = null;
+  let warmings = 0;
+  const disasters: [number, number] = [0, 0];
   const total = Object.keys(TECHS).length;
   while (state.turn <= RULES.maxTurns) {
     state = manageEconomy(state);
@@ -309,7 +315,13 @@ function playOne(seed: string): Result {
     state = manageCities(state);
     const ended = applyCommand(state, { type: "endTurn" });
     if (!ended.ok) break;
-    state = passComputerTurns(ended.state).state;
+    const passed = passComputerTurns(ended.state);
+    state = passed.state;
+    for (const e of [...ended.events, ...passed.events]) {
+      if (e.type === "globalWarming") warmings++;
+      if (e.type === "disaster" && state.cities.find((c) => c.id === e.cityId)?.owner === ME) disasters[0]++;
+      if (e.type === "disasterPrevented" && state.cities.find((c) => c.id === e.cityId)?.owner === ME) disasters[1]++;
+    }
     const me = state.players[ME]!;
     const era = currentEra(me);
     for (const e of [2, 3, 4, 5]) if (era >= e && eraTurn[e] === null) eraTurn[e] = state.turn;
@@ -336,7 +348,9 @@ function playOne(seed: string): Result {
       const trade = rs.reduce((n, r) => n + r.production.trade, 0);
       return trade ? Math.round((100 * rs.reduce((n, r) => n + r.corruption, 0)) / trade) : 0;
     })(),
-    smog: mine.reduce((n, c) => n + cityReport(state, c).pollution.unhappy, 0),
+    smog: state.map.pollution.reduce((n, x) => n + x, 0),
+    warmings,
+    disasters,
     wonders: mine.reduce((n, c) => n + c.buildings.filter((b) => BUILDINGS[b].wonder).length, 0),
     government: state.players[ME]!.government,
   };
@@ -370,7 +384,9 @@ console.log(`města v tahu 120: ${quantiles(results.map((r) => r.cities))}`);
 console.log(`obyvatel v tahu 120: ${quantiles(results.map((r) => r.population))}`);
 console.log(`největší město v tahu 120: ${quantiles(results.map((r) => r.largest))}`);
 console.log(`korupce v tahu 120 (% obchodu): ${quantiles(results.map((r) => r.corruption))}`);
-console.log(`nespokojení ze smogu v tahu 120: ${quantiles(results.map((r) => r.smog))}`);
+console.log(`znečištěná políčka v tahu 120: ${quantiles(results.map((r) => r.smog))}`);
+console.log(`globální oteplování za partii: ${quantiles(results.map((r) => r.warmings))}`);
+console.log(`katastrofy za partii (zasáhly / odvrácené): ${quantiles(results.map((r) => r.disasters[0]))} / ${quantiles(results.map((r) => r.disasters[1]))}`);
 console.log(`divy: ${quantiles(results.map((r) => r.wonders))}`);
 console.log(`vláda v tahu 120: ${[...governments].map(([g, n]) => `${g} ${n}×`).join(", ")}`);
 if (stuck.length) console.log(`zaseknuté partie (méně než 3 města): ${stuck.join(", ")}`);

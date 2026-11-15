@@ -3,9 +3,11 @@ import {
   RULES,
   type BuildingRule,
   type CommandError,
+  type DisasterId,
   type GameEvent,
   type GameState,
   type GovernmentRule,
+  type Happiness,
   type UnitRule,
 } from "../core";
 import { t, tn } from "./i18n";
@@ -72,7 +74,57 @@ export const ERROR_TEXT: Record<CommandError, string> = {
   needsRoad: t("Železnice se staví na cestu."),
   carriesUnits: t("Na palubě jsou jednotky. Na moři by se utopily, loď rozpusť až ve městě."),
   nothingToUpgrade: t("Na novější typ zatím nejde povýšit, chybí ti technologie."),
+  cityTooBig: t("Město je na to moc velké. Osadník se přidá jen k městu, které má méně než {joinCityMaxSize} obyvatel a ještě může růst.", { joinCityMaxSize: RULES.joinCityMaxSize }),
+  noPollution: t("Na tomhle políčku žádné znečištění není."),
+  cannotSell: t("Tohle prodat nejde. Divy světa ani palác se neprodávají."),
+  alreadySold: t("V tomhle městě jsi už v tomhle tahu jednu budovu prodal."),
+  cityTooSmall: t("Výběrčí daní a vědce může mít až město s aspoň {specialistMinSize} obyvateli.", { specialistMinSize: RULES.specialistMinSize }),
+  tooManySpecialists: t("Tolik obyvatel mimo pole město nemá."),
 };
+
+/** "před požárem": what a building or technology keeps away, in the instrumental. */
+export function disasterAgainst(id: DisasterId): string {
+  switch (id) {
+    case "earthquake":
+      return t("před zemětřesením");
+    case "fire":
+      return t("před požárem");
+    case "flood":
+      return t("před povodní");
+    case "famine":
+      return t("před hladomorem");
+    case "piracy":
+      return t("před piráty");
+    case "plague":
+      return t("před morem");
+    case "volcano":
+      return t("před sopkou");
+  }
+}
+
+function disasterText(state: GameState, e: Extract<GameEvent, { type: "disaster" }>): string {
+  const city = cityName(state, e.cityId);
+  switch (e.disaster) {
+    case "earthquake":
+      return e.building
+        ? t("Zemětřesení ve městě {city} zbořilo budovu {building}.", { city, building: buildingName(e.building) })
+        : t("Městem {city} otřáslo zemětřesení, naštěstí nic nespadlo.", { city });
+    case "fire":
+      return e.building
+        ? t("Ve městě {city} vypukl požár a shořela budova {building}. Akvadukt by požáru zabránil.", { city, building: buildingName(e.building) })
+        : t("Ve městě {city} hořelo, naštěstí nic neshořelo. Akvadukt by požáru zabránil.", { city });
+    case "flood":
+      return t("Řeka zaplavila město {city}, zbylo {size} obyvatel. Hradby by povodni zabránily.", { city, size: e.size });
+    case "famine":
+      return t("Ve městě {city} vypukl hladomor, sýpka je prázdná a zbylo {size} obyvatel. Sýpka by hladomoru zabránila.", { city, size: e.size });
+    case "piracy":
+      return t("Piráti vyplenili město {city}, vzali zásoby jídla i rozestavěnou výrobu. Kasárna by piráty odrazila.", { city });
+    case "plague":
+      return t("Ve městě {city} řádil mor, zbylo {size} obyvatel. Akvadukt nebo lékařství by moru zabránily.", { city, size: e.size });
+    case "volcano":
+      return t("U města {city} vybuchla sopka, zbylo {size} obyvatel. Chrám by město ochránil.", { city, size: e.size });
+  }
+}
 
 /** "Římská říše": the realm of a player, for sentences with a feminine subject. */
 export function realmName(state: GameState, player: number): string {
@@ -110,7 +162,9 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
         ? t("{city} dostavělo div světa {building}!", { city: cityName(state, e.cityId), building: buildingName(e.building) })
         : t("Jiná říše dostavěla div světa {building}.", { building: buildingName(e.building) });
     case "buildingSold":
-      return t("Nemáš na údržbu, a tak {city} prodalo budovu {building}.", { city: cityName(state, e.cityId), building: buildingName(e.building) });
+      return e.manual
+        ? t("Ve městě {city} jsi prodal budovu {building}.", { city: cityName(state, e.cityId), building: buildingName(e.building) })
+        : t("Nemáš na údržbu, a tak {city} prodalo budovu {building}.", { city: cityName(state, e.cityId), building: buildingName(e.building) });
     case "cityDisorder":
       return t("Ve městě {city} jsou nepokoje, tento tah nic nevyrobilo.", { city: cityName(state, e.cityId) });
     case "cityAtMaxSize":
@@ -184,6 +238,30 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
       return e.to === viewer ? t("{city} se přidalo k tvé říši.", { city: cityName(state, e.cityId) }) : t("{city} přešlo k jiné říši.", { city: cityName(state, e.cityId) });
     case "nuclearStrike":
       return e.intercepted ? t("Protiraketový štít zastavil jadernou raketu.") : t("Jaderná raketa vybuchla u [{at}, {at2}].", { at: e.at.x, at2: e.at.y });
+    case "cityJoined":
+      return t("Osadník se přidal k městu {city}, má teď {size} obyvatel.", { city: cityName(state, e.cityId), size: e.size });
+    case "celebrationStarted":
+      return t("Obyvatelé města {city} slaví na tvou počest!", { city: cityName(state, e.cityId) });
+    case "celebrationEnded":
+      return t("Oslavy ve městě {city} skončily.", { city: cityName(state, e.cityId) });
+    case "tilePolluted":
+      return t("Město {city} znečistilo políčko [{x}, {y}]. Dokud ho osadník nevyčistí, dává polovinu.", { city: cityName(state, e.cityId), x: e.at.x, y: e.at.y });
+    case "pollutionCleaned":
+      return t("Osadník vyčistil znečištěné políčko.");
+    case "nuclearMeltdown":
+      return t("V jaderné elektrárně města {city} se kvůli nepokojům roztavil reaktor! Zbylo {size} obyvatel a okolí je znečištěné.", { city: cityName(state, e.cityId), size: e.size });
+    case "globalWarming":
+      return tn("Svět se oteplil. Jedno políčko u moře se změnilo v bažinu nebo džungli a ve vnitrozemí v poušť.|Svět se oteplil. {n} políčka u moře se změnila v bažiny a džungle a ve vnitrozemí v poušť.|Svět se oteplil. {n} políček u moře se změnilo v bažiny a džungle a ve vnitrozemí v poušť.", e.tiles);
+    case "disaster":
+      return disasterText(state, e);
+    case "disasterPrevented":
+      return e.building
+        ? t("Budova {building} ochránila město {city} {against}.", { building: buildingName(e.building), city: cityName(state, e.cityId), against: disasterAgainst(e.disaster) })
+        : t("Díky technologii {tech} se město {city} ubránilo {against}.", { tech: techName(e.tech!), city: cityName(state, e.cityId), against: disasterAgainst(e.disaster) });
+    case "governmentCollapsed":
+      return e.player === viewer
+        ? t("Nepokoje ve městech svrhly vládu. Vládne anarchie, pak se vrátí {government}.", { government: inSentence(governmentName(e.government)) })
+        : null;
   }
 }
 
@@ -218,7 +296,25 @@ export function describeGovernment(g: GovernmentRule): string {
   if (g.militaryUnhappy) parts.push(tn("každý voják mimo vlastní města rozladí jednoho obyvatele|každý voják mimo vlastní města rozladí {n} obyvatele|každý voják mimo vlastní města rozladí {n} obyvatel", g.militaryUnhappy));
   parts.push(g.freeUnits ? t("město živí {freeUnits} jednotky zdarma", { freeUnits: g.freeUnits }) : t("každá jednotka stojí štít"));
   if (g.settlerFood > 1) parts.push(t("osadník jí {settlerFood} jídla", { settlerFood: g.settlerFood }));
+  if (g.celebration === "noTilePenalty") parts.push(t("slavící město nemá postih na políčkách"));
+  if (g.celebration === "tradeBonus") parts.push(t("slavící město dostane obchod navíc na políčkách s obchodem"));
+  if (g.celebration === "rapture") parts.push(t("slavící město roste každý tah"));
+  if (g.collapsesInDisorder) parts.push(t("dlouhé nepokoje ji můžou svrhnout"));
   return parts.join(", ");
+}
+
+/** "Šťastní 1 · spokojení 3 · nespokojení 0 · baviči 1": the moods of a city in one line. */
+export function moodLine(h: Happiness): string {
+  const parts = [
+    ...(h.happy ? [t("šťastní {n}", { n: h.happy })] : []),
+    t("spokojení {n}", { n: h.content }),
+    t("nespokojení {n}", { n: h.unhappy }),
+    ...(h.entertainers ? [t("baviči {n}", { n: h.entertainers })] : []),
+    ...(h.taxmen ? [t("výběrčí {n}", { n: h.taxmen })] : []),
+    ...(h.scientists ? [t("vědci {n}", { n: h.scientists })] : []),
+  ];
+  const line = parts.join(" · ");
+  return line.charAt(0).toUpperCase() + line.slice(1);
 }
 
 export { productionLabel as productionName };
@@ -253,7 +349,8 @@ export function describeBuilding(b: BuildingRule, withCost = true): string {
   if (e.safeTriremes) parts.push(t("triéry se nepotopí"));
   if (e.techsFromOthers) parts.push(t("dostaneš každou technologii, kterou znají aspoň {techsFromOthers} jiné říše", { techsFromOthers: e.techsFromOthers }));
   if (e.freeTechs) parts.push(t("hned dá {freeTechs} technologie zdarma", { freeTechs: e.freeTechs }));
-  if (e.fastRevolution) parts.push(t("revoluce trvá jen jeden tah"));
+  if (e.noAnarchy) parts.push(t("vládu změníš hned, bez anarchie"));
+  if (e.allGovernments) parts.push(t("můžeš zvolit každou vládu i bez technologie"));
   if (e.seesAllCities) parts.push(t("uvidíš všechna města světa a všichni můžou stavět vesmírné lodě"));
   if (e.militaryUnhappyCut) parts.push(t("vojáci mimo města rozladí méně obyvatel"));
   if (e.peaceOffers) parts.push(t("soupeři ti budou nabízet mír (začne platit s diplomacií ve fázi 3)"));
@@ -267,6 +364,8 @@ export function describeBuilding(b: BuildingRule, withCost = true): string {
   if (b.onePerPlayer) parts.push(t("máš jen jeden, nový přestěhuje sídlo vlády"));
   if (b.group) parts.push(t("město má jen jednu elektrárnu, nová nahradí starou"));
   if (b.requiresWonder && !b.spaceship) parts.push(t("jde stavět, až stojí {building}", { building: buildingName(b.requiresWonder) }));
+  const against = RULES.disasters.filter((d) => d.preventBuilding === b.id).map((d) => disasterAgainst(d.id));
+  if (against.length) parts.push(t("chrání město {against}", { against: against.join(t(" a ")) }));
   if (!parts.length) parts.push(t("začne chránit město, až do hry přibude boj"));
   if (!withCost) return `${parts.join(", ")}${b.upkeep ? t(" · údržba {upkeep} zlata za tah", { upkeep: b.upkeep }) : ""}`;
   const cost = t("{cost} štítů{upkeep}", { cost: b.cost, upkeep: b.upkeep ? t(", údržba {upkeep} zlata za tah", { upkeep: b.upkeep }) : "" });

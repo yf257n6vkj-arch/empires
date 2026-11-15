@@ -3,7 +3,7 @@
  * only; the screen turns them into Czech text, the AI can read them directly.
  */
 import type { Point } from "./geometry";
-import type { BuildingId, GovernmentId, ImprovementId, TechId, UnitTypeId } from "./rules";
+import type { BuildingId, DisasterId, GovernmentId, ImprovementId, TechId, UnitTypeId } from "./rules";
 import type { CityId, PlayerId, ProductionItem, UnitId } from "./state";
 
 export type GameEvent =
@@ -22,7 +22,7 @@ export type GameEvent =
   | { type: "queueAdvanced"; cityId: CityId; item: ProductionItem }
   | { type: "turnStarted"; turn: number; player: PlayerId }
   | { type: "wonderBuilt"; cityId: CityId; owner: PlayerId; building: BuildingId }
-  | { type: "buildingSold"; cityId: CityId; building: BuildingId }
+  | { type: "buildingSold"; cityId: CityId; building: BuildingId; manual?: boolean }
   | { type: "cityDisorder"; cityId: CityId }
   | { type: "cityAtMaxSize"; cityId: CityId; size: number }
   | { type: "techLearned"; player: PlayerId; tech: TechId }
@@ -42,4 +42,17 @@ export type GameEvent =
   | { type: "cityIncited"; cityId: CityId; from: PlayerId; to: PlayerId }
   | { type: "nuclearStrike"; at: Point; owner: PlayerId; intercepted: boolean }
   | { type: "unitDismissed"; unitType: UnitTypeId; owner: PlayerId; cityId: CityId | null; shields: number }
-  | { type: "unitUpgraded"; unitId: UnitId; owner: PlayerId; from: UnitTypeId; to: UnitTypeId; cost: number };
+  | { type: "unitUpgraded"; unitId: UnitId; owner: PlayerId; from: UnitTypeId; to: UnitTypeId; cost: number }
+  | { type: "cityJoined"; cityId: CityId; size: number }
+  | { type: "celebrationStarted"; cityId: CityId }
+  | { type: "celebrationEnded"; cityId: CityId }
+  | { type: "tilePolluted"; cityId: CityId; at: Point }
+  | { type: "pollutionCleaned"; unitId: UnitId; at: Point }
+  | { type: "nuclearMeltdown"; cityId: CityId; size: number }
+  /** Land changed all over the world; every player hears about it. */
+  | { type: "globalWarming"; tiles: number }
+  | { type: "disaster"; cityId: CityId; disaster: DisasterId; building: BuildingId | null; size: number }
+  /** A building or a technology kept a disaster away. */
+  | { type: "disasterPrevented"; cityId: CityId; disaster: DisasterId; building: BuildingId | null; tech: TechId | null }
+  /** Disorder brought the government down into anarchy. */
+  | { type: "governmentCollapsed"; player: PlayerId; government: GovernmentId };

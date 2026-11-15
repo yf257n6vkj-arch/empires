@@ -99,8 +99,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Science",
   "Zlato":
     "Gold",
-  "Spokojení / nespokojení obyvatelé":
-    "Content / unhappy citizens",
   "Nálada":
     "Mood",
   "Vyrábí":
@@ -163,16 +161,10 @@ export const EN_STRINGS: Record<string, string> = {
     "size {size} · founded in turn {turn} · city {n} of {all}",
   "Nepokoje! Město tento tah nic nevyrobí.":
     "Riots! The city produces nothing this turn.",
-  "Spokojení {n}":
-    "Content {n}",
   "nespokojení {n}":
     "unhappy {n}",
-  " · baviči {entertainers}":
-    " · entertainers {entertainers}",
   "Bez pomoci je spokojených {n} obyvatel.":
     "Without help, {n} citizens are content.",
-  " Znečištěný vzduch rozladí jednoho dalšího.| Znečištěný vzduch rozladí {n} další.| Znečištěný vzduch rozladí {n} dalších.":
-    " Polluted air makes one more unhappy.| Polluted air makes {n} more unhappy.",
   " Z {unhappyBase} nespokojených uklidní budovy {calmedByBuildings} a vojáci ve městě {calmedBySoldiers}.":
     " Of {unhappyBase} unhappy, buildings calm {calmedByBuildings} and soldiers in the city calm {calmedBySoldiers}.",
   "Táhni nahoru nebo dolů. Dvojklik vrátí původní velikost.":
@@ -377,8 +369,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Not known yet",
   "Vláda: {now}":
     "Government: {now}",
-  "Revoluce znamená jeden tah anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami trvá jen jeden tah.|Revoluce znamená {n} tahy anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami trvá jen jeden tah.|Revoluce znamená {n} tahů anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami trvá jen jeden tah.":
-    "A revolution means one turn of anarchy, when the empire collects no taxes and does no research. With the pyramids it lasts just one turn.|A revolution means {n} turns of anarchy, when the empire collects no taxes and does no research. With the pyramids it lasts just one turn.",
   "{n} z {max}":
     "{n} of {max}",
   "Loď letí od tahu {from} a přistane v tahu {to}. Šance na přistání je {pct} %.":
@@ -611,16 +601,12 @@ export const EN_STRINGS: Record<string, string> = {
     "{done} of {cost} ({change} per turn), {state}",
   "Nepokoje! Město nic nevyrábí.":
     "Riots! The city produces nothing.",
-  "Spokojení {content} · nespokojení {unhappy}":
-    "Content {content} · unhappy {unhappy}",
   "Obchod {trade}":
     "Trade {trade}",
   ", korupce −{corruption}":
     ", corruption −{corruption}",
   "věda {science}, zlato {gold}":
     "science {science}, gold {gold}",
-  "Znečištěný vzduch rozladí {n} obyvatel.":
-    "Polluted air makes {n} citizens unhappy.",
   "Budovy: {list}":
     "Buildings: {list}",
   "Obyvatelé obdělávají políčka orámovaná na mapě.":
@@ -1039,8 +1025,6 @@ export const EN_STRINGS: Record<string, string> = {
     "you get every technology that at least {techsFromOthers} other empires know",
   "hned dá {freeTechs} technologie zdarma":
     "gives {freeTechs} technologies for free at once",
-  "revoluce trvá jen jeden tah":
-    "a revolution lasts just one turn",
   "uvidíš všechna města světa a všichni můžou stavět vesmírné lodě":
     "you see every city in the world and everyone can build spaceships",
   "vojáci mimo města rozladí méně obyvatel":
@@ -1187,8 +1171,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Build later",
   "zábava <b>{n}</b>":
     "luxuries <b>{n}</b>",
-  "(uklidní {calm})":
-    "(calm {calm})",
   "anarchie: jen zábava":
     "anarchy: luxuries only",
   "daně {tax} %":
@@ -1199,8 +1181,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Luxuries",
   "Kolik obchodu jde do výzkumu":
     "How much trade goes to research",
-  "Kolik obchodu jde na zábavu. Každé dva body zábavy ve městě udělají z nespokojeného obyvatele spokojeného.":
-    "How much trade goes to luxuries. Every two luxury points in a city make one unhappy citizen content.",
   "Daně dostanou, co zbude po vědě a zábavě":
     "Taxes get what is left after science and luxuries",
   "Div světa je hotový!":
@@ -1237,4 +1217,170 @@ export const EN_STRINGS: Record<string, string> = {
     "gives no more than {maxRate} % to science, taxes or luxuries",
   "korupce je jen {pct} % té za despocie":
     "corruption is only {pct} % of that under despotism",
+  "Město slaví":
+    "The city is celebrating",
+  "Šťastní / spokojení / nespokojení obyvatelé, hvězdička znamená, že město slaví":
+    "Happy / content / unhappy citizens; a star means the city is celebrating",
+  "Políčka nemají postih despocie.":
+    "Tiles lose the despotism penalty.",
+  "Políčka s obchodem dají o jeden obchod víc.":
+    "Tiles with trade give one more trade.",
+  "Město roste každý tah, dokud má přebytek jídla.":
+    "The city grows every turn while it has food to spare.",
+  "Město slaví!":
+    "The city is celebrating!",
+  "Obyvatelé se chystají slavit, oslava začne příští tah.":
+    "The citizens are getting ready to celebrate; the celebration starts next turn.",
+  " Tvoje říše je velká, proto o jednoho méně než obvykle.| Tvoje říše je velká, proto o {n} méně než obvykle.| Tvoje říše je velká, proto o {n} méně než obvykle.":
+    " Your empire is large, so that is one fewer than usual.| Your empire is large, so that is {n} fewer than usual.",
+  " Zábava udělá šťastným jednoho.| Zábava udělá šťastnými {n}.| Zábava udělá šťastnými {n}.":
+    " Luxuries make one citizen happy.| Luxuries make {n} citizens happy.",
+  " Město bude slavit, až v něm nikdo nebude nespokojený a šťastných bude aspoň tolik co spokojených.":
+    " The city will celebrate once nobody is unhappy and there are at least as many happy citizens as content ones.",
+  " Klikni na obyvatele mimo pole a změň ho na výběrčího daní nebo vědce.":
+    " Click a citizen off the fields to make them a taxman or a scientist.",
+  " Výběrčí daní a vědce může mít město od {n} obyvatel.":
+    " A city can have taxmen and scientists from {n} citizens.",
+  "V tomhle tahu už jsi tu jednu budovu prodal.":
+    "You have already sold a building here this turn.",
+  "Prodat za {gold} zlata":
+    "Sell for {gold} gold",
+  "Prodat za {gold}?":
+    "Sell for {gold}?",
+  "Prodat":
+    "Sell",
+  "šťastný obyvatel":
+    "happy citizen",
+  "spokojený obyvatel":
+    "content citizen",
+  "nespokojený obyvatel":
+    "unhappy citizen",
+  "bavič: +{n} zábavy":
+    "entertainer: +{n} luxuries",
+  "výběrčí daní: +{n} zlata":
+    "taxman: +{n} gold",
+  "vědec: +{n} vědy":
+    "scientist: +{n} science",
+  " · klikni a změň ho":
+    " · click to change",
+  "Změnit vládu":
+    "Change government",
+  "Máš pyramidy, a tak vládu změníš hned bez anarchie a vybrat můžeš kteroukoli.":
+    "You have the pyramids, so you change government at once without anarchy and can pick any of them.",
+  "Revoluce znamená jeden tah anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami se vláda změní hned.|Revoluce znamená {n} tahy anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami se vláda změní hned.|Revoluce znamená {n} tahů anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami se vláda změní hned.":
+    "A revolution means one turn of anarchy, when the empire collects no taxes and does no research. With the pyramids the government changes at once.|A revolution means {n} turns of anarchy, when the empire collects no taxes and does no research. With the pyramids the government changes at once.",
+  "Globální oteplování je na {pct} %. Na světě je {n} znečištěných políček. Až počítadlo dojde na 100 %, změní se krajina: u moře vzniknou bažiny a džungle, ve vnitrozemí poušť. Pomůže vyčistit znečištění osadníky.":
+    "Global warming is at {pct} %. There are {n} polluted tiles in the world. When the counter reaches 100 %, the land changes: swamps and jungles appear by the sea and desert inland. Cleaning up pollution with settlers helps.",
+  "Čistí znečištění, hotovo za {turns}.":
+    "Cleaning up pollution, done in {turns}.",
+  "Mění terén na: {terrain}, hotovo za {turns}.":
+    "Changing the terrain to: {terrain}, done in {turns}.",
+  "Přidat se k městu":
+    "Join the city",
+  "Změnit na: {terrain}":
+    "Change to: {terrain}",
+  "Vyčistit znečištění ({turns})":
+    "Clean up pollution ({turns})",
+  "Šance na znečištění okolí: {pct} % za tah.":
+    "Chance of polluting the land around: {pct} % per turn.",
+  "znečištění, dává polovinu":
+    "pollution, gives half",
+  "Město je na to moc velké. Osadník se přidá jen k městu, které má méně než {joinCityMaxSize} obyvatel a ještě může růst.":
+    "The city is too big for that. A settler joins only a city with fewer than {joinCityMaxSize} citizens that can still grow.",
+  "Na tomhle políčku žádné znečištění není.":
+    "There is no pollution on this tile.",
+  "Tohle prodat nejde. Divy světa ani palác se neprodávají.":
+    "This cannot be sold. Wonders of the world and the palace are not for sale.",
+  "V tomhle městě jsi už v tomhle tahu jednu budovu prodal.":
+    "You have already sold a building in this city this turn.",
+  "Výběrčí daní a vědce může mít až město s aspoň {specialistMinSize} obyvateli.":
+    "Only a city with at least {specialistMinSize} citizens can have taxmen and scientists.",
+  "Tolik obyvatel mimo pole město nemá.":
+    "The city does not have that many citizens off the fields.",
+  "před zemětřesením":
+    "from an earthquake",
+  "před požárem":
+    "from fire",
+  "před povodní":
+    "from a flood",
+  "před hladomorem":
+    "from famine",
+  "před piráty":
+    "from pirates",
+  "před morem":
+    "from plague",
+  "před sopkou":
+    "from a volcano",
+  "Zemětřesení ve městě {city} zbořilo budovu {building}.":
+    "An earthquake in {city} brought down the {building}.",
+  "Městem {city} otřáslo zemětřesení, naštěstí nic nespadlo.":
+    "An earthquake shook {city}; luckily nothing fell down.",
+  "Ve městě {city} vypukl požár a shořela budova {building}. Akvadukt by požáru zabránil.":
+    "A fire broke out in {city} and the {building} burned down. An aqueduct would have prevented the fire.",
+  "Ve městě {city} hořelo, naštěstí nic neshořelo. Akvadukt by požáru zabránil.":
+    "There was a fire in {city}; luckily nothing burned down. An aqueduct would have prevented the fire.",
+  "Řeka zaplavila město {city}, zbylo {size} obyvatel. Hradby by povodni zabránily.":
+    "The river flooded {city}; {size} citizens are left. City walls would have stopped the flood.",
+  "Ve městě {city} vypukl hladomor, sýpka je prázdná a zbylo {size} obyvatel. Sýpka by hladomoru zabránila.":
+    "Famine struck {city}: the food store is empty and {size} citizens are left. A granary would have prevented the famine.",
+  "Piráti vyplenili město {city}, vzali zásoby jídla i rozestavěnou výrobu. Kasárna by piráty odrazila.":
+    "Pirates plundered {city} and took its food stores and the production in progress. Barracks would have driven them off.",
+  "Ve městě {city} řádil mor, zbylo {size} obyvatel. Akvadukt nebo lékařství by moru zabránily.":
+    "Plague raged in {city}; {size} citizens are left. An aqueduct or medicine would have prevented it.",
+  "U města {city} vybuchla sopka, zbylo {size} obyvatel. Chrám by město ochránil.":
+    "A volcano erupted near {city}; {size} citizens are left. A temple would have protected the city.",
+  "Ve městě {city} jsi prodal budovu {building}.":
+    "You sold the {building} in {city}.",
+  "Osadník se přidal k městu {city}, má teď {size} obyvatel.":
+    "A settler joined {city}, which now has {size} citizens.",
+  "Obyvatelé města {city} slaví na tvou počest!":
+    "The people of {city} are celebrating in your honour!",
+  "Oslavy ve městě {city} skončily.":
+    "The celebrations in {city} are over.",
+  "Město {city} znečistilo políčko [{x}, {y}]. Dokud ho osadník nevyčistí, dává polovinu.":
+    "{city} polluted the tile [{x}, {y}]. Until a settler cleans it, it gives half.",
+  "Osadník vyčistil znečištěné políčko.":
+    "A settler cleaned up a polluted tile.",
+  "V jaderné elektrárně města {city} se kvůli nepokojům roztavil reaktor! Zbylo {size} obyvatel a okolí je znečištěné.":
+    "The reactor of the nuclear plant in {city} melted down during the riots! {size} citizens are left and the land around is polluted.",
+  "Svět se oteplil. Jedno políčko u moře se změnilo v bažinu nebo džungli a ve vnitrozemí v poušť.|Svět se oteplil. {n} políčka u moře se změnila v bažiny a džungle a ve vnitrozemí v poušť.|Svět se oteplil. {n} políček u moře se změnilo v bažiny a džungle a ve vnitrozemí v poušť.":
+    "The world has warmed. One tile changed: by the sea into swamp or jungle, inland into desert.|The world has warmed. {n} tiles changed: by the sea into swamps and jungles, inland into desert.",
+  "Budova {building} ochránila město {city} {against}.":
+    "The {building} protected {city} {against}.",
+  "Díky technologii {tech} se město {city} ubránilo {against}.":
+    "Thanks to {tech}, {city} was safe {against}.",
+  "Nepokoje ve městech svrhly vládu. Vládne anarchie, pak se vrátí {government}.":
+    "Riots in your cities brought the government down. Anarchy rules, then {government} returns.",
+  "slavící město nemá postih na políčkách":
+    "a celebrating city loses the tile penalty",
+  "slavící město dostane obchod navíc na políčkách s obchodem":
+    "a celebrating city gets extra trade on tiles with trade",
+  "slavící město roste každý tah":
+    "a celebrating city grows every turn",
+  "dlouhé nepokoje ji můžou svrhnout":
+    "long riots can bring it down",
+  "šťastní {n}":
+    "happy {n}",
+  "spokojení {n}":
+    "content {n}",
+  "baviči {n}":
+    "entertainers {n}",
+  "výběrčí {n}":
+    "taxmen {n}",
+  "vědci {n}":
+    "scientists {n}",
+  "vládu změníš hned, bez anarchie":
+    "you change government at once, without anarchy",
+  "můžeš zvolit každou vládu i bez technologie":
+    "you can choose any government, even without its technology",
+  "chrání město {against}":
+    "protects the city {against}",
+  " a ":
+    " and ",
+  "Kolik obchodu jde na zábavu. Každé dva body zábavy ve městě uklidní jednoho nespokojeného, a když nespokojení nejsou, udělají ze spokojeného šťastného.":
+    "How much trade goes to luxuries. Every two luxury points in a city calm one unhappy citizen, and when nobody is unhappy they make a content citizen happy.",
+  "Kolem města {city} je znečištěné políčko a dává jen polovinu. Pošli tam osadníka a klávesou V ho vyčisti, nebo mu zapni automatickou práci. Znečištění navíc přibližuje globální oteplování.":
+    "There is a polluted tile around {city} and it gives only half. Send a settler there and clean it with V, or turn on automatic work. Pollution also brings global warming closer.",
+  "(uklidní nebo rozveselí {calm})":
+    "(calms or cheers up {calm})",
 };

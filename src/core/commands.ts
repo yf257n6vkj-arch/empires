@@ -15,6 +15,7 @@ import {
   capitalOf,
   cityEffects,
   ratesAllowed,
+  fitRates,
   fallbackProduction,
   knowsTech,
   learnTechDraft,
@@ -44,6 +45,7 @@ import {
   TECHS,
   TERRAINS,
   UNIT_TYPES,
+  type BuildingId,
   type GovernmentId,
   type ImprovementId,
   type TechId,
@@ -81,6 +83,14 @@ export type Command =
   | { type: "detonate"; unitId: UnitId; at: Point }
   | { type: "disband"; unitId: UnitId }
   | { type: "upgrade"; unitId: UnitId }
+  /** A settler joins the city it stands in and adds one citizen. */
+  | { type: "joinCity"; unitId: UnitId }
+  /** A settler starts cleaning up the pollution on its tile. */
+  | { type: "cleanPollution"; unitId: UnitId }
+  /** Sells a building for gold, one per city and turn. */
+  | { type: "sellBuilding"; cityId: CityId; building: BuildingId }
+  /** Turns a citizen off the fields into another kind of specialist (entertainer, taxman, scientist). */
+  | { type: "setSpecialists"; cityId: CityId; taxmen: number; scientists: number }
   | { type: "endTurn" };
 
 export type DiplomatAction = "embassy" | "stealTech" | "sabotage" | "incite";
@@ -135,7 +145,13 @@ export type CommandError =
   | "needsTech"
   | "needsRoad"
   | "carriesUnits"
-  | "nothingToUpgrade";
+  | "nothingToUpgrade"
+  | "cityTooBig"
+  | "noPollution"
+  | "cannotSell"
+  | "alreadySold"
+  | "cityTooSmall"
+  | "tooManySpecialists";
 
 export type CommandResult =
   | { ok: true; state: GameState; events: GameEvent[] }
@@ -178,7 +194,8 @@ export function improvementProblemAt(state: GameState, owner: number, i: number,
   const onTerrain = rule.requiresOn?.[terrain];
   if (onTerrain && !knowsTech(getPlayer(state, owner), onTerrain)) return "needsTech";
   if (rule.requiresImprovement && !state.map[rule.requiresImprovement][i]) return "needsRoad";
-  if (improvement === "irrigation") {
+  // Turning forest, jungle or swamp into other land needs no water.
+  if (improvement === "irrigation" && !rule.transform?.[terrain]) {
     const watered = neighbors4(state.map, i).some(
       (n) =>
         state.map.terrain[n] === "ocean" ||
@@ -190,7 +207,34 @@ export function improvementProblemAt(state: GameState, owner: number, i: number,
   return null;
 }
 
-/** Why the unit cannot be upgraded right now, or null when it can. */
+/** Why the settler cannot join the city it stands in, or null when it can. */
+export function canJoinCity(state: GameState, unit: Unit): CommandError | null {
+  if (!UNIT_TYPES[unit.type].foundsCity) return "cannotFoundCity";
+  if (unit.movesLeft <= 0) return "noMovesLeft";
+  const city = cityAt(state, unit);
+  if (!city || city.owner !== unit.owner) return "notInCity";
+  if (city.size >= RULES.joinCityMaxSize || city.size >= cityEffects(state, city).maxSize) return "cityTooBig";
+  return null;
+}
+
+/** Why the settler cannot clean its tile, or null when it can. */
+export function canCleanPollution(state: GameState, unit: Unit): CommandError | null {
+  if (!UNIT_TYPES[unit.type].buildsImprovements) return "cannotBuildImprovements";
+  if (unit.movesLeft <= 0) return "noMovesLeft";
+  if (!state.map.pollution[idx(state.map, unit)]) return "noPollution";
+  return null;
+}
+
+/** Why the building cannot be sold now, or null when it can. */
+export function canSellBuilding(state: GameState, city: City, building: BuildingId): CommandError | null {
+  const rule = BUILDINGS[building];
+  if (!rule || !city.buildings.includes(building)) return "cannotSell";
+  if (rule.wonder || rule.onePerPlayer) return "cannotSell";
+  if (city.soldTurn === state.turn) return "alreadySold";
+  return null;
+}
+
+/** Why the upgrade cannot be done right now, or null when it can. */
 export function canUpgrade(state: GameState, unit: Unit): CommandError | null {
   const target = upgradeTarget(getPlayer(state, unit.owner), unit.type);
   if (!target) return "nothingToUpgrade";
@@ -258,6 +302,11 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
         foundedTurn: draft.turn,
         tradeRoutes: [],
         stolenBy: [],
+        taxmen: 0,
+        scientists: 0,
+        celebrating: false,
+        disorderTurns: 0,
+        soldTurn: null,
       };
       player.citiesFounded += 1;
       draft.cities.push(city);
@@ -280,6 +329,67 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       u.orders = null;
       u.fortified = false;
       u.movesLeft = 0;
+      return { ok: true, state: draft, events };
+    }
+
+    case "joinCity": {
+      const unit = ownUnit(state, command.unitId);
+      if (typeof unit === "string") return { ok: false, error: unit };
+      const error = canJoinCity(state, unit);
+      if (error) return { ok: false, error };
+      const draft = cloneState(state);
+      const city = cityAt(draft, unit)!;
+      removeUnitDraft(draft, unit.id);
+      city.size += 1;
+      city.manualTiles = false;
+      assignWorkersDraft(draft, city);
+      events.push({ type: "cityJoined", cityId: city.id, size: city.size });
+      return { ok: true, state: draft, events };
+    }
+
+    case "cleanPollution": {
+      const unit = ownUnit(state, command.unitId);
+      if (typeof unit === "string") return { ok: false, error: unit };
+      const error = canCleanPollution(state, unit);
+      if (error) return { ok: false, error };
+      const draft = cloneState(state);
+      const u = draft.units.find((x) => x.id === unit.id)!;
+      u.work = { improvement: "clean", progress: 0 };
+      u.goto = null;
+      u.orders = null;
+      u.fortified = false;
+      u.movesLeft = 0;
+      return { ok: true, state: draft, events };
+    }
+
+    case "sellBuilding": {
+      const city = state.cities.find((c) => c.id === command.cityId);
+      if (!city) return { ok: false, error: "unknownCity" };
+      if (city.owner !== state.currentPlayer) return { ok: false, error: "notYourCity" };
+      const error = canSellBuilding(state, city, command.building);
+      if (error) return { ok: false, error };
+      const draft = cloneState(state);
+      const c = draft.cities.find((x) => x.id === city.id)!;
+      c.buildings = c.buildings.filter((b) => b !== command.building);
+      c.soldTurn = draft.turn;
+      getPlayer(draft, c.owner).gold += BUILDINGS[command.building].cost;
+      assignWorkersDraft(draft, c);
+      events.push({ type: "buildingSold", cityId: c.id, building: command.building, manual: true });
+      return { ok: true, state: draft, events };
+    }
+
+    case "setSpecialists": {
+      const city = state.cities.find((c) => c.id === command.cityId);
+      if (!city) return { ok: false, error: "unknownCity" };
+      if (city.owner !== state.currentPlayer) return { ok: false, error: "notYourCity" };
+      const { taxmen, scientists } = command;
+      if (![taxmen, scientists].every((n) => Number.isInteger(n) && n >= 0)) return { ok: false, error: "tooManySpecialists" };
+      if (taxmen + scientists > 0 && city.size < RULES.specialistMinSize) return { ok: false, error: "cityTooSmall" };
+      if (taxmen + scientists > Math.max(0, city.size - city.worked.length)) return { ok: false, error: "tooManySpecialists" };
+      const draft = cloneState(state);
+      const c = draft.cities.find((x) => x.id === city.id)!;
+      c.taxmen = taxmen;
+      c.scientists = scientists;
       return { ok: true, state: draft, events };
     }
 
@@ -461,12 +571,21 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
     case "revolution": {
       if (!(command.government in GOVERNMENTS)) return { ok: false, error: "unknownGovernment" };
       const player = getPlayer(state, state.currentPlayer);
-      if (!canChooseGovernment(player, command.government)) return { ok: false, error: "governmentNotKnown" };
+      if (!canChooseGovernment(player, command.government, wonderFlag(state, player.id, "allGovernments"))) return { ok: false, error: "governmentNotKnown" };
       if (player.revolution) return { ok: false, error: "revolutionRunning" };
       if (player.government === command.government) return { ok: false, error: "alreadyGovernment" };
       const draft = cloneState(state);
       const p = getPlayer(draft, state.currentPlayer);
-      const turns = wonderFlag(state, p.id, "fastRevolution") ? 1 : RULES.anarchyTurns;
+      if (wonderFlag(state, p.id, "noAnarchy")) {
+        // The pyramids change the government at once.
+        p.government = command.government;
+        const fitted = fitRates(p.scienceRate, p.luxuryRate, p.government, "luxury");
+        p.scienceRate = fitted.science;
+        p.luxuryRate = fitted.luxury;
+        events.push({ type: "governmentChanged", player: p.id, government: p.government });
+        return { ok: true, state: draft, events };
+      }
+      const turns = RULES.anarchyTurns;
       p.government = "anarchy";
       p.revolution = { target: command.government, turnsLeft: turns };
       events.push({ type: "revolutionStarted", player: p.id, target: command.government, turns });

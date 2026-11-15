@@ -192,14 +192,17 @@ describe("governments", () => {
     expect(s.players[0]!.government).toBe("monarchy");
   });
 
-  it("need the technology, and the pyramids shorten the anarchy to one turn", () => {
+  it("need the technology, and the pyramids change the government without anarchy", () => {
     let s = cityOn(["....."], 2, 0);
     expect(applyCommand(s, { type: "revolution", government: "republic" })).toEqual({ ok: false, error: "governmentNotKnown" });
     s.players[0]!.techs.push("republic");
     giveWonder(s, 0, "pyramids");
     s = apply(s, { type: "revolution", government: "republic" });
-    s = nextTurn(s);
     expect(s.players[0]!.government).toBe("republic");
+    expect(s.players[0]!.revolution).toBeNull();
+    // With the pyramids any government can be chosen, even without the technology.
+    s = apply(s, { type: "revolution", government: "democracy" });
+    expect(s.players[0]!.government).toBe("democracy");
   });
 
   it("keep luxuries after a revolution and move science up when taxes would pass the limit", () => {

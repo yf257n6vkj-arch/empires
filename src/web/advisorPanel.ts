@@ -70,6 +70,12 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
           button: t("Otevřít město"),
           act: () => host.openCity(a.cityId),
         };
+      case "cleanPollution":
+        return {
+          text: t("Kolem města {city} je znečištěné políčko a dává jen polovinu. Pošli tam osadníka a klávesou V ho vyčisti, nebo mu zapni automatickou práci. Znečištění navíc přibližuje globální oteplování.", { city: cityName(a.cityId) }),
+          button: t("Otevřít město"),
+          act: () => host.openCity(a.cityId),
+        };
       case "goldRunningOut":
         return {
           text: tn("Každý tah ti ubude {gold} zlata a za {n} tah dojde. Pak hra začne prodávat budovy. Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.|Každý tah ti ubude {gold} zlata a za {n} tahy dojde. Pak hra začne prodávat budovy. Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.|Každý tah ti ubude {gold} zlata a za {n} tahů dojde. Pak hra začne prodávat budovy. Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.", a.turnsLeft, { gold: -a.perTurn }),

@@ -27,15 +27,17 @@ When a city starves, its food box empties and the city shrinks. Open it and move
   "how-happy": {
     title: "How to keep citizens happy",
     icon: "😊",
-    text: `The first {contentBase} citizens of every city are content. Every one after that is unhappy. When a city has more unhappy than content citizens, riots break out and the city produces and earns nothing for the whole turn.
+    text: `Citizens are happy, content or unhappy. The first {contentBase} citizens of every city are content and every one after that is unhappy. When a city has more unhappy citizens than content and happy ones together, riots break out and the city produces and earns nothing for the whole turn.
 
-A temple calms {templeContent} unhappy citizens. An amphitheatre and a cathedral calm even more. Some wonders of the world calm citizens in all your cities.
+A large empire is harder to hold. With more than {empireSizeBase} cities every city has one content citizen fewer, and one fewer again for every further {empireSizeStep} cities.
 
-Under despotism, monarchy and communism, every soldier in a city calms one unhappy citizen, at most {martialLawMax} soldiers per city. In a republic or a democracy that doesn't work. There, soldiers outside your own cities make people unhappy instead.
+A temple calms {templeContent} unhappy citizens. An amphitheatre and a cathedral calm even more. Some wonders of the world calm citizens in all your cities. Under despotism, monarchy and communism every soldier in a city calms one unhappy citizen, at most {martialLawMax} soldiers per city. In a republic or a democracy that doesn't work, and soldiers outside your own cities make people unhappy instead.
 
-The Luxuries slider at the top sends part of your trade to luxuries. Every {luxuryPerContent} luxury points in a city turn one unhappy citizen content. A marketplace makes luxuries bigger. When many cities are close to riots at once, luxuries help fastest.
+The Luxuries slider at the top sends part of your trade to luxuries. Every {luxuryPerContent} luxury points in a city first calm one unhappy citizen. Once nobody is unhappy, they make a content citizen happy. A marketplace makes luxuries bigger.
 
-The last option is entertainers. Click a worked tile in the city and the citizen leaves the field to entertain the others. An entertainer produces nothing but keeps the city calm. The game adds entertainers by itself when riots threaten.`,
+When a city with at least {celebrationMinSize} citizens has nobody unhappy and at least as many happy as content citizens, it celebrates. Under despotism its tiles then lose their penalty, under monarchy and communism tiles with trade give extra trade, and under a republic or democracy the city grows by one citizen every turn while it has food to spare. Celebrations under a republic are the fastest way to big cities.
+
+A citizen you call off the fields becomes a specialist. An entertainer gives {specialistYield} luxury points. In a city with at least {specialistMinSize} citizens you can click a specialist and make them a taxman, who brings {specialistYield} gold, or a scientist, who brings {specialistYield} science points. The game adds entertainers by itself when riots threaten.`,
   },
   "how-production": {
     title: "How to produce more",
@@ -53,7 +55,7 @@ A factory adds half of the shields and a power plant another quarter. Every unit
     icon: "⚖️",
     text: `Trade comes from rivers, seas, oceans and roads on plains, grassland and desert. Each city's trade is split into three parts: science, taxes and luxuries. The Science and Luxuries sliders at the top set how much goes to science and to luxuries. Taxes get what is left.
 
-Science moves research forward. Taxes pay building upkeep and can be saved for buying. Luxuries make citizens content.
+Science moves research forward. Taxes pay building upkeep and can be saved for buying. Luxuries make citizens content and happy.
 
 Your government sets the most you may put into one part. Under despotism it is {despotismMax} %, under democracy up to {democracyMax} %. The sliders move in steps of {rateStep} %.
 
@@ -73,22 +75,28 @@ The Hall of Scholars adds science in all your cities, and the Great Observatory 
   "how-settlers": {
     title: "How settlers work",
     icon: "⛏️",
-    text: `A settler founds cities and improves the land. A road speeds up movement and adds trade on plains, grassland and desert. Irrigation adds food. A mine adds shields on hills and mountains. A railroad adds more shields, and moving along it costs nothing.
+    text: `Settlers found cities and improve the land. A road speeds up movement and adds trade on plains, grassland and desert. Irrigation adds food. A mine adds shields on hills and mountains. A railroad adds more shields and moving along it costs nothing.
 
-Press A to let a settler work on his own. He will improve the tiles around your cities, first the ones your citizens work.
+Settlers can change the terrain too. Irrigation clears a forest into plains and drains jungle or swamp into grassland. A mine does the opposite and plants a forest on grassland, plains, jungle or swamp. Changing the terrain needs no water, but it takes longer than ordinary work.
 
-Press K and click a target, and the settler builds a road along the whole route. It is handy for linking cities.
+Press A to let a settler work on its own. It improves the tiles around your cities, the worked ones first, and cleans up pollution too. Press K and click a target to have the settler build a road along the whole way. It's handy for linking cities.
 
-Found new cities with a few free tiles between them. Cities must not touch, and each one wants enough fields around it.`,
+When a settler stands in one of your cities, press B to have it join the city, which grows by one citizen. It works for cities smaller than {joinCityMaxSize} citizens that can still grow. It's useful when you have more settlers than you need.
+
+A polluted tile gives half. A settler cleans it with V in {pollutionCleanTurns} turns.
+
+Found new cities a few tiles apart. Cities must not touch, and each wants plenty of fields around it.`,
   },
   "how-government": {
     title: "Which government to choose",
     icon: "🏛️",
-    text: `The game starts in despotism. It takes away a shield, food or trade on tiles that give more than two. That is why it pays to discover monarchy as soon as you can.
+    text: `The game starts in despotism. It takes a shield, food or trade away from tiles that give more than two. That's why it pays to discover monarchy as soon as you can.
 
-Monarchy removes that penalty and lowers corruption. A republic and a democracy add trade and with it science, but soldiers outside your own cities make citizens unhappy. Communism has the same small corruption everywhere.
+Monarchy removes that penalty and lowers corruption. A republic and a democracy add trade and so science, but soldiers outside your own cities make citizens unhappy there. Communism has the same small corruption everywhere. Each government gives celebrating cities a different reward.
 
-Changing government starts with a revolution. Then come {anarchyTurns} turns of anarchy, when no taxes are collected and no research happens. All trade goes to luxuries. With the pyramids, a revolution lasts just one turn.`,
+Democracy cannot stand long riots. When a city has been rioting two turns running, the government may fall and the empire drops into anarchy.
+
+Changing government starts with a revolution. Then come {anarchyTurns} turns of anarchy, when no taxes are collected and no research happens. All trade goes to luxuries. With the pyramids the government changes at once and you can pick any one, even one you have not discovered yet.`,
   },
   "how-wonders": {
     title: "How to build wonders of the world",
@@ -102,9 +110,24 @@ Build wonders in cities with high production. Caravans from other cities can add
   "how-corruption": {
     title: "How to fight corruption and pollution",
     icon: "🏭",
-    text: `The further a city is from the palace, the more trade it loses to corruption. Each tile of distance costs {corruptionPerTile} %, at most {corruptionMaxPct} %. A courthouse reduces corruption. The capital has none.
+    text: `The farther a city is from the palace, the more trade it loses to corruption. It's {corruptionPerTile} % for every tile of distance, at most {corruptionMaxPct} %. A courthouse cuts corruption. The capital has none.
 
-Large production and many citizens dirty the air. A city doesn't notice up to {pollutionFree} points of pollution. Above that limit, citizens become unhappy. Hydro and nuclear power plants, recycling centres and public transport reduce pollution.`,
+Big industry and many citizens dirty the land around. Up to {pollutionFree} points of pollution nothing happens. Every point above that adds {pollutionPctPerPoint} % chance that the city pollutes one tile around it this turn. A polluted tile gives half its food, shields and trade until a settler cleans it.
+
+When too much pollution stays in the world, the global warming counter at the top fills up. When it reaches 100 %, the land changes. Swamps and jungles appear by the sea, and inland grassland, plains and forests turn into desert.
+
+Hydro and nuclear plants, recycling centres and mass transit reduce pollution. A nuclear plant in a rioting city can melt down, though, kill half the citizens and pollute the land around. That danger lasts until you discover fusion power.`,
+  },
+  "how-disasters": {
+    title: "How to protect cities from disasters",
+    icon: "🌋",
+    text: `From turn {disasterStart}, every turn there is a small chance that a disaster strikes one of your cities. The right building prevents it, and the game tells you it protected the city.
+
+A fire destroys a building and a plague kills some of the citizens. An aqueduct protects against both, and the discovery of medicine against plague too. A famine empties the granary and takes citizens; a granary protects against it.
+
+Cities by a river are threatened by floods, which city walls stop. Coastal cities are raided by pirates, who take the stores and the production in progress; barracks drive them off. Cities by mountains are threatened by volcanoes and a temple protects them.
+
+An earthquake in cities by hills knocks down a building and nothing helps against it. Disasters never destroy wonders or the palace.`,
   },
   "how-space": {
     title: "How to win",

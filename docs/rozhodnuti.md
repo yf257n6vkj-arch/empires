@@ -2,6 +2,22 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Doplnili jsme ekonomiku podle Civilizace 1
+
+Prošli jsme pravidla Civilizace 1 a doplnili, co z ekonomiky jedné říše chybělo. Boj, skóre a soupeři zůstávají na fázi 3.
+
+Obyvatelé jsou šťastní, spokojení, nebo nespokojení. Zábava nejdřív uklidní nespokojené a potom dělá spokojené šťastnými. Nepokoje počítáme mírněji než originál: vypuknou, když je nespokojených víc než spokojených a šťastných dohromady. Město s aspoň třemi obyvateli, kde nikdo není nespokojený a šťastných je aspoň tolik co spokojených, slaví. Za despocie pak nemá postih na políčkách, za monarchie a komunismu dostane obchod navíc a za republiky a demokracie roste každý tah, dokud má přebytek jídla. Oslava začne platit tah po tom, co se splní podmínky.
+
+Obyvatel mimo pole je specialista. Bavič dá 2 body zábavy, výběrčí daní 2 zlata a vědec 2 body vědy. Výběrčí a vědce jde zvolit od velikosti 5 kliknutím na specialistu ve městě. Velká říše má méně spokojených: nad 6 měst je v každém městě o jednoho spokojeného méně a za každých dalších 6 měst zase o jednoho. Čísla jsme odhadli a doladíme je, až budou hrát soupeři.
+
+Osadník umí měnit terén jako v Civilizaci 1. Zavlažováním udělá z lesa pláně a z džungle a bažiny louku, dolem z louky, plání, džungle a bažiny les. Automatický osadník mění terén jen tehdy, když políčko dá víc jídla. Osadník se může přidat k vlastnímu městu menšímu než 10 obyvatel, které ještě může růst.
+
+Budovu jde ve městě prodat jednou za tah za tolik zlata, kolik stála štítů. Divy a palác prodat nejde. Demokracie může padnout do anarchie, když je některé město v nepokojích dva tahy po sobě, každý další tah s šancí 50 %. Po anarchii se vrátí demokracie. Pyramidy teď mění vládu hned bez anarchie a dovolí zvolit kteroukoli vládu.
+
+Znečištění už nedělá obyvatele nespokojenými. Každý bod nad 20 dává 2 % šance, že město znečistí políčko v okolí. Znečištěné políčko dává polovinu, dokud ho osadník tři tahy nečistí. Když je na světě víc než 3 znečištěná políčka, plní se počítadlo oteplování a při plném počítadle se krajina změní. U moře vzniknou bažiny a džungle, ve vnitrozemí poušť. Jaderná elektrárna ve městě v nepokojích se může roztavit, dokud hráč nezná jadernou fúzi.
+
+Katastrofy postihnou každý tah s šancí 4 % jedno město hráče, nejdřív od 20. tahu. Jsou to zemětřesení, požár, povodeň, hladomor, piráti, mor a sopka a před každou chrání budova podle Civilizace 1, kromě zemětřesení, před kterým nechrání nic. Hra hráči řekne i to, když ho budova ochránila. Na 120 automatických partiích zasáhnou hráče v mediánu dvě katastrofy za hru.
+
 ## 15. 11. 2026: Obchod se dělí na vědu, zábavu a daně a encyklopedie učí hrát
 
 Michal chtěl rozdělovat peníze na vědu, daně a zábavu. Nahoře přibyl druhý posuvník Zábava a daně dostanou, co zbude. Jako v Civilizaci 1 platí limit vlády pro každou ze tří částí, za despocie tedy nejde dát víc než 60 % ani na vědu, ani na zábavu, ani na daně. Každé 2 body zábavy ve městě udělají z jednoho nespokojeného obyvatele spokojeného a tržiště zábavu zvětší. Za anarchie jde celý obchod na zábavu. Po revoluci zůstane zábava, jak ji hráč nastavil, a když by daně přetekly přes limit nové vlády, přidá se věda. Staré uložené hry si posuvníky upraví stejně.

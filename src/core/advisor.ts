@@ -6,6 +6,8 @@
  * Tips come ordered by urgency. The screen turns the codes into words.
  */
 import { cityReport } from "./city";
+import { cityRadiusTiles } from "./geometry";
+import { idx } from "./world";
 import { buildingUpkeep, canBuild, knowsTech, researchableTechs } from "./economy";
 import { BUILDINGS, UNIT_TYPES, type BuildingId } from "./rules";
 import type { CityId, GameState, PlayerId, UnitId } from "./state";
@@ -15,6 +17,7 @@ export type Advice =
   | { kind: "chooseResearch" }
   | { kind: "cityInDisorder"; cityId: CityId }
   | { kind: "cityStarving"; cityId: CityId }
+  | { kind: "cleanPollution"; cityId: CityId }
   | { kind: "goldRunningOut"; perTurn: number; turnsLeft: number }
   | { kind: "defendCity"; cityId: CityId }
   | { kind: "idleSettler"; unitId: UnitId }
@@ -52,6 +55,12 @@ export function advise(state: GameState, player: PlayerId): Advice[] {
   const reports = new Map(cities.map((c) => [c.id, cityReport(state, c)]));
   for (const c of cities) if (reports.get(c.id)!.happiness.disorder) tips.push({ kind: "cityInDisorder", cityId: c.id });
   for (const c of cities) if (reports.get(c.id)!.foodSurplus < 0) tips.push({ kind: "cityStarving", cityId: c.id });
+  // Pollution around a city that no settler is cleaning yet.
+  const cleaning = new Set(units.filter((u) => u.work?.improvement === "clean").map((u) => idx(state.map, u)));
+  for (const c of cities) {
+    const dirty = cityRadiusTiles(state.map, c).some((i) => state.map.pollution[i] && !cleaning.has(i));
+    if (dirty && !units.some((u) => u.orders?.kind === "auto")) tips.push({ kind: "cleanPollution", cityId: c.id });
+  }
 
   const net = cities.reduce((n, c) => n + reports.get(c.id)!.gold, 0) - buildingUpkeep(state, player);
   if (net < 0 && me.gold + net * 5 < 0) tips.push({ kind: "goldRunningOut", perTurn: net, turnsLeft: Math.max(0, Math.floor(me.gold / -net)) });

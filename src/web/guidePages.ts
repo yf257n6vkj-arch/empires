@@ -25,6 +25,7 @@ export const GUIDE_KEYS = [
   "how-government",
   "how-wonders",
   "how-corruption",
+  "how-disasters",
   "how-space",
   "how-tips",
 ] as const;
@@ -54,6 +55,16 @@ export function guideNumbers(): Record<string, number> {
     tradeRouteMinDistance: RULES.tradeRouteMinDistance,
     successPerModule: RULES.spaceship.successPerModule,
     maxStructural: RULES.spaceship.maxStructural,
+    celebrationMinSize: RULES.celebrationMinSize,
+    specialistYield: RULES.specialistYield,
+    specialistMinSize: RULES.specialistMinSize,
+    empireSizeBase: RULES.empireSizeBase,
+    empireSizeStep: RULES.empireSizeStep,
+    joinCityMaxSize: RULES.joinCityMaxSize,
+    pollutionCleanTurns: RULES.pollutionCleanTurns,
+    pollutionPctPerPoint: RULES.pollutionPctPerPoint,
+    disasterPct: RULES.disasterPct,
+    disasterStart: RULES.disasterStartTurn,
   };
 }
 
@@ -83,15 +94,17 @@ Když město hladoví, sýpka se vyprázdní a město se zmenší. Otevři ho a 
   "how-happy": {
     title: "Jak udělat obyvatele šťastnými",
     icon: "😊",
-    text: `Prvních {contentBase} obyvatel v každém městě je spokojených. Každý další je nespokojený. Když je ve městě víc nespokojených než spokojených, vypuknou nepokoje a město celý tah nic nevyrobí ani nevydělá.
+    text: `Obyvatelé jsou šťastní, spokojení, nebo nespokojení. Prvních {contentBase} obyvatel v každém městě je spokojených a každý další je nespokojený. Když je ve městě víc nespokojených než spokojených a šťastných dohromady, vypuknou nepokoje a město celý tah nic nevyrobí ani nevydělá.
 
-Nespokojené uklidní chrám, který uklidní {templeContent} obyvatele. Amfiteátr a katedrála uklidní ještě víc. Některé divy světa uklidňují obyvatele ve všech tvých městech.
+Velká říše se drží hůř. Když máš víc než {empireSizeBase} měst, je v každém městě o jednoho spokojeného méně, a za každých dalších {empireSizeStep} měst zase o jednoho.
 
-Za despocie, monarchie a komunismu uklidní každý voják ve městě jednoho nespokojeného, nejvýš {martialLawMax} vojáci na město. V republice a demokracii to nejde. Tam naopak vojáci mimo vlastní města lidi rozlaďují.
+Nespokojené uklidní chrám, který uklidní {templeContent} obyvatele. Amfiteátr a katedrála uklidní ještě víc. Některé divy světa uklidňují obyvatele ve všech tvých městech. Za despocie, monarchie a komunismu uklidní každý voják ve městě jednoho nespokojeného, nejvýš {martialLawMax} vojáci na město. V republice a demokracii to nejde a vojáci mimo vlastní města tam lidi naopak rozlaďují.
 
-Posuvník Zábava nahoře posílá část obchodu na zábavu. Každé {luxuryPerContent} body zábavy ve městě udělají z jednoho nespokojeného spokojeného. Tržiště zábavu zvětší. Když se blíží nepokoje v hodně městech najednou, zábava pomůže nejrychleji.
+Posuvník Zábava nahoře posílá část obchodu na zábavu. Každé {luxuryPerContent} body zábavy ve městě nejdřív uklidní jednoho nespokojeného. Když už nikdo nespokojený není, udělají ze spokojeného šťastného. Tržiště zábavu zvětší.
 
-Poslední možnost je baviči. Klikni ve městě na obsazené políčko a obyvatel z pole odejde bavit ostatní. Bavič nic nevyrábí, ale udrží ve městě klid. Hra baviče přidává sama, když hrozí nepokoje.`,
+Když ve městě s aspoň {celebrationMinSize} obyvateli není nikdo nespokojený a šťastných je aspoň tolik co spokojených, město slaví. Za despocie pak políčka nemají postih, za monarchie a komunismu dají políčka s obchodem obchod navíc a za republiky a demokracie město roste o obyvatele každý tah, dokud má přebytek jídla. Oslavy za republiky jsou nejrychlejší cesta k velkým městům.
+
+Obyvatel, kterého z pole odvoláš, se stane specialistou. Bavič dá {specialistYield} body zábavy. Ve městě s aspoň {specialistMinSize} obyvateli můžeš na specialistu kliknout a udělat z něj výběrčího daní, který dá {specialistYield} zlata, nebo vědce, který dá {specialistYield} body vědy. Hra baviče přidává sama, když hrozí nepokoje.`,
   },
   "how-production": {
     title: "Jak víc vyrábět",
@@ -109,7 +122,7 @@ Továrna přidá polovinu štítů a elektrárna ještě čtvrtinu. Každá jedn
     icon: "⚖️",
     text: `Obchod přichází z řek, moří, oceánů a cest na pláních, loukách a v poušti. Obchod každého města se dělí na tři díly: vědu, daně a zábavu. Posuvníky Věda a Zábava nahoře nastavíš, kolik jde na vědu a na zábavu. Daně dostanou, co zbude.
 
-Věda posouvá výzkum. Daně platí údržbu budov a dají se ušetřit na nákupy. Zábava dělá obyvatele spokojenými.
+Věda posouvá výzkum. Daně platí údržbu budov a dají se ušetřit na nákupy. Zábava dělá obyvatele spokojenými a šťastnými.
 
 Vláda určuje, kolik nejvýš smíš dát do jednoho dílu. Za despocie je to {despotismMax} %, za demokracie až {democracyMax} %. Posuvníky se mění po {rateStep} %.
 
@@ -131,9 +144,13 @@ Síň učenců přidá vědu ve všech tvých městech a Velká hvězdárna zdvo
     icon: "⛏️",
     text: `Osadník zakládá města a vylepšuje krajinu. Cesta zrychlí pohyb a na pláních, loukách a v poušti přidá obchod. Zavlažování přidá jídlo. Důl přidá štíty na kopcích a v horách. Železnice přidá další štíty a pohyb po ní nic nestojí.
 
-Klávesou A pustíš osadníka pracovat samotného. Bude vylepšovat políčka kolem tvých měst, nejdřív ta, na kterých obyvatelé pracují.
+Osadník umí i měnit terén. Zavlažováním vykácí les na pláně a vysuší džungli nebo bažinu na louku. Dolem naopak z louky, plání, džungle i bažiny vysadí les. Na přeměnu není potřeba voda, ale trvá déle než obyčejná stavba.
 
-Klávesou K a klikem na cíl postaví osadník cestu po celé trase. Hodí se k propojení měst.
+Klávesou A pustíš osadníka pracovat samotného. Bude vylepšovat políčka kolem tvých měst, nejdřív ta, na kterých obyvatelé pracují, a čistí i znečištění. Klávesou K a klikem na cíl postaví osadník cestu po celé trase. Hodí se k propojení měst.
+
+Když osadník stojí ve tvém městě, klávesou B se k němu přidá a město vyroste o obyvatele. Jde to u měst menších než {joinCityMaxSize} obyvatel, která ještě můžou růst. Hodí se to, když máš osadníků víc, než potřebuješ.
+
+Znečištěné políčko dává polovinu. Osadník ho klávesou V vyčistí za {pollutionCleanTurns} tahy.
 
 Nová města zakládej tak, aby měla mezi sebou pár políček volna. Města se nesmí dotýkat a každé chce kolem sebe dost polí.`,
   },
@@ -142,9 +159,11 @@ Nová města zakládej tak, aby měla mezi sebou pár políček volna. Města se
     icon: "🏛️",
     text: `Hra začíná v despocii. Ta ubírá štít, jídlo nebo obchod na políčkách, která dávají víc než dva. Proto se vyplatí co nejdřív objevit monarchii.
 
-Monarchie ten postih ruší a snižuje korupci. Republika a demokracie přidávají obchod a tím i vědu, ale vojáci mimo vlastní města v nich rozlaďují obyvatele. Komunismus má všude stejně malou korupci.
+Monarchie ten postih ruší a snižuje korupci. Republika a demokracie přidávají obchod a tím i vědu, ale vojáci mimo vlastní města v nich rozlaďují obyvatele. Komunismus má všude stejně malou korupci. Každá vláda dává jinou odměnu městům, která slaví.
 
-Změna vlády začíná revolucí. Následuje {anarchyTurns} tahy anarchie, kdy se nevybírají daně a nebádá se. Celý obchod jde na zábavu. S pyramidami trvá revoluce jen jeden tah.`,
+Demokracie nesnese dlouhé nepokoje. Když je některé město v nepokojích dva tahy po sobě, může vláda padnout a říše spadne do anarchie.
+
+Změna vlády začíná revolucí. Následuje {anarchyTurns} tahy anarchie, kdy se nevybírají daně a nebádá se. Celý obchod jde na zábavu. S pyramidami se vláda změní hned a vybrat jde kteroukoli, i tu, kterou ještě neznáš.`,
   },
   "how-wonders": {
     title: "Jak stavět divy světa",
@@ -160,7 +179,22 @@ Divy stav ve městech s velkou výrobou. Karavany z jiných měst můžou na div
     icon: "🏭",
     text: `Čím dál je město od paláce, tím víc obchodu ztratí korupcí. Za každé políčko vzdálenosti je to {corruptionPerTile} %, nejvýš {corruptionMaxPct} %. Soudní dvůr korupci zmenší. Hlavní město korupci nemá.
 
-Velká výroba a hodně obyvatel špiní vzduch. Do {pollutionFree} bodů znečištění město nic nepozná. Nad tuhle hranici začnou být obyvatelé nespokojení. Vodní a jaderná elektrárna, recyklační centrum a městská hromadná doprava znečištění snižují.`,
+Velká výroba a hodně obyvatel špiní okolí. Do {pollutionFree} bodů znečištění se nic neděje. Každý bod navíc přidá {pollutionPctPerPoint} % šance, že město tento tah znečistí jedno políčko kolem sebe. Znečištěné políčko dává polovinu jídla, štítů i obchodu, dokud ho osadník nevyčistí.
+
+Když na světě zůstává moc znečištění, plní se počítadlo globálního oteplování nahoře. Až dojde na 100 %, krajina se změní. U moře vzniknou bažiny a džungle a ve vnitrozemí se louky, pláně a lesy změní v poušť.
+
+Vodní a jaderná elektrárna, recyklační centrum a městská hromadná doprava znečištění snižují. Jaderná elektrárna se ale ve městě v nepokojích může roztavit, zabít polovinu obyvatel a znečistit okolí. To hrozí, dokud neobjevíš jadernou fúzi.`,
+  },
+  "how-disasters": {
+    title: "Jak chránit města před katastrofami",
+    icon: "🌋",
+    text: `Od {disasterStart}. tahu může každý tah s malou šancí postihnout některé tvoje město katastrofa. Správná budova jí zabrání a hra ti řekne, že město ochránila.
+
+Požár zničí budovu a mor zabije část obyvatel. Před obojím chrání akvadukt, před morem i objev lékařství. Hladomor vyprázdní sýpku a vezme obyvatele, chrání před ním sýpka.
+
+Města u řeky ohrožuje povodeň, kterou zastaví hradby. Přímořská města přepadají piráti, kteří vezmou zásoby i rozestavěnou výrobu, a odrazí je kasárna. Města u hor ohrožuje sopka a chrání je chrám.
+
+Zemětřesení ve městech u kopců zbourá budovu a nic proti němu nepomůže. Divy světa a palác katastrofy nezničí.`,
   },
   "how-space": {
     title: "Jak vyhrát",

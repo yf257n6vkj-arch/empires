@@ -4,6 +4,7 @@
  */
 import {
   canChooseGovernment,
+  wonderFlag,
   GOVERNMENT_IDS,
   GOVERNMENTS,
   spaceshipFlight,
@@ -46,20 +47,25 @@ export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost)
     const running = p.revolution
       ? `<p class="warn">${tn("Probíhá revoluce. Za jeden tah nastoupí {government}.|Probíhá revoluce. Za {n} tahy nastoupí {government}.|Probíhá revoluce. Za {n} tahů nastoupí {government}.", p.revolution.turnsLeft, { government: inSentence(governmentName(p.revolution.target)) })}</p>`
       : "";
+    const pyramids = wonderFlag(s, p.id, "allGovernments");
     const rows = GOVERNMENT_IDS.filter((g) => g !== "anarchy")
       .map((g) => {
         const rule = GOVERNMENTS[g];
-        const known = canChooseGovernment(p, g);
+        const known = canChooseGovernment(p, g, pyramids);
         const current = p.government === g;
         const button = current
           ? `<span class="tag">${t("vládne teď")}</span>`
-          : `<button type="button" data-gov="${g}" ${!known || p.revolution ? "disabled" : ""}>${known ? t("Vyhlásit revoluci") : t("Zatím neznáš")}</button>`;
+          : `<button type="button" data-gov="${g}" ${!known || p.revolution ? "disabled" : ""}>${known ? (wonderFlag(s, p.id, "noAnarchy") ? t("Změnit vládu") : t("Vyhlásit revoluci")) : t("Zatím neznáš")}</button>`;
         return `<div class="gov ${current ? "on" : ""} ${known ? "" : "locked"}"><div><button type="button" class="linklike" data-entry="gov-${g}"><b>${escapeHtml(governmentName(g))}</b></button><div class="muted small">${escapeHtml(describeGovernment(rule))}</div></div>${button}</div>`;
       })
       .join("");
     frame(
       t("Vláda: {now}", { now: governmentName(p.government) }),
-      `${running}<p class="small">${tn("Revoluce znamená jeden tah anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami trvá jen jeden tah.|Revoluce znamená {n} tahy anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami trvá jen jeden tah.|Revoluce znamená {n} tahů anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami trvá jen jeden tah.", RULES.anarchyTurns)}</p>${rows}`,
+      `${running}<p class="small">${
+        wonderFlag(s, p.id, "noAnarchy")
+          ? t("Máš pyramidy, a tak vládu změníš hned bez anarchie a vybrat můžeš kteroukoli.")
+          : tn("Revoluce znamená jeden tah anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami se vláda změní hned.|Revoluce znamená {n} tahy anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami se vláda změní hned.|Revoluce znamená {n} tahů anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami se vláda změní hned.", RULES.anarchyTurns)
+      }</p>${rows}`,
     );
     dialog.querySelectorAll<HTMLButtonElement>("[data-entry]").forEach((b) =>
       b.addEventListener("click", () => {

@@ -2,7 +2,7 @@
 
 Tahová strategie do prohlížeče ve stylu Civilizace 1. Jedna partie má trvat 45 až 60 minut proti třem počítačovým soupeřům, kteří hrají rozumně a nepodvádějí. Celé zadání je v projektu Empires v Claudovi.
 
-Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti národů (čtrnáct z Civilizace 1 a Češi), zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají vlastní obrazovku s pohledem na město, spokojenost, korupci a znečištění, 27 budov a 24 divů světa a jde vyrábět 29 typů jednotek včetně lodí a letadel. Starší jednotky jde ve městě za zlato povýšit na novější typ a každou jednotku jde rozpustit. Říše si volí ze šesti vlád a může vyhrát vesmírnou lodí. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče a navíc jde uložit pod jménem nebo do souboru. Mapa má dvanáct terénů z Civilizace 1 včetně řek a polárního ledu a na části políček leží suroviny jako ryby, koně nebo zlato.
+Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti národů (čtrnáct z Civilizace 1 a Češi), zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi vědu, daně a zábavu. Za zlato platí údržbu budov, může dokoupit výrobu a budovy jde i prodat. Města mají vlastní obrazovku s pohledem na město, šťastné, spokojené a nespokojené obyvatele, oslavy, specialisty, korupci a znečištění, 27 budov a 24 divů světa a jde vyrábět 29 typů jednotek včetně lodí a letadel. Starší jednotky jde ve městě za zlato povýšit na novější typ a každou jednotku jde rozpustit. Říše si volí ze šesti vlád a může vyhrát vesmírnou lodí. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče a navíc jde uložit pod jménem nebo do souboru. Mapa má dvanáct terénů z Civilizace 1 včetně řek a polárního ledu a na části políček leží suroviny jako ryby, koně nebo zlato. Osadníci umí terén měnit, přidat se k městu a čistit znečištění. Města můžou postihnout katastrofy a příliš mnoho znečištění vede ke globálnímu oteplování.
 
 ## Jak se hra ovládá
 
@@ -12,16 +12,16 @@ Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti náro
 - Klik na sousední políčko jednotku posune, klik dál ji tam pošle i na víc tahů. Cestu ukáže přerušovaná čára.
 - Do města nebo k jiné jednotce ji pošleš pravým klikem (na trackpadu dvěma prsty) nebo klávesou `G` a klikem na cíl. Jednotka na cestě má u sebe modrou šipku. Když ji vybereš, cestu zrušíš klávesou `C`.
 - Šipky nebo číslice 1 až 9 posouvají vybranou jednotku.
-- `B` založí město, `R` postaví cestu, `I` zavlažování, `M` důl, `F` opevní jednotku, mezerník ji nechá do příštího tahu, `N` vybere další jednotku, `U` ji povýší a `D` rozpustí.
+- `B` založí město, ve vlastním městě k němu osadníka přidá. `R` postaví cestu, `I` zavlažování, `M` důl, `V` vyčistí znečištění, `F` opevní jednotku, mezerník ji nechá do příštího tahu, `N` vybere další jednotku, `U` ji povýší a `D` rozpustí. Zavlažování v lese, džungli a bažině a důl na louce a pláních mění terén.
 - `K` a klik na cíl pošle osadníka stavět cestu po celé trase, `A` mu zapne automatickou práci kolem měst. Obojí zastaví `C`.
 - `Enter` ukončí tah, `Esc` zruší výběr. Druhé `Esc` otevře nabídku.
-- `T` otevře strom technologií. Na výzkum klikneš i v hlavičce. Posuvníky Věda a Zábava vedle nastavíš, kolik obchodu jde do výzkumu a kolik na zábavu, zbytek jsou daně. Zábava dělá obyvatele spokojenými.
+- `T` otevře strom technologií. Na výzkum klikneš i v hlavičce. Posuvníky Věda a Zábava vedle nastavíš, kolik obchodu jde do výzkumu a kolik na zábavu, zbytek jsou daně. Zábava dělá obyvatele spokojenými a šťastnými a šťastná města slaví.
 - Klik na technologii ve stromu otevře její stránku. Vzdálenou technologii jde nastavit jako cíl a hra k ní bude zkoumat sama.
 - Dvojklik na město nebo tlačítko `Otevřít město` ukáže obrazovku města. Klikem na políčko v okolí města přesuneš obyvatele. Tlačítkem + u stavby ji přidáš do plánu. Pořadí v plánu změníš šipkami nebo přetažením a hranici mezi obrázkem a panely jde táhnout myší.
 - `O` nebo tlačítko `Města` nahoře otevře přehled všech měst. U každého města je vidět velikost, růst, výroba, obchod a nálada a v seznamu jde rovnou změnit, co staví.
 - Jazyk hry přepneš na úvodní obrazovce nebo v menu. Hra umí česky a anglicky.
 - Rádce vlevo radí začátečníkům, co dělat dál. Křížkem ho schováš, tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.
-- Ve městě můžeš místo stavby zvolit Vydělávat zlato. Otazník u stavby nebo klik na budovu v obrázku města otevře encyklopedii.
+- Ve městě můžeš místo stavby zvolit Vydělávat zlato. Otazník u stavby nebo klik na budovu v obrázku města otevře encyklopedii. Tlačítkem Prodat u budovy ji prodáš, jednu za tah. Klik na obyvatele mimo pole z něj udělá výběrčího daní nebo vědce.
 - Mapu přiblížíš roztažením prstů na trackpadu, `Ctrl` a kolečkem myši, tlačítky v rohu mapy nebo klávesami `+` a `−`. Nula vrátí celou mapu.
 - Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením. Klik do malé mapy vpravo dole tě přenese na to místo.
 - Záznam událostí vpravo nahoře rozbalíš šipkou.

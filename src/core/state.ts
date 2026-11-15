@@ -6,7 +6,7 @@ import type { Point } from "./geometry";
 import type { BuildingId, CivId, GovernmentId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 10;
+export const STATE_VERSION = 11;
 
 export interface GameMap {
   width: number;
@@ -25,6 +25,8 @@ export interface GameMap {
   fortress: number[];
   /** 1 = the tile has its terrain's special resource (fish, horses, gold...). */
   special: number[];
+  /** 1 = the tile is polluted and gives half its yield until a settler cleans it. */
+  pollution: number[];
 }
 
 export type PlayerId = number;
@@ -89,8 +91,11 @@ export type WorkerOrder =
   | { kind: "route"; to: Point; improvement: "road" | "railroad" }
   | { kind: "auto"; target: Point | null };
 
+/** What a settler can work on: an improvement, or cleaning up pollution. */
+export type WorkKind = ImprovementId | "clean";
+
 export interface WorkOrder {
-  improvement: ImprovementId;
+  improvement: WorkKind;
   /** Turns of work done so far. */
   progress: number;
 }
@@ -151,6 +156,15 @@ export interface City {
   tradeRoutes: CityId[];
   /** Players whose diplomats already stole a technology here. */
   stolenBy: PlayerId[];
+  /** Citizens off the fields who collect taxes or do research instead of entertaining. */
+  taxmen: number;
+  scientists: number;
+  /** The city celebrated at the end of its owner's last turn; the gains apply now. */
+  celebrating: boolean;
+  /** Turns in a row the city has ended in disorder. */
+  disorderTurns: number;
+  /** Turn when the owner last sold a building here; one sale per turn. */
+  soldTurn: number | null;
 }
 
 export interface GameState {
@@ -166,6 +180,8 @@ export interface GameState {
   players: Player[];
   units: Unit[];
   cities: City[];
+  /** Global warming counter: grows with polluted tiles, warming strikes at RULES.warmingLimit. */
+  warming: number;
   /** Set when somebody has won; the game can go on, but the result stays. */
   victory: { player: PlayerId; kind: "space"; turn: number } | null;
 }

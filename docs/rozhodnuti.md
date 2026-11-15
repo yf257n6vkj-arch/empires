@@ -2,6 +2,18 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Jednotky a města kreslí Gemini
+
+Michal schválil, že jednotky a města na mapě budou obrázky od Gemini místo figurek kreslených kódem. Gemini kreslí každou jednotku jako figurku z mírného nadhledu na purpurovém pozadí a Claude pozadí vyřízne. Města mají podobu podle éry svého majitele (pravěk a starověk, středověk, průmyslová doba, moderní doba) a pro každou éru malou a velkou verzi. Velká verze platí od šesti obyvatel.
+
+Na obrázcích nemá oblečení barvu národa, takže barvu ukazuje podstavec pod jednotkou a kruh kolem města. Co obrázek nemá, kreslí dál kód. Terén zůstává kreslený kódem.
+
+Opevněnou jednotku teď obklopuje kamenná hradba s cimbuřím a nad ní je štítek s věží. Dřív ji poznal jen ten, kdo si všiml nízké zídky před podstavcem.
+
+## 15. 11. 2026: Encyklopedie má hesla o vládcích
+
+Každý vládce má v encyklopedii heslo s portrétem od Gemini. Michal chtěl, aby texty kromě obecného popisu přinesly i skutečnosti ze života a nevyhýbaly se temným stránkám. U Caesara, Čingischána, Stalina, Maa a dalších proto heslo říká, kolik lidí za jejich vlády nebo v jejich válkách zemřelo, a u Karla IV. připomíná pogrom v Norimberku. Čísla jsou podle odhadů historiků a tam, kde se odhady liší, to text přizná.
+
 ## 15. 11. 2026: Hraje se za národy z Civilizace 1 a za Čechy
 
 Michal chtěl národy podle Civilizace 1 a k nim Čechy. Na výběr je patnáct národů: Římané, Babyloňané, Němci, Egypťané, Američané, Řekové, Indové, Rusové, Zuluové, Francouzi, Aztékové, Číňané, Angličané, Mongolové a Češi s Karlem IV. Původní zadání počítalo s tím, že jména národů vymyslí syn, tohle ho nahrazuje. Syn může dál vymýšlet jména jednotek a divů.

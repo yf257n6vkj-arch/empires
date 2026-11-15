@@ -45,6 +45,9 @@ while IFS=$'\t' read -r id prompt; do
     elif [ "$code" = "429" ] || [ "${code:0:1}" = "5" ]; then
       echo "[$n/$total] $id: Google je přetížený ($code), zkusím to znovu za $((attempt * 10)) s"
       sleep $((attempt * 10))
+    elif [ "$code" = "400" ] && grep -q '"image_other"\|blocked' /tmp/empires-response.json; then
+      echo "[$n/$total] $id: Gemini tenhle obrázek odmítl nakreslit, přeskakuju ho"
+      break
     else
       echo "[$n/$total] $id: chyba $code"
       head -c 600 /tmp/empires-response.json; echo

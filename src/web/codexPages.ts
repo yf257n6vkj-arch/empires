@@ -711,9 +711,9 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   },
   "lead-russians": {
     when: "1878 až 1953",
-    text: "Stalin se narodil v Gruzii jako syn ševce a studoval v semináři na kněze. Dal se k revolucionářům a po Leninově smrti ovládl celý Sovětský svaz. Z chudé zemědělské země udělal průmyslovou velmoc a zaplatily to miliony životů. Rolníkům vzal půdu a při hladomoru na začátku 30. let zemřely miliony lidí, nejvíc na Ukrajině. Při Velké čistce v letech 1937 a 1938 nechal zastřelit kolem 700 tisíc lidí a další miliony poslal do pracovních táborů, gulagů. Ve druhé světové válce porazil nacistické Německo, Sovětský svaz v ní ale přišel o víc než 20 milionů lidí.",
+    text: "Stalin se narodil v Gruzii jako syn ševce a studoval v semináři na kněze. Dal se k revolucionářům a po Leninově smrti ovládl celý Sovětský svaz. Z chudé zemědělské země udělal průmyslovou velmoc a zaplatily to miliony životů. Rolníkům vzal půdu a při hladomoru na začátku 30. let zemřely miliony lidí, nejvíc na Ukrajině. Při Velké čistce v letech 1937 a 1938 nechal zastřelit kolem 700 tisíc lidí. Pracovními tábory, gulagy, prošlo za jeho vlády asi 18 milionů lidí. Ve druhé světové válce porazil nacistické Německo, Sovětský svaz v ní ale přišel o víc než 20 milionů lidí.",
     fact: "V Praze na Letné stál od roku 1955 obří Stalinův pomník, největší sousoší v Evropě. Po sedmi letech ho odstřelili.",
-    wiki: "Josif Stalin",
+    wiki: "Josif Vissarionovič Stalin",
   },
   "lead-zulus": {
     when: "asi 1787 až 1828",
@@ -735,7 +735,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   },
   "lead-chinese": {
     when: "1893 až 1976",
-    text: "Mao byl syn bohatého sedláka z jihu Číny a patřil k zakladatelům čínské komunistické strany. Po dlouhé občanské válce vyhlásil v roce 1949 Čínskou lidovou republiku a vládl jí až do smrti. Jeho Velký skok vpřed měl z Číny rychle udělat průmyslovou zemi. Skončil hladomorem, ve kterém podle odhadů zemřely desítky milionů lidí. Za kulturní revoluce od roku 1966 mladí rudí gardisté ponižovali a bili učitele a úředníky a statisíce lidí přišly o život.",
+    text: "Mao byl syn zámožného sedláka z provincie Chu-nan a patřil k zakladatelům čínské komunistické strany. Po dlouhé občanské válce vyhlásil v roce 1949 Čínskou lidovou republiku a vládl jí až do smrti. Jeho Velký skok vpřed měl z Číny rychle udělat průmyslovou zemi. Skončil hladomorem, ve kterém podle odhadů zemřelo 20 až 40 milionů lidí. Za kulturní revoluce od roku 1966 mladí rudí gardisté ponižovali a bili učitele a úředníky a statisíce lidí přišly o život.",
     fact: "Citáty z Maových projevů vyšly v Rudé knížce. Vytiskli jich přes miliardu a za kulturní revoluce ji u sebe musel mít skoro každý Číňan.",
     wiki: "Mao Ce-tung",
   },

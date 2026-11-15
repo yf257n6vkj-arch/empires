@@ -4,7 +4,7 @@ Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nej
 
 ## 15. 11. 2026: Encyklopedie popisuje všechno, co ve hře je
 
-Michal chtěl, aby každá jednotka, budova, div, vláda, terén i úprava krajiny měla popis a obrázek. Encyklopedie má 98 hesel a otevírá se tlačítkem v horní liště nebo klávesou E. Do hesla se dá skočit i z města, ze stromu technologií a z panelu jednotky.
+Michal chtěl, aby každá jednotka, budova, div, vláda, terén i úprava krajiny měla popis a obrázek. Encyklopedie má 98 hesel a otevírá se tlačítkem v horní liště nebo klávesou E. Do hesla se dá skočit i ze stromu technologií nebo kliknutím na budovu ve městě.
 
 Každé heslo má krátký text pro děti, zajímavost s vazbou na Česko, kde to šlo, a odkaz na článek české Wikipedie. Texty Claude psal sám a ověřoval je proti staženým článkům. Pod textem hra vypíše, co heslo dělá podle pravidel a která technologie ho odemyká, takže se popis nerozejde s čísly v datech.
 

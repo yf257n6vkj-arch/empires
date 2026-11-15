@@ -5,6 +5,7 @@ import {
   TECHS,
   productionName,
   UNIT_TYPES,
+  type BuildingRule,
   type CommandError,
   type GameEvent,
   type GameState,
@@ -86,3 +87,24 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
 }
 
 export { productionName };
+
+export function escapeHtml(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+}
+
+/** One line saying what a building does, for panels and the encyclopedia. */
+export function describeBuilding(b: BuildingRule): string {
+  const e = b.effects;
+  const parts: string[] = [];
+  const where = b.wonder && b.scope === "all" ? " ve všech tvých městech" : "";
+  if (e.content) parts.push(`uklidní ${e.content} ${e.content === 1 ? "nespokojeného" : "nespokojené"}${where}`);
+  if (e.sciencePct) parts.push(`+${e.sciencePct} % vědy${where}`);
+  if (e.goldPct) parts.push(`+${e.goldPct} % zlata${where}`);
+  if (e.shieldsPct) parts.push(`+${e.shieldsPct} % výroby${where}`);
+  if (e.keepFoodOnGrowth) parts.push(`po růstu města zůstane ${Math.round(e.keepFoodOnGrowth * 100)} % jídla`);
+  if (e.maxSize) parts.push(`město může vyrůst až na ${e.maxSize}`);
+  if (b.victory) parts.push("kdo ho postaví první, vyhraje hru");
+  if (!parts.length) parts.push("začne chránit město, až do hry přibude boj");
+  const cost = `${b.cost} štítů${b.upkeep ? `, údržba ${b.upkeep} zlata za tah` : ""}`;
+  return `${parts.join(", ")} · ${cost}`;
+}

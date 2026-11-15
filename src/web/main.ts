@@ -52,7 +52,10 @@ import {
   type Camera,
 } from "./camera";
 import { draw, setupCanvas, tileSize, type DrawInput } from "./render";
-import { ERROR_TEXT, eventText } from "./texts";
+import { ERROR_TEXT, escapeHtml, eventText } from "./texts";
+import { createTechTree, unlockNames } from "./techTree";
+import { techIconSvg } from "./techIcons";
+import { createCityScreen } from "./cityScreen";
 
 const HUMAN = 0;
 const PLAYER_COUNT = 4;
@@ -76,8 +79,6 @@ const goldLabel = $<HTMLSpanElement>("#gold");
 const rateInput = $<HTMLInputElement>("#rate");
 const rateLabel = $<HTMLSpanElement>("#rate-label");
 const researchPanel = $<HTMLElement>("#research-pick");
-const techDialog = $<HTMLDialogElement>("#tech-dialog");
-const techTree = $<HTMLDivElement>("#tech-tree");
 const zoomInButton = $<HTMLButtonElement>("#zoom-in");
 const zoomOutButton = $<HTMLButtonElement>("#zoom-out");
 const zoomResetButton = $<HTMLButtonElement>("#zoom-reset");
@@ -390,12 +391,11 @@ function refresh(): void {
   renderResearchPick();
   renderSelection();
   renderLog();
-  if (techDialog.open) renderTechTree();
+  techTree.refresh();
+  cityScreen.refresh();
 }
 
 // ---------- economy and research ----------
-
-const ERA_NAMES = ["", "Starověk", "Antika", "Středověk", "Novověk"];
 
 function me() {
   return state.players[HUMAN]!;
@@ -416,18 +416,6 @@ function empireTotals(): { science: number; gold: number; upkeep: number } {
 
 function needsResearchChoice(): boolean {
   return me().researching === null && researchableTechs(me()).length > 0;
-}
-
-/** Names of the units and buildings a technology unlocks. */
-function unlocks(tech: TechId): string[] {
-  return [
-    ...Object.values(UNIT_TYPES)
-      .filter((u) => u.requires === tech)
-      .map((u) => u.name),
-    ...Object.values(BUILDINGS)
-      .filter((b) => b.requires === tech)
-      .map((b) => (b.wonder ? `div ${b.name}` : b.name)),
-  ];
 }
 
 function renderEconomy(): void {
@@ -458,6 +446,21 @@ function chooseResearch(tech: TechId): void {
   refresh();
 }
 
+function chooseGoal(tech: TechId): void {
+  if (run({ type: "setResearchGoal", tech })) {
+    const p = me();
+    say(p.researchGoal ? `Míříme k objevu ${TECHS[tech].name}, teď zkoumáme ${TECHS[p.researching!].name}.` : `Zkoumáme: ${TECHS[tech].name}.`);
+  }
+  refresh();
+}
+
+const techTree = createTechTree({
+  me,
+  sciencePerTurn: () => empireTotals().science,
+  chooseResearch,
+  chooseGoal,
+});
+
 function renderResearchPick(): void {
   if (!needsResearchChoice()) {
     researchPanel.hidden = true;
@@ -467,8 +470,8 @@ function renderResearchPick(): void {
   const options = researchableTechs(me())
     .sort((a, b) => TECHS[a].era - TECHS[b].era)
     .map((t) => {
-      const what = unlocks(t);
-      return `<button type="button" class="tech-pick" data-tech="${t}"><b>${TECHS[t].name}</b><span>${escapeHtml(what.join(", ") || "otevře další technologie")}</span></button>`;
+      const what = unlockNames(t);
+      return `<div class="tech-pick-row"><button type="button" class="tech-pick" data-tech="${t}">${techIconSvg(t, TECHS[t].era, 34)}<span><b>${TECHS[t].name}</b><span>${escapeHtml(what.join(", ") || "otevře další technologie")}</span></span></button><button type="button" class="tech-info" data-info="${t}" title="Přečíst si o téhle technologii">?</button></div>`;
     })
     .join("");
   researchPanel.innerHTML = `<h2>Vyber výzkum</h2><div class="tech-picks">${options}</div>
@@ -476,51 +479,30 @@ function renderResearchPick(): void {
   researchPanel.querySelectorAll<HTMLButtonElement>("button[data-tech]").forEach((b) =>
     b.addEventListener("click", () => chooseResearch(b.dataset.tech as TechId)),
   );
-  researchPanel.querySelector("button[data-tree]")?.addEventListener("click", openTechTree);
-}
-
-function openTechTree(): void {
-  renderTechTree();
-  techDialog.showModal();
-}
-
-function renderTechTree(): void {
-  const p = me();
-  const columns = [1, 2, 3, 4].map((era) => {
-    const cards = (Object.keys(TECHS) as TechId[])
-      .filter((t) => TECHS[t].era === era)
-      .map((t) => {
-        const known = p.techs.includes(t);
-        const current = p.researching === t;
-        const open = researchableTechs(p).includes(t);
-        const cls = known ? "known" : current ? "current" : open ? "open" : "locked";
-        const needs = TECHS[t].requires.filter((r) => !p.techs.includes(r)).map((r) => TECHS[r].name);
-        const what = unlocks(t);
-        return `<button type="button" class="tech ${cls}" data-tech="${t}" ${open && !current ? "" : "disabled"}>
-          <b>${TECHS[t].name}</b>
-          <span>${escapeHtml(what.join(", ") || "otevře další technologie")}</span>
-          ${!known && needs.length ? `<span class="needs">Potřebuje: ${escapeHtml(needs.join(", "))}</span>` : ""}
-          ${known ? `<span class="state">známá</span>` : current ? `<span class="state">zkoumá se</span>` : ""}
-        </button>`;
-      })
-      .join("");
-    return `<div class="era"><h3>${ERA_NAMES[era]}</h3>${cards}</div>`;
-  });
-  techTree.innerHTML = columns.join("");
-  techTree.querySelectorAll<HTMLButtonElement>("button[data-tech]:not([disabled])").forEach((b) =>
-    b.addEventListener("click", () => {
-      chooseResearch(b.dataset.tech as TechId);
-      techDialog.close();
-    }),
+  researchPanel.querySelectorAll<HTMLButtonElement>("button[data-info]").forEach((b) =>
+    b.addEventListener("click", () => techTree.openPage(b.dataset.info as TechId)),
   );
+  researchPanel.querySelector("button[data-tree]")?.addEventListener("click", techTree.open);
 }
 
-researchButton.addEventListener("click", openTechTree);
-techDialog.addEventListener("click", (e) => {
-  // A click on the backdrop closes the dialog.
-  if (e.target === techDialog) techDialog.close();
+researchButton.addEventListener("click", techTree.open);
+
+const cityScreen = createCityScreen({
+  state: () => state,
+  run,
+  refresh,
+  selectUnit: (id) => {
+    selectedUnitId = id;
+    selectedCityId = null;
+    refresh();
+  },
+  drawInput: () => buildDrawInput(),
+  say,
 });
-$<HTMLButtonElement>("#tech-close").addEventListener("click", () => techDialog.close());
+
+function cityScreenOpen(): boolean {
+  return cityScreen.isOpen();
+}
 rateInput.addEventListener("input", () => {
   run({ type: "setScienceRate", rate: Number(rateInput.value) });
   refresh();
@@ -530,10 +512,6 @@ function renderLog(): void {
   logList.innerHTML = log
     .map((e) => `<li><span class="t">${e.turn}.</span>${escapeHtml(e.text)}</li>`)
     .join("");
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 }
 
 function plural(n: number, one: string, few: string, many: string): string {
@@ -699,7 +677,7 @@ function renderCity(city: City): void {
             .join("")}</ul>`
         : ""
     }
-    <div class="actions" style="margin-top:10px"><button type="button" data-close>Zavřít <kbd>Esc</kbd></button></div>`;
+    <div class="actions" style="margin-top:10px"><button type="button" data-open-city class="primary">Otevřít město</button><button type="button" data-close>Zavřít <kbd>Esc</kbd></button></div>`;
 
   selectionPanel.querySelector("button[data-buy]")?.addEventListener("click", () => {
     run({ type: "buy", cityId: city.id });
@@ -718,6 +696,7 @@ function renderCity(city: City): void {
     }),
   );
   selectionPanel.querySelector("button[data-close]")?.addEventListener("click", closeCity);
+  selectionPanel.querySelector("button[data-open-city]")?.addEventListener("click", () => cityScreen.open(city.id));
 }
 
 function closeCity(): void {
@@ -834,6 +813,13 @@ const endDrag = () => {
 canvas.addEventListener("pointerup", endDrag);
 canvas.addEventListener("pointercancel", endDrag);
 
+canvas.addEventListener("dblclick", (e) => {
+  const p = tileFromEvent(e);
+  if (!p) return;
+  const city = state.cities.find((c) => c.x === p.x && c.y === p.y && c.owner === HUMAN);
+  if (city) cityScreen.open(city.id);
+});
+
 canvas.addEventListener("click", (e) => {
   if (suppressClick) {
     suppressClick = false;
@@ -945,10 +931,10 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techDialog.open) return;
+  if (techTree.isOpen() || cityScreenOpen()) return;
   if (e.key.toLowerCase() === "t") {
     e.preventDefault();
-    return openTechTree();
+    return techTree.open();
   }
   const unit = selectedUnit();
   const dir = DIRECTIONS[e.key];

@@ -1,0 +1,22 @@
+// Builds a developed game for screenshots: one big city with buildings, some techs and units.
+import { writeFileSync } from "node:fs";
+import { apply, newGame, STATE_VERSION, workableTiles, type GameState } from "../../src/core";
+let s: GameState = newGame({ seed: process.argv[2] ?? "pohled-1", playerCount: 4 });
+const settler = s.units.find((u) => u.owner === 0 && u.type === "settlers")!;
+s = apply(s, { type: "foundCity", unitId: settler.id });
+const c = s.cities[0]!;
+const p = s.players[0]!;
+for (let y = c.y - 3; y <= c.y + 3; y++) for (let x = c.x - 3; x <= c.x + 3; x++) if (x >= 0 && y >= 0 && x < s.map.width && y < s.map.height) p.explored[y * s.map.width + x] = 1;
+p.techs.push("pottery", "bronze", "masonry", "ceremonies", "writing", "alphabet", "codeOfLaws", "currency", "horseback", "wheel", "iron", "mathematics", "mysticism", "literacy", "construction", "philosophy");
+p.researching = "astronomy";
+p.research = 9;
+p.gold = 140;
+c.size = Number(process.argv[3] ?? 7);
+c.food = 18;
+c.shields = 22;
+c.buildings = (process.argv[4] ?? "granary,temple,library,marketplace,walls,barracks,amphitheater,aqueduct,stoneCircle").split(",") as never;
+for (const i of workableTiles(s, c)) if (s.map.terrain[i] === "grassland" || s.map.terrain[i] === "plains") s.map.irrigation[i] = (i % 3 === 0 ? 1 : 0);
+for (const t of ["spearmen", "archers", "swordsmen"] as const) s.units.push({ id: s.nextId++, owner: 0, type: t, x: c.x, y: c.y, movesLeft: 3, homeCity: c.id, fortified: t === "spearmen", work: null, goto: null });
+s = apply(s, { type: "autoAssignWorkers", cityId: c.id });
+writeFileSync(process.argv[5] ?? "/tmp/prev/save.json", JSON.stringify({ version: STATE_VERSION, state: s, log: [] }));
+console.log("city at", c.x, c.y);

@@ -242,6 +242,38 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   for (const c of input.cities) drawCityLabel(ctx, c, width);
 }
 
+/**
+ * Draws terrain, improvements and cities of a rectangle of tiles into a separate
+ * canvas, for the city screen. (x0, y0) is the tile at the canvas corner and
+ * `pixelsPerTile` the size of a tile in device pixels.
+ */
+export function drawTerrainPatch(
+  ctx: CanvasRenderingContext2D,
+  input: DrawInput,
+  x0: number,
+  y0: number,
+  tilesW: number,
+  tilesH: number,
+  pixelsPerTile: number,
+): void {
+  const saved = view;
+  view = {
+    x0: Math.max(0, x0 - 1),
+    y0: Math.max(0, y0 - 1),
+    x1: Math.min(input.width - 1, x0 + tilesW),
+    y1: Math.min(input.height - 1, y0 + tilesH),
+  };
+  const s = pixelsPerTile / TILE;
+  ctx.save();
+  ctx.setTransform(s, 0, 0, s, -x0 * TILE * s, -y0 * TILE * s);
+  drawBackground(ctx, { ...input, territory: undefined });
+  for (const c of input.cities) {
+    if (c.x >= view.x0 && c.x <= view.x1 && c.y >= view.y0 && c.y <= view.y1) drawCity(ctx, c, false);
+  }
+  ctx.restore();
+  view = saved;
+}
+
 // ---------- background ----------
 
 function drawBackground(ctx: CanvasRenderingContext2D, input: DrawInput): void {
@@ -1586,6 +1618,36 @@ function drawUnits(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     const fy = top.y * TILE + (inCity ? 19.5 : 21);
     drawMiniature(ctx, top, fx, fy, scale, top.id === input.selectedUnitId, units.length);
   }
+}
+
+/** A unit figure on its base for panels and the encyclopedia; (fx, fy) is the base centre in canvas pixels. */
+export function drawUnitPortrait(
+  ctx: CanvasRenderingContext2D,
+  type: UnitTypeId,
+  owner: number,
+  fx: number,
+  fy: number,
+  scale: number,
+): void {
+  const unit: DrawUnit = { id: -1, owner, type, x: 0, y: 0, fortified: false, working: false, hasMoves: true };
+  drawMiniature(ctx, unit, fx, fy, scale, false, 1);
+}
+
+/** Small canvas with a unit portrait, sized in CSS pixels. */
+export function unitPortraitCanvas(type: UnitTypeId, owner: number, width: number, height: number): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.scale(dpr, dpr);
+    const s = height / 26;
+    drawUnitPortrait(ctx, type, owner, width / 2 + 1.2 * s, height - 4 * s, s);
+  }
+  return canvas;
 }
 
 /** A unit as a painted miniature on a base in the player's colour; (fx, fy) is the base centre. */

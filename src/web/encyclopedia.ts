@@ -155,7 +155,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
   },
   engineering: {
     when: "kolem roku 250 př. n. l.",
-    text: "Inženýři vymýšlejí stroje, které práci usnadní. Řek Archimédés popsal páku, kladku a šroub na čerpání vody. Římští stavitelé uměli zvedat těžké kameny jeřáby poháněnými lidmi v obřím kole. Z ozubených kol se skládaly první mechanické hračky a přístroje.",
+    text: "Inženýři vymýšlejí stroje, které práci usnadní. Řek Archimédés vysvětlil, jak zvednout těžké břemeno malou silou, a vymyslel šroub na čerpání vody. Římští stavitelé uměli zvedat těžké kameny jeřáby poháněnými lidmi v obřím kole. Z ozubených kol se skládaly první mechanické hračky a přístroje.",
     fact: "Mechanismus z Antikythéry je bronzový strojek s ozubenými koly starý přes dva tisíce let. Počítal polohu Slunce a Měsíce, takže se mu říká první počítač.",
     wiki: "Mechanismus z Antikythéry",
   },

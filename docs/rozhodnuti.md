@@ -12,6 +12,10 @@ Hra má rádce pro syna. Ukazuje vlevo nahoře nejvýš tři rady podle naléhav
 
 V detailu města jde hranici mezi obrázkem a panely táhnout myší, hra si výšku pamatuje.
 
+## 15. 11. 2026: Pohled do města je izometrická deska
+
+První pokus o detail města se nepovedl. Budovy od Gemini jsou kreslené izometricky, krajina za nimi zepředu, a tak budovy vypadaly jako nalepené na fotku a každá stála na jiném podstavci. Michal schválil předělat pohled podle Civilizace 3. Město teď stojí na izometrické desce ve stejném úhlu jako obrázky budov. Ulice obíhají bloky po dvou na dvě parcely, na každé parcele stojí budova nebo dům a div zabere celý blok. Podstavec každého obrázku hra změří a zarovná na parcelu, takže podstavce na sebe navazují. Město roste od středu blok po bloku, s více obyvateli přibývají domy. Přístavní města mají vpravo moře a přístavní stavby stojí na pobřeží. Hradba obíhá okraj města a věže stojí v rozích. Malovaná krajina z pozadí zmizela.
+
 ## 15. 11. 2026: Detail města kreslí Gemini a terén má přírodní hranice
 
 Michal chtěl, aby detail města vypadal dobře a všechny budovy nakreslil Gemini. Gemini nakreslí každou budovu a každý div jako samostatný obrázek z mírného nadhledu, k tomu tři typy domů pro každou éru a dvě krajiny do pozadí, jednu s mořem pro přístavní města. Město v detailu staví budovy na louku do řad, divy dostanou nejlepší místa a zbytek zaplní domy podle počtu obyvatel. Vepředu vede hradba s věžemi. Široké okno doplní krajinu po stranách zrcadlenými kusy louky. Obrázky budov slouží i jako ikony v seznamech města.

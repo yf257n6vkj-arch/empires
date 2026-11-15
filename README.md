@@ -2,20 +2,23 @@
 
 Tahová strategie do prohlížeče ve stylu Civilizace 1. Jedna partie má trvat 45 až 60 minut proti třem počítačovým soupeřům, kteří hrají rozumně a nepodvádějí. Celé zadání je v projektu Empires v Claudovi.
 
-Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti národů (čtrnáct z Civilizace 1 a Češi), zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají vlastní obrazovku s pohledem na město, spokojenost, korupci a znečištění, 27 budov a 24 divů světa a jde vyrábět 29 typů jednotek včetně lodí a letadel. Starší jednotky jde ve městě za zlato povýšit na novější typ a každou jednotku jde rozpustit. Říše si volí ze šesti vlád a může vyhrát vesmírnou lodí. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče.
+Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti národů (čtrnáct z Civilizace 1 a Češi), zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají vlastní obrazovku s pohledem na město, spokojenost, korupci a znečištění, 27 budov a 24 divů světa a jde vyrábět 29 typů jednotek včetně lodí a letadel. Starší jednotky jde ve městě za zlato povýšit na novější typ a každou jednotku jde rozpustit. Říše si volí ze šesti vlád a může vyhrát vesmírnou lodí. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče a navíc jde uložit pod jménem nebo do souboru.
 
 ## Jak se hra ovládá
 
+- Po spuštění se ukáže hlavní nabídka. Odtud pokračuješ v rozehrané hře, začneš novou, nahraješ uloženou nebo otevřeš encyklopedii.
+- Tlačítko `Menu` vlevo nahoře nebo `Esc` bez vybrané jednotky otevře nabídku ve hře. Tam hru uložíš, nahraješ jinou nebo se vrátíš do hlavní nabídky.
 - Klikni na svou jednotku nebo město a vyber ho.
 - Klik na sousední políčko jednotku posune, klik dál ji tam pošle i na víc tahů. Cestu ukáže přerušovaná čára.
 - Šipky nebo číslice 1 až 9 posouvají vybranou jednotku.
 - `B` založí město, `R` postaví cestu, `I` zavlažování, `M` důl, `F` opevní jednotku, mezerník ji nechá do příštího tahu, `N` vybere další jednotku, `U` ji povýší a `D` rozpustí.
-- `Enter` ukončí tah, `Esc` zruší výběr.
+- `Enter` ukončí tah, `Esc` zruší výběr. Druhé `Esc` otevře nabídku.
 - `T` otevře strom technologií. Na výzkum klikneš i v hlavičce a posuvníkem vedle nastavíš, kolik obchodu jde do výzkumu a kolik do zlata.
 - Klik na technologii ve stromu otevře její stránku. Vzdálenou technologii jde nastavit jako cíl a hra k ní bude zkoumat sama.
 - Dvojklik na město nebo tlačítko `Otevřít město` ukáže obrazovku města. Klikem na políčko v okolí města přesuneš obyvatele.
 - Mapu přiblížíš roztažením prstů na trackpadu, `Ctrl` a kolečkem myši, tlačítky v rohu mapy nebo klávesami `+` a `−`. Nula vrátí celou mapu.
-- Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením.
+- Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením. Klik do malé mapy vpravo dole tě přenese na to místo.
+- Záznam událostí vpravo nahoře rozbalíš šipkou.
 
 ## Jak hru spustit na Macu
 
@@ -66,6 +69,8 @@ src/web/         vykreslení do Canvasu, ovládání a české texty
   render.ts      mapa, terén, města
   unitArt.ts     figurky jednotek
   newGame.ts     výběr národa pro novou hru
+  menu.ts        hlavní nabídka, nabídka ve hře a dialog uložených her
+  saves.ts       automatické ukládání, pojmenované uložené hry a soubory
   buildingArt.ts budovy a divy pro obrazovku města a encyklopedii
   cityScreen.ts  obrazovka města
   empire.ts      dialogy vlády, vesmírné lodi a vítězství

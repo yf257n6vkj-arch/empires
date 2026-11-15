@@ -328,3 +328,87 @@ button.linklike { background: none; border: none; padding: 0; color: inherit; fo
 .ng-seed { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 .ng-seed input { width: 130px; }
 .cx-color { display: inline-block; width: 46px; height: 14px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.35); vertical-align: middle; }
+
+/* ---------- full-window layout: the map fills the window, panels float over it ---------- */
+html, body { height: 100%; }
+body { padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+header.topbar {
+  flex: 0 0 auto; margin: 0; padding: 7px 12px; gap: 12px; align-items: center;
+  background: linear-gradient(#2b2620, #1f1c18); border-bottom: 1px solid #4a3f31; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); z-index: 5;
+}
+header.topbar h1 { font-size: 17px; }
+header.topbar .economy { margin-left: 4px; gap: 10px; }
+button.menu-button { font-size: 13px; padding: 5px 12px; background: #3a3127; border-color: #6b5a44; font-weight: 600; }
+main.playfield { flex: 1 1 auto; min-height: 0; display: block; gap: 0; }
+.map-wrap {
+  position: relative; width: 100%; height: 100%; border: none; border-radius: 0; line-height: 0;
+  display: flex; align-items: center; justify-content: center; background: radial-gradient(#15232f, #0b0f14);
+}
+.hud { position: absolute; line-height: 1.4; z-index: 3; }
+.hud-panel {
+  background: rgba(24, 27, 32, 0.93); border: 1px solid #4a4236; border-radius: 10px; padding: 11px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); backdrop-filter: blur(3px);
+}
+.hud-left { left: 12px; bottom: 12px; width: 370px; max-height: calc(100% - 24px); display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; }
+.hud-left > section { overflow-y: auto; min-height: 0; }
+.hud-left > section[hidden] { display: none; }
+.hud-log { top: 12px; right: 12px; width: 330px; padding: 6px 10px 8px; }
+.hud-head { all: unset; cursor: pointer; display: flex; justify-content: space-between; width: 100%; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 2px 0 4px; }
+.hud-head:hover { color: var(--text); }
+.hud-log .log { max-height: 62px; overflow: hidden; }
+.hud-log.open .log { max-height: 46vh; overflow-y: auto; }
+.hud-log .chev { transition: transform 0.15s; }
+.hud-log.open .chev { transform: rotate(180deg); }
+.hud-right { right: 12px; bottom: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.hud-right .zoom { position: static; }
+.minimap { display: block; border: 1px solid #4a4236; border-radius: 6px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); cursor: pointer; }
+.status:empty { display: none; }
+.map-wrap .status {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 4; line-height: 1.35;
+  background: rgba(40, 30, 18, 0.95); border: 1px solid #a8803a; border-radius: 8px; padding: 7px 14px; max-width: 46%; text-align: center;
+}
+
+/* ---------- start screen ---------- */
+.start { position: fixed; inset: 0; z-index: 50; background: #0b0d10; overflow: hidden; }
+.start[hidden] { display: none; }
+.st-bg { position: absolute; inset: -4%; background: center / cover no-repeat; opacity: 0; transition: opacity 2.4s ease; transform: scale(1); }
+.st-bg.on { opacity: 1; animation: st-drift 14s ease-out forwards; }
+@keyframes st-drift { from { transform: scale(1.02) translateX(0); } to { transform: scale(1.1) translateX(-1.5%); } }
+.st-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8, 9, 11, 0.92) 0%, rgba(8, 9, 11, 0.72) 32%, rgba(8, 9, 11, 0.1) 70%); }
+.st-panel { position: absolute; left: 7vw; top: 50%; transform: translateY(-50%); width: min(420px, 80vw); }
+.st-title { font-family: Georgia, "Times New Roman", serif; font-size: clamp(48px, 7vw, 88px); letter-spacing: 0.08em; margin: 0; color: #f0cf7d; text-shadow: 0 3px 18px rgba(0, 0, 0, 0.7); text-transform: uppercase; }
+.st-sub { margin: 2px 0 28px; color: #cbbf9f; font-size: 16px; letter-spacing: 0.04em; }
+.st-menu { display: flex; flex-direction: column; gap: 10px; }
+.st-menu button {
+  text-align: left; font-size: 19px; padding: 12px 18px; border-radius: 8px; color: #f3ead6;
+  background: rgba(30, 26, 21, 0.78); border: 1px solid #6b5a44; display: flex; flex-direction: column; gap: 2px;
+}
+.st-menu button span { font-size: 13px; color: #b8aa88; }
+.st-menu button:hover:not(:disabled), .st-menu button:focus-visible { background: rgba(138, 106, 36, 0.85); border-color: #e0b75a; }
+.st-foot { margin-top: 26px; color: #8e8470; font-size: 12px; }
+
+/* ---------- in-game menu, saves, help ---------- */
+.menu-dialog, .saves-dialog, .help-dialog { background: #1f1b17; border: 1px solid #5a4a36; border-radius: 12px; color: inherit; padding: 18px 22px; }
+.menu-dialog::backdrop, .saves-dialog::backdrop, .help-dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+.menu-dialog { width: 330px; }
+.menu-dialog h2, .saves-dialog h2, .help-dialog h2 { font-size: 20px; color: #f2d79a; text-transform: none; letter-spacing: 0.02em; margin: 0 0 12px; }
+.gm-menu { display: flex; flex-direction: column; gap: 7px; }
+.gm-menu button { text-align: left; font-size: 15px; padding: 9px 12px; }
+.gm-menu button kbd { float: right; }
+.gm-settings { margin-top: 14px; border-top: 1px solid #3d342a; padding-top: 6px; }
+.saves-dialog { width: min(640px, 94vw); }
+.sv .dialog-head, .help-dialog .dialog-head { display: flex; justify-content: space-between; align-items: center; }
+.sv-new { display: flex; gap: 8px; margin-bottom: 4px; }
+.sv-msg { min-height: 18px; font-size: 13px; color: #f0b26b; margin: 4px 0; }
+.sv-list { list-style: none; padding: 0; margin: 0; max-height: 52vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.sv-row { display: flex; align-items: center; gap: 10px; background: #2a241e; border: 1px solid #3d342a; border-radius: 8px; padding: 8px 10px; }
+.sv-dot { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; border: 1px solid rgba(0, 0, 0, 0.4); }
+.sv-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.sv-info b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sv-empty { padding: 10px 2px; }
+.sv-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.small { font-size: 12px; }
+.help-dialog { width: min(720px, 94vw); }
+.help-dialog .help { font-size: 14px; }
+label.check input { flex: 0 0 auto; }
+.sv-foot button { white-space: nowrap; }

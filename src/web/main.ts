@@ -27,7 +27,6 @@ import {
   distance,
   findPath,
   IMPROVEMENTS,
-  migrateState,
   newGame,
   passComputerTurns,
   planPath,
@@ -39,7 +38,6 @@ import {
   researchCost,
   RULES,
   sameItem,
-  STATE_VERSION,
   TECHS,
   TERRAINS,
   tileYield,
@@ -56,6 +54,7 @@ import {
   type Unit,
 } from "../core";
 import {
+  clampCamera,
   DEFAULT_CAMERA,
   keepInView,
   MAX_ZOOM,
@@ -73,10 +72,11 @@ import { createCityScreen } from "./cityScreen";
 import { createEmpireDialogs } from "./empire";
 import { createCodex, entryKey } from "./codex";
 import { createNewGameDialog } from "./newGame";
+import { createMenus } from "./menu";
+import { payloadOf, readAutosave, writeAutosave, type LogEntry, type SavePayload } from "./saves";
 
 const HUMAN = 0;
 const PLAYER_COUNT = 4;
-const SAVE_KEY = "empires.save";
 const LOG_LIMIT = 60;
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
@@ -88,7 +88,8 @@ const statusLine = $<HTMLDivElement>("#status");
 const turnLabel = $<HTMLSpanElement>("#turn");
 const endTurnButton = $<HTMLButtonElement>("#end-turn");
 const seedLabel = $<HTMLElement>("#seed-label");
-const newGameButton = $<HTMLButtonElement>("#new-game");
+const mapWrap = $<HTMLDivElement>("#map-wrap");
+const minimap = $<HTMLCanvasElement>("#minimap");
 const showAllBox = $<HTMLInputElement>("#show-all");
 const researchButton = $<HTMLButtonElement>("#research");
 const goldLabel = $<HTMLSpanElement>("#gold");
@@ -100,11 +101,6 @@ const zoomOutButton = $<HTMLButtonElement>("#zoom-out");
 const zoomResetButton = $<HTMLButtonElement>("#zoom-reset");
 const governmentButton = $<HTMLButtonElement>("#government");
 const spaceshipButton = $<HTMLButtonElement>("#spaceship");
-
-interface LogEntry {
-  turn: number;
-  text: string;
-}
 
 let state!: GameState;
 let log: LogEntry[] = [];
@@ -123,27 +119,29 @@ let disbandConfirmUnitId: number | null = null;
 
 // ---------- saving ----------
 
+/** Whether a real game is running (the placeholder behind the start screen is never saved). */
+let gameStarted = false;
+
 function save(): void {
-  try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ version: STATE_VERSION, state, log }));
-  } catch {
-    // Storage may be unavailable (private mode, embedded viewer); the game still works.
-  }
+  // Storage may be unavailable (private mode, embedded viewer); the game still works.
+  if (gameStarted) writeAutosave(payloadOf(state, log));
 }
 
-function load(): boolean {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return false;
-    const data = JSON.parse(raw) as { version: number; state: Record<string, unknown>; log: LogEntry[] };
-    const loaded = migrateState(data.state);
-    if (!loaded) return false;
-    state = loaded;
-    log = data.log ?? [];
-    return true;
-  } catch {
-    return false;
-  }
+function useGame(payload: SavePayload): void {
+  state = payload.state;
+  log = payload.log;
+  gameStarted = true;
+  selectedCityId = null;
+  selectedUnitId = null;
+  targetingUnitId = null;
+  disbandConfirmUnitId = null;
+  empire.resetVictory();
+  camera = DEFAULT_CAMERA;
+  updateZoomButtons();
+  ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());
+  selectNextUnit();
+  save();
+  refresh();
 }
 
 function randomSeed(): string {
@@ -153,7 +151,7 @@ function randomSeed(): string {
   return `${w}-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
-function startNewGame(seed: string, civ?: CivId): void {
+function startNewGame(seed: string, civ?: CivId, persist = true): void {
   state = newGame({ seed, playerCount: PLAYER_COUNT, civ });
   const nation = CIVS[state.players[HUMAN]!.civ];
   const rivals = state.players.filter((p) => p.id !== HUMAN).map((p) => p.name).join(", ");
@@ -170,6 +168,7 @@ function startNewGame(seed: string, civ?: CivId): void {
   camera = DEFAULT_CAMERA;
   updateZoomButtons();
   selectNextUnit();
+  gameStarted = persist;
   save();
   ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());
   refresh();
@@ -367,13 +366,11 @@ function workShare(u: Unit): number {
   return u.work.progress / need;
 }
 
-/** Largest tile size that fits the map next to the side panel in the current window. */
+/** Largest tile size that fits the whole map into the map area of the window. */
 function fitTileSize(): number {
-  const panel = 290 + 16 + 34;
-  const header = 84;
-  const byWidth = (window.innerWidth - panel) / state.map.width;
-  const byHeight = (window.innerHeight - header) / state.map.height;
-  return Math.max(20, Math.min(44, Math.floor(Math.min(byWidth, byHeight))));
+  const byWidth = mapWrap.clientWidth / state.map.width;
+  const byHeight = mapWrap.clientHeight / state.map.height;
+  return Math.max(16, Math.min(56, Math.floor(Math.min(byWidth, byHeight))));
 }
 
 let resizeTimer: number | undefined;
@@ -426,6 +423,7 @@ function refresh(): void {
   renderResearchPick();
   renderSelection();
   renderLog();
+  drawMinimap();
   techTree.refresh();
   cityScreen.refresh();
 }
@@ -502,7 +500,10 @@ governmentButton.addEventListener("click", () => empire.openGovernment());
 const codex = createCodex($<HTMLDialogElement>("#codex-dialog"), { openTech: (t) => techTree.openPage(t) });
 $<HTMLButtonElement>("#codex").addEventListener("click", () => codex.open());
 const newGameDialog = createNewGameDialog($<HTMLDialogElement>("#new-game-dialog"), {
-  start: (seed, civ) => startNewGame(seed, civ),
+  start: (seed, civ) => {
+    menus.hideStart();
+    startNewGame(seed, civ);
+  },
   randomSeed,
   showNation: (civ) => codex.show(entryKey("civ", civ)),
 });
@@ -1051,7 +1052,7 @@ canvas.addEventListener("mousemove", (e) => {
   if (hoverRouteText) tooltip.insertAdjacentHTML("beforeend", `<br><span class="route">${hoverRouteText}</span>`);
 
   tooltip.hidden = false;
-  const rect = canvas.getBoundingClientRect();
+  const rect = mapWrap.getBoundingClientRect();
   tooltip.style.left = `${Math.min(e.clientX - rect.left + 14, rect.width - tooltip.offsetWidth - 4)}px`;
   tooltip.style.top = `${Math.min(e.clientY - rect.top + 14, rect.height - tooltip.offsetHeight - 4)}px`;
 });
@@ -1101,7 +1102,7 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || newGameDialog.isOpen()) return;
+  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || newGameDialog.isOpen() || menus.isOpen()) return;
   if (e.key.toLowerCase() === "t") {
     e.preventDefault();
     return techTree.open();
@@ -1145,6 +1146,11 @@ document.addEventListener("keydown", (e) => {
       return refresh();
     }
     if (selectedCityId !== null) return closeCity();
+    if (selectedUnitId === null) {
+      // Without preventDefault the browser treats this Escape as a request to close the dialog it just opened.
+      e.preventDefault();
+      return menus.openMenu();
+    }
     selectedUnitId = null;
     refresh();
   }
@@ -1153,7 +1159,101 @@ document.addEventListener("keydown", (e) => {
 endTurnButton.addEventListener("click", endTurn);
 showAllBox.addEventListener("change", refresh);
 
-newGameButton.addEventListener("click", () => newGameDialog.open());
+const menus = createMenus($<HTMLElement>("#start-screen"), $<HTMLDialogElement>("#menu-dialog"), $<HTMLDialogElement>("#saves-dialog"), $<HTMLDialogElement>("#help-dialog"), {
+  autosaveInfo: () => {
+    const saved = readAutosave();
+    return saved ? { civ: saved.state.players[HUMAN]!.civ, turn: saved.state.turn } : null;
+  },
+  continueGame: () => {
+    const saved = readAutosave();
+    if (saved) useGame(saved);
+  },
+  newGame: () => newGameDialog.open(),
+  currentPayload: () => payloadOf(state, log),
+  loadPayload: (payload) => {
+    useGame(payload);
+    say(`Hra je nahraná: ${CIVS[state.players[HUMAN]!.civ].name}, tah ${state.turn}.`);
+  },
+  openCodex: () => codex.open(),
+  player: HUMAN,
+});
+$<HTMLButtonElement>("#menu-button").addEventListener("click", () => menus.openMenu());
+
+// The event log folds into one line so the map stays visible.
+const logPanel = $<HTMLElement>("#log-panel");
+$<HTMLButtonElement>("#log-toggle").addEventListener("click", () => logPanel.classList.toggle("open"));
+
+// ---------- minimap ----------
+
+const MINI_COLORS: Record<string, string> = {
+  ocean: "#2f6c9e",
+  grassland: "#6aa84f",
+  plains: "#b9a85a",
+  forest: "#2f6b3a",
+  hills: "#8c9a55",
+  mountains: "#9a958c",
+  desert: "#dcc98d",
+};
+
+function drawMinimap(): void {
+  const w = state.map.width;
+  const h = state.map.height;
+  const scale = 5;
+  const dpr = window.devicePixelRatio || 1;
+  if (minimap.width !== w * scale * dpr) {
+    minimap.width = w * scale * dpr;
+    minimap.height = h * scale * dpr;
+    minimap.style.width = `${w * scale}px`;
+    minimap.style.height = `${h * scale}px`;
+  }
+  const g = minimap.getContext("2d")!;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.fillStyle = "#0e1013";
+  g.fillRect(0, 0, w * scale, h * scale);
+  const explored = state.players[HUMAN]!.explored;
+  const all = showAllBox.checked;
+  for (let i = 0; i < w * h; i++) {
+    if (!all && !explored[i]) continue;
+    g.fillStyle = MINI_COLORS[state.map.terrain[i]!] ?? "#555";
+    g.fillRect((i % w) * scale, Math.floor(i / w) * scale, scale, scale);
+  }
+  for (const c of state.cities) {
+    if (!all && !explored[c.y * w + c.x]) continue;
+    g.fillStyle = CIVS[state.players[c.owner]!.civ].color;
+    g.fillRect(c.x * scale - 1.5, c.y * scale - 1.5, scale + 3, scale + 3);
+    g.strokeStyle = "#111";
+    g.lineWidth = 1;
+    g.strokeRect(c.x * scale - 1.5, c.y * scale - 1.5, scale + 3, scale + 3);
+  }
+  for (const u of state.units) {
+    if (u.owner !== HUMAN) continue;
+    g.fillStyle = u.id === selectedUnitId ? "#ffd84a" : "#f3efe6";
+    g.fillRect(u.x * scale + 1.5, u.y * scale + 1.5, scale - 3, scale - 3);
+  }
+  // The part of the map the big view shows.
+  g.strokeStyle = "#ffd84a";
+  g.lineWidth = 1.5;
+  g.strokeRect(camera.x * scale + 0.75, camera.y * scale + 0.75, (w / camera.zoom) * scale - 1.5, (h / camera.zoom) * scale - 1.5);
+}
+
+function minimapJump(e: PointerEvent): void {
+  const rect = minimap.getBoundingClientRect();
+  const tx = ((e.clientX - rect.left) / rect.width) * state.map.width;
+  const ty = ((e.clientY - rect.top) / rect.height) * state.map.height;
+  // Zoom in first when the whole map is shown, otherwise there is nowhere to move.
+  const zoom = camera.zoom > 1 + 1e-6 ? camera.zoom : ZOOM_STEP * ZOOM_STEP;
+  setCamera(clampCamera({ zoom, x: tx - state.map.width / zoom / 2, y: ty - state.map.height / zoom / 2 }, state.map));
+}
+let miniDrag = false;
+minimap.addEventListener("pointerdown", (e) => {
+  miniDrag = true;
+  minimap.setPointerCapture(e.pointerId);
+  minimapJump(e);
+});
+minimap.addEventListener("pointermove", (e) => {
+  if (miniDrag) minimapJump(e);
+});
+minimap.addEventListener("pointerup", () => (miniDrag = false));
 
 // ---------- start ----------
 
@@ -1179,12 +1279,10 @@ function loadSprites(): void {
 }
 
 updateZoomButtons();
-if (load()) {
-  ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());
-  selectNextUnit();
-  refresh();
-} else {
-  startNewGame(randomSeed());
-  newGameDialog.open(true);
-}
+// The start screen covers a game: the saved one when there is one, otherwise a
+// random placeholder that is never saved.
+const saved = readAutosave();
+if (saved) useGame(saved);
+else startNewGame(randomSeed(), undefined, false);
+menus.showStart();
 loadSprites();

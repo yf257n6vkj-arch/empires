@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Hra má hlavní nabídku a mapa zabírá celé okno
+
+Michal chtěl rozhraní podle Civilizace 3. Po spuštění se ukáže hlavní nabídka s obrázky z encyklopedie, které se pomalu prolínají. Z ní hráč pokračuje v rozehrané hře, začne novou, nahraje uloženou nebo otevře encyklopedii a přehled ovládání.
+
+Ve hře otevře nabídku tlačítko vlevo nahoře nebo klávesa Esc, když není vybraná žádná jednotka. Hru jde uložit pod jménem. V prohlížeči se vejde dvanáct uložených her, protože prohlížeč má na data jen pár megabajtů. Kdo chce hru přenést jinam nebo jich mít víc, uloží ji do souboru. Automatické ukládání po každém kroku zůstává a hlavní nabídka z něj nabízí tlačítko Pokračovat.
+
+Postranní panel zmizel a mapa vyplní celé okno pod horní lištou. Výběr výzkumu a panel jednotky nebo města plují vlevo dole, záznam událostí vpravo nahoře a jde ho sbalit. Vpravo dole je malá mapa celého kontinentu. Klik do ní přenese pohled na to místo, a když je mapa oddálená, rovnou ji přiblíží.
+
 ## 15. 11. 2026: Jednotky a města kreslí Gemini
 
 Michal schválil, že jednotky a města na mapě budou obrázky od Gemini místo figurek kreslených kódem. Gemini kreslí každou jednotku jako figurku z mírného nadhledu na purpurovém pozadí a Claude pozadí vyřízne. Města mají podobu podle éry svého majitele (pravěk a starověk, středověk, průmyslová doba, moderní doba) a pro každou éru malou a velkou verzi. Velká verze platí od šesti obyvatel.

@@ -18,7 +18,7 @@ Obrázek ulož na šířku v poměru 4 : 3, nejlépe 1024 × 768 bodů, jako `we
 
 Zadání pro generátor jsou anglicky, protože jim generátory rozumějí nejlíp. Začátek je u všech stejný, aby obrázky měly jednotný styl. Generátoru pošli celý řádek za dvojtečkou. Jména skutečných lidí v zadání nejsou, protože je některé generátory odmítají.
 
-## Zadání pro jednotlivé technologie
+## Co poslat generátoru
 
 
 ### Pravěk a starověk

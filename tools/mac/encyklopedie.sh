@@ -10,8 +10,10 @@ if [ -z "$KEY" ]; then
   echo "Chybí klíč. Spusť: bash encyklopedie.sh TVŮJ_API_KLÍČ"
   exit 1
 fi
-echo "1/2 Stahuju články z Wikipedie"
+echo "1/3 Stahuju články z Wikipedie"
 bash wiki.sh encyklopedie-wiki.tsv encyklopedie/wiki
-echo "2/2 Generuju obrázky"
+echo "2/3 Generuju obrázky"
 bash obrazky.sh "$KEY" encyklopedie-zadani.tsv encyklopedie/obrazky || exit 1
+echo "3/3 Kreslím znovu obrázky, které se napoprvé nepovedly"
+bash obrazky.sh "$KEY" encyklopedie-oprava.tsv encyklopedie/oprava || exit 1
 echo "Všechno hotovo. Napiš Claudovi."

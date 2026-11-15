@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Encyklopedie popisuje všechno, co ve hře je
+
+Michal chtěl, aby každá jednotka, budova, div, vláda, terén i úprava krajiny měla popis a obrázek. Encyklopedie má 98 hesel a otevírá se tlačítkem v horní liště nebo klávesou E. Do hesla se dá skočit i z města, ze stromu technologií a z panelu jednotky.
+
+Každé heslo má krátký text pro děti, zajímavost s vazbou na Česko, kde to šlo, a odkaz na článek české Wikipedie. Texty Claude psal sám a ověřoval je proti staženým článkům. Pod textem hra vypíše, co heslo dělá podle pravidel a která technologie ho odemyká, takže se popis nerozejde s čísly v datech.
+
+Obrázky kreslí Gemini v jednotném malovaném stylu a Michal je generuje skriptem na svém Macu, protože klíč k Gemini nechává u sebe. Claude je zmenšuje na 800 × 600 a ořízne papírový okraj, když ho obrázek má. Kdyby nějaký obrázek chyběl, hra místo něj ukáže portrét jednotky nebo budovy kreslený kódem.
+
 ## 15. 11. 2026: Hra má všechno, co technologie v Civilizaci 1 odemykají
 
 Michal schválil výzkumné centrum a pak chtěl projít strom Civilizace 1 a doplnit ke každé technologii, co odemyká. Claude doporučoval vynechat vlády, diplomata a karavanu, protože je zadání vyřadilo kvůli AI. Michal se rozhodl pro úplně všechno, takže hra teď jde v těchto věcech nad rámec zadání první verze.

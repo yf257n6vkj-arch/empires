@@ -2,13 +2,23 @@
 
 Každá technologie má ve hře stránku a na ní je místo na jeden obrázek. Když obrázek chybí, stránka ukáže velkou kreslenou ikonu.
 
-## Jak dostat obrázek do hry
+## Jak obrázky vygenerovat najednou
+
+Skript `tools/generate-images.ts` pošle všechna zadání do Gemini API od Googlu a obrázky uloží do `src/web/techs/`. Hotové obrázky přeskakuje, takže když se běh přeruší, stačí ho pustit znovu. Jednotlivé obrázky jde vygenerovat znovu přepínačem `--only`.
+
+1. V Google AI Studiu vytvoř API klíč a zapni u projektu placení. Generování obrázků nemá bezplatnou úroveň.
+2. Spusť `GEMINI_API_KEY=tvůj-klíč npm run images`. Buď to udělá Claude v cloudu, pokud má v povolených doménách `generativelanguage.googleapis.com`, nebo to spustíš na Macu ve složce s repozitářem.
+3. Claude pak obrázky projde, nepovedené vygeneruje znovu přes `npm run images -- --only zkratka`, uloží je do repozitáře a vydá novou verzi hry.
+
+Zadání pro skript jsou v `tools/image-prompts.json`, níže je stejný text pro ruční použití.
+
+## Jak dostat obrázek do hry ručně
 
 Obrázek ulož na šířku v poměru 4 : 3, nejlépe 1024 × 768 bodů, jako `webp`, `jpg` nebo `png`. Soubor pojmenuj podle zkratky technologie v závorce, třeba `pottery.webp`. Pošli mi ho, nebo ho dej do složky `src/web/techs/` v repozitáři, hra si ho při dalším sestavení najde sama.
 
 Zadání pro generátor jsou anglicky, protože jim generátory rozumějí nejlíp. Začátek je u všech stejný, aby obrázky měly jednotný styl. Generátoru pošli celý řádek za dvojtečkou. Jména skutečných lidí v zadání nejsou, protože je některé generátory odmítají.
 
-## Co poslat generátoru
+## Zadání pro jednotlivé technologie
 
 
 ### Pravěk a starověk

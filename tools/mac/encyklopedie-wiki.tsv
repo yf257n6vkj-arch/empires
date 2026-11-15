@@ -1,6 +1,6 @@
 unit-settlers	Kolonizace
-unit-warriors	Bojovník
-unit-spearmen	Hoplita
+unit-warriors	Pravěk
+unit-spearmen	Hoplít
 unit-horsemen	Jízda
 unit-archers	Lukostřelba
 unit-swordsmen	Římská legie
@@ -55,7 +55,7 @@ bld-manufacturingPlant	Robot
 bld-massTransit	Městská hromadná doprava
 bld-recyclingCenter	Recyklace
 bld-researchLab	Laboratoř
-bld-coastalFortress	Pobřežní baterie
+bld-coastalFortress	Gibraltar
 bld-sdiDefense	Protiraketová obrana
 bld-ssStructural	Mezinárodní vesmírná stanice
 bld-ssComponent	Raketový motor
@@ -65,7 +65,7 @@ wdr-pyramids	Pyramidy v Gíze
 wdr-colossus	Rhódský kolos
 wdr-hangingGardens	Visuté zahrady Semiramidiny
 wdr-greatWall	Velká čínská zeď
-wdr-lighthouse	Maják na Faru
+wdr-lighthouse	Maják na ostrově Faros
 wdr-oracle	Delfská věštírna
 wdr-greatLibrary	Alexandrijská knihovna
 wdr-hallOfScholars	Platónská Akademie

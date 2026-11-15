@@ -27,13 +27,13 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     when: "od pravěku",
     text: "První bojovníci neměli žádné brnění ani kovové zbraně. Bránili své tlupy kyji a oštěpy s kamenným hrotem. Válčilo se o lovecká území a o vodu. Ze zkušených válečníků se časem stali náčelníci a později i první králové.",
     fact: "Archeologové našli pravěké lebky se stopami po úderech kyjem. Prozrazují, že se lidé bili už dávno předtím, než vznikla první města.",
-    wiki: "Bojovník",
+    wiki: "Pravěk",
   },
   "unit-spearmen": {
     when: "asi od 7. století př. n. l.",
     text: "Řečtí hoplité byli pěšáci s velkým kulatým štítem a dlouhým kopím. Stáli v těsných řadách, kterým se říká falanga, a štíty se navzájem kryli. Nepřítel před sebou viděl zeď ze štítů a ostnů. Výzbroj si každý voják kupoval sám, a tak sloužili hlavně svobodní občané, kteří na ni měli.",
-    fact: "Slovo hoplíta pochází z řeckého hoplon, jak se říkalo velkému štítu. Vojáka tedy pojmenovali podle jeho štítu.",
-    wiki: "Hoplita",
+    fact: "Hoplíta nesl na hlavě bronzovou přilbu, která vážila až pět kilogramů. Štít z dřeva potaženého bronzem byl ještě těžší, vážil kolem devíti kilogramů.",
+    wiki: "Hoplít",
   },
   "unit-horsemen": {
     when: "asi od roku 1000 př. n. l.",
@@ -42,7 +42,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     wiki: "Jízda",
   },
   "unit-archers": {
-    when: "asi před 20 000 lety",
+    when: "od pravěku",
     text: "Luk dovolil zasáhnout zvíře nebo nepřítele na velkou vzdálenost. Lučištníci stáli za řadami pěšáků a stříleli šípy přes jejich hlavy. Dobrý lučištník trénoval od dětství, protože napnout silný luk chce hodně síly. Angličtí lučištníci s dlouhými luky vyhrávali ve středověku i bitvy proti rytířům.",
     fact: "V Anglii platil ve středověku zákon, podle kterého museli muži každou neděli po mši cvičit střelbu z luku.",
     wiki: "Lukostřelba",
@@ -317,7 +317,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   },
   "bld-manufacturingPlant": {
     text: "Moderní továrny pracují s roboty. Robotická ramena svařují a lakují rychleji a přesněji než lidé. Lidé roboty programují a opravují. Díky nim se vyrobí víc aut nebo elektroniky za kratší dobu.",
-    fact: "Slovo robot vymyslel Josef Čapek pro hru svého bratra Karla Čapka R.U.R. z roku 1920. Dnes ho zná celý svět.",
+    fact: "Slovo robot vymyslel Josef Čapek pro hru R.U.R. svého bratra Karla. Dnes ho zná celý svět.",
     wiki: "Robot",
   },
   "bld-massTransit": {
@@ -338,7 +338,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   "bld-coastalFortress": {
     text: "Pobřežní pevnosti chránily přístavy a města u moře před nepřátelskými loďmi. Stály na skalách nad vjezdem do přístavu a měly těžká děla, která mířila na moře. Silné zdi odolaly i palbě z lodí. Kdo ovládal pobřežní pevnosti, ovládal i přístav.",
     fact: "Pevnost na skále Gibraltar u jižního cípu Španělska hlídá vjezd do Středozemního moře už stovky let.",
-    wiki: "Pobřežní baterie",
+    wiki: "Gibraltar",
   },
   "bld-sdiDefense": {
     text: "Protiraketová obrana má zachytit nepřátelskou raketu dřív, než dopadne. Radary sledují oblohu a při útoku vystřelí obranné střely, které raketu zničí ve vzduchu. Jde o velmi složitou techniku, protože rakety letí obrovskou rychlostí. Ve hře chrání město a okolí před jadernými útoky.",
@@ -396,7 +396,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     when: "kolem roku 280 př. n. l.",
     text: "Maják na ostrově Faros u Alexandrie byl jednou z nejvyšších staveb starověku. Měl tři patra a nahoře hořel oheň, který ukazoval lodím cestu do přístavu. Ve dne prý světlo odráželo velké kovové zrcadlo. Maják stál přes tisíc let, než ho zničila zemětřesení.",
     fact: "Podle ostrova Faros se maják řekne v italštině i ve francouzštině skoro stejně, faro a phare.",
-    wiki: "Maják na Faru",
+    wiki: "Maják na ostrově Faros",
   },
   "wdr-oracle": {
     when: "od 8. století př. n. l.",

@@ -1,8 +1,8 @@
 /**
  * Encyclopedia pages for the technologies: when it happened, a short story
  * for a curious child, one surprising fact and a Czech Wikipedia article.
- * Texts are written for this game; each page links the Czech Wikipedia article
- * where the reader can check and continue.
+ * Texts are written for this game and were compared with the linked Czech
+ * Wikipedia articles (downloaded with tools/mac/wiki.sh) on 15 November 2026.
  */
 import type { TechId } from "../core";
 
@@ -17,8 +17,8 @@ export interface TechPage {
 
 export const TECH_PAGES: Record<TechId, TechPage> = {
   pottery: {
-    when: "asi před 20 000 lety",
-    text: "Hlína se po vypálení v ohni změní v tvrdý materiál, který nepropouští vodu. Lidé z ní začali dělat hrnce a misky, ve kterých šlo vařit a skladovat obilí. Nejstarší známé střepy našli archeologové v jeskyni v Číně. Asi před šesti tisíci lety přibyl hrnčířský kruh a nádoby se daly točit rychle a pravidelně.",
+    when: "před více než 17 000 lety",
+    text: "Hlína se po vypálení v ohni změní v tvrdý materiál, který nepropouští vodu. Lidé z ní začali dělat hrnce a misky, ve kterých šlo vařit a skladovat obilí. Nejstarší známé střepy našli archeologové ve východní Asii. Asi před šesti tisíci lety přibyl hrnčířský kruh a nádoby se daly točit rychle a pravidelně.",
     fact: "Podle zdobení keramiky archeologové poznají, kdo kde žil. Celé pravěké kultury proto mají jména podle hrnců, třeba kultura s lineární keramikou.",
     wiki: "Keramika",
   },
@@ -49,7 +49,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
   wheel: {
     when: "kolem roku 3500 př. n. l.",
     text: "Kolo se objevilo skoro současně v Mezopotámii a ve střední Evropě. Nejdřív sloužilo hrnčířům, potom na vozech, které táhli voli. Plné dřevěné kolo bylo těžké, a tak lidé později vymysleli kolo s loukotěmi, které je lehčí. Bez kola by nebyly vozy, mlýny ani hodinové strojky.",
-    fact: "Nejstarší dochované dřevěné kolo s nápravou našli v bažinách u Lublaně ve Slovinsku. Je staré asi 5 150 let.",
+    fact: "Nejstarší dochované dřevěné kolo s nápravou našli v bažinách u Lublaně ve Slovinsku. Je staré přes 5 000 let.",
     wiki: "Kolo",
   },
   archery: {
@@ -97,7 +97,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
   mapMaking: {
     when: "kolem roku 600 př. n. l.",
     text: "Mapa zachytí krajinu tak, jak by ji viděl pták shora. Nejstarší známá mapa světa je babylonská hliněná tabulka, na které je svět kruh obklopený oceánem. Řek Ptolemaios později popsal, jak kreslit mapy podle zeměpisných souřadnic. Námořníci a obchodníci bez map nedokázali dojít daleko.",
-    fact: "Na babylonské mapě je uprostřed světa Babylon. Kreslíři map rádi dávali doprostřed svou vlastní zemi.",
+    fact: "Možná nejstarší mapu na světě našli archeologové v Pavlově na jižní Moravě. Je vyrytá do mamutího klu a je stará asi 27 000 let.",
     wiki: "Kartografie",
   },
   mathematics: {
@@ -128,7 +128,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
     when: "kolem roku 200 př. n. l.",
     text: "Římané objevili beton. Míchali vápno se sopečným popelem a kamením a směs v dřevěném bednění ztvrdla jako skála. Z betonu stavěli přístavy, lázně, amfiteátry a akvadukty, kterými přiváděli do měst vodu z hor. Některé stavby stojí dodnes.",
     fact: "Kupole římského Pantheonu je téměř dva tisíce let stará a pořád je to největší kupole z betonu bez železných výztuží.",
-    wiki: "Římský beton",
+    wiki: "Beton",
   },
   trade: {
     when: "kolem roku 200 př. n. l.",
@@ -151,7 +151,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
   bridgeBuilding: {
     when: "od starověku po rok 1357",
     text: "Most přes řeku je těžká stavba, protože pilíře stojí ve vodě a proud je podemílá. Římané stavěli kamenné mosty s oblouky, které rozloží váhu do stran. V Praze stál od roku 1172 Juditin most a po jeho zřícení začal císař Karel IV. stavět Karlův most.",
-    fact: "Podle pověsti se do malty na Karlův most přidávala vejce. Základní kámen podle tradice položili v roce 1357, 9. 7. v 5:31, a číslice tvoří řadu 1-3-5-7-9-7-5-3-1.",
+    fact: "Podle pověsti se do malty na Karlův most přidávala vejce. Chemici z Vysoké školy chemicko-technologické ale v roce 2010 rozborem malty zjistili, že vejce v ní nejsou.",
     wiki: "Karlův most",
   },
   engineering: {
@@ -266,7 +266,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
     when: "1793",
     text: "Dřív válčili hlavně žoldnéři a šlechtici. Francouzská revoluce zavedla, že bránit zemi musí každý mladý muž. Armády se tím zvětšily na statisíce vojáků. V Rakousku-Uhersku platila všeobecná branná povinnost od roku 1868.",
     fact: "Napoleon měl díky branné povinnosti armádu tak velkou, že do Ruska v roce 1812 vyrazil s více než půl milionem vojáků.",
-    wiki: "Branná povinnost",
+    wiki: "Všeobecná branná povinnost",
   },
   explosives: {
     when: "1867",
@@ -308,7 +308,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
     when: "1856",
     text: "Ropa vytéká ze země jako hustá černá kapalina. V rafinerii se zahřívá a rozdělí na různé části, třeba petrolej, benzín, naftu a asfalt. Nejdřív se z ní vyráběl hlavně petrolej do lamp. S auty se nejcennější částí stal benzín.",
     fact: "Ignacy Łukasiewicz vyrobil petrolejovou lampu a v Polsku postavil jednu z prvních rafinerií na světě. Benzín se tehdy často vyléval jako zbytečný odpad.",
-    wiki: "Rafinerie",
+    wiki: "Ropná rafinerie",
   },
   electronics: {
     when: "1904 až 1947",
@@ -331,7 +331,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
   automobile: {
     when: "1886",
     text: "Carl Benz postavil tříkolový vůz s benzínovým motorem a nechal si ho patentovat. Jeho žena Bertha s ním pak bez manželova vědomí ujela se dvěma syny přes sto kilometrů za svou matkou a ukázala, že auto opravdu funguje. Brzy začaly auta vyrábět desítky firem.",
-    fact: "Prvním autem ve střední Evropě byl vůz Präsident z Kopřivnice z roku 1897. Kopřivnická firma vyrábí dodnes nákladní auta Tatra.",
+    fact: "Prvním funkčním autem vyrobeným na území dnešního Česka byl vůz Präsident z Kopřivnice z roku 1897. Kopřivnická firma vyrábí dodnes nákladní auta Tatra.",
     wiki: "Automobil",
   },
   flight: {
@@ -356,7 +356,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
     when: "od roku 1886",
     text: "Dělníci v továrnách pracovali dlouhé hodiny za malou mzdu. Jednotlivec s tím nic nezmohl, a tak se spojili do odborů a vyjednávali společně. Prosadili osmihodinový pracovní den, placenou dovolenou a bezpečnější práci.",
     fact: "Svátek práce 1. května připomíná stávku dělníků v Chicagu v roce 1886, kteří žádali osmihodinový pracovní den.",
-    wiki: "Odborová organizace",
+    wiki: "Odbory",
   },
   geneticEngineering: {
     when: "1865 až 1996",
@@ -380,7 +380,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
     when: "1938",
     text: "Když se do jádra uranu trefí neutron, jádro se rozštěpí na dvě menší a uvolní obrovské množství energie. Objevili to Otto Hahn a Fritz Strassmann a vysvětlila Lise Meitnerová. Štěpení jednoho kilogramu uranu uvolní tolik energie jako spálení zhruba tří tisíc tun uhlí.",
     fact: "Marie Curie-Skłodowská objevila radium v uranové rudě z Jáchymova. Je to stejné město, podle kterého se jmenuje dolar.",
-    wiki: "Jaderné štěpení",
+    wiki: "Štěpení jádra",
   },
   spaceFlight: {
     when: "1957 až 1969",

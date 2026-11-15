@@ -2,6 +2,10 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Texty technologií jsme porovnali s českou Wikipedií
+
+Michal stáhl na Macu skriptem `tools/mac/wiki.sh` všech 68 článků, na které odkazují stránky technologií, a texty jsme s nimi porovnali. Opravili jsme, co nesedělo: nejstarší keramika je stará přes 17 000 let, lublaňské kolo přes 5 000 let, Präsident byl první auto vyrobené na území dnešního Česka a pověst o vejcích v maltě Karlova mostu vyvrátili v roce 2010 chemici z VŠCHT. K mapám jsme přidali mapu vyrytou do mamutího klu z Pavlova. Odkazy vedou rovnou na hlavní články bez přesměrování a stavitelství odkazuje na článek Beton, protože článek o římském betonu neexistuje.
+
 ## 15. 11. 2026: Obrázky k technologiím vygenerujeme, z Wikipedie bereme jen texty
 
 Michal rozhodl, že obrázky na stránky technologií vygenerujeme, místo abychom stahovali fotky z Wikimedia Commons. Odpadne tím uvádění autorů a licencí. Každá stránka má místo na jeden obrázek v poměru 4 : 3, soubor se jmenuje podle zkratky technologie a patří do `src/web/techs/`. Zadání pro generátor ke všem 68 technologiím jsou v `docs/obrazky-technologii.md` a mají společný styl dětské encyklopedie. Dokud obrázek chybí, stránka ukáže velkou ikonu. Pro hru samotnou dál platí, že grafiku kreslíme kódem.

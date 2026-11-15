@@ -56,7 +56,7 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
     when: "asi před 60 000 lety",
     text: "Luk umožnil zasáhnout zvíře nebo nepřítele na velkou vzdálenost. Nejstarší kamenné hroty šípů pocházejí z jeskyně v Jižní Africe. Luky ze dřeva se dochovaly hůř, nejstarší jsou z Dánska a mají asi 9 000 let. Lukostřelci pak tisíce let rozhodovali bitvy.",
     fact: "Ledový muž Ötzi, kterého našli v Alpách, měl u sebe luk a toulec se čtrnácti šípy. Zemřel před více než 5 000 lety.",
-    wiki: "Luk (zbraň)",
+    wiki: "Lukostřelba",
   },
   writing: {
     when: "kolem roku 3300 př. n. l.",

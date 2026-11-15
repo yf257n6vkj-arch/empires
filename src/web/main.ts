@@ -64,7 +64,7 @@ import {
   ZOOM_STEP,
   type Camera,
 } from "./camera";
-import { draw, setPlayerColors, setupCanvas, tileSize, type DrawInput } from "./render";
+import { draw, setPlayerColors, setSprites, setupCanvas, tileSize, type DrawInput } from "./render";
 import { ERROR_TEXT, escapeHtml, eventText } from "./texts";
 import { createTechTree, unlockNames } from "./techTree";
 import { techIconSvg } from "./techIcons";
@@ -1154,6 +1154,27 @@ showAllBox.addEventListener("change", refresh);
 newGameButton.addEventListener("click", () => newGameDialog.open());
 
 // ---------- start ----------
+
+// Graphics trial: with ?sprity in the address, painted sprites replace the drawn figures.
+if (new URLSearchParams(location.search).has("sprity")) {
+  const files = import.meta.glob<string>("./sprites/*.webp", { eager: true, query: "?url", import: "default" });
+  const loaded = new Map<string, HTMLImageElement>();
+  let pending = Object.keys(files).length;
+  for (const [path, url] of Object.entries(files)) {
+    const img = new Image();
+    const done = () => {
+      if (--pending > 0) return;
+      setSprites(loaded);
+      refresh();
+    };
+    img.onload = () => {
+      loaded.set(path.split("/").pop()!.replace(/\.webp$/, ""), img);
+      done();
+    };
+    img.onerror = done;
+    img.src = url;
+  }
+}
 
 updateZoomButtons();
 if (load()) {

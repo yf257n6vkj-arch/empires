@@ -628,7 +628,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
     when: "od začátku 19. století",
     text: "Zuluové jsou národ z jihu Afriky. Na začátku 19. století z nich náčelník Šaka udělal silné království. Zavedl krátké bodné kopí a bitevní šik, kterému se říká býčí rohy. Zulští bojovníci v něm obkličovali nepřítele ze dvou stran najednou.",
     fact: "V roce 1879 porazili Zuluové u Isandlwany britskou armádu, přestože měli hlavně kopí a štíty a Britové pušky.",
-    wiki: "Zuluové",
+    wiki: "Zulové",
   },
   "civ-french": {
     when: "od 9. století",

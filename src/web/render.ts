@@ -31,6 +31,22 @@ export const TERRAIN_COLORS: Record<TerrainId, string> = {
 const DEFAULT_COLORS = ["#f4f1ea", "#d9483b", "#3f8fd6", "#e2ac2f"];
 let colors: string[] = DEFAULT_COLORS;
 
+/**
+ * Painted sprites that replace the drawn figures, keyed "unit-<type>" or
+ * "city-<stage>". Empty unless the page loads them (the graphics trial).
+ */
+const sprites = new Map<string, HTMLImageElement>();
+export function setSprites(next: Map<string, HTMLImageElement>): void {
+  sprites.clear();
+  for (const [k, v] of next) sprites.set(k, v);
+}
+
+/** Draws a sprite standing with its bottom centre at (x, y), `h` tall. */
+function drawSprite(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, h: number): void {
+  const w = (img.naturalWidth / img.naturalHeight) * h;
+  ctx.drawImage(img, x - w / 2, y - h, w, h);
+}
+
 /** Every player draws in the colour of their nation. */
 export function setPlayerColors(next: string[]): void {
   colors = next.length > 0 ? next : DEFAULT_COLORS;
@@ -1277,6 +1293,13 @@ function drawCity(ctx: CanvasRenderingContext2D, c: DrawCity, selected: boolean)
     ctx.stroke();
   }
 
+  const citySprite = sprites.get(`city-${c.size >= 8 ? "modern" : c.size >= 4 ? "medieval" : "ancient"}`);
+  if (citySprite) {
+    drawSprite(ctx, citySprite, 0, cy + ry + 2, TILE * 1.15);
+    ctx.restore();
+    return;
+  }
+
   // Back half of the wall, then buildings, then the front half and its towers.
   drawWallArc(ctx, layout.wall, 0, cy, rx, ry, Math.PI, Math.PI * 2, color);
   for (const b of layout.buildings) drawBuilding(ctx, b, oy, color);
@@ -1758,11 +1781,16 @@ function drawMiniature(
     ctx.stroke();
   }
 
-  ctx.save();
-  ctx.translate(fx, fy);
-  ctx.scale(s, s);
-  drawUnitFigure(ctx, u, color);
-  ctx.restore();
+  const unitSprite = sprites.get(`unit-${u.type}`);
+  if (unitSprite) {
+    drawSprite(ctx, unitSprite, fx, fy + bry * 0.4, 21 * s);
+  } else {
+    ctx.save();
+    ctx.translate(fx, fy);
+    ctx.scale(s, s);
+    drawUnitFigure(ctx, u, color);
+    ctx.restore();
+  }
 
   if (u.fortified) {
     // A low stone wall in front of the base.

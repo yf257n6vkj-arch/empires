@@ -205,6 +205,15 @@ function paintTile(ctx: CanvasRenderingContext2D, b: Board, i: number, j: number
   }
 }
 
+/** Where `stand` would draw the picture, without drawing it. */
+function standRect(b: Board, a: Art, i: number, j: number, cells: number, scale = 1): Hit["rect"] {
+  const [x, y] = corner(b, i, j);
+  const plinth = a.right - a.left + 1;
+  const k = ((b.tw * cells) / plinth) * scale;
+  const centreX = (a.left + a.right) / 2;
+  return { x: x - centreX * k, y: y + b.th * cells - a.bottom * k - (b.th * cells * (1 - scale)) / 2, w: a.img.width * k, h: a.img.height * k };
+}
+
 /**
  * Stands a picture on the tile whose top corner is (i, j); `cells` tiles wide
  * (1 for a plot, 2 for a block). The plinth is scaled to the tiles' width.
@@ -257,10 +266,26 @@ interface Lot {
   scale: number;
 }
 
-export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number, input: CityViewInput): Hit[] {
-  const hits: Hit[] = [];
-  const entryOf = (b: BuildingId) => ({ entry: `${BUILDINGS[b].wonder ? "wdr" : "bld"}-${b}`, name: BUILDINGS[b].name });
+/** Everything about the town's layout, in tiles; it depends only on the city, never on the view's size. */
+interface Plan {
+  lots: Lot[];
+  used: { a: number; b: number }[];
+  roads: Set<string>;
+  /** On the coast: tiles right of this x (in half-tile units of the board) are sea. */
+  seaX: number | null;
+  walls: ReturnType<typeof townWalls> | null;
+  era: number;
+  cityId: number;
+}
+
+/** Screen x and y of a tile corner on a board with tiles one unit wide. */
+function unitCorner(i: number, j: number): [number, number] {
+  return [(i - j) / 2, ((i + j) * ISO) / 2];
+}
+
+function planCity(input: CityViewInput): Plan {
   const rand = seeded(input.cityId * 7919 + 13);
+  const entryOf = (b: BuildingId) => ({ entry: `${BUILDINGS[b].wonder ? "wdr" : "bld"}-${b}`, name: BUILDINGS[b].name });
   const own = input.buildings.filter((b) => !b.startsWith("ss") && b !== "walls");
   const shore = input.coastal ? own.filter((b) => AT_SEA.includes(b)) : [];
   const land = own.filter((b) => !shore.includes(b));
@@ -271,42 +296,19 @@ export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number
   const plots = plain.length + houses + wonders.length * 4;
   const blocks = Math.max(2, Math.ceil((plots * 1.15) / 4));
 
-  // Tile size: the town's blocks together should cover about half of the view.
-  // A block of BLOCK x BLOCK tiles covers BLOCK² × tw × th / 2 pixels.
-  const tw = Math.max(h * 0.16, Math.min(h * 0.32, Math.sqrt((0.5 * w * h) / (blocks * BLOCK * BLOCK * ISO * 0.5))));
-  const board: Board = { tw, th: tw * ISO, ox: 0, oy: 0 };
-  board.ox = w * (input.coastal ? 0.42 : 0.5);
-  board.oy = h * 0.52 - board.th / 2;
-
-  // Tiles that cover the canvas.
-  const reach = Math.ceil(w / tw + h / board.th) + 2;
-  const seaFrom = w * 0.74;
-  const isSea = (i: number, j: number) => {
-    if (!input.coastal) return false;
-    const [x, y] = corner(board, i, j);
-    // A gently curving shore.
-    return x > seaFrom + Math.sin(y / (h * 0.25) + input.cityId) * w * 0.03;
-  };
-
-  // Blocks of the town around the centre, nearest first. Block (a, b) has plots
-  // (a*BLOCK+1 .. a*BLOCK+2, b*BLOCK+1 .. b*BLOCK+2).
-  const half = Math.ceil((w / tw + h / board.th) / BLOCK) + 1;
+  // Blocks around the centre, nearest first, the town spreading more sideways than in depth.
+  const reachBlocks = Math.ceil(Math.sqrt(blocks)) + 3;
+  const distance = (x: number, y: number) => Math.hypot(x / 2.4, y);
   const allBlocks: { a: number; b: number; d: number }[] = [];
-  for (let a = -half; a <= half; a++) {
-    for (let bb = -half; bb <= half; bb++) {
-      const [x, y] = corner(board, a * BLOCK + 1, bb * BLOCK + 1);
-      // Blocks must be on land and inside the view.
-      if (isSea(a * BLOCK + 2, bb * BLOCK + 2) || isSea(a * BLOCK + 1, bb * BLOCK + 2) || isSea(a * BLOCK + 2, bb * BLOCK + 1)) continue;
-      if (y < h * 0.16 || y + board.th * 2 > h * 0.97 || x - tw < 0 || x + tw > w) continue;
-      // Distance in the view, squeezed sideways, so the town spreads along the wide view.
-      const [cx, cy] = corner(board, a * BLOCK + 2, bb * BLOCK + 2);
-      const d = Math.hypot((cx - board.ox) / w, ((cy - board.oy) / h) * 1.6) + rand() * 0.02;
-      allBlocks.push({ a, b: bb, d });
+  for (let a = -reachBlocks; a <= reachBlocks; a++) {
+    for (let b = -reachBlocks; b <= reachBlocks; b++) {
+      const [x, y] = unitCorner(a * BLOCK + 2, b * BLOCK + 2);
+      allBlocks.push({ a, b, d: distance(x, y) + rand() * 0.05 });
     }
   }
   // Grow the town block by block from the middle, always next to a block it already has.
   allBlocks.sort((p, q) => p.d - q.d);
-  const used: typeof allBlocks = allBlocks.length ? [allBlocks[0]!] : [];
+  const used: typeof allBlocks = [allBlocks[0]!];
   const touches = (p: { a: number; b: number }) => used.some((u) => Math.abs(u.a - p.a) + Math.abs(u.b - p.b) === 1);
   while (used.length < blocks) {
     const nextBlock = allBlocks.find((p) => !used.includes(p) && touches(p));
@@ -333,8 +335,8 @@ export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number
     ] as const) {
       const i = blk.a * BLOCK + di;
       const j = blk.b * BLOCK + dj;
-      const [cx, cy] = corner(board, i, j);
-      free.push({ i, j, d: Math.hypot((cx - board.ox) / w, ((cy - board.oy) / h) * 1.6) + rand() * 0.04 });
+      const [x, y] = unitCorner(i, j);
+      free.push({ i, j, d: distance(x, y) + rand() * 0.08 });
     }
   }
   free.sort((p, q) => p.d - q.d);
@@ -354,7 +356,6 @@ export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number
     lots.push({ i: spot.i, j: spot.j, cells: 1, art: homes[Math.floor(rand() * homes.length)]!, scale: 0.86 + rand() * 0.08 });
   }
 
-  // Ground: streets around the town's blocks, sea and sand on the coast, grass elsewhere.
   const roads = new Set<string>();
   for (const blk of used) {
     for (let d = 0; d <= BLOCK; d++) {
@@ -364,66 +365,124 @@ export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number
       roads.add(`${blk.a * BLOCK + BLOCK},${blk.b * BLOCK + d}`);
     }
   }
-  ctx.fillStyle = GRASS[0]!;
-  ctx.fillRect(0, 0, w, h);
-  for (let s = -reach; s <= reach; s++) {
-    // Rows of equal i + j, from the back to the front.
-    for (let i = -reach; i <= reach; i++) {
-      const j = s - i;
-      const [x, y] = corner(board, i, j);
-      if (x < -tw || x > w + tw || y < -board.th * 2 || y > h + board.th) continue;
-      let g: Ground = roads.has(`${i},${j}`) ? "road" : "grass";
-      if (isSea(i, j)) g = "water";
-      else if (input.coastal && (isSea(i + 1, j) || isSea(i, j - 1) || isSea(i + 1, j - 1))) g = g === "road" ? "road" : "sand";
-      paintTile(ctx, board, i, j, g, input.era);
-    }
-  }
 
-  // Shore structures stand in the shallow water along the coast.
-  const shoreSpots: { i: number; j: number; y: number }[] = [];
-  for (let s = -reach; s <= reach; s++) {
-    for (let i = -reach; i <= reach; i++) {
-      const j = s - i;
-      const [x, y] = corner(board, i, j);
-      if (y < h * 0.12 || y + board.th > h * 0.95 || x > w - tw * 0.4) continue;
-      if (isSea(i, j) && !isSea(i - 1, j) && !isSea(i, j + 1)) shoreSpots.push({ i, j, y });
+  // The sea begins a little right of the town, with shore structures in its shallows.
+  let seaX: number | null = null;
+  if (input.coastal) {
+    seaX = Math.max(...used.map((u) => unitCorner(u.a * BLOCK + BLOCK + 1, u.b * BLOCK)[0])) + 0.9;
+    const plan = { seaX, cityId: input.cityId } as Plan;
+    const spots: { i: number; j: number; y: number }[] = [];
+    const [, cy] = unitCorner(1, 1);
+    for (let i = -40; i <= 40; i++) {
+      for (let j = -40; j <= 40; j++) {
+        if (isSea(plan, i, j) && !isSea(plan, i - 1, j) && !isSea(plan, i, j + 1)) spots.push({ i, j, y: unitCorner(i, j)[1] });
+      }
     }
+    spots.sort((p, q) => Math.abs(p.y - cy) - Math.abs(q.y - cy) || p.i - q.i);
+    shore.forEach((b, n) => {
+      const a = art.get(`bld-${b}`);
+      const spot = spots[n * 3];
+      if (a && spot) lots.push({ ...entryOf(b), i: spot.i, j: spot.j, cells: 1, art: a, scale: BUILDINGS[b].wonder ? 1.35 : 1.15 });
+    });
   }
-  shoreSpots.sort((p, q) => Math.abs(p.y - h * 0.55) - Math.abs(q.y - h * 0.55));
-  shore.forEach((b, n) => {
-    const a = art.get(`bld-${b}`);
-    // Spread them out along the shore.
-    const spot = shoreSpots[n * 3];
-    if (a && spot) lots.push({ ...entryOf(b), i: spot.i, j: spot.j, cells: 1, art: a, scale: BUILDINGS[b].wonder ? 1.35 : 1.15 });
-  });
-
-  const tower = input.buildings.includes("walls") ? art.get("bld-walls") : undefined;
-  const walls = tower ? townWalls(used) : null;
-  if (walls) for (const seg of walls.back) drawWall(ctx, board, seg);
-  if (tower && walls) for (const [i, j] of walls.towers) lots.push({ ...entryOf("walls"), i: i - 0.5, j: j - 0.5, cells: 1, art: tower, scale: TOWER });
 
   // Pictures from the back to the front: by the row of their lowest corner.
   lots.sort((p, q) => p.i + p.j + p.cells * 2 - (q.i + q.j + q.cells * 2) || p.i - q.i);
-  for (const lot of lots) {
-    if (lot.art !== tower) shadow(ctx, board, lot);
+  return { lots, used, roads, seaX, walls: input.buildings.includes("walls") ? townWalls(used) : null, era: input.era, cityId: input.cityId };
+}
+
+function isSea(plan: Pick<Plan, "seaX" | "cityId">, i: number, j: number): boolean {
+  if (plan.seaX === null) return false;
+  const [x, y] = unitCorner(i, j);
+  // A gently curving shore.
+  return x > plan.seaX + Math.sin(y * 2.2 + plan.cityId) * 0.45;
+}
+
+let cachedPlan: { key: string; plan: Plan } | null = null;
+
+export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number, input: CityViewInput): Hit[] {
+  const key = JSON.stringify(input);
+  if (cachedPlan?.key !== key) cachedPlan = { key, plan: planCity(input) };
+  const plan = cachedPlan.plan;
+
+  // Fit the town into the view: the layout stays, only the scale changes.
+  const unit: Board = { tw: 1, th: ISO, ox: 0, oy: 0 };
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  const grow = (r: { x: number; y: number; w: number; h: number }) => {
+    x0 = Math.min(x0, r.x);
+    y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  };
+  for (const lot of plan.lots) grow(standRect(unit, lot.art, lot.i, lot.j, lot.cells, lot.scale));
+  for (const u of plan.used) {
+    const [lx] = unitCorner(u.a * BLOCK, u.b * BLOCK + BLOCK + 1);
+    const [rx] = unitCorner(u.a * BLOCK + BLOCK + 1, u.b * BLOCK);
+    const [, ty] = unitCorner(u.a * BLOCK, u.b * BLOCK);
+    const [, by] = unitCorner(u.a * BLOCK + BLOCK + 1, u.b * BLOCK + BLOCK + 1);
+    grow({ x: lx, y: ty - ISO, w: rx - lx, h: by - ty + ISO });
+  }
+  if (plan.seaX !== null) x1 = Math.max(x1, plan.seaX + 1.6);
+  const tw = Math.min((w * 0.94) / (x1 - x0), (h * 0.9) / (y1 - y0), h * 0.3);
+  const board: Board = { tw, th: tw * ISO, ox: 0, oy: 0 };
+  board.ox = w / 2 - ((x0 + x1) / 2) * tw;
+  board.oy = h / 2 - ((y0 + y1) / 2) * tw;
+
+  // Ground over the whole view.
+  ctx.fillStyle = GRASS[0]!;
+  ctx.fillRect(0, 0, w, h);
+  const reach = Math.ceil(w / tw + h / board.th) + 4;
+  // The tile at the middle of the view.
+  const mx = (w / 2 - board.ox) / (tw / 2);
+  const my = (h / 2 - board.oy) / (board.th / 2);
+  const ci = Math.round((mx + my) / 2);
+  const cj = Math.round((my - mx) / 2);
+  for (let s = ci + cj - reach; s <= ci + cj + reach; s++) {
+    // Rows of equal i + j, from the back to the front.
+    for (let i = ci - reach; i <= ci + reach; i++) {
+      const j = s - i;
+      const [x, y] = corner(board, i, j);
+      if (x < -tw || x > w + tw || y < -board.th * 2 || y > h + board.th) continue;
+      let g: Ground = plan.roads.has(`${i},${j}`) ? "road" : "grass";
+      if (isSea(plan, i, j)) g = "water";
+      else if (plan.seaX !== null && (isSea(plan, i + 1, j) || isSea(plan, i, j - 1) || isSea(plan, i + 1, j - 1))) g = g === "road" ? "road" : "sand";
+      paintTile(ctx, board, i, j, g, plan.era);
+    }
+  }
+
+  const hits: Hit[] = [];
+  const wallEntry = { entry: "bld-walls", name: BUILDINGS.walls.name };
+  if (plan.walls) for (const seg of plan.walls.back) drawWall(ctx, board, seg, "back");
+  if (plan.walls) for (const [i, j] of plan.walls.towers) drawTower(ctx, board, i, j);
+  for (const lot of plan.lots) {
+    shadow(ctx, board, lot);
     const rect = stand(ctx, board, lot.art, lot.i, lot.j, lot.cells, lot.scale);
     if (lot.entry) hits.push({ entry: lot.entry, name: lot.name ?? "", rect, art: lot.art });
   }
-
-  if (tower && walls) {
-    for (const seg of walls.front) drawWall(ctx, board, seg);
-    // Towers on the front walls stand over them.
-    for (const [i, j] of walls.frontTowers) {
-      const rect = stand(ctx, board, tower, i - 0.5, j - 0.5, 1, TOWER);
-      hits.push({ ...entryOf("walls"), rect, art: tower });
+  if (plan.walls) {
+    for (const seg of plan.walls.front) drawWall(ctx, board, seg, "front");
+    for (const [i, j] of plan.walls.frontTowers) drawTower(ctx, board, i, j);
+    const tower = art.get("bld-walls");
+    // The wall itself has no picture to click; its corner towers stand for it.
+    if (tower) {
+      for (const [i, j] of [...plan.walls.towers, ...plan.walls.frontTowers]) {
+        const [x, y] = corner(board, i, j);
+        hits.push({ ...wallEntry, rect: { x: x - tw * 0.2, y: y - board.th * 1.6, w: tw * 0.4, h: board.th * 1.8 }, art: solidArt(tower) });
+      }
     }
   }
   return hits;
 }
 
+/** The picture of a tower stood in for by a fully opaque mask, so its whole box is clickable. */
+function solidArt(a: Art): Art {
+  return { ...a, mask: new Uint8Array(a.mask.length).fill(1) };
+}
+
 type Segment = [number, number, number, number];
-/** Size of a wall tower against a plot. */
-const TOWER = 0.62;
 
 /**
  * The wall around the town follows the outer edge of its blocks, just outside
@@ -480,18 +539,34 @@ function shadow(ctx: CanvasRenderingContext2D, b: Board, lot: Lot): void {
   ctx.restore();
 }
 
-/** One straight piece of the town wall between two tile corners. */
-function drawWall(ctx: CanvasRenderingContext2D, b: Board, [ai, aj, bi, bj]: Segment): void {
-  const height = b.th * 0.55;
+const STONE_LIGHT = "#d9d0bb";
+const STONE = "#b8ae97";
+const STONE_DARK = "#8c836f";
+const MORTAR = "rgba(70, 60, 48, 0.35)";
+const OUTLINE = "rgba(45, 38, 30, 0.9)";
+
+/**
+ * One straight piece of the town wall between two tile corners, drawn as a
+ * stone wall with a walkway on top and battlements on its outer edge.
+ */
+function drawWall(ctx: CanvasRenderingContext2D, b: Board, [ai, aj, bi, bj]: Segment, side: "back" | "front"): void {
+  const height = b.th * 0.62;
   const [x1, y1] = corner(b, ai, aj);
   const [x2, y2] = corner(b, bi, bj);
-  // The wall face as a band raised from the ground line.
-  const g = ctx.createLinearGradient(0, Math.min(y1, y2) - height, 0, Math.max(y1, y2));
-  g.addColorStop(0, "#cfc6b0");
-  g.addColorStop(1, "#8e8574");
-  ctx.fillStyle = g;
-  ctx.strokeStyle = "rgba(45, 38, 30, 0.85)";
-  ctx.lineWidth = 1.2;
+  // The wall is a little thick: its top runs a short step towards the inside of the town.
+  const alongI = aj === bj;
+  const inward = side === "back" ? 1 : -1;
+  const tx = (alongI ? -b.tw : b.tw) * 0.07 * inward;
+  const ty = b.th * 0.07 * inward;
+  ctx.save();
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = OUTLINE;
+  // Face towards the viewer.
+  const face = ctx.createLinearGradient(0, Math.min(y1, y2) - height, 0, Math.max(y1, y2));
+  face.addColorStop(0, STONE);
+  face.addColorStop(1, STONE_DARK);
+  ctx.fillStyle = face;
   ctx.beginPath();
   ctx.moveTo(x1, y1);
   ctx.lineTo(x2, y2);
@@ -500,25 +575,133 @@ function drawWall(ctx: CanvasRenderingContext2D, b: Board, [ai, aj, bi, bj]: Seg
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
-  // Battlements along the top.
+  // Courses of stone.
+  ctx.strokeStyle = MORTAR;
+  ctx.lineWidth = 0.8;
+  const rows = 4;
   const len = Math.hypot(x2 - x1, y2 - y1);
-  const steps = Math.max(2, Math.floor(len / (b.tw * 0.18)));
-  ctx.fillStyle = "#d8d0bb";
-  for (let k = 0; k < steps; k += 2) {
-    const t0 = k / steps;
-    const t1 = (k + 1) / steps;
+  const blocks = Math.max(2, Math.round(len / (b.tw * 0.16)));
+  ctx.beginPath();
+  for (let r = 1; r < rows; r++) {
+    const h = (height * r) / rows;
+    ctx.moveTo(x1, y1 - h);
+    ctx.lineTo(x2, y2 - h);
+  }
+  for (let r = 0; r < rows; r++) {
+    for (let k = r % 2 ? 0.5 : 1; k < blocks; k++) {
+      const t = k / blocks;
+      const x = x1 + (x2 - x1) * t;
+      const y = y1 + (y2 - y1) * t;
+      ctx.moveTo(x, y - (height * r) / rows);
+      ctx.lineTo(x, y - (height * (r + 1)) / rows);
+    }
+  }
+  ctx.stroke();
+  // Walkway on top.
+  ctx.fillStyle = STONE_LIGHT;
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1 - height);
+  ctx.lineTo(x2, y2 - height);
+  ctx.lineTo(x2 + tx, y2 - height + ty);
+  ctx.lineTo(x1 + tx, y1 - height + ty);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Battlements along the outer edge.
+  const merlons = Math.max(3, Math.round(len / (b.tw * 0.11)));
+  const mh = height * 0.32;
+  for (let k = 0; k < merlons; k += 2) {
+    const t0 = k / merlons;
+    const t1 = (k + 1) / merlons;
     const ax = x1 + (x2 - x1) * t0;
     const ay = y1 + (y2 - y1) * t0 - height;
     const bx = x1 + (x2 - x1) * t1;
     const by = y1 + (y2 - y1) * t1 - height;
-    const m = height * 0.35;
+    ctx.fillStyle = STONE;
     ctx.beginPath();
     ctx.moveTo(ax, ay);
     ctx.lineTo(bx, by);
-    ctx.lineTo(bx, by - m);
-    ctx.lineTo(ax, ay - m);
+    ctx.lineTo(bx, by - mh);
+    ctx.lineTo(ax, ay - mh);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = STONE_LIGHT;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay - mh);
+    ctx.lineTo(bx, by - mh);
+    ctx.lineTo(bx + tx * 0.6, by - mh + ty * 0.6);
+    ctx.lineTo(ax + tx * 0.6, ay - mh + ty * 0.6);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
   }
+  ctx.restore();
+}
+
+/** A round stone tower with battlements and a pointed roof where the wall turns. */
+function drawTower(ctx: CanvasRenderingContext2D, b: Board, i: number, j: number): void {
+  const [x, y] = corner(b, i, j);
+  const rx = b.tw * 0.17;
+  const ry = rx * ISO;
+  const height = b.th * 1.15;
+  const top = y - height;
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = OUTLINE;
+  // Shadow on the ground.
+  ctx.fillStyle = "rgba(29, 42, 16, 0.25)";
+  ctx.beginPath();
+  ctx.ellipse(x + rx * 0.5, y + ry * 0.3, rx * 1.3, ry * 1.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Body.
+  const body = ctx.createLinearGradient(x - rx, 0, x + rx, 0);
+  body.addColorStop(0, STONE_LIGHT);
+  body.addColorStop(0.55, STONE);
+  body.addColorStop(1, STONE_DARK);
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(x - rx, top);
+  ctx.lineTo(x - rx, y);
+  ctx.ellipse(x, y, rx, ry, 0, Math.PI, 0, true);
+  ctx.lineTo(x + rx, top);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Courses of stone and a window slit.
+  ctx.strokeStyle = MORTAR;
+  ctx.beginPath();
+  for (let k = 1; k < 5; k++) ctx.ellipse(x, top + ((y - top) * k) / 5, rx, ry, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.fillStyle = "#2b241c";
+  ctx.fillRect(x - rx * 0.12, top + height * 0.35, rx * 0.24, height * 0.16);
+  // Battlements.
+  ctx.strokeStyle = OUTLINE;
+  const crown = rx * 1.12;
+  ctx.fillStyle = STONE_LIGHT;
+  ctx.beginPath();
+  ctx.ellipse(x, top, crown, crown * ISO, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  for (let k = 0; k < 5; k++) {
+    const a = Math.PI * (0.1 + (k * 0.8) / 4);
+    const mx = x + Math.cos(a) * crown * 0.92;
+    const my = top + Math.sin(a) * crown * ISO * 0.92;
+    ctx.fillStyle = STONE;
+    ctx.fillRect(mx - rx * 0.16, my - ry * 1.3, rx * 0.32, ry * 1.3);
+    ctx.strokeRect(mx - rx * 0.16, my - ry * 1.3, rx * 0.32, ry * 1.3);
+  }
+  // Pointed roof.
+  ctx.fillStyle = "#9c3b2c";
+  ctx.beginPath();
+  ctx.moveTo(x - crown * 0.85, top - ry * 0.4);
+  ctx.lineTo(x, top - height * 0.75);
+  ctx.lineTo(x + crown * 0.85, top - ry * 0.4);
+  ctx.ellipse(x, top - ry * 0.4, crown * 0.85, crown * 0.85 * ISO, 0, 0, Math.PI);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
 }

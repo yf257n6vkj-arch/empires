@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Město v detailu vypadá pořád stejně a hradbu kreslí kód
+
+Když Michal měnil výšku obrázku města, hra rozložila budovy pokaždé znovu a město vypadalo jinak. Teď si rozložení spočítá jen z toho, co ve městě stojí, a při změně velikosti obrázek jen přiblíží nebo oddálí. Jiné rozložení přijde, až město vyroste nebo postaví něco nového.
+
+Hradbu z obrázku hradu od Gemini jsme opakovali v každém rohu a vypadalo to špatně. Hradbu teď kreslí kód: kamenná zeď s ochozem a cimbuřím obíhá okraj města a kulaté věže s červenou střechou stojí jen tam, kde hradba zatáčí.
+
 ## 15. 11. 2026: Mapa má všechny terény z Civilizace 1 a suroviny
 
 Michal chtěl všechny terény z Civilizace 1. K oceánu, louce, pláním, lesu, kopcům, horám a poušti přibyla tundra, ledovec, džungle, bažina a řeka. Výnosy a pohyb odpovídají Civilizaci 1. Michal poslal seznam, kde měla louka 2/1/0 a řeka 2/1/1, ale v Civilizaci 1 má louka 2/0/0 a řeka 1/0/1 a jeden štít navíc dává až surovina na louce. Držíme hodnoty z Civilizace 1.

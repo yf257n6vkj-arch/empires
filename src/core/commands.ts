@@ -7,7 +7,7 @@
  * reason code. `applyCommand` never mutates its input; it returns a new state.
  */
 import { assignWorkersDraft, sameItem } from "./city";
-import { buyCost, canBuild, canResearch, fallbackProduction } from "./economy";
+import { buyCost, canBuild, canResearch, fallbackProduction, nextStepToGoal } from "./economy";
 import type { GameEvent } from "./events";
 import { distance, neighbors4, type Point } from "./geometry";
 import { findPath } from "./path";
@@ -17,7 +17,7 @@ export { canMove };
 import { BUILDINGS, CITY_NAMES, IMPROVEMENTS, RULES, TECHS, TERRAINS, UNIT_TYPES, type ImprovementId, type TechId } from "./rules";
 import type { CityId, GameState, ProductionItem, Unit, UnitId } from "./state";
 import { endTurnDraft } from "./turn";
-import { cityAt, cityName, cloneState, getPlayer, idx, reveal } from "./world";
+import { cityAt, cityName, cloneState, getPlayer, idx, reveal, workableTiles } from "./world";
 
 export type Command =
   | { type: "move"; unitId: UnitId; to: Point }
@@ -30,6 +30,9 @@ export type Command =
   | { type: "setProduction"; cityId: CityId; item: ProductionItem }
   | { type: "buy"; cityId: CityId }
   | { type: "setResearch"; tech: TechId }
+  | { type: "setResearchGoal"; tech: TechId }
+  | { type: "setWorkedTiles"; cityId: CityId; tiles: number[] }
+  | { type: "autoAssignWorkers"; cityId: CityId }
   | { type: "setScienceRate"; rate: number }
   | { type: "endTurn" };
 
@@ -56,7 +59,10 @@ export type CommandError =
   | "notEnoughGold"
   | "unknownTech"
   | "cannotResearch"
-  | "invalidRate";
+  | "invalidRate"
+  | "alreadyKnown"
+  | "tileNotWorkable"
+  | "tooManyWorkers";
 
 export type CommandResult =
   | { ok: true; state: GameState; events: GameEvent[] }
@@ -151,6 +157,7 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
         production: fallbackProduction(draft, unit.owner),
         buildings: [],
         worked: [],
+        manualTiles: false,
         foundedTurn: draft.turn,
       };
       player.citiesFounded += 1;
@@ -225,7 +232,47 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       const player = getPlayer(state, state.currentPlayer);
       if (!canResearch(player, command.tech)) return { ok: false, error: "cannotResearch" };
       const draft = cloneState(state);
-      getPlayer(draft, state.currentPlayer).researching = command.tech;
+      const p = getPlayer(draft, state.currentPlayer);
+      p.researching = command.tech;
+      p.researchGoal = null;
+      return { ok: true, state: draft, events };
+    }
+
+    case "setResearchGoal": {
+      if (!(command.tech in TECHS)) return { ok: false, error: "unknownTech" };
+      const player = getPlayer(state, state.currentPlayer);
+      if (player.techs.includes(command.tech)) return { ok: false, error: "alreadyKnown" };
+      const draft = cloneState(state);
+      const p = getPlayer(draft, state.currentPlayer);
+      // Collected science is shared, so switching to the first step loses nothing.
+      p.researching = nextStepToGoal(p, command.tech);
+      p.researchGoal = p.researching === command.tech ? null : command.tech;
+      return { ok: true, state: draft, events };
+    }
+
+    case "setWorkedTiles": {
+      const city = state.cities.find((c) => c.id === command.cityId);
+      if (!city) return { ok: false, error: "unknownCity" };
+      if (city.owner !== state.currentPlayer) return { ok: false, error: "notYourCity" };
+      const tiles = [...new Set(command.tiles)];
+      if (tiles.length > city.size) return { ok: false, error: "tooManyWorkers" };
+      const allowed = new Set(workableTiles(state, city));
+      if (tiles.some((i) => !allowed.has(i))) return { ok: false, error: "tileNotWorkable" };
+      const draft = cloneState(state);
+      const c = draft.cities.find((x) => x.id === city.id)!;
+      c.worked = tiles.sort((a, b) => a - b);
+      c.manualTiles = true;
+      return { ok: true, state: draft, events };
+    }
+
+    case "autoAssignWorkers": {
+      const city = state.cities.find((c) => c.id === command.cityId);
+      if (!city) return { ok: false, error: "unknownCity" };
+      if (city.owner !== state.currentPlayer) return { ok: false, error: "notYourCity" };
+      const draft = cloneState(state);
+      const c = draft.cities.find((x) => x.id === city.id)!;
+      c.manualTiles = false;
+      assignWorkersDraft(draft, c);
       return { ok: true, state: draft, events };
     }
 

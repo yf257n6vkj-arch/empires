@@ -83,12 +83,14 @@ describe("technologies", () => {
     expect(s.players[0]!.research).toBe(science);
   });
 
-  it("makes each technology more expensive than the last", () => {
+  it("makes technologies more expensive the more the player knows", () => {
     const s = cityState();
     const p = s.players[0]!;
     const first = researchCost(p);
-    p.techs.push("bronze");
-    expect(researchCost(p)).toBe(first + RULES.researchCostPerTech);
+    expect(first).toBe(Math.round(RULES.researchCostBase));
+    p.techs.push(...(Object.keys(TECHS) as (keyof typeof TECHS)[]).slice(0, 10));
+    expect(researchCost(p)).toBe(Math.round(RULES.researchCostBase + 10 * RULES.researchCostPerTech));
+    expect(researchCost(p)).toBeGreaterThan(first);
   });
 
   it("unlocks units and hides those that are obsolete", () => {

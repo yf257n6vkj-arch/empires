@@ -262,7 +262,7 @@ function playOne(seed: string): Result {
   workers.clear();
   founders.clear();
   let state = newGame({ seed, playerCount: 4 });
-  const eraTurn: Record<number, number | null> = { 2: null, 3: null, 4: null };
+  const eraTurn: Record<number, number | null> = { 2: null, 3: null, 4: null, 5: null };
   const techsAt: Record<number, number> = {};
   let allTechsTurn: number | null = null;
   const total = Object.keys(TECHS).length;
@@ -275,7 +275,7 @@ function playOne(seed: string): Result {
     state = passComputerTurns(ended.state).state;
     const me = state.players[ME]!;
     const era = currentEra(me);
-    for (const e of [2, 3, 4]) if (era >= e && eraTurn[e] === null) eraTurn[e] = state.turn;
+    for (const e of [2, 3, 4, 5]) if (era >= e && eraTurn[e] === null) eraTurn[e] = state.turn;
     if (allTechsTurn === null && me.techs.length === total) allTechsTurn = state.turn;
     if ([40, 60, 80, 100, 120].includes(state.turn - 1)) techsAt[state.turn - 1] = me.techs.length;
     if (process.env.PACE_DEBUG && state.turn % 10 === 0) {
@@ -316,7 +316,7 @@ function quantiles(values: (number | null)[]): string {
 }
 
 console.log(`${games} partií za ${seconds} s, cena výzkumu ${RULES.researchCostBase} + ${RULES.researchCostPerTech} × počet technologií`);
-for (const e of [2, 3, 4]) console.log(`éra ${e} v tahu: ${quantiles(results.map((r) => r.eraTurn[e] ?? null))}`);
+for (const e of [2, 3, 4, 5]) console.log(`éra ${e} v tahu: ${quantiles(results.map((r) => r.eraTurn[e] ?? null))}`);
 for (const t of [40, 60, 80, 100, 120]) console.log(`technologie v tahu ${t}: ${quantiles(results.map((r) => r.techsAt[t] ?? null))}`);
 console.log(`celý strom v tahu: ${quantiles(results.map((r) => r.allTechsTurn))}`);
 console.log(`města v tahu 120: ${quantiles(results.map((r) => r.cities))}`);

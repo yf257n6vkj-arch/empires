@@ -8,13 +8,14 @@
     { "id": "library", "name": "Knihovna", "cost": 40, "upkeep": 1, "requires": "writing", "requiresBuilding": null, "wonder": false, "effects": { "sciencePct": 50 } },
     { "id": "marketplace", "name": "Tržiště", "cost": 40, "upkeep": 1, "requires": "currency", "requiresBuilding": null, "wonder": false, "effects": { "goldPct": 50 } },
     { "id": "amphitheater", "name": "Amfiteátr", "cost": 35, "upkeep": 3, "requires": "construction", "requiresBuilding": null, "wonder": false, "effects": { "content": 3 } },
-    { "id": "aqueduct", "name": "Akvadukt", "cost": 50, "upkeep": 2, "requires": "engineering", "requiresBuilding": null, "wonder": false, "effects": { "maxSize": 16 } },
-    { "id": "university", "name": "Univerzita", "cost": 70, "upkeep": 3, "requires": "scholarship", "requiresBuilding": "library", "wonder": false, "effects": { "sciencePct": 50 } },
-    { "id": "factory", "name": "Továrna", "cost": 90, "upkeep": 4, "requires": "industry", "requiresBuilding": null, "wonder": false, "effects": { "shieldsPct": 50 } },
+    { "id": "aqueduct", "name": "Akvadukt", "cost": 50, "upkeep": 2, "requires": "construction", "requiresBuilding": null, "wonder": false, "effects": { "maxSize": 16 } },
+    { "id": "cathedral", "name": "Katedrála", "cost": 60, "upkeep": 3, "requires": "religion", "requiresBuilding": null, "wonder": false, "effects": { "content": 3 } },
+    { "id": "university", "name": "Univerzita", "cost": 70, "upkeep": 3, "requires": "university", "requiresBuilding": "library", "wonder": false, "effects": { "sciencePct": 50 } },
+    { "id": "factory", "name": "Továrna", "cost": 90, "upkeep": 4, "requires": "industrialization", "requiresBuilding": null, "wonder": false, "effects": { "shieldsPct": 50 } },
     { "id": "stoneCircle", "name": "Kamenný kruh", "cost": 90, "upkeep": 0, "requires": "mysticism", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": { "content": 1 } },
     { "id": "hallOfScholars", "name": "Síň učenců", "cost": 110, "upkeep": 0, "requires": "philosophy", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": { "sciencePct": 25 } },
     { "id": "greatObservatory", "name": "Velká hvězdárna", "cost": 120, "upkeep": 0, "requires": "astronomy", "requiresBuilding": null, "wonder": true, "scope": "city", "effects": { "sciencePct": 100 } },
     { "id": "grandBazaar", "name": "Velký bazar", "cost": 130, "upkeep": 0, "requires": "banking", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": { "goldPct": 25 } },
-    { "id": "greatWork", "name": "Velké dílo", "cost": 300, "upkeep": 0, "requires": "modernScience", "requiresBuilding": null, "wonder": true, "scope": "city", "victory": true, "effects": {} }
+    { "id": "greatWork", "name": "Velké dílo", "cost": 300, "upkeep": 0, "requires": "fusionPower", "requiresBuilding": null, "wonder": true, "scope": "city", "victory": true, "effects": {} }
   ]
 }

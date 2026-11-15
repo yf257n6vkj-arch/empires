@@ -3,7 +3,7 @@
  * another; when the last player ends, a new game turn begins.
  */
 import { processCityDraft } from "./city";
-import { buildingUpkeep, researchCost, sellBuildingsForUpkeepDraft } from "./economy";
+import { buildingUpkeep, nextStepToGoal, researchCost, sellBuildingsForUpkeepDraft } from "./economy";
 import { continueGotoDraft } from "./units";
 import type { GameEvent } from "./events";
 import { IMPROVEMENTS, type ImprovementId } from "./rules";
@@ -47,7 +47,11 @@ function economyDraft(draft: GameState, playerId: PlayerId, science: number, gol
     player.techs.push(tech);
     player.researching = null;
     events.push({ type: "techLearned", player: playerId, tech });
-    events.push({ type: "researchNeeded", player: playerId });
+    if (player.researchGoal !== null) player.researching = nextStepToGoal(player, player.researchGoal);
+    if (player.researching === null) {
+      player.researchGoal = null;
+      events.push({ type: "researchNeeded", player: playerId });
+    }
   }
 }
 

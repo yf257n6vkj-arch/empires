@@ -12,6 +12,6 @@
     { "id": "musketeers", "name": "Mušketýr", "cost": 15, "attack": 3, "defense": 3, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "gunpowder", "obsoleteBy": "riflemen" },
     { "id": "cannon", "name": "Dělo", "cost": 20, "attack": 8, "defense": 1, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "metallurgy", "obsoleteBy": null },
     { "id": "riflemen", "name": "Střelec", "cost": 20, "attack": 5, "defense": 4, "moves": 1, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "conscription", "obsoleteBy": null },
-    { "id": "tank", "name": "Tank", "cost": 40, "attack": 10, "defense": 5, "moves": 3, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "combustion", "obsoleteBy": null }
+    { "id": "tank", "name": "Tank", "cost": 40, "attack": 10, "defense": 5, "moves": 3, "foundsCity": false, "buildsImprovements": false, "populationCost": 0, "foodUpkeep": 0, "requires": "automobile", "obsoleteBy": null }
   ]
 }

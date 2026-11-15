@@ -60,11 +60,18 @@ export function cityHappiness(state: GameState, city: City, effects = cityEffect
 
 /**
  * Puts citizens on the best available tiles (mutates the draft).
- * First it keeps as many citizens off the fields as entertainers as the city
+ * Tiles the owner chose by hand are kept while they stay valid.
+ * Otherwise it first keeps as many citizens off the fields as entertainers as the city
  * needs to stay calm. The rest pick food-heavy tiles until the city has a
  * surplus of TARGET_FOOD_SURPLUS, then they weigh food and shields equally.
  */
 export function assignWorkersDraft(draft: GameState, city: City): void {
+  if (city.manualTiles) {
+    // A hand-made choice stays while every chosen tile is still free to work.
+    const allowed = new Set(workableTiles(draft, city));
+    if (city.worked.length <= city.size && city.worked.every((i) => allowed.has(i))) return;
+    city.manualTiles = false;
+  }
   const unhappy = unhappyAfterHelp(draft, city, cityEffects(draft, city));
   // Smallest number of entertainers e with unhappy - e <= size - e - (unhappy - e).
   const entertainers = Math.min(unhappy, Math.max(0, 2 * unhappy - city.size));
@@ -173,6 +180,7 @@ export function processCityDraft(draft: GameState, city: City, events: GameEvent
   if (city.food < 0) {
     if (city.size > 1) {
       city.size -= 1;
+      city.manualTiles = false;
       events.push({ type: "cityStarved", cityId: city.id, size: city.size });
     }
     city.food = 0;
@@ -184,6 +192,7 @@ export function processCityDraft(draft: GameState, city: City, events: GameEvent
       city.food = report.growthThreshold;
     } else {
       city.size += 1;
+      city.manualTiles = false;
       city.food = Math.floor(report.growthThreshold * effects.keepFoodOnGrowth);
       events.push({ type: "cityGrew", cityId: city.id, size: city.size });
     }
@@ -213,6 +222,7 @@ function completeProductionDraft(draft: GameState, city: City, cost: number, eve
       return;
     }
     city.size -= rule.populationCost;
+    if (rule.populationCost > 0) city.manualTiles = false;
     city.shields -= cost;
     const unitId = draft.nextId++;
     draft.units.push({

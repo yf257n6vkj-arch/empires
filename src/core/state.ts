@@ -6,7 +6,7 @@ import type { Point } from "./geometry";
 import type { BuildingId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 
 export interface GameMap {
   width: number;
@@ -39,6 +39,8 @@ export interface Player {
   techs: TechId[];
   /** Technology being researched, null = the player has to choose. */
   researching: TechId | null;
+  /** Technology the player is heading for; the next step is chosen automatically. */
+  researchGoal: TechId | null;
   /** Science collected towards the next technology. */
   research: number;
   gold: number;
@@ -88,6 +90,11 @@ export interface City {
   buildings: BuildingId[];
   /** Tile indexes worked by citizens; the city centre is always worked on top of these. */
   worked: number[];
+  /**
+   * True when the owner chose the worked tiles by hand. The choice holds until
+   * the city grows or shrinks, then the city places citizens itself again.
+   */
+  manualTiles: boolean;
   foundedTurn: number;
 }
 

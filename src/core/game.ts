@@ -6,9 +6,9 @@ import { applyCommand } from "./commands";
 import type { GameEvent } from "./events";
 import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
-import { RULES } from "./rules";
+import { RULES, TECH_IDS, type TechId } from "./rules";
 import { chooseStartPositions } from "./start";
-import { startingEconomy } from "./economy";
+import { canResearch, startingEconomy } from "./economy";
 import { STATE_VERSION, type GameState, type Player, type Unit } from "./state";
 import { fullMoves, reveal } from "./world";
 
@@ -98,11 +98,23 @@ export function passComputerTurns(state: GameState): { state: GameState; events:
  */
 export function migrateState(saved: { version?: number } & Record<string, unknown>): GameState | null {
   if (saved.version === STATE_VERSION) return saved as unknown as GameState;
-  if (saved.version === 2) {
-    const state = JSON.parse(JSON.stringify(saved)) as GameState;
-    state.version = STATE_VERSION;
-    state.players = state.players.map((p) => ({ ...startingEconomy(), ...p }));
-    return state;
+  if (saved.version !== 2 && saved.version !== 3) return null;
+  const state = JSON.parse(JSON.stringify(saved)) as GameState;
+  if (saved.version === 2) state.players = state.players.map((p) => ({ ...startingEconomy(), ...p }));
+  // Version 4 has the full tree of phase 2b. Renamed technologies keep their
+  // place, ones that no longer exist are dropped, research in progress stays.
+  const renamed: Record<string, TechId | undefined> = { scholarship: "university", industry: "industrialization" };
+  const fix = (t: string): TechId | null => {
+    const id = renamed[t] ?? t;
+    return (TECH_IDS as readonly string[]).includes(id) ? (id as TechId) : null;
+  };
+  for (const p of state.players) {
+    p.techs = p.techs.map(fix).filter((t): t is TechId => t !== null);
+    p.researching = p.researching === null ? null : fix(p.researching);
+    if (p.researching && !canResearch(p, p.researching)) p.researching = null;
+    p.researchGoal = null;
   }
-  return null;
+  for (const c of state.cities) c.manualTiles = false;
+  state.version = STATE_VERSION;
+  return state;
 }

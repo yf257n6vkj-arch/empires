@@ -16,10 +16,14 @@ import {
 import type { City, GameState, Player, PlayerId, ProductionItem } from "./state";
 
 /** Economy fields of a player at the start of a game. */
-export function startingEconomy(): Pick<Player, "techs" | "researching" | "research" | "gold" | "scienceRate"> {
+export function startingEconomy(): Pick<
+  Player,
+  "techs" | "researching" | "researchGoal" | "research" | "gold" | "scienceRate"
+> {
   return {
     techs: [],
     researching: null,
+    researchGoal: null,
     research: 0,
     gold: RULES.startingGold,
     scienceRate: RULES.startingScienceRate,
@@ -41,9 +45,29 @@ export function researchableTechs(player: Player): TechId[] {
   return (Object.keys(TECHS) as TechId[]).filter((t) => canResearch(player, t));
 }
 
+/**
+ * Technologies still missing on the way to `goal`, the goal included, in an
+ * order in which they can be researched (prerequisites first).
+ */
+export function pathToTech(player: Player, goal: TechId): TechId[] {
+  const result: TechId[] = [];
+  const visit = (t: TechId) => {
+    if (player.techs.includes(t) || result.includes(t)) return;
+    for (const r of TECHS[t].requires) visit(r);
+    result.push(t);
+  };
+  visit(goal);
+  return result;
+}
+
+/** The next technology to research on the way to `goal`, or null when the goal is known. */
+export function nextStepToGoal(player: Player, goal: TechId): TechId | null {
+  return pathToTech(player, goal).find((t) => canResearch(player, t)) ?? null;
+}
+
 /** Science needed for the player's next technology. */
 export function researchCost(player: Player): number {
-  return RULES.researchCostBase + RULES.researchCostPerTech * player.techs.length;
+  return Math.round(RULES.researchCostBase + RULES.researchCostPerTech * player.techs.length);
 }
 
 /** Highest era among known technologies, 0 before the first one. */

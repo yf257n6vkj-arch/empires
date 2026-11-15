@@ -37,6 +37,7 @@ export interface PlayerView {
   economy: {
     techs: TechId[];
     researching: TechId | null;
+    researchGoal: TechId | null;
     research: number;
     researchCost: number;
     gold: number;
@@ -68,6 +69,7 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     economy: {
       techs: [...player.techs],
       researching: player.researching,
+      researchGoal: player.researchGoal,
       research: player.research,
       researchCost: researchCost(player),
       gold: player.gold,

@@ -34,6 +34,9 @@ export const ERROR_TEXT: Record<CommandError, string> = {
   unknownTech: "Taková technologie neexistuje.",
   cannotResearch: "Tuhle technologii teď zkoumat nejde. Buď ji už znáš, nebo ti chybí předchozí.",
   invalidRate: "Poměr výzkumu a zlata jde nastavit jen po deseti procentech.",
+  alreadyKnown: "Tuhle technologii už znáš.",
+  tileNotWorkable: "Tohle políčko město obdělávat nemůže. Buď je mimo jeho okolí, nebo ho obdělává jiné město.",
+  tooManyWorkers: "Město nemá tolik obyvatel.",
 };
 
 export function cityName(state: GameState, id: number): string {

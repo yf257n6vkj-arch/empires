@@ -46,6 +46,7 @@ export function makeUnit(id: number, owner: PlayerId, type: Unit["type"], at: Po
     fortified: false,
     work: null,
     goto: null,
+    orders: null,
     carriedBy: null,
     turnsAloft: 0,
   };

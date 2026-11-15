@@ -29,6 +29,7 @@
         <div id="tooltip" hidden></div>
         <div id="status" class="status" aria-live="polite"></div>
         <div class="hud hud-left">
+          <section id="advisor" class="hud-panel advisor" hidden></section>
           <section id="research-pick" class="hud-panel" hidden></section>
           <section id="selection" class="hud-panel"></section>
         </div>
@@ -60,6 +61,7 @@
       </nav>
       <div class="gm-settings">
         <p class="hint">Hra se průběžně ukládá sama. Kód téhle mapy je <b id="seed-label"></b>. Když ho zadáš u nové hry, dostaneš stejnou mapu.</p>
+        <label class="check"><input id="advisor-on" type="checkbox" checked /> Rádce radí, co dělat dál</label>
         <label class="check"><input id="show-all" type="checkbox" /> Ukázat celou mapu (ladění)</label>
       </div>
     </dialog>
@@ -72,13 +74,15 @@
         <li>Do města nebo k jiné jednotce pošleš vybranou jednotku pravým klikem (na trackpadu klikni dvěma prsty) nebo klávesou <kbd>G</kbd> a klikem na cíl. Jednotku na cestě poznáš podle modré šipky. Když ji vybereš, cestu zrušíš klávesou <kbd>C</kbd>.</li>
         <li>Šipky nebo číslice 1 až 9 posouvají vybranou jednotku.</li>
         <li><kbd>B</kbd> založit město, <kbd>R</kbd> cesta, <kbd>I</kbd> zavlažování, <kbd>M</kbd> důl, <kbd>Z</kbd> železnice, <kbd>P</kbd> pevnost</li>
+        <li><kbd>K</kbd> a klik na cíl: osadník postaví cestu po celé trase. <kbd>A</kbd>: osadník sám vylepšuje okolí tvých měst. Obojí zastavíš klávesou <kbd>C</kbd>.</li>
         <li>Pozemní jednotka nastoupí na loď, když na ni vstoupí z pobřeží. Ve městě ji nalodíš klávesou <kbd>L</kbd>. Z lodi vystoupí krokem na pevninu.</li>
         <li>Letadla musí včas přistát ve městě nebo na letadlové lodi, jinak jim dojde palivo.</li>
         <li><kbd>F</kbd> opevnit, <kbd>mezerník</kbd> nechat jednotku do příštího tahu, <kbd>N</kbd> další jednotka</li>
         <li><kbd>U</kbd> povýšit jednotku na novější typ (ve vlastním městě za zlato), <kbd>D</kbd> rozpustit jednotku. Ve vlastním městě dá polovinu své ceny do výroby.</li>
         <li><kbd>Enter</kbd> konec tahu, <kbd>T</kbd> strom technologií, <kbd>E</kbd> encyklopedie</li>
         <li><kbd>Esc</kbd> zruší výběr. Když není nic vybrané, otevře menu, kde hru uložíš nebo nahraješ.</li>
-        <li>Dvojklik na město nebo tlačítko <b>Otevřít město</b> ukáže celé město. Klikem na políčko v okolí města přesuneš obyvatele.</li>
+        <li>Dvojklik na město nebo tlačítko <b>Otevřít město</b> ukáže celé město. Klikem na políčko v okolí města přesuneš obyvatele. Tlačítkem + u stavby ji přidáš do plánu a město ji postaví, až dokončí tu předchozí. Hranici mezi obrázkem města a panely můžeš táhnout myší.</li>
+        <li>Rádce vlevo nahoře radí, co dělat dál. Vypneš ho v menu.</li>
         <li>Přiblížení: roztažení dvěma prsty na trackpadu, <kbd>Ctrl</kbd> + kolečko myši nebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Klávesa <kbd>0</kbd> vrátí celou mapu.</li>
         <li>Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši, tažením nebo klikem do malé mapy vpravo dole.</li>
       </ul>

@@ -13,10 +13,12 @@ Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti náro
 - Do města nebo k jiné jednotce ji pošleš pravým klikem (na trackpadu dvěma prsty) nebo klávesou `G` a klikem na cíl. Jednotka na cestě má u sebe modrou šipku. Když ji vybereš, cestu zrušíš klávesou `C`.
 - Šipky nebo číslice 1 až 9 posouvají vybranou jednotku.
 - `B` založí město, `R` postaví cestu, `I` zavlažování, `M` důl, `F` opevní jednotku, mezerník ji nechá do příštího tahu, `N` vybere další jednotku, `U` ji povýší a `D` rozpustí.
+- `K` a klik na cíl pošle osadníka stavět cestu po celé trase, `A` mu zapne automatickou práci kolem měst. Obojí zastaví `C`.
 - `Enter` ukončí tah, `Esc` zruší výběr. Druhé `Esc` otevře nabídku.
 - `T` otevře strom technologií. Na výzkum klikneš i v hlavičce a posuvníkem vedle nastavíš, kolik obchodu jde do výzkumu a kolik do zlata.
 - Klik na technologii ve stromu otevře její stránku. Vzdálenou technologii jde nastavit jako cíl a hra k ní bude zkoumat sama.
-- Dvojklik na město nebo tlačítko `Otevřít město` ukáže obrazovku města. Klikem na políčko v okolí města přesuneš obyvatele.
+- Dvojklik na město nebo tlačítko `Otevřít město` ukáže obrazovku města. Klikem na políčko v okolí města přesuneš obyvatele. Tlačítkem + u stavby ji přidáš do plánu a hranici mezi obrázkem a panely jde táhnout myší.
+- Rádce vlevo nahoře radí začátečníkům, co dělat dál. Vypnout jde v menu.
 - Mapu přiblížíš roztažením prstů na trackpadu, `Ctrl` a kolečkem myši, tlačítky v rohu mapy nebo klávesami `+` a `−`. Nula vrátí celou mapu.
 - Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením. Klik do malé mapy vpravo dole tě přenese na to místo.
 - Záznam událostí vpravo nahoře rozbalíš šipkou.
@@ -65,6 +67,8 @@ src/core/        herní jádro, žádná vazba na prohlížeč
   world.ts       pomocné funkce pro čtení mapy a výnosů
   events.ts      události pro záznam a pro AI
   view.ts        pohled hráče, jediný vstup pro AI
+  workers.ts     osadník staví cestu po celé trase nebo sám vylepšuje okolí měst
+  advisor.ts     rady pro začínajícího hráče
   economy.ts     technologie, cíl výzkumu, zlato, co jde stavět
 src/web/         vykreslení do Canvasu, ovládání a české texty
   render.ts      mapa, terén, města

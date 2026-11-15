@@ -32,6 +32,7 @@ import type { GameEvent } from "./events";
 import { distance, neighbors4, type Point } from "./geometry";
 import { findPath } from "./path";
 import { boardDraft, canMove, continueGotoDraft, moveDraft } from "./units";
+import { workerStepDraft } from "./workers";
 
 export { canMove };
 import {
@@ -60,6 +61,9 @@ export type Command =
   | { type: "skipTurn"; unitId: UnitId }
   | { type: "cancelOrders"; unitId: UnitId }
   | { type: "setProduction"; cityId: CityId; item: ProductionItem }
+  | { type: "setQueue"; cityId: CityId; queue: ProductionItem[] }
+  | { type: "buildRoute"; unitId: UnitId; to: Point; improvement: "road" | "railroad" }
+  | { type: "automate"; unitId: UnitId }
   | { type: "buy"; cityId: CityId }
   | { type: "setResearch"; tech: TechId }
   | { type: "setResearchGoal"; tech: TechId }
@@ -98,6 +102,7 @@ export type CommandError =
   | "onCityTile"
   | "noPath"
   | "invalidProduction"
+  | "queueFull"
   | "alreadyComplete"
   | "notEnoughGold"
   | "unknownTech"
@@ -157,13 +162,17 @@ export function canBuildImprovement(
 ): CommandError | null {
   if (!UNIT_TYPES[unit.type].buildsImprovements) return "cannotBuildImprovements";
   if (unit.movesLeft <= 0) return "noMovesLeft";
-  if (cityAt(state, unit)) return "onCityTile";
-  const i = idx(state.map, unit);
+  return improvementProblemAt(state, unit.owner, idx(state.map, unit), improvement);
+}
+
+/** Why `owner` cannot build the improvement on tile `i`, whoever stands there; null when it can. */
+export function improvementProblemAt(state: GameState, owner: number, i: number, improvement: ImprovementId): CommandError | null {
+  if (state.cities.some((c) => idx(state.map, c) === i)) return "onCityTile";
   const terrain = state.map.terrain[i];
   const rule = IMPROVEMENTS[improvement];
   if (!terrain || rule.turns[terrain] === undefined) return "terrainNotSuitable";
   if (state.map[improvement][i]) return "alreadyBuilt";
-  if (rule.requires && !knowsTech(getPlayer(state, unit.owner), rule.requires)) return "needsTech";
+  if (rule.requires && !knowsTech(getPlayer(state, owner), rule.requires)) return "needsTech";
   if (rule.requiresImprovement && !state.map[rule.requiresImprovement][i]) return "needsRoad";
   if (improvement === "irrigation") {
     const watered = neighbors4(state.map, i).some(
@@ -200,6 +209,7 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       const draft = cloneState(state);
       const u = draft.units.find((x) => x.id === unit.id)!;
       u.goto = null;
+      u.orders = null;
       moveDraft(draft, u, command.to);
       return { ok: true, state: draft, events };
     }
@@ -213,6 +223,7 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       u.goto = { ...command.to };
       u.fortified = false;
       u.work = null;
+      u.orders = null;
       continueGotoDraft(draft, u, events);
       return { ok: true, state: draft, events };
     }
@@ -235,6 +246,7 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
         food: 0,
         shields: 0,
         production: fallbackProduction(draft, unit.owner),
+        queue: [],
         // The first city of a player is the capital.
         buildings: player.citiesFounded === 0 ? ["palace" as const] : [],
         worked: [],
@@ -261,6 +273,7 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       const u = draft.units.find((x) => x.id === unit.id)!;
       u.work = { improvement: command.improvement, progress: 0 };
       u.goto = null;
+      u.orders = null;
       u.fortified = false;
       u.movesLeft = 0;
       return { ok: true, state: draft, events };
@@ -275,6 +288,7 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       const u = draft.units.find((x) => x.id === unit.id)!;
       u.goto = null;
       u.work = null;
+      u.orders = null;
       if (command.type === "fortify") {
         u.fortified = true;
         u.movesLeft = 0;
@@ -293,6 +307,54 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       if (!canBuild(state, city, command.item)) return { ok: false, error: "invalidProduction" };
       const draft = cloneState(state);
       draft.cities.find((c) => c.id === city.id)!.production = { ...command.item };
+      return { ok: true, state: draft, events };
+    }
+
+    case "setQueue": {
+      const city = state.cities.find((c) => c.id === command.cityId);
+      if (!city) return { ok: false, error: "unknownCity" };
+      if (city.owner !== state.currentPlayer) return { ok: false, error: "notYourCity" };
+      if (command.queue.length > RULES.queueLength) return { ok: false, error: "queueFull" };
+      const seen: ProductionItem[] = [city.production];
+      for (const item of command.queue) {
+        if (!canBuild(state, city, item)) return { ok: false, error: "invalidProduction" };
+        // A building can only stand once, so it can only be planned once.
+        if (item.kind === "building" && seen.some((x) => sameItem(x, item))) return { ok: false, error: "invalidProduction" };
+        seen.push(item);
+      }
+      const draft = cloneState(state);
+      draft.cities.find((c) => c.id === city.id)!.queue = command.queue.map((x) => ({ ...x }));
+      return { ok: true, state: draft, events };
+    }
+
+    case "buildRoute": {
+      const unit = ownUnit(state, command.unitId);
+      if (typeof unit === "string") return { ok: false, error: unit };
+      if (!UNIT_TYPES[unit.type].buildsImprovements) return { ok: false, error: "cannotBuildImprovements" };
+      const needs = IMPROVEMENTS[command.improvement].requires;
+      if (needs && !knowsTech(getPlayer(state, unit.owner), needs)) return { ok: false, error: "needsTech" };
+      if (!findPath(state, unit.owner, unit, command.to)) return { ok: false, error: "noPath" };
+      const draft = cloneState(state);
+      const u = draft.units.find((x) => x.id === unit.id)!;
+      u.goto = null;
+      u.work = null;
+      u.fortified = false;
+      u.orders = { kind: "route", to: { ...command.to }, improvement: command.improvement };
+      workerStepDraft(draft, u, events);
+      return { ok: true, state: draft, events };
+    }
+
+    case "automate": {
+      const unit = ownUnit(state, command.unitId);
+      if (typeof unit === "string") return { ok: false, error: unit };
+      if (!UNIT_TYPES[unit.type].buildsImprovements) return { ok: false, error: "cannotBuildImprovements" };
+      const draft = cloneState(state);
+      const u = draft.units.find((x) => x.id === unit.id)!;
+      u.goto = null;
+      u.work = null;
+      u.fortified = false;
+      u.orders = { kind: "auto", target: null };
+      workerStepDraft(draft, u, events);
       return { ok: true, state: draft, events };
     }
 

@@ -375,6 +375,10 @@ export interface GameConstants {
   unitSight: number;
   citySight: number;
   minCityDistance: number;
+  /** Items a city can plan after its current production. */
+  queueLength: number;
+  /** How far (in tiles) an automatic settler looks for work around its owner's cities. */
+  autoWorkRange: number;
   foodPerCitizen: number;
   growthFoodBase: number;
   cityCenterMinShields: number;

@@ -60,6 +60,7 @@ export function addUnit(state: GameState, type: UnitTypeId, x: number, y: number
     fortified: false,
     work: null,
     goto: null,
+    orders: null,
     carriedBy: null,
     turnsAloft: 0,
   };

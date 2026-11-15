@@ -18,6 +18,7 @@ import type { GameEvent } from "./events";
 import { BUILDINGS, IMPROVEMENTS, RULES, TECH_IDS, UNIT_TYPES, type ImprovementId } from "./rules";
 import { Rng } from "./rng";
 import type { GameState, PlayerId, Unit } from "./state";
+import { workerStepDraft } from "./workers";
 import { cityAt, idx, touchesLand } from "./world";
 
 /** Ends the current player's turn and starts the next player's (mutates the draft). */
@@ -146,6 +147,9 @@ function startTurnDraft(draft: GameState, player: PlayerId, events: GameEvent[])
   }
   for (const unit of draft.units.filter((u) => u.owner === player && u.goto)) {
     continueGotoDraft(draft, unit, events);
+  }
+  for (const unit of draft.units.filter((u) => u.owner === player && u.orders && !u.work)) {
+    workerStepDraft(draft, unit, events);
   }
   events.push({ type: "turnStarted", turn: draft.turn, player });
 }

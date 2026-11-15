@@ -335,10 +335,7 @@ export function processCityDraft(draft: GameState, city: City, events: GameEvent
 
   // Production. Something that became impossible (a wonder built elsewhere,
   // an obsolete unit) is replaced before shields are added.
-  if (!canBuild(draft, city, city.production)) {
-    city.production = fallbackProduction(draft, city.owner);
-    events.push({ type: "productionNeeded", cityId: city.id });
-  }
+  if (!canBuild(draft, city, city.production)) nextProductionDraft(draft, city, events);
   city.shields += report.shieldSurplus;
   const item = city.production;
   const cost = productionCost(item);
@@ -362,6 +359,8 @@ function completeProductionDraft(draft: GameState, city: City, cost: number, eve
     const unitId = draft.nextId++;
     draft.units.push(makeUnit(unitId, city.owner, item.id, city, city.id));
     events.push({ type: "unitBuilt", cityId: city.id, unitId, unitType: item.id });
+    // Without plans the city keeps making the same unit.
+    if (city.queue.length > 0) nextProductionDraft(draft, city, events);
     return;
   }
   city.shields -= cost;
@@ -370,11 +369,8 @@ function completeProductionDraft(draft: GameState, city: City, cost: number, eve
     const player = draft.players[city.owner]!;
     player.spaceship[rule.spaceship] += 1;
     events.push({ type: "spaceshipPartBuilt", cityId: city.id, building: item.id });
-    // The city keeps building parts while it can.
-    if (!canBuild(draft, city, item)) {
-      city.production = fallbackProduction(draft, city.owner);
-      events.push({ type: "productionNeeded", cityId: city.id });
-    }
+    // The city keeps building parts while it can and has nothing else planned.
+    if (city.queue.length > 0 || !canBuild(draft, city, item)) nextProductionDraft(draft, city, events);
     return;
   }
   // A new palace moves the capital; a new power plant replaces the old one.
@@ -395,7 +391,24 @@ function completeProductionDraft(draft: GameState, city: City, cost: number, eve
     const tech = freeTechChoice(player);
     if (tech) learnTechDraft(draft, city.owner, tech, events);
   }
-  // A building cannot be built twice, so the city falls back to a defender.
+  // A building cannot be built twice: the city takes the next planned item or falls back to a defender.
+  nextProductionDraft(draft, city, events);
+}
+
+/**
+ * Moves the city on to the first item of its queue that it can still build,
+ * dropping ones that became impossible, or to a defender when nothing is
+ * planned (mutates the draft).
+ */
+function nextProductionDraft(draft: GameState, city: City, events: GameEvent[]): void {
+  while (city.queue.length > 0) {
+    const next = city.queue.shift()!;
+    if (canBuild(draft, city, next)) {
+      city.production = next;
+      events.push({ type: "queueAdvanced", cityId: city.id, item: next });
+      return;
+    }
+  }
   city.production = fallbackProduction(draft, city.owner);
   events.push({ type: "productionNeeded", cityId: city.id });
 }

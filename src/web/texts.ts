@@ -35,6 +35,7 @@ export const ERROR_TEXT: Record<CommandError, string> = {
   onCityTile: "Ve městě je cesta i zavlažování automaticky.",
   noPath: "Na tohle místo nevede žádná známá cesta.",
   invalidProduction: "Tohle město teď postavit nemůže.",
+  queueFull: "Do plánu se víc staveb nevejde.",
   alreadyComplete: "Výroba je už zaplacená, dokončí se na konci tahu.",
   notEnoughGold: "Na nákup nemáš dost zlata.",
   unknownTech: "Taková technologie neexistuje.",
@@ -117,6 +118,12 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
       return `Osadník dokončil: ${IMPROVEMENTS[e.improvement].name}.`;
     case "gotoBlocked":
       return "Jednotka nenašla cestu k cíli a zastavila se.";
+    case "routeBuilt":
+      return e.improvement === "road" ? "Osadník dostavěl cestu až do cíle." : "Osadník dostavěl železnici až do cíle.";
+    case "queueAdvanced": {
+      const city = state.cities.find((c) => c.id === e.cityId);
+      return city ? `Ve městě ${city.name} se podle plánu začalo stavět: ${productionName(e.item)}.` : null;
+    }
     case "turnStarted":
       return null;
     case "unitDisbanded":

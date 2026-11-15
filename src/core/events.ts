@@ -16,6 +16,10 @@ export type GameEvent =
   | { type: "productionNeeded"; cityId: CityId }
   | { type: "improvementDone"; unitId: UnitId; at: Point; improvement: ImprovementId }
   | { type: "gotoBlocked"; unitId: UnitId }
+  /** A settler finished its road or railroad along the whole way. */
+  | { type: "routeBuilt"; unitId: UnitId; improvement: "road" | "railroad" }
+  /** A city took the next item from its queue. */
+  | { type: "queueAdvanced"; cityId: CityId; item: ProductionItem }
   | { type: "turnStarted"; turn: number; player: PlayerId }
   | { type: "wonderBuilt"; cityId: CityId; owner: PlayerId; building: BuildingId }
   | { type: "buildingSold"; cityId: CityId; building: BuildingId }

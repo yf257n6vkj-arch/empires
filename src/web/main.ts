@@ -73,6 +73,7 @@ import { createEmpireDialogs } from "./empire";
 import { createCodex, entryKey } from "./codex";
 import { createNewGameDialog } from "./newGame";
 import { createMenus } from "./menu";
+import { createAdvisor } from "./advisorPanel";
 import { payloadOf, readAutosave, writeAutosave, type LogEntry, type SavePayload } from "./saves";
 
 const HUMAN = 0;
@@ -116,6 +117,8 @@ let followed = "";
 let targetingUnitId: number | null = null;
 /** The unit waiting for a click that says where to send it, whatever is on the tile. */
 let sendingUnitId: number | null = null;
+/** What the click does with it: go there, or build a road or railroad all the way. */
+let sendMode: "goto" | "road" | "railroad" = "goto";
 /** Unit whose "Rozpustit" button was pressed once and now asks for confirmation. */
 let disbandConfirmUnitId: number | null = null;
 
@@ -217,7 +220,7 @@ function run(command: Command): boolean {
 }
 
 function needsOrders(u: Unit): boolean {
-  return u.owner === HUMAN && u.movesLeft > 0 && !u.goto && !u.fortified && !u.work;
+  return u.owner === HUMAN && u.movesLeft > 0 && !u.goto && !u.fortified && !u.work && !u.orders;
 }
 
 function selectedUnit(): Unit | undefined {
@@ -250,11 +253,20 @@ function afterUnitAction(): void {
 function moveSelected(to: Point): void {
   const unit = selectedUnit();
   if (!unit) return;
+  const mode = sendingUnitId === unit.id ? sendMode : "goto";
   const ok =
-    distance(unit, to) === 1
-      ? run({ type: "move", unitId: unit.id, to })
-      : run({ type: "goto", unitId: unit.id, to });
+    mode !== "goto"
+      ? run({ type: "buildRoute", unitId: unit.id, to, improvement: mode })
+      : distance(unit, to) === 1
+        ? run({ type: "move", unitId: unit.id, to })
+        : run({ type: "goto", unitId: unit.id, to });
   sendingUnitId = null;
+  sendMode = "goto";
+  if (ok && mode !== "goto") {
+    say(`Osadník staví ${mode === "road" ? "cestu" : "železnici"} až do cíle. Když ho vybereš, stavbu zrušíš klávesou C.`);
+    afterUnitAction();
+    return;
+  }
   if (ok) {
     const moved = state.units.find((u) => u.id === unit.id);
     if (moved?.goto) say(`${UNIT_TYPES[unit.type].name} je na cestě. Cestu zrušíš klávesou C, až jednotku znovu vybereš.`);
@@ -338,7 +350,8 @@ function buildDrawInput(): DrawInput {
       x: u.x,
       y: u.y,
       fortified: u.fortified,
-      onRoute: u.owner === HUMAN && state.units.some((x) => x.id === u.id && x.goto !== null),
+      onRoute: u.owner === HUMAN && state.units.some((x) => x.id === u.id && (x.goto !== null || x.orders?.kind === "route")),
+      automated: u.owner === HUMAN && state.units.some((x) => x.id === u.id && x.orders?.kind === "auto"),
       working: u.work !== null,
       workProgress: u.work ? workShare(u) : undefined,
       hasMoves: needsOrders(u),
@@ -433,6 +446,7 @@ function refresh(): void {
   drawMinimap();
   techTree.refresh();
   cityScreen.refresh();
+  advisor.render();
 }
 
 // ---------- economy and research ----------
@@ -577,6 +591,22 @@ const cityScreen = createCityScreen({
   openEntry: (key) => codex.show(key),
 });
 
+const advisor = createAdvisor($<HTMLElement>("#advisor"), $<HTMLInputElement>("#advisor-on"), {
+  state: () => state,
+  player: () => HUMAN,
+  openCity: (id) => cityScreen.open(id),
+  selectUnit: (id) => {
+    selectedUnitId = id;
+    selectedCityId = null;
+    refresh();
+  },
+  openTechTree: () => techTree.open(),
+  automate: (id) => {
+    if (run({ type: "automate", unitId: id })) say("Osadník teď sám vylepšuje okolí tvých měst.");
+    refresh();
+  },
+});
+
 function cityScreenOpen(): boolean {
   return cityScreen.isOpen();
 }
@@ -624,6 +654,12 @@ function renderUnit(unit: Unit): void {
   if (unit.work) {
     const need = IMPROVEMENTS[unit.work.improvement].turns[terrain] ?? 0;
     status = `Staví: ${IMPROVEMENTS[unit.work.improvement].name.toLowerCase()}, hotovo za ${turnsText(need - unit.work.progress)}.`;
+    if (unit.orders?.kind === "auto") status += " Pak si sám najde další práci.";
+    if (unit.orders?.kind === "route") status += ` Pak pokračuje k políčku [${unit.orders.to.x}, ${unit.orders.to.y}].`;
+  } else if (unit.orders?.kind === "auto") {
+    status = "Sám vylepšuje okolí tvých měst." + (unit.orders.target ? "" : " Teď tu není co dělat, počká na další tah.");
+  } else if (unit.orders?.kind === "route") {
+    status = `Staví ${unit.orders.improvement === "road" ? "cestu" : "železnici"} až na políčko [${unit.orders.to.x}, ${unit.orders.to.y}].`;
   } else if (unit.goto) {
     const turns = routeTo(unit, unit.goto).turns;
     status = `Míří na políčko [${unit.goto.x}, ${unit.goto.y}]` + (turns ? `, ${turns === 1 ? "dojde v tomhle tahu" : `dojde za ${turnsText(turns)}`}.` : ".");
@@ -662,6 +698,10 @@ function renderUnit(unit: Unit): void {
       const label = turns ? `${IMPROVEMENTS[imp].name} (${turnsText(turns)})` : IMPROVEMENTS[imp].name;
       button(`build:${imp}`, label, keys[imp], err ? ERROR_TEXT[err] : null);
     }
+    const choosing = (mode: "road" | "railroad") => sendingUnitId === unit.id && sendMode === mode;
+    button("lay:road", choosing("road") ? "Klikni, kam má cesta vést" : "Cesta až na místo", "K", null);
+    if (knowsTech(me(), "railroad")) button("lay:railroad", choosing("railroad") ? "Klikni, kam má železnice vést" : "Železnice až na místo", "", null);
+    button("auto", "Automatická práce", "A", unit.orders?.kind === "auto" ? "Osadník už pracuje sám." : null);
   } else if (rule.domain === "land") {
     button("fortify", "Opevnit", "F", unit.fortified ? "Jednotka už je opevněná." : null);
   }
@@ -692,7 +732,9 @@ function renderUnit(unit: Unit): void {
   }
   button("send", sendingUnitId === unit.id ? "Klikni na cíl na mapě" : "Poslat na místo", "G", null);
   button("skip", "Počkat", "mezera", unit.movesLeft > 0 ? null : "Jednotka už nemá pohyb.");
-  if (unit.goto) button("cancel", "Zrušit cestu", "C", null);
+  if (unit.orders?.kind === "auto") button("cancel", "Zrušit automatickou práci", "C", null);
+  else if (unit.orders?.kind === "route") button("cancel", "Zrušit stavbu cesty", "C", null);
+  else if (unit.goto) button("cancel", "Zrušit cestu", "C", null);
   else if (unit.work) button("cancel", "Přestat pracovat", "C", null);
   else if (unit.fortified) button("cancel", "Zrušit opevnění", "C", null);
   const upgradeTo = upgradeTarget(me(), unit.type);
@@ -739,7 +781,23 @@ function doUnitAction(action: string): void {
     if (run({ type: "cancelOrders", unitId: unit.id }) && hadRoute) say("Cesta je zrušená. Jednotka čeká na nový rozkaz.");
     return refresh();
   }
+  if (action === "lay:road" || action === "lay:railroad") {
+    const mode = action === "lay:road" ? "road" : "railroad";
+    const again = sendingUnitId === unit.id && sendMode === mode;
+    sendingUnitId = again ? null : unit.id;
+    sendMode = again ? "goto" : mode;
+    say(sendingUnitId ? `Klikni na políčko, kam má ${mode === "road" ? "cesta" : "železnice"} vést. Osadník ji postaví po celé délce. Esc to zruší.` : "");
+    return refresh();
+  }
+  if (action === "auto") {
+    if (run({ type: "automate", unitId: unit.id })) {
+      say("Osadník teď sám vylepšuje okolí tvých měst. Když ho vybereš, klávesou C ho zastavíš.");
+      afterUnitAction();
+    } else refresh();
+    return;
+  }
   if (action === "send") {
+    sendMode = "goto";
     sendingUnitId = sendingUnitId === unit.id ? null : unit.id;
     say(sendingUnitId ? "Klikni na políčko, kam má jednotka jít. Esc to zruší." : "");
     return refresh();
@@ -1129,6 +1187,8 @@ const KEY_ACTIONS: Record<string, string> = {
   f: "fortify",
   " ": "skip",
   g: "send",
+  k: "lay:road",
+  a: "auto",
   c: "cancel",
   n: "next",
 };
@@ -1178,6 +1238,7 @@ document.addEventListener("keydown", (e) => {
     if (targetingUnitId !== null || sendingUnitId !== null) {
       targetingUnitId = null;
       sendingUnitId = null;
+      sendMode = "goto";
       say("");
       return refresh();
     }

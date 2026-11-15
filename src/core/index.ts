@@ -17,3 +17,5 @@ export * from "./state";
 export * from "./units";
 export * from "./view";
 export * from "./world";
+export * from "./workers";
+export * from "./advisor";

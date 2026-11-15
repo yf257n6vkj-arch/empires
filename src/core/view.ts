@@ -95,7 +95,7 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     cities: state.cities.filter((c) => c.owner === playerId).map((c) => ({ ...c })),
     foreignCities: state.cities
       .filter((c) => c.owner !== playerId && (seesAll || player.explored[c.y * state.map.width + c.x]))
-      .map((c) => ({ ...c, worked: [], food: 0, shields: 0, tradeRoutes: [], stolenBy: [] })),
+      .map((c) => ({ ...c, worked: [], food: 0, shields: 0, queue: [], tradeRoutes: [], stolenBy: [] })),
     rivals: state.players
       .filter((p) => p.id !== playerId)
       .map((p) => ({

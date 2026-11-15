@@ -522,6 +522,15 @@ export function createCityScreen(host: CityHost) {
   const dialog = document.querySelector<HTMLDialogElement>("#city-dialog")!;
   let cityId: number | null = null;
   const TILE_PX = 50;
+  const PANEL_KEY = "empires.cityPanel";
+  /** Height of the panels below the picture chosen by dragging, null for the default. */
+  let panelHeight: number | null = null;
+  try {
+    const stored = Number(localStorage.getItem(PANEL_KEY));
+    if (stored > 0) panelHeight = stored;
+  } catch {
+    // No storage: the default height.
+  }
 
   function city(): City | undefined {
     return host.state().cities.find((c) => c.id === cityId);
@@ -619,9 +628,11 @@ export function createCityScreen(host: CityHost) {
     const optionRow = (o: ProductionItem, n: number) => {
       const t = r.shieldSurplus > 0 ? Math.max(1, Math.ceil((productionCost(o) - c.shields) / r.shieldSurplus)) : null;
       const wonder = o.kind === "building" && BUILDINGS[o.id].wonder;
-      return `<button type="button" class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}" data-opt="${n}" title="${escapeHtml(
+      const planned = o.kind === "building" && [c.production, ...c.queue].some((x) => sameItem(x, o));
+      const full = c.queue.length >= RULES.queueLength;
+      return `<div class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}"><button type="button" class="cs-opt-main" data-opt="${n}" title="${escapeHtml(
         o.kind === "building" ? describeBuilding(BUILDINGS[o.id]) : describeUnit(UNIT_TYPES[o.id]),
-      )}"><span class="cs-opt-pic"></span><span class="cs-opt-name">${escapeHtml(productionName(o))}</span><span class="cs-opt-cost">${productionCost(o)} ${yieldIcon("shields", 11)}</span><span class="cs-opt-turns">${t ? turns(t) : "—"}</span></button>`;
+      )}"><span class="cs-opt-pic"></span><span class="cs-opt-name">${escapeHtml(productionName(o))}</span><span class="cs-opt-cost">${productionCost(o)} ${yieldIcon("shields", 11)}</span><span class="cs-opt-turns">${t ? turns(t) : "—"}</span></button><button type="button" class="cs-opt-add" data-add="${n}" ${planned || full ? "disabled" : ""} title="${planned ? "Už je v plánu." : full ? "Plán je plný." : "Přidat do plánu, město to postaví potom"}">+</button></div>`;
     };
     const group = (title: string, pick: (o: ProductionItem) => boolean) => {
       const rows = options.map((o, n) => (pick(o) ? optionRow(o, n) : "")).join("");
@@ -654,7 +665,8 @@ export function createCityScreen(host: CityHost) {
             </div>
           </div>
         </div>
-        <div class="cs-bottom">
+        <div class="cs-split" data-split title="Táhni nahoru nebo dolů. Dvojklik vrátí původní velikost."><span></span></div>
+        <div class="cs-bottom" ${panelHeight ? `style="height:${panelHeight}px"` : ""}>
           <section class="cs-box cs-land">
             <h3>Okolí města</h3>
             <div class="cs-map"></div>
@@ -674,7 +686,20 @@ export function createCityScreen(host: CityHost) {
               </div>
               ${price > 0 ? `<button type="button" class="cs-buy" data-buy ${gold < price ? `disabled title="Máš jen ${gold} zlata."` : ""}>Koupit za ${price} zlata</button>` : ""}
             </div>
-            <h3>Co stavět dál</h3>
+            <div class="cs-plan">
+              <span class="cs-plan-label">Potom:</span>
+              ${
+                c.queue.length
+                  ? c.queue
+                      .map(
+                        (q, n) =>
+                          `<span class="cs-chip">${n + 1}. ${escapeHtml(productionName(q))}${n > 0 ? `<button type="button" data-up="${n}" title="Postavit dřív">‹</button>` : ""}<button type="button" data-unq="${n}" title="Vyřadit z plánu">×</button></span>`,
+                      )
+                      .join("")
+                  : `<span class="muted small">nic dalšího. Tlačítkem + u stavby ji přidáš do plánu.</span>`
+              }
+            </div>
+            <h3>Co stavět dál <span class="muted">· klik vybere, + naplánuje</span></h3>
             <div class="cs-opts">${optionList}</div>
           </section>
           <section class="cs-box cs-info">
@@ -753,11 +778,27 @@ export function createCityScreen(host: CityHost) {
     // Pictures.
     const pp = dialog.querySelector<HTMLDivElement>(".cs-prod-pic")!;
     pp.append(pictureOf(c.production, 104, 80, c.owner));
-    dialog.querySelectorAll<HTMLButtonElement>(".cs-opt").forEach((b) => {
+    dialog.querySelectorAll<HTMLButtonElement>(".cs-opt-main").forEach((b) => {
       const o = options[Number(b.dataset.opt)]!;
       b.querySelector(".cs-opt-pic")!.append(pictureOf(o, 40, 30, c.owner));
       b.addEventListener("click", () => act({ type: "setProduction", cityId: c.id, item: o }));
     });
+    dialog.querySelectorAll<HTMLButtonElement>(".cs-opt-add").forEach((b) => {
+      const o = options[Number(b.dataset.add)]!;
+      b.addEventListener("click", () => act({ type: "setQueue", cityId: c.id, queue: [...c.queue, o] }));
+    });
+    dialog.querySelectorAll<HTMLButtonElement>("[data-unq]").forEach((b) =>
+      b.addEventListener("click", () => act({ type: "setQueue", cityId: c.id, queue: c.queue.filter((_, k) => k !== Number(b.dataset.unq)) })),
+    );
+    dialog.querySelectorAll<HTMLButtonElement>("[data-up]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const k = Number(b.dataset.up);
+        const q = [...c.queue];
+        [q[k - 1], q[k]] = [q[k]!, q[k - 1]!];
+        act({ type: "setQueue", cityId: c.id, queue: q });
+      }),
+    );
+    setUpSplit();
     dialog.querySelectorAll<HTMLButtonElement>(".cs-building").forEach((d) => {
       d.querySelector(".pic")!.append(buildingPortraitCanvas(d.dataset.b as BuildingId, 36, 28));
       d.addEventListener("click", () => host.openEntry(`${BUILDINGS[d.dataset.b as BuildingId].wonder ? "wdr" : "bld"}-${d.dataset.b}`));
@@ -779,6 +820,48 @@ export function createCityScreen(host: CityHost) {
         if (next) open(next.id);
       }),
     );
+  }
+
+  /** Lets the player drag the border between the city picture and the panels. */
+  function setUpSplit(): void {
+    const split = dialog.querySelector<HTMLDivElement>("[data-split]");
+    const bottom = dialog.querySelector<HTMLDivElement>(".cs-bottom");
+    if (!split || !bottom) return;
+    let start: { y: number; h: number } | null = null;
+    split.addEventListener("pointerdown", (e) => {
+      start = { y: e.clientY, h: bottom.getBoundingClientRect().height };
+      split.setPointerCapture(e.pointerId);
+      split.classList.add("dragging");
+    });
+    split.addEventListener("pointermove", (e) => {
+      if (!start) return;
+      const max = dialog.clientHeight - 200;
+      const h = Math.max(220, Math.min(max, start.h - (e.clientY - start.y)));
+      bottom.style.height = `${h}px`;
+    });
+    const end = () => {
+      if (!start) return;
+      start = null;
+      split.classList.remove("dragging");
+      panelHeight = Math.round(bottom.getBoundingClientRect().height);
+      try {
+        localStorage.setItem(PANEL_KEY, String(panelHeight));
+      } catch {
+        // The height holds until the page reloads.
+      }
+      render();
+    };
+    split.addEventListener("pointerup", end);
+    split.addEventListener("pointercancel", end);
+    split.addEventListener("dblclick", () => {
+      panelHeight = null;
+      try {
+        localStorage.removeItem(PANEL_KEY);
+      } catch {
+        // Nothing stored, nothing to remove.
+      }
+      render();
+    });
   }
 
   function pictureOf(item: ProductionItem, w: number, h: number, owner: number): HTMLCanvasElement {

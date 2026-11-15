@@ -2,6 +2,16 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Město má plán staveb, osadníci pracují sami a hra má rádce
+
+Michal chtěl ve městě frontu práce. Město si teď může naplánovat až osm dalších staveb. Když dokončí tu současnou, vezme další z plánu a přeskočí, co už postavit nejde. Bez plánu dál vyrábí stejnou jednotku, nebo po dokončené budově přejde na obránce. Plán je obyčejný příkaz, takže ho bude používat i AI.
+
+Osadník umí postavit cestu nebo železnici po celé trase k cíli. Na každém políčku bez cesty se zastaví, postaví ji a jde dál. Pod železnici nejdřív položí cestu. Osadník taky může pracovat sám: vybere políčko kolem vlastních měst, kde vylepšení přidá nejvíc jídla, výroby a obchodu, a započítá, jak daleko musí jít. Políčka, která město obdělává, mají přednost. Dva osadníci si práci nerozeberou na stejné políčko. Rozkazy plní na začátku každého tahu a AI je bude používat stejně.
+
+Hra má rádce pro syna. Ukazuje vlevo nahoře nejvýš tři rady podle naléhavosti, například zvolit výzkum, uklidnit nepokoje, nedovolit, aby došlo zlato, nebo založit další město. U každé rady je tlačítko, které hráče dovede na správné místo. Rádce čte jen to, co hráč vidí o svých městech a jednotkách. Jde vypnout v menu.
+
+V detailu města jde hranici mezi obrázkem a panely táhnout myší, hra si výšku pamatuje.
+
 ## 15. 11. 2026: Detail města kreslí Gemini a terén má přírodní hranice
 
 Michal chtěl, aby detail města vypadal dobře a všechny budovy nakreslil Gemini. Gemini nakreslí každou budovu a každý div jako samostatný obrázek z mírného nadhledu, k tomu tři typy domů pro každou éru a dvě krajiny do pozadí, jednu s mořem pro přístavní města. Město v detailu staví budovy na louku do řad, divy dostanou nejlepší místa a zbytek zaplní domy podle počtu obyvatel. Hradby stojí vepředu. Dokud obrázky nejsou ve hře, zůstává pohled kreslený kódem.

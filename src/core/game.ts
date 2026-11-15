@@ -171,6 +171,11 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
       return { ...p, civ, name: CIVS[civ].name };
     });
   }
+  if (version <= 7) {
+    // Version 8 adds production queues and standing orders for settlers.
+    for (const u of state.units) u.orders ??= null;
+    for (const c of state.cities) c.queue ??= [];
+  }
   state.version = STATE_VERSION;
   return state;
 }

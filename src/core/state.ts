@@ -6,7 +6,7 @@ import type { Point } from "./geometry";
 import type { BuildingId, CivId, GovernmentId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 7;
+export const STATE_VERSION = 8;
 
 export interface GameMap {
   width: number;
@@ -76,6 +76,15 @@ export function emptySpaceship(): Spaceship {
   return { structural: 0, component: 0, module: 0, launchedTurn: null, arrivalTurn: null, successPct: 0 };
 }
 
+/**
+ * Standing orders for a unit that builds improvements: build a road or
+ * railroad along the whole way to a tile, or improve the land around the
+ * owner's cities on its own. They are carried out at the start of each turn.
+ */
+export type WorkerOrder =
+  | { kind: "route"; to: Point; improvement: "road" | "railroad" }
+  | { kind: "auto"; target: Point | null };
+
 export interface WorkOrder {
   improvement: ImprovementId;
   /** Turns of work done so far. */
@@ -97,6 +106,8 @@ export interface Unit {
   work: WorkOrder | null;
   /** Multi-turn move target, continued at the start of every turn. */
   goto: Point | null;
+  /** Standing orders of a settler, see WorkerOrder. */
+  orders: WorkerOrder | null;
   /** The ship (or carrier) this unit travels on. */
   carriedBy: UnitId | null;
   /** Turns an aircraft has ended away from a city or carrier. */
@@ -119,6 +130,8 @@ export interface City {
   /** Shields stored towards the current production. */
   shields: number;
   production: ProductionItem;
+  /** What to build after the current production, in order. */
+  queue: ProductionItem[];
   buildings: BuildingId[];
   /** Tile indexes worked by citizens; the city centre is always worked on top of these. */
   worked: number[];

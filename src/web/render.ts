@@ -65,6 +65,8 @@ export interface DrawUnit {
   fortified: boolean;
   /** The unit follows a route over several turns. */
   onRoute?: boolean;
+  /** The settler improves the land on its own. */
+  automated?: boolean;
   working: boolean;
   /** Share of the current work done, 0..1. */
   workProgress?: number;
@@ -1702,6 +1704,8 @@ function drawMiniature(
     drawFortifiedBadge(ctx, bcx + brx + 0.5 * s, fy - 15 * s, s);
   } else if (u.onRoute) {
     drawRouteBadge(ctx, bcx + brx + 0.5 * s, fy - 15 * s, s);
+  } else if (u.automated) {
+    drawAutoBadge(ctx, bcx + brx + 0.5 * s, fy - 15 * s, s);
   }
 
   if (stack > 1) {
@@ -1790,6 +1794,25 @@ function drawRouteBadge(ctx: CanvasRenderingContext2D, x: number, y: number, s: 
   ctx.lineTo(x - r * 0.55, y + r * 0.18);
   ctx.closePath();
   ctx.fill();
+  ctx.restore();
+}
+
+/** A round green badge with a letter A for a settler that works on its own. */
+function drawAutoBadge(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): void {
+  const r = 2.9 * s;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = "#2f8f4e";
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#f3efe6";
+  ctx.stroke();
+  ctx.fillStyle = "#f3efe6";
+  ctx.font = `700 ${(r * 1.3).toFixed(2)}px ui-sans-serif, system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("A", x, y + r * 0.08);
   ctx.restore();
 }
 

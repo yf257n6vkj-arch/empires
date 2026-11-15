@@ -74,7 +74,27 @@ import { createCodex, entryKey } from "./codex";
 import { createNewGameDialog } from "./newGame";
 import { createMenus } from "./menu";
 import { createAdvisor } from "./advisorPanel";
+import { createCitiesOverview } from "./citiesOverview";
 import { payloadOf, readAutosave, writeAutosave, type LogEntry, type SavePayload } from "./saves";
+import { t, tn, translatePage } from "./i18n";
+import {
+  buildingName,
+  cityLabel,
+  civName,
+  governmentName,
+  improvementName,
+  inSentence,
+  leaderName,
+  productionLabel,
+  realmObject,
+  specialName,
+  techName,
+  terrainName,
+  unitName,
+} from "./i18n/names";
+
+// The static page is translated before anything reads it.
+translatePage(document);
 
 const HUMAN = 0;
 const PLAYER_COUNT = 4;
@@ -150,7 +170,7 @@ function useGame(payload: SavePayload): void {
 }
 
 function randomSeed(): string {
-  const words = ["sever", "jih", "řeka", "hora", "údolí", "les", "zátoka", "pláň", "ostrov", "mys"];
+  const words = t("sever jih řeka hora údolí les zátoka pláň ostrov mys").split(" ");
   // Math.random is fine here: it only picks a seed, the game itself is driven by Rng.
   const w = words[Math.floor(Math.random() * words.length)];
   return `${w}-${Math.floor(Math.random() * 9000 + 1000)}`;
@@ -158,12 +178,17 @@ function randomSeed(): string {
 
 function startNewGame(seed: string, civ?: CivId, persist = true): void {
   state = newGame({ seed, playerCount: PLAYER_COUNT, civ });
-  const nation = CIVS[state.players[HUMAN]!.civ];
-  const rivals = state.players.filter((p) => p.id !== HUMAN).map((p) => p.name).join(", ");
+  const civ0 = state.players[HUMAN]!.civ;
+  const rivals = state.players.filter((p) => p.id !== HUMAN).map((p) => civName(p.civ)).join(", ");
   log = [
     {
       turn: 1,
-      text: `Jsi ${nation.leader} a vedeš ${nation.adjective.slice(0, -1)}ou říši. Na kontinentu žijí i ${rivals}. Najdi osadníkem dobré místo a založ hlavní město (klávesa B). Bude se jmenovat ${nation.cities[0]}.`,
+      text: t("Jsi {leader} a vedeš {realm}. Na kontinentu žijí i {rivals}. Najdi osadníkem dobré místo a založ hlavní město (klávesa B). Bude se jmenovat {capital}.", {
+        leader: leaderName(civ0),
+        realm: realmObject(civ0),
+        rivals,
+        capital: cityLabel(CIVS[civ0].cities[0]!),
+      }),
     },
   ];
   selectedCityId = null;
@@ -263,13 +288,13 @@ function moveSelected(to: Point): void {
   sendingUnitId = null;
   sendMode = "goto";
   if (ok && mode !== "goto") {
-    say(`Osadník staví ${mode === "road" ? "cestu" : "železnici"} až do cíle. Když ho vybereš, stavbu zrušíš klávesou C.`);
+    say(mode === "road" ? t("Osadník staví cestu až do cíle. Když ho vybereš, stavbu zrušíš klávesou C.") : t("Osadník staví železnici až do cíle. Když ho vybereš, stavbu zrušíš klávesou C."));
     afterUnitAction();
     return;
   }
   if (ok) {
     const moved = state.units.find((u) => u.id === unit.id);
-    if (moved?.goto) say(`${UNIT_TYPES[unit.type].name} je na cestě. Cestu zrušíš klávesou C, až jednotku znovu vybereš.`);
+    if (moved?.goto) say(t("{unit} je na cestě. Cestu zrušíš klávesou C, až jednotku znovu vybereš.", { unit: unitName(unit.type) }));
     afterUnitAction();
   } else refresh();
 }
@@ -323,9 +348,9 @@ function routePreview(): Route | null {
 }
 
 function routeText(route: Route): string {
-  if (route.turns === null) return "Sem jednotka nedojde.";
-  if (route.turns === 1) return "Jednotka sem dojde ještě v tomhle tahu.";
-  return `Cesta sem zabere ${turnsText(route.turns)}.`;
+  if (route.turns === null) return t("Sem jednotka nedojde.");
+  if (route.turns === 1) return t("Jednotka sem dojde ještě v tomhle tahu.");
+  return t("Cesta sem zabere {turns}.", { turns: turnsText(route.turns) });
 }
 
 function buildDrawInput(): DrawInput {
@@ -360,7 +385,7 @@ function buildDrawInput(): DrawInput {
     cities: [...view.cities, ...view.foreignCities].map((c) => ({
       id: c.id,
       owner: c.owner,
-      name: c.name,
+      name: cityLabel(c.name),
       x: c.x,
       y: c.y,
       size: c.size,
@@ -435,7 +460,7 @@ function refresh(): void {
     hoverRouteText = unit && clickWouldMove(unit, hoverTile) ? routeText(routeTo(unit, hoverTile)) : "";
   }
   draw(ctx, buildDrawInput());
-  turnLabel.textContent = `Tah ${state.turn} z ${RULES.maxTurns}`;
+  turnLabel.textContent = t("Tah {turn} z {maxTurns}", { turn: state.turn, maxTurns: RULES.maxTurns });
   seedLabel.textContent = state.seed;
   const waiting = state.units.some(needsOrders);
   const choose = needsResearchChoice();
@@ -447,6 +472,7 @@ function refresh(): void {
   drawMinimap();
   techTree.refresh();
   cityScreen.refresh();
+  citiesOverview.refresh();
   advisor.render();
 }
 
@@ -475,21 +501,21 @@ function needsResearchChoice(): boolean {
 
 function renderEconomy(): void {
   const p = me();
-  const t = empireTotals();
-  const net = t.gold - t.upkeep;
-  goldLabel.innerHTML = `Zlato <b>${p.gold}</b> <span class="${net < 0 ? "neg" : "muted"}">(${net >= 0 ? "+" : ""}${net} za tah)</span>`;
-  goldLabel.title = `Příjem ${t.gold}, údržba budov ${t.upkeep}`;
+  const totals = empireTotals();
+  const net = totals.gold - totals.upkeep;
+  goldLabel.innerHTML = t("Zlato <b>{gold}</b>", { gold: p.gold }) + ` <span class="${net < 0 ? "neg" : "muted"}">(${t("{net} za tah", { net: `${net >= 0 ? "+" : ""}${net}` })})</span>`;
+  goldLabel.title = t("Příjem {gold}, údržba budov {upkeep}", { gold: totals.gold, upkeep: totals.upkeep });
   const cost = researchCost(p);
   if (p.researching) {
     const left = Math.max(0, cost - p.research);
-    const turns = t.science > 0 ? turnsText(Math.max(1, Math.ceil(left / t.science))) : "nikdy";
-    researchButton.innerHTML = `Výzkum: <b>${TECHS[p.researching].name}</b> <span class="muted">${Math.min(p.research, cost)}/${cost} · ${turns}</span>`;
+    const turns = totals.science > 0 ? turnsText(Math.max(1, Math.ceil(left / totals.science))) : t("nikdy");
+    researchButton.innerHTML = t("Výzkum: <b>{tech}</b>", { tech: techName(p.researching) }) + ` <span class="muted">${Math.min(p.research, cost)}/${cost} · ${turns}</span>`;
     researchButton.classList.remove("attention");
   } else if (researchableTechs(p).length > 0) {
-    researchButton.innerHTML = `<b>Vyber výzkum</b> <span class="muted">${p.research}/${cost}</span>`;
+    researchButton.innerHTML = `<b>${t("Vyber výzkum")}</b> <span class="muted">${p.research}/${cost}</span>`;
     researchButton.classList.add("attention");
   } else {
-    researchButton.innerHTML = `Všechno je vyzkoumané`;
+    researchButton.innerHTML = t("Všechno je vyzkoumané");
     researchButton.classList.remove("attention");
   }
   const gov = GOVERNMENTS[p.government];
@@ -499,15 +525,15 @@ function renderEconomy(): void {
     rateInput.max = String(gov.maxRate);
   }
   rateInput.value = String(p.scienceRate);
-  rateLabel.textContent = gov.maxRate === 0 ? "anarchie: nic" : `${p.scienceRate} % · zlato ${100 - p.scienceRate} %`;
+  rateLabel.textContent = gov.maxRate === 0 ? t("anarchie: nic") : t("{scienceRate} % · zlato {scienceRate2} %", { scienceRate: p.scienceRate, scienceRate2: 100 - p.scienceRate });
   governmentButton.innerHTML = p.revolution
-    ? `Vláda: <b>Anarchie</b> <span class="muted">${GOVERNMENTS[p.revolution.target].name} za ${turnsText(p.revolution.turnsLeft)}</span>`
-    : `Vláda: <b>${gov.name}</b>`;
+    ? t("Vláda: <b>{gov}</b>", { gov: governmentName("anarchy") }) + ` <span class="muted">${t("{gov} za {turns}", { gov: governmentName(p.revolution.target), turns: turnsText(p.revolution.turnsLeft) })}</span>`
+    : t("Vláda: <b>{gov}</b>", { gov: governmentName(p.government) });
   const ship = p.spaceship;
   const apollo = state.cities.some((c) => c.buildings.includes("apolloProgram"));
   spaceshipButton.hidden = !apollo && ship.structural + ship.component + ship.module === 0 && !state.players.some((x) => x.spaceship.arrivalTurn !== null);
   spaceshipButton.innerHTML =
-    ship.arrivalTurn !== null ? `Loď letí, přistání v tahu <b>${ship.arrivalTurn}</b>` : `Vesmírná loď <span class="muted">${ship.structural}/${ship.component}/${ship.module}</span>`;
+    ship.arrivalTurn !== null ? t("Loď letí, přistání v tahu <b>{arrivalTurn}</b>", { arrivalTurn: ship.arrivalTurn }) : `${t("Vesmírná loď")} <span class="muted">${ship.structural}/${ship.component}/${ship.module}</span>`;
   empire.checkVictory();
 }
 
@@ -532,14 +558,14 @@ const newGameDialog = createNewGameDialog($<HTMLDialogElement>("#new-game-dialog
 spaceshipButton.addEventListener("click", () => empire.openSpaceship());
 
 function chooseResearch(tech: TechId): void {
-  if (run({ type: "setResearch", tech })) say(`Zkoumáme: ${TECHS[tech].name}.`);
+  if (run({ type: "setResearch", tech })) say(t("Zkoumáme: {tech}.", { tech: techName(tech) }));
   refresh();
 }
 
 function chooseGoal(tech: TechId): void {
   if (run({ type: "setResearchGoal", tech })) {
     const p = me();
-    say(p.researchGoal ? `Míříme k objevu ${TECHS[tech].name}, teď zkoumáme ${TECHS[p.researching!].name}.` : `Zkoumáme: ${TECHS[tech].name}.`);
+    say(p.researchGoal ? t("Míříme k objevu {tech}, teď zkoumáme {tech2}.", { tech: techName(tech), tech2: techName(p.researching!) }) : t("Zkoumáme: {tech}.", { tech: techName(tech) }));
   }
   refresh();
 }
@@ -560,13 +586,13 @@ function renderResearchPick(): void {
   researchPanel.hidden = false;
   const options = researchableTechs(me())
     .sort((a, b) => TECHS[a].era - TECHS[b].era)
-    .map((t) => {
-      const what = unlockNames(t);
-      return `<div class="tech-pick-row"><button type="button" class="tech-pick" data-tech="${t}">${techIconSvg(t, TECHS[t].era, 34)}<span><b>${TECHS[t].name}</b><span>${escapeHtml(what.join(", ") || "otevře další technologie")}</span></span></button><button type="button" class="tech-info" data-info="${t}" title="Přečíst si o téhle technologii">?</button></div>`;
+    .map((tech) => {
+      const what = unlockNames(tech);
+      return `<div class="tech-pick-row"><button type="button" class="tech-pick" data-tech="${tech}">${techIconSvg(tech, TECHS[tech].era, 34)}<span><b>${techName(tech)}</b><span>${escapeHtml(what.join(", ") || t("otevře další technologie"))}</span></span></button><button type="button" class="tech-info" data-info="${tech}" title="${t("Přečíst si o téhle technologii")}">?</button></div>`;
     })
     .join("");
-  researchPanel.innerHTML = `<h2>Vyber výzkum</h2><div class="tech-picks">${options}</div>
-    <button type="button" class="wide" data-tree>Ukázat celý strom technologií</button>`;
+  researchPanel.innerHTML = `<h2>${t("Vyber výzkum")}</h2><div class="tech-picks">${options}</div>
+    <button type="button" class="wide" data-tree>${t("Ukázat celý strom technologií")}</button>`;
   researchPanel.querySelectorAll<HTMLButtonElement>("button[data-tech]").forEach((b) =>
     b.addEventListener("click", () => chooseResearch(b.dataset.tech as TechId)),
   );
@@ -603,12 +629,21 @@ const advisor = createAdvisor($<HTMLElement>("#advisor"), $<HTMLInputElement>("#
   },
   openTechTree: () => techTree.open(),
   automate: (id) => {
-    if (run({ type: "automate", unitId: id })) say("Osadník teď sám vylepšuje okolí tvých měst.");
+    if (run({ type: "automate", unitId: id })) say(t("Osadník teď sám vylepšuje okolí tvých měst."));
     refresh();
   },
 });
 
 $<HTMLButtonElement>("#advisor-button").addEventListener("click", () => advisor.toggleShown());
+
+const citiesOverview = createCitiesOverview($<HTMLDialogElement>("#cities-dialog"), {
+  state: () => state,
+  player: () => HUMAN,
+  run,
+  refresh,
+  openCity: (id) => cityScreen.open(id),
+});
+$<HTMLButtonElement>("#cities-button").addEventListener("click", () => citiesOverview.open());
 
 function cityScreenOpen(): boolean {
   return cityScreen.isOpen();
@@ -624,14 +659,8 @@ function renderLog(): void {
     .join("");
 }
 
-function plural(n: number, one: string, few: string, many: string): string {
-  if (n === 1) return one;
-  if (n >= 2 && n <= 4) return few;
-  return many;
-}
-
 function turnsText(n: number): string {
-  return `${n} ${plural(n, "tah", "tahy", "tahů")}`;
+  return tn("{n} tah|{n} tahy|{n} tahů", n);
 }
 
 function renderSelection(): void {
@@ -641,10 +670,10 @@ function renderSelection(): void {
   if (unit) return renderUnit(unit);
   const waiting = state.units.filter(needsOrders).length;
   selectionPanel.innerHTML =
-    `<h2>Výběr</h2><p class="facts">` +
+    `<h2>${t("Výběr")}</h2><p class="facts">` +
     (waiting > 0
-      ? `Na rozkaz ${plural(waiting, "čeká", "čekají", "čeká")} ${waiting} ${plural(waiting, "jednotka", "jednotky", "jednotek")}. Stiskni <kbd>N</kbd> nebo klikni na jednotku.`
-      : `Všechny jednotky mají rozkazy. Ukonči tah klávesou <kbd>Enter</kbd>.`) +
+      ? tn("Na rozkaz čeká {n} jednotka. Stiskni <kbd>N</kbd> nebo klikni na jednotku.|Na rozkaz čekají {n} jednotky. Stiskni <kbd>N</kbd> nebo klikni na jednotku.|Na rozkaz čeká {n} jednotek. Stiskni <kbd>N</kbd> nebo klikni na jednotku.", waiting)
+      : t("Všechny jednotky mají rozkazy. Ukonči tah klávesou <kbd>Enter</kbd>.")) +
     `</p>`;
 }
 
@@ -652,33 +681,33 @@ function renderUnit(unit: Unit): void {
   const rule = UNIT_TYPES[unit.type];
   const terrain = state.map.terrain[unit.y * state.map.width + unit.x]!;
   const left = unit.movesLeft / RULES.movesFraction;
-  const moves = `${Number.isInteger(left) ? left : left.toFixed(1).replace(".", ",")} z ${rule.moves}`;
+  const moves = t("{left} z {all}", { left: Number.isInteger(left) ? left : left.toFixed(1).replace(".", t(",")), all: rule.moves });
   let status = "";
   if (unit.work) {
     const need = IMPROVEMENTS[unit.work.improvement].turns[terrain] ?? 0;
-    status = `Staví: ${IMPROVEMENTS[unit.work.improvement].name.toLowerCase()}, hotovo za ${turnsText(need - unit.work.progress)}.`;
-    if (unit.orders?.kind === "auto") status += " Pak si sám najde další práci.";
-    if (unit.orders?.kind === "route") status += ` Pak pokračuje k políčku [${unit.orders.to.x}, ${unit.orders.to.y}].`;
+    status = t("Staví: {improvement}, hotovo za {turns}.", { improvement: inSentence(improvementName(unit.work.improvement)), turns: turnsText(need - unit.work.progress) });
+    if (unit.orders?.kind === "auto") status += t(" Pak si sám najde další práci.");
+    if (unit.orders?.kind === "route") status += t(" Pak pokračuje k políčku [{x}, {y}].", { x: unit.orders.to.x, y: unit.orders.to.y });
   } else if (unit.orders?.kind === "auto") {
-    status = "Sám vylepšuje okolí tvých měst." + (unit.orders.target ? "" : " Teď tu není co dělat, počká na další tah.");
+    status = t("Sám vylepšuje okolí tvých měst.") + (unit.orders.target ? "" : t(" Teď tu není co dělat, počká na další tah."));
   } else if (unit.orders?.kind === "route") {
-    status = `Staví ${unit.orders.improvement === "road" ? "cestu" : "železnici"} až na políčko [${unit.orders.to.x}, ${unit.orders.to.y}].`;
+    status = (unit.orders.improvement === "road" ? t("Staví cestu až na políčko [{x}, {y}].", unit.orders.to) : t("Staví železnici až na políčko [{x}, {y}].", unit.orders.to));
   } else if (unit.goto) {
     const turns = routeTo(unit, unit.goto).turns;
-    status = `Míří na políčko [${unit.goto.x}, ${unit.goto.y}]` + (turns ? `, ${turns === 1 ? "dojde v tomhle tahu" : `dojde za ${turnsText(turns)}`}.` : ".");
+    status = t("Míří na políčko [{x}, {y}]", unit.goto) + (turns ? `, ${turns === 1 ? t("dojde v tomhle tahu") : t("dojde za {turns}", { turns: turnsText(turns) })}.` : ".");
   }
-  else if (unit.fortified) status = "Opevněná.";
+  else if (unit.fortified) status = t("Opevněná.");
   if (unit.carriedBy !== null) {
     const ship = state.units.find((u) => u.id === unit.carriedBy);
-    status = `Je na palubě: ${ship ? UNIT_TYPES[ship.type].name : "loď"}. ${rule.domain === "land" ? "Vystoupí krokem na pevninu." : ""}` + (status ? ` ${status}` : "");
+    status = t("Je na palubě: {ship}.", { ship: ship ? unitName(ship.type) : t("loď") }) + (rule.domain === "land" ? " " + t("Vystoupí krokem na pevninu.") : "") + (status ? ` ${status}` : "");
   }
   if (rule.capacity) {
     const cargo = state.units.filter((u) => u.carriedBy === unit.id).length;
-    status = `Na palubě ${cargo} z ${rule.capacity}. ` + status;
+    status = t("Na palubě {cargo} z {capacity}. ", { cargo, capacity: rule.capacity }) + status;
   }
   if (rule.domain === "air" && rule.fuel) {
     const left = rule.fuel - unit.turnsAloft;
-    status = `Palivo ještě na ${left === 1 ? "tento tah" : `${left} tahy`}, pak musí přistát ve městě nebo na letadlové lodi. ` + status;
+    status = tn("Palivo ještě na tento tah, pak musí přistát ve městě nebo na letadlové lodi. |Palivo ještě na {n} tahy, pak musí přistát ve městě nebo na letadlové lodi. |Palivo ještě na {n} tahů, pak musí přistát ve městě nebo na letadlové lodi. ", left) + status;
   }
 
   const buttons: string[] = [];
@@ -689,7 +718,7 @@ function renderUnit(unit: Unit): void {
 
   if (rule.foundsCity) {
     const err = canFoundCity(state, unit);
-    button("found", "Založit město", "B", err ? ERROR_TEXT[err] : null);
+    button("found", t("Založit město"), "B", err ? ERROR_TEXT[err] : null);
   }
   if (rule.buildsImprovements) {
     const keys: Record<ImprovementId, string> = { road: "R", irrigation: "I", mine: "M", railroad: "Z", fortress: "P" };
@@ -698,68 +727,69 @@ function renderUnit(unit: Unit): void {
       if (needs && !knowsTech(me(), needs)) continue;
       const err = canBuildImprovement(state, unit, imp);
       const turns = IMPROVEMENTS[imp].turns[terrain];
-      const label = turns ? `${IMPROVEMENTS[imp].name} (${turnsText(turns)})` : IMPROVEMENTS[imp].name;
+      const label = turns ? `${improvementName(imp)} (${turnsText(turns)})` : improvementName(imp);
       button(`build:${imp}`, label, keys[imp], err ? ERROR_TEXT[err] : null);
     }
     const choosing = (mode: "road" | "railroad") => sendingUnitId === unit.id && sendMode === mode;
-    button("lay:road", choosing("road") ? "Klikni, kam má cesta vést" : "Cesta až na místo", "K", null);
-    if (knowsTech(me(), "railroad")) button("lay:railroad", choosing("railroad") ? "Klikni, kam má železnice vést" : "Železnice až na místo", "", null);
-    button("auto", "Automatická práce", "A", unit.orders?.kind === "auto" ? "Osadník už pracuje sám." : null);
+    button("lay:road", choosing("road") ? t("Klikni, kam má cesta vést") : t("Cesta až na místo"), "K", null);
+    if (knowsTech(me(), "railroad")) button("lay:railroad", choosing("railroad") ? t("Klikni, kam má železnice vést") : t("Železnice až na místo"), "", null);
+    button("auto", t("Automatická práce"), "A", unit.orders?.kind === "auto" ? t("Osadník už pracuje sám.") : null);
   } else if (rule.domain === "land") {
-    button("fortify", "Opevnit", "F", unit.fortified ? "Jednotka už je opevněná." : null);
+    button("fortify", t("Opevnit"), "F", unit.fortified ? t("Jednotka už je opevněná.") : null);
   }
   const here = state.cities.find((c) => c.x === unit.x && c.y === unit.y);
   if (rule.domain !== "sea" && here && unit.carriedBy === null && state.units.some((u) => u.x === unit.x && u.y === unit.y && UNIT_TYPES[u.type].capacity)) {
-    button("board", "Nalodit", "L", shipWithRoom(state, unit, unit) ? null : ERROR_TEXT.noShip);
+    button("board", t("Nalodit"), "L", shipWithRoom(state, unit, unit) ? null : ERROR_TEXT.noShip);
   }
   const near = state.cities.filter((c) => distance(c, unit) <= 1);
   if (rule.special === "caravan") {
     const wonder = here && here.owner === HUMAN && here.production.kind === "building" && BUILDINGS[here.production.id].wonder;
-    button("help", "Pomoct se stavbou divu", "H", wonder ? null : ERROR_TEXT.notBuildingWonder);
+    button("help", t("Pomoct se stavbou divu"), "H", wonder ? null : ERROR_TEXT.notBuildingWonder);
     for (const c of near) {
       const err = canOpenTradeRoute(state, unit, c.id);
-      if (c.id !== unit.homeCity) button(`route:${c.id}`, `Obchodní cesta: ${escapeHtml(c.name)}`, "", err ? ERROR_TEXT[err] : null);
+      if (c.id !== unit.homeCity) button(`route:${c.id}`, t("Obchodní cesta: {city}", { city: escapeHtml(cityLabel(c.name)) }), "", err ? ERROR_TEXT[err] : null);
     }
   }
   if (rule.special === "diplomat") {
     for (const c of near.filter((x) => x.owner !== HUMAN)) {
       const price = inciteCost(state, c);
-      button(`dip:embassy:${c.id}`, `Velvyslanectví: ${escapeHtml(c.name)}`, "", me().embassies.includes(c.owner) ? ERROR_TEXT.embassyExists : null);
-      button(`dip:stealTech:${c.id}`, "Ukrást technologii", "", c.stolenBy.includes(HUMAN) ? ERROR_TEXT.alreadyStolen : null);
-      button(`dip:sabotage:${c.id}`, "Sabotáž", "", null);
-      button(`dip:incite:${c.id}`, `Podplatit město (${price} zlata)`, "", c.buildings.includes("palace") ? ERROR_TEXT.isCapital : me().gold < price ? ERROR_TEXT.notEnoughGold : null);
+      button(`dip:embassy:${c.id}`, t("Velvyslanectví: {city}", { city: escapeHtml(cityLabel(c.name)) }), "", me().embassies.includes(c.owner) ? ERROR_TEXT.embassyExists : null);
+      button(`dip:stealTech:${c.id}`, t("Ukrást technologii"), "", c.stolenBy.includes(HUMAN) ? ERROR_TEXT.alreadyStolen : null);
+      button(`dip:sabotage:${c.id}`, t("Sabotáž"), "", null);
+      button(`dip:incite:${c.id}`, t("Podplatit město ({price} zlata)", { price }), "", c.buildings.includes("palace") ? ERROR_TEXT.isCapital : me().gold < price ? ERROR_TEXT.notEnoughGold : null);
     }
   }
   if (rule.special === "nuclear") {
-    button("aim", targetingUnitId === unit.id ? "Klikni na cíl na mapě" : "Zamířit a odpálit", "X", unit.movesLeft > 0 ? null : ERROR_TEXT.noMovesLeft);
+    button("aim", targetingUnitId === unit.id ? t("Klikni na cíl na mapě") : t("Zamířit a odpálit"), "X", unit.movesLeft > 0 ? null : ERROR_TEXT.noMovesLeft);
   }
-  button("send", sendingUnitId === unit.id ? "Klikni na cíl na mapě" : "Poslat na místo", "G", null);
-  button("skip", "Počkat", "mezera", unit.movesLeft > 0 ? null : "Jednotka už nemá pohyb.");
-  if (unit.orders?.kind === "auto") button("cancel", "Zrušit automatickou práci", "C", null);
-  else if (unit.orders?.kind === "route") button("cancel", "Zrušit stavbu cesty", "C", null);
-  else if (unit.goto) button("cancel", "Zrušit cestu", "C", null);
-  else if (unit.work) button("cancel", "Přestat pracovat", "C", null);
-  else if (unit.fortified) button("cancel", "Zrušit opevnění", "C", null);
+  button("send", sendingUnitId === unit.id ? t("Klikni na cíl na mapě") : t("Poslat na místo"), "G", null);
+  button("skip", t("Počkat"), t("mezera"), unit.movesLeft > 0 ? null : t("Jednotka už nemá pohyb."));
+  if (unit.orders?.kind === "auto") button("cancel", t("Zrušit automatickou práci"), "C", null);
+  else if (unit.orders?.kind === "route") button("cancel", t("Zrušit stavbu cesty"), "C", null);
+  else if (unit.goto) button("cancel", t("Zrušit cestu"), "C", null);
+  else if (unit.work) button("cancel", t("Přestat pracovat"), "C", null);
+  else if (unit.fortified) button("cancel", t("Zrušit opevnění"), "C", null);
   const upgradeTo = upgradeTarget(me(), unit.type);
   if (upgradeTo) {
     const err = canUpgrade(state, unit);
-    button("upgrade", `Povýšit: ${UNIT_TYPES[upgradeTo].name} (${upgradeCost(unit.type, upgradeTo)} zlata)`, "U", err ? ERROR_TEXT[err] : null);
+    button("upgrade", t("Povýšit: {unit} ({upgradeCost} zlata)", { unit: unitName(upgradeTo), upgradeCost: upgradeCost(unit.type, upgradeTo) }), "U", err ? ERROR_TEXT[err] : null);
   }
   const ownCity = here && here.owner === HUMAN;
   const disbandLabel =
     disbandConfirmUnitId === unit.id
-      ? "Opravdu rozpustit?"
+      ? t("Opravdu rozpustit?")
       : ownCity
-        ? `Rozpustit (+${disbandShields(unit.type)} štítů do výroby)`
-        : "Rozpustit";
+        ? t("Rozpustit (+{disbandShields} štítů do výroby)", { disbandShields: disbandShields(unit.type) })
+        : t("Rozpustit");
   button("disband", disbandLabel, "D", null);
-  button("next", "Další jednotka", "N", null);
+  button("next", t("Další jednotka"), "N", null);
 
-  const home = unit.homeCity !== null ? state.cities.find((c) => c.id === unit.homeCity)?.name : undefined;
+  const homeName = unit.homeCity !== null ? state.cities.find((c) => c.id === unit.homeCity)?.name : undefined;
+  const home = homeName ? cityLabel(homeName) : undefined;
   selectionPanel.innerHTML = `
-    <div class="panel-title"><h3><button type="button" class="linklike" data-codex="${entryKey("unit", unit.type)}" title="Co je to za jednotku? (klávesa E)">${rule.name}</button></h3><span class="sub">[${unit.x}, ${unit.y}] ${TERRAINS[terrain].name}</span></div>
-    <p class="facts">Pohyb: ${moves}${home ? ` · domov: ${escapeHtml(home)}` : ""}<br>
-    <span class="muted">${status || (sendingUnitId === unit.id ? "Klikni na políčko, kam má jít. Může to být i město nebo jiná jednotka." : "Klikni na mapu, kam má jít. Do města ji pošleš pravým klikem nebo klávesou G.")}</span></p>
+    <div class="panel-title"><h3><button type="button" class="linklike" data-codex="${entryKey("unit", unit.type)}" title="${t("Co je to za jednotku? (klávesa E)")}">${unitName(unit.type)}</button></h3><span class="sub">[${unit.x}, ${unit.y}] ${terrainName(terrain)}</span></div>
+    <p class="facts">${t("Pohyb: {moves}", { moves })}${home ? ` · ${t("domov: {city}", { city: escapeHtml(home) })}` : ""}<br>
+    <span class="muted">${status || (sendingUnitId === unit.id ? t("Klikni na políčko, kam má jít. Může to být i město nebo jiná jednotka.") : t("Klikni na mapu, kam má jít. Do města ji pošleš pravým klikem nebo klávesou G."))}</span></p>
     <div class="actions">${buttons.join("")}</div>`;
 
   selectionPanel.querySelectorAll<HTMLButtonElement>("button[data-action]").forEach((b) =>
@@ -781,7 +811,7 @@ function doUnitAction(action: string): void {
   if (action === "skip") return unitAction({ type: "skipTurn", unitId: unit.id });
   if (action === "cancel") {
     const hadRoute = unit.goto !== null;
-    if (run({ type: "cancelOrders", unitId: unit.id }) && hadRoute) say("Cesta je zrušená. Jednotka čeká na nový rozkaz.");
+    if (run({ type: "cancelOrders", unitId: unit.id }) && hadRoute) say(t("Cesta je zrušená. Jednotka čeká na nový rozkaz."));
     return refresh();
   }
   if (action === "lay:road" || action === "lay:railroad") {
@@ -789,12 +819,12 @@ function doUnitAction(action: string): void {
     const again = sendingUnitId === unit.id && sendMode === mode;
     sendingUnitId = again ? null : unit.id;
     sendMode = again ? "goto" : mode;
-    say(sendingUnitId ? `Klikni na políčko, kam má ${mode === "road" ? "cesta" : "železnice"} vést. Osadník ji postaví po celé délce. Esc to zruší.` : "");
+    say(sendingUnitId ? mode === "road" ? t("Klikni na políčko, kam má cesta vést. Osadník ji postaví po celé délce. Esc to zruší.") : t("Klikni na políčko, kam má železnice vést. Osadník ji postaví po celé délce. Esc to zruší.") : "");
     return refresh();
   }
   if (action === "auto") {
     if (run({ type: "automate", unitId: unit.id })) {
-      say("Osadník teď sám vylepšuje okolí tvých měst. Když ho vybereš, klávesou C ho zastavíš.");
+      say(t("Osadník teď sám vylepšuje okolí tvých měst. Když ho vybereš, klávesou C ho zastavíš."));
       afterUnitAction();
     } else refresh();
     return;
@@ -802,7 +832,7 @@ function doUnitAction(action: string): void {
   if (action === "send") {
     sendMode = "goto";
     sendingUnitId = sendingUnitId === unit.id ? null : unit.id;
-    say(sendingUnitId ? "Klikni na políčko, kam má jednotka jít. Esc to zruší." : "");
+    say(sendingUnitId ? t("Klikni na políčko, kam má jednotka jít. Esc to zruší.") : "");
     return refresh();
   }
   if (action.startsWith("build:")) {
@@ -835,7 +865,7 @@ function doUnitAction(action: string): void {
   if (action === "aim") {
     if (UNIT_TYPES[unit.type].special !== "nuclear") return;
     targetingUnitId = targetingUnitId === unit.id ? null : unit.id;
-    say(targetingUnitId ? "Klikni na políčko, kam má raketa dopadnout. Esc zamíření zruší." : "");
+    say(targetingUnitId ? t("Klikni na políčko, kam má raketa dopadnout. Esc zamíření zruší.") : "");
     return refresh();
   }
 }
@@ -847,32 +877,32 @@ function renderCity(city: City): void {
   const prodPct = Math.min(100, (city.shields / cost) * 100);
   const growth =
     city.size >= r.maxSize && r.foodSurplus > 0
-      ? "dál neroste, potřebuje akvadukt"
+      ? t("dál neroste, potřebuje akvadukt")
       : r.foodSurplus > 0
-        ? `roste za ${turnsText(r.turnsToGrow!)}`
+        ? t("roste za {turns}", { turns: turnsText(r.turnsToGrow!) })
         : r.foodSurplus === 0
-          ? "neroste"
-          : "hladoví";
+          ? t("neroste")
+          : t("hladoví");
   const done = r.waitingForSize
-    ? "čeká na druhého obyvatele"
+    ? t("čeká na druhého obyvatele")
     : city.shields >= cost
-      ? "hotovo na konci tahu"
+      ? t("hotovo na konci tahu")
       : r.turnsToComplete
-        ? `hotovo za ${turnsText(r.turnsToComplete)}`
-        : "nevyrábí";
+        ? t("hotovo za {turns}", { turns: turnsText(r.turnsToComplete) })
+        : t("nevyrábí");
   const options = productionOptions(state, city)
     .map((o) => {
       const selected = sameItem(o, city.production) ? "selected" : "";
-      if (o.kind === "wealth") return `<option value="wealth:" ${selected}>${productionName(o)} (+${r.shieldSurplus * RULES.wealthGoldPerShield} zlata za tah)</option>`;
+      if (o.kind === "wealth") return `<option value="wealth:" ${selected}>${productionLabel(o)} (${t("+{gold} zlata za tah", { gold: r.shieldSurplus * RULES.wealthGoldPerShield })})</option>`;
       const turns = r.shieldSurplus > 0 ? `, ${turnsText(Math.max(1, Math.ceil((productionCost(o) - city.shields) / r.shieldSurplus)))}` : "";
-      const tag = o.kind === "building" && BUILDINGS[o.id].wonder ? "Div: " : "";
-      return `<option value="${o.kind}:${o.id}" ${selected}>${tag}${productionName(o)} (${productionCost(o)} štítů${turns})</option>`;
+      const tag = o.kind === "building" && BUILDINGS[o.id].wonder ? t("Div: ") : "";
+      return `<option value="${o.kind}:${o.id}" ${selected}>${tag}${productionLabel(o)} (${t("{cost} štítů", { cost: productionCost(o) })}${turns})</option>`;
     })
     .join("");
   const unitsHere = state.units.filter((u) => u.x === city.x && u.y === city.y && u.owner === HUMAN);
   const buildings =
-    city.buildings.map((b) => (BUILDINGS[b].upkeep ? `${BUILDINGS[b].name} (${BUILDINGS[b].upkeep})` : BUILDINGS[b].name)).join(", ") ||
-    "žádné";
+    city.buildings.map((b) => (BUILDINGS[b].upkeep ? `${buildingName(b)} (${BUILDINGS[b].upkeep})` : buildingName(b))).join(", ") ||
+    t("žádné");
   const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
   const h = r.happiness;
   const price = buyCost(city);
@@ -880,38 +910,38 @@ function renderCity(city: City): void {
   const buy =
     price === 0
       ? ""
-      : `<button type="button" class="wide" data-buy ${gold < price ? `disabled title="Máš jen ${gold} zlata."` : ""}>Koupit hned za ${price} zlata</button>`;
+      : `<button type="button" class="wide" data-buy ${gold < price ? `disabled title="${t("Máš jen {gold} zlata.", { gold })}"` : ""}>${t("Koupit hned za {price} zlata", { price })}</button>`;
 
   selectionPanel.innerHTML = `
-    <div class="panel-title"><h3>${escapeHtml(city.name)}</h3><span class="sub">velikost ${city.size}</span></div>
-    <p class="facts">Jídlo ${city.food} z ${r.growthThreshold} (${signed(r.foodSurplus)} za tah), ${growth}</p>
+    <div class="panel-title"><h3>${escapeHtml(cityLabel(city.name))}</h3><span class="sub">${t("velikost {size}", { size: city.size })}</span></div>
+    <p class="facts">${t("Jídlo {food} z {need} ({change} za tah), {growth}", { food: city.food, need: r.growthThreshold, change: signed(r.foodSurplus), growth })}</p>
     <div class="bar food"><div style="width:${foodPct}%"></div></div>
-    <p class="facts">${productionName(city.production)}: ${Math.min(city.shields, cost)} z ${cost} (${signed(r.shieldSurplus)} za tah), ${done}</p>
+    <p class="facts">${productionLabel(city.production)}: ${t("{done} z {cost} ({change} za tah), {state}", { done: Math.min(city.shields, cost), cost, change: signed(r.shieldSurplus), state: done })}</p>
     <div class="bar prod"><div style="width:${prodPct}%"></div></div>
-    <label for="production">Co stavět</label>
+    <label for="production">${t("Co stavět")}</label>
     <select id="production">${options}</select>
     ${buy}
     <p class="facts" style="margin-top:8px">${
-      h.disorder ? `<span class="neg">Nepokoje! Město nic nevyrábí.</span><br>` : ""
-    }Spokojení ${h.content} · nespokojení ${h.unhappy}${h.entertainers ? ` · baviči ${h.entertainers}` : ""}<br>
-    Obchod ${r.production.trade}${r.corruption ? `, korupce −${r.corruption}` : ""}: věda ${r.science}, zlato ${r.gold}<br>${
-      r.pollution.unhappy ? `<span class="neg">Znečištěný vzduch rozladí ${r.pollution.unhappy} obyvatel.</span><br>` : ""
+      h.disorder ? `<span class="neg">${t("Nepokoje! Město nic nevyrábí.")}</span><br>` : ""
+    }${t("Spokojení {content} · nespokojení {unhappy}", { content: h.content, unhappy: h.unhappy })}${h.entertainers ? t(" · baviči {entertainers}", { entertainers: h.entertainers }) : ""}<br>
+    ${t("Obchod {trade}", { trade: r.production.trade })}${r.corruption ? t(", korupce −{corruption}", { corruption: r.corruption }) : ""}: ${t("věda {science}, zlato {gold}", { science: r.science, gold: r.gold })}<br>${
+      r.pollution.unhappy ? `<span class="neg">${t("Znečištěný vzduch rozladí {n} obyvatel.", { n: r.pollution.unhappy })}</span><br>` : ""
     }
-    <span class="muted">Budovy: ${buildings}</span><br>
-    <span class="muted">Obyvatelé obdělávají políčka orámovaná na mapě.${
-      h.entertainers ? " Baviči nepracují na poli a udržují ve městě klid." : ""
+    <span class="muted">${t("Budovy: {list}", { list: buildings })}</span><br>
+    <span class="muted">${t("Obyvatelé obdělávají políčka orámovaná na mapě.")}${
+      h.entertainers ? t(" Baviči nepracují na poli a udržují ve městě klid.") : ""
     }</span></p>
     ${
       unitsHere.length
-        ? `<h2>Jednotky ve městě</h2><ul class="unit-list">${unitsHere
+        ? `<h2>${t("Jednotky ve městě")}</h2><ul class="unit-list">${unitsHere
             .map(
               (u) =>
-                `<li>${UNIT_TYPES[u.type].name}${u.fortified ? " (opevněný)" : ""}<button type="button" data-unit="${u.id}">Vybrat</button></li>`,
+                `<li>${unitName(u.type)}${u.fortified ? t(" (opevněný)") : ""}<button type="button" data-unit="${u.id}">${t("Vybrat")}</button></li>`,
             )
             .join("")}</ul>`
         : ""
     }
-    <div class="actions" style="margin-top:10px"><button type="button" data-open-city class="primary">Otevřít město</button><button type="button" data-close>Zavřít <kbd>Esc</kbd></button></div>`;
+    <div class="actions" style="margin-top:10px"><button type="button" data-open-city class="primary">${t("Otevřít město")}</button><button type="button" data-close>${t("Zavřít")} <kbd>Esc</kbd></button></div>`;
 
   selectionPanel.querySelector("button[data-buy]")?.addEventListener("click", () => {
     run({ type: "buy", cityId: city.id });
@@ -1117,27 +1147,27 @@ canvas.addEventListener("mousemove", (e) => {
   }
   const i = p.y * state.map.width + p.x;
   const known = showAllBox.checked || state.players[HUMAN]!.explored[i] === 1;
-  const t = state.map.terrain[i]!;
+  const ter = state.map.terrain[i]!;
   if (!known) {
-    tooltip.textContent = `[${p.x}, ${p.y}] neprozkoumáno`;
+    tooltip.textContent = t("[{x}, {y}] neprozkoumáno", p);
   } else {
     const city = state.cities.find((c) => c.x === p.x && c.y === p.y);
     const owner = state.cities.find((c) => c.owner === HUMAN && (c.x === p.x && c.y === p.y || c.worked.includes(i)));
     const y = owner ? cityTileYield(state, owner, i) : tileYield(state.map, i, city !== undefined);
     const extras = [
-      state.map.road[i] ? "cesta" : "",
-      state.map.irrigation[i] ? "zavlažování" : "",
-      state.map.mine[i] ? "důl" : "",
-      state.map.railroad[i] ? "železnice" : "",
-      state.map.fortress[i] ? "pevnost" : "",
+      state.map.road[i] ? t("cesta") : "",
+      state.map.irrigation[i] ? t("zavlažování") : "",
+      state.map.mine[i] ? t("důl") : "",
+      state.map.railroad[i] ? t("železnice") : "",
+      state.map.fortress[i] ? t("pevnost") : "",
     ].filter(Boolean);
-    const r = TERRAINS[t];
-    const special = r.special && state.map.special[i] ? ` · ${r.special.name}` : "";
+    const r = TERRAINS[ter];
+    const special = r.special && state.map.special[i] ? ` · ${specialName(ter)}` : "";
     tooltip.innerHTML =
-      `<b>${city ? escapeHtml(city.name) + " · " : ""}${r.name}${special}</b> [${p.x}, ${p.y}]<br>` +
-      `jídlo ${y.food} · štíty ${y.shields} · obchod ${y.trade}` +
+      `<b>${city ? escapeHtml(cityLabel(city.name)) + " · " : ""}${terrainName(ter)}${special}</b> [${p.x}, ${p.y}]<br>` +
+      t("jídlo {food} · štíty {shields} · obchod {trade}", { food: y.food, shields: y.shields, trade: y.trade }) +
       (extras.length ? `<br>${extras.join(", ")}` : "") +
-      (r.land ? `<br>pohyb ${r.moveCost}${r.defenseBonus ? ` · obrana +${r.defenseBonus} %` : ""}` : "");
+      (r.land ? `<br>${t("pohyb {cost}", { cost: r.moveCost })}${r.defenseBonus ? ` · ${t("obrana +{pct} %", { pct: r.defenseBonus })}` : ""}` : "");
   }
   // Highlight the target and redraw only when the tile under the mouse changes.
   if (!hoverTile || hoverTile.x !== p.x || hoverTile.y !== p.y) {
@@ -1203,7 +1233,11 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || newGameDialog.isOpen() || menus.isOpen()) return;
+  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen()) return;
+  if (e.key.toLowerCase() === "o") {
+    e.preventDefault();
+    return citiesOverview.open();
+  }
   if (e.key.toLowerCase() === "t") {
     e.preventDefault();
     return techTree.open();
@@ -1275,10 +1309,11 @@ const menus = createMenus($<HTMLElement>("#start-screen"), $<HTMLDialogElement>(
   currentPayload: () => payloadOf(state, log),
   loadPayload: (payload) => {
     useGame(payload);
-    say(`Hra je nahraná: ${CIVS[state.players[HUMAN]!.civ].name}, tah ${state.turn}.`);
+    say(t("Hra je nahraná: {civ}, tah {turn}.", { civ: civName(state.players[HUMAN]!.civ), turn: state.turn }));
   },
   openCodex: () => codex.open(),
   openAdvisor: () => advisor.show(),
+  openCities: () => citiesOverview.open(),
   player: HUMAN,
 });
 $<HTMLButtonElement>("#menu-button").addEventListener("click", () => menus.openMenu());

@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.core.json",
     "check-maps": "tsx tools/check-maps.ts",
     "pace": "tsx tools/pace.ts",
-    "images": "tsx tools/generate-images.ts"
+    "images": "tsx tools/generate-images.ts",
+    "i18n": "tsx tools/i18n.ts"
   },
   "repository": {
     "type": "git",

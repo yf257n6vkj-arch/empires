@@ -2,6 +2,16 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Hra mluví česky i anglicky a má přehled měst
+
+Michal chtěl dvojjazyčnou hru, do které půjdou přidat další jazyky. Texty dál píšeme česky přímo v kódu a česká věta slouží jako klíč k překladu. Angličtina má vlastní soubor s překlady vět, jmen jednotek, budov, technologií, národů i měst a celou encyklopedii. Další jazyk vznikne zkopírováním anglických souborů a přeložením hodnot, test hlídá, aby žádný text rozhraní nechyběl. Encyklopedie se v jazyce bez překladu ukáže česky.
+
+Jazyk se vybírá na úvodní obrazovce nebo v menu a hra si ho pamatuje. Výchozí je čeština. Po přepnutí se stránka znovu načte, rozehraná hra zůstane. Záznam událostí, který už ve hře je, zůstane v jazyce, ve kterém vznikl. Klávesy jsou v obou jazycích stejné, železnice zůstává na Z.
+
+Anglické texty píšeme britským pravopisem. Města, která už stojí, mají v uložené hře česká jména, a anglická verze je překládá podle seznamu národa, takže z Prahy je Prague. Odkazy z anglické encyklopedie vedou přes vyhledávání na anglické Wikipedii, protože názvy článků jsme tam neověřovali. Věta o Civilizaci 1 u výběru národa v angličtině jméno hry nepoužívá.
+
+Přehled měst otevře klávesa O, tlačítko Města nahoře nebo položka v menu. U každého města ukazuje velikost, jídlo a růst, štíty, obchod, vědu, zlato, náladu a počet budov. Ve sloupci Vyrábí jde rovnou změnit stavbu a vedle ní koupit hotovou výrobu. Klik na jméno otevře celé město. Přehled používá stejné příkazy jako zbytek hry.
+
 ## 15. 11. 2026: Město v detailu vypadá pořád stejně a hradbu kreslí kód
 
 Když Michal měnil výšku obrázku města, hra rozložila budovy pokaždé znovu a město vypadalo jinak. Teď si rozložení spočítá jen z toho, co ve městě stojí, a při změně velikosti obrázek jen přiblíží nebo oddálí. Jiné rozložení přijde, až město vyroste nebo postaví něco nového.

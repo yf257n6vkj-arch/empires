@@ -454,3 +454,28 @@ label.check input { flex: 0 0 auto; }
 .cs-unit-wrap .cs-unit { border: 0; border-radius: 0; }
 .cs-unit-info { flex-basis: 26px; }
 .cs-opts { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+
+/* ---------- city overview ---------- */
+.co-dialog { background: #1f1b17; border: 1px solid #5a4a36; border-radius: 10px; padding: 12px 16px; width: min(1180px, 96vw); max-height: 90vh; color: inherit; }
+.co-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.co-dialog .spacer { flex: 1; }
+.co-body { overflow: auto; max-height: calc(90vh - 70px); }
+.co-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.co-table th { text-align: left; font-weight: 600; color: #cdbb94; padding: 6px 8px; border-bottom: 1px solid #5a4a36; position: sticky; top: 0; background: #1f1b17; white-space: nowrap; }
+.co-table td { padding: 5px 8px; border-bottom: 1px solid #332b22; vertical-align: middle; }
+.co-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.co-table tbody tr:hover { background: rgba(255, 255, 255, 0.035); }
+.co-table tr.disorder { background: rgba(200, 70, 50, 0.12); }
+.co-table tfoot td { border-bottom: none; border-top: 1px solid #5a4a36; color: #cdbb94; padding-top: 8px; }
+.co-name { white-space: nowrap; font-weight: 600; }
+.co-make select { max-width: 260px; }
+.co-make .small { margin-top: 2px; }
+.co-buy { white-space: nowrap; font-size: 12px; padding: 3px 8px; }
+.warn-text { color: #f0b46a; }
+
+/* ---------- language picker on the start screen ---------- */
+.st-langs { display: flex; gap: 6px; margin-top: 18px; }
+.st-langs button { background: rgba(20, 16, 12, 0.6); border: 1px solid #5a4a36; color: #cdbb94; border-radius: 6px; padding: 4px 10px; font-size: 12.5px; cursor: pointer; }
+.st-langs button.on { border-color: #e0b75a; color: #f3e2b8; }
+.gm-settings select { margin-left: 6px; }
+.gm-settings .lang-pick { display: flex; align-items: center; gap: 6px; white-space: nowrap; }

@@ -11,6 +11,7 @@
  * only changes when it builds something or grows.
  */
 import { BUILDINGS, type BuildingId } from "../core";
+import { buildingName } from "./i18n/names";
 
 interface Art {
   img: HTMLImageElement;
@@ -285,7 +286,7 @@ function unitCorner(i: number, j: number): [number, number] {
 
 function planCity(input: CityViewInput): Plan {
   const rand = seeded(input.cityId * 7919 + 13);
-  const entryOf = (b: BuildingId) => ({ entry: `${BUILDINGS[b].wonder ? "wdr" : "bld"}-${b}`, name: BUILDINGS[b].name });
+  const entryOf = (b: BuildingId) => ({ entry: `${BUILDINGS[b].wonder ? "wdr" : "bld"}-${b}`, name: buildingName(b) });
   const own = input.buildings.filter((b) => !b.startsWith("ss") && b !== "walls");
   const shore = input.coastal ? own.filter((b) => AT_SEA.includes(b)) : [];
   const land = own.filter((b) => !shore.includes(b));
@@ -454,7 +455,7 @@ export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number
   }
 
   const hits: Hit[] = [];
-  const wallEntry = { entry: "bld-walls", name: BUILDINGS.walls.name };
+  const wallEntry = { entry: "bld-walls", name: buildingName("walls") };
   if (plan.walls) for (const seg of plan.walls.back) drawWall(ctx, board, seg, "back");
   if (plan.walls) for (const [i, j] of plan.walls.towers) drawTower(ctx, board, i, j);
   for (const lot of plan.lots) {

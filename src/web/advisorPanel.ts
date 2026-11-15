@@ -5,6 +5,8 @@
  */
 import { advise, BUILDINGS, type Advice, type CityId, type GameState, type UnitId } from "../core";
 import { describeBuilding, escapeHtml } from "./texts";
+import { t, tn } from "./i18n";
+import { buildingName, cityLabel } from "./i18n/names";
 
 export interface AdvisorHost {
   state(): GameState;
@@ -17,10 +19,6 @@ export interface AdvisorHost {
 
 const STORAGE_KEY = "empires.advisor";
 const SHOWN = 3;
-
-function plural(n: number, one: string, few: string, many: string): string {
-  return n === 1 ? one : n >= 2 && n <= 4 ? few : many;
-}
 
 export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host: AdvisorHost) {
   let enabled = true;
@@ -44,7 +42,8 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
   });
 
   function cityName(id: CityId): string {
-    return escapeHtml(host.state().cities.find((c) => c.id === id)?.name ?? "město");
+    const name = host.state().cities.find((c) => c.id === id)?.name;
+    return escapeHtml(name ? cityLabel(name) : t("město"));
   }
 
   /** Words and an optional button for one tip. */
@@ -53,76 +52,76 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
     switch (a.kind) {
       case "foundFirstCity":
         return {
-          text: "Nejdřív potřebuješ město. Vyber osadníka a stiskni <kbd>B</kbd>. Hodí se místo, kde je kolem hodně louky a k tomu trochu lesa nebo kopců.",
-          button: "Ukaž osadníka",
+          text: t("Nejdřív potřebuješ město. Vyber osadníka a stiskni <kbd>B</kbd>. Hodí se místo, kde je kolem hodně louky a k tomu trochu lesa nebo kopců."),
+          button: t("Ukaž osadníka"),
           act: () => host.selectUnit(a.unitId),
         };
       case "chooseResearch":
-        return { text: "Tví vědci nevědí, co mají zkoumat. Vyber jim další objev, jinak výzkum stojí.", button: "Vybrat objev", act: host.openTechTree };
+        return { text: t("Tví vědci nevědí, co mají zkoumat. Vyber jim další objev, jinak výzkum stojí."), button: t("Vybrat objev"), act: host.openTechTree };
       case "cityInDisorder":
         return {
-          text: `Ve městě ${cityName(a.cityId)} se lidé bouří a město nic nevyrábí. Postav tam chrám, pošli do města vojáka nebo udělej z jednoho obyvatele baviče.`,
-          button: "Otevřít město",
+          text: t("Ve městě {city} se lidé bouří a město nic nevyrábí. Postav tam chrám, pošli do města vojáka nebo udělej z jednoho obyvatele baviče.", { city: cityName(a.cityId) }),
+          button: t("Otevřít město"),
           act: () => host.openCity(a.cityId),
         };
       case "cityStarving":
         return {
-          text: `${cityName(a.cityId)} hladoví a brzy se zmenší. Přesuň obyvatele na políčka s jídlem, nebo tam pošli osadníka zavlažovat.`,
-          button: "Otevřít město",
+          text: t("{city} hladoví a brzy se zmenší. Přesuň obyvatele na políčka s jídlem, nebo tam pošli osadníka zavlažovat.", { city: cityName(a.cityId) }),
+          button: t("Otevřít město"),
           act: () => host.openCity(a.cityId),
         };
       case "goldRunningOut":
         return {
-          text: `Každý tah ti ubude ${-a.perTurn} zlata a za ${a.turnsLeft} ${plural(a.turnsLeft, "tah", "tahy", "tahů")} dojde. Pak hra začne prodávat budovy. Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.`,
+          text: tn("Každý tah ti ubude {gold} zlata a za {n} tah dojde. Pak hra začne prodávat budovy. Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.|Každý tah ti ubude {gold} zlata a za {n} tahy dojde. Pak hra začne prodávat budovy. Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.|Každý tah ti ubude {gold} zlata a za {n} tahů dojde. Pak hra začne prodávat budovy. Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.", a.turnsLeft, { gold: -a.perTurn }),
         };
       case "defendCity":
         return {
-          text: `${cityName(a.cityId)} nikdo nebrání. Postav tam válečníka nebo jinou jednotku, která umí bránit.`,
-          button: "Otevřít město",
+          text: t("{city} nikdo nebrání. Postav tam válečníka nebo jinou jednotku, která umí bránit.", { city: cityName(a.cityId) }),
+          button: t("Otevřít město"),
           act: () => host.openCity(a.cityId),
         };
       case "idleSettler":
         return {
-          text: "Osadník nemá práci. Když mu zapneš automatickou práci, bude sám stavět cesty, zavlažování a doly kolem tvých měst.",
-          button: "Zapnout automatickou práci",
+          text: t("Osadník nemá práci. Když mu zapneš automatickou práci, bude sám stavět cesty, zavlažování a doly kolem tvých měst."),
+          button: t("Zapnout automatickou práci"),
           act: () => host.automate(a.unitId),
         };
       case "buildSettlers": {
         const n = s.cities.filter((c) => c.owner === host.player()).length;
         return {
-          text: `Máš ${n} ${plural(n, "město", "města", "měst")}. Víc měst ti dá víc jídla, výroby i vědy. Postav ve městě ${cityName(a.cityId)} osadníka a založ s ním další město.`,
-          button: "Otevřít město",
+          text: tn("Máš {n} město. Víc měst ti dá víc jídla, výroby i vědy. Postav ve městě {city} osadníka a založ s ním další město.|Máš {n} města. Víc měst ti dá víc jídla, výroby i vědy. Postav ve městě {city} osadníka a založ s ním další město.|Máš {n} měst. Víc měst ti dá víc jídla, výroby i vědy. Postav ve městě {city} osadníka a založ s ním další město.", n, { city: cityName(a.cityId) }),
+          button: t("Otevřít město"),
           act: () => host.openCity(a.cityId),
         };
       }
       case "needsAqueduct":
         return {
-          text: `${cityName(a.cityId)} už dál neroste. Aby mohlo být větší, potřebuje akvadukt.`,
-          button: "Otevřít město",
+          text: t("{city} už dál neroste. Aby mohlo být větší, potřebuje akvadukt.", { city: cityName(a.cityId) }),
+          button: t("Otevřít město"),
           act: () => host.openCity(a.cityId),
         };
       case "buildBuilding": {
         const b = BUILDINGS[a.building];
         return {
-          text: `Ve městě ${cityName(a.cityId)} by se hodila stavba ${escapeHtml(b.name)}: ${escapeHtml(describeBuilding(b))}.`,
-          button: "Otevřít město",
+          text: t("Ve městě {city} by se hodila stavba {building}: {what}.", { city: cityName(a.cityId), building: escapeHtml(buildingName(b.id)), what: escapeHtml(describeBuilding(b)) }),
+          button: t("Otevřít město"),
           act: () => host.openCity(a.cityId),
         };
       }
       case "spendGold":
         return {
-          text: `Máš hodně zlata. Stavbu ve městě ${cityName(a.cityId)} můžeš rovnou koupit a nemusíš čekat.`,
-          button: "Otevřít město",
+          text: t("Máš hodně zlata. Stavbu ve městě {city} můžeš rovnou koupit a nemusíš čekat.", { city: cityName(a.cityId) }),
+          button: t("Otevřít město"),
           act: () => host.openCity(a.cityId),
         };
       case "unitsWaiting":
         return {
-          text: `Na rozkaz ${plural(a.count, "čeká", "čekají", "čeká")} ${a.count} ${plural(a.count, "jednotka", "jednotky", "jednotek")}. Stiskni <kbd>N</kbd> a projdi je jednu po druhé. Vojáky ve městě můžeš opevnit klávesou <kbd>F</kbd>.`,
-          button: "Ukaž jednotku",
+          text: tn("Na rozkaz čeká {n} jednotka. Stiskni <kbd>N</kbd> a projdi je jednu po druhé. Vojáky ve městě můžeš opevnit klávesou <kbd>F</kbd>.|Na rozkaz čekají {n} jednotky. Stiskni <kbd>N</kbd> a projdi je jednu po druhé. Vojáky ve městě můžeš opevnit klávesou <kbd>F</kbd>.|Na rozkaz čeká {n} jednotek. Stiskni <kbd>N</kbd> a projdi je jednu po druhé. Vojáky ve městě můžeš opevnit klávesou <kbd>F</kbd>.", a.count),
+          button: t("Ukaž jednotku"),
           act: () => host.selectUnit(a.unitId),
         };
       case "allDone":
-        return { text: "Všechno má práci. Ukonči tah klávesou <kbd>Enter</kbd>." };
+        return { text: t("Všechno má práci. Ukonči tah klávesou <kbd>Enter</kbd>.") };
     }
   }
 
@@ -135,10 +134,10 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
     const tips = advise(s, host.player()).slice(0, SHOWN).map(words);
     panel.hidden = false;
     panel.innerHTML =
-      `<div class="adv-head"><span class="adv-owl" aria-hidden="true">🦉</span><b>Rádce</b><span class="spacer"></span>` +
-      `<button type="button" class="adv-close" data-close title="Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu." aria-label="Schovat">×</button></div>` +
+      `<div class="adv-head"><span class="adv-owl" aria-hidden="true">🦉</span><b>${t("Rádce")}</b><span class="spacer"></span>` +
+      `<button type="button" class="adv-close" data-close title="${t("Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu.")}" aria-label="${t("Schovat")}">×</button></div>` +
       `<ol class="adv-tips">${tips
-        .map((t, n) => `<li><p>${t.text}</p>${t.button ? `<button type="button" data-tip="${n}">${t.button}</button>` : ""}</li>`)
+        .map((tip, n) => `<li><p>${tip.text}</p>${tip.button ? `<button type="button" data-tip="${n}">${tip.button}</button>` : ""}</li>`)
         .join("")}</ol>`;
     panel.querySelector("[data-close]")?.addEventListener("click", () => {
       hiddenInTurn = s.turn;

@@ -24,6 +24,7 @@ Browser turn-based strategy in the style of Civilization 1, built by Michal with
 ## Conventions
 
 - Code, identifiers and code comments in English. UI texts, README and documents for Michal in Czech.
+- The game is bilingual (Czech and English). Every UI text is written in Czech inside `t("...")` or `tn("...|...|...", n)` from `src/web/i18n`; the Czech sentence is the key. Names of rule data go through `src/web/i18n/names.ts`, never `UNIT_TYPES[x].name` and friends. Each new key needs its English text in `src/web/i18n/en-strings.ts`; `npm run i18n -- en` lists what is missing and `tests/i18n.test.ts` fails until it is complete.
 - Czech texts for Michal: plain spoken Czech, verbs rather than nouns, headings that contain a verb. Avoid "není X, ale Y" antitheses, dash punchlines, groups of exactly three parallel items and sentences about the document itself. Bold only where it really helps. Never use the word "páka" in any form.
 - Every rule change gets a test. Map or AI changes are judged on hundreds of seeds, not single screenshots.
 - Commit messages in English, imperative mood.

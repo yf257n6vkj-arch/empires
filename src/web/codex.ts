@@ -21,8 +21,22 @@ import {
   type TechId,
 } from "../core";
 import { buildingPortraitCanvas } from "./buildingArt";
-import { CODEX_PAGES } from "./codexPages";
+import { CODEX_PAGES, type CodexPage } from "./codexPages";
 import { wikiUrl } from "./encyclopedia";
+import { language, t, tn } from "./i18n";
+import {
+  buildingName,
+  cityLabel,
+  civName,
+  governmentName,
+  improvementName,
+  inSentence,
+  leaderName,
+  specialName,
+  techName,
+  terrainName,
+  unitName,
+} from "./i18n/names";
 import { unitPortraitCanvas } from "./render";
 import { techIconSvg } from "./techIcons";
 import { describeBuilding, describeGovernment, describeUnit, escapeHtml } from "./texts";
@@ -63,43 +77,43 @@ export function entryKey(kind: "civ" | "unit" | "building" | "government" | "ter
 const CATEGORIES: { kind: EntryKind; title: string; entries: Entry[] }[] = [
   {
     kind: "unit",
-    title: "Jednotky",
-    entries: UNIT_TYPE_IDS.map((id) => ({ key: `unit-${id}`, kind: "unit" as const, id, name: UNIT_TYPES[id].name })),
+    title: t("Jednotky"),
+    entries: UNIT_TYPE_IDS.map((id) => ({ key: `unit-${id}`, kind: "unit" as const, id, name: unitName(id) })),
   },
   {
     kind: "bld",
-    title: "Budovy",
-    entries: BUILDING_IDS.filter((id) => !BUILDINGS[id].wonder).map((id) => ({ key: `bld-${id}`, kind: "bld" as const, id, name: BUILDINGS[id].name })),
+    title: t("Budovy"),
+    entries: BUILDING_IDS.filter((id) => !BUILDINGS[id].wonder).map((id) => ({ key: `bld-${id}`, kind: "bld" as const, id, name: buildingName(id) })),
   },
   {
     kind: "wdr",
-    title: "Divy světa",
-    entries: BUILDING_IDS.filter((id) => BUILDINGS[id].wonder).map((id) => ({ key: `wdr-${id}`, kind: "wdr" as const, id, name: BUILDINGS[id].name })),
+    title: t("Divy světa"),
+    entries: BUILDING_IDS.filter((id) => BUILDINGS[id].wonder).map((id) => ({ key: `wdr-${id}`, kind: "wdr" as const, id, name: buildingName(id) })),
   },
   {
     kind: "gov",
-    title: "Vlády",
-    entries: GOVERNMENT_IDS.map((id) => ({ key: `gov-${id}`, kind: "gov" as const, id, name: GOVERNMENTS[id].name })),
+    title: t("Vlády"),
+    entries: GOVERNMENT_IDS.map((id) => ({ key: `gov-${id}`, kind: "gov" as const, id, name: governmentName(id) })),
   },
   {
     kind: "ter",
-    title: "Terén",
-    entries: TERRAIN_IDS.map((id) => ({ key: `ter-${id}`, kind: "ter" as const, id, name: TERRAINS[id].name })),
+    title: t("Terén"),
+    entries: TERRAIN_IDS.map((id) => ({ key: `ter-${id}`, kind: "ter" as const, id, name: terrainName(id) })),
   },
   {
     kind: "imp",
-    title: "Úpravy krajiny",
-    entries: IMPROVEMENT_IDS.map((id) => ({ key: `imp-${id}`, kind: "imp" as const, id, name: IMPROVEMENTS[id].name })),
+    title: t("Úpravy krajiny"),
+    entries: IMPROVEMENT_IDS.map((id) => ({ key: `imp-${id}`, kind: "imp" as const, id, name: improvementName(id) })),
   },
   {
     kind: "civ",
-    title: "Národy",
-    entries: CIV_IDS.map((id) => ({ key: `civ-${id}`, kind: "civ" as const, id, name: CIVS[id].name })),
+    title: t("Národy"),
+    entries: CIV_IDS.map((id) => ({ key: `civ-${id}`, kind: "civ" as const, id, name: civName(id) })),
   },
   {
     kind: "lead",
-    title: "Vládci",
-    entries: CIV_IDS.map((id) => ({ key: `lead-${id}`, kind: "lead" as const, id, name: CIVS[id].leader })),
+    title: t("Vládci"),
+    entries: CIV_IDS.map((id) => ({ key: `lead-${id}`, kind: "lead" as const, id, name: leaderName(id) })),
   },
 ];
 
@@ -107,6 +121,19 @@ const ALL: Entry[] = CATEGORIES.flatMap((c) => c.entries);
 
 export function codexEntryCount(): number {
   return ALL.length;
+}
+
+/** The page of an entry in the current language, falling back to Czech, with the link to its article. */
+export function codexPage(key: string): { page: CodexPage; url: string } | null {
+  const own = language().codex?.[key];
+  if (own) return { page: own, url: wikiUrl(own.wiki, language().wikipedia ?? "cs") };
+  const page = CODEX_PAGES[key];
+  return page ? { page, url: wikiUrl(page.wiki) } : null;
+}
+
+/** Entry keys of the encyclopedia, for the tests. */
+export function codexKeys(): string[] {
+  return ALL.map((e) => e.key);
 }
 
 /** Every entry that has no page text yet; the tests keep this list empty. */
@@ -122,9 +149,9 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
   let current = ALL[0]!.key;
   let category: EntryKind = "unit";
 
-  function techLink(t: TechId | null | undefined): string {
-    if (!t) return `<span class="muted">jde od začátku hry</span>`;
-    return `<button type="button" class="tp-link" data-tech="${t}">${techIconSvg(t, TECHS[t].era, 24)}${escapeHtml(TECHS[t].name)}</button>`;
+  function techLink(tech: TechId | null | undefined): string {
+    if (!tech) return `<span class="muted">${t("jde od začátku hry")}</span>`;
+    return `<button type="button" class="tp-link" data-tech="${tech}">${techIconSvg(tech, TECHS[tech].era, 24)}${escapeHtml(techName(tech))}</button>`;
   }
 
   function entryLink(key: string, label: string): string {
@@ -136,83 +163,86 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
     const row = (label: string, value: string) => `<div class="cx-row"><span class="cx-label">${label}</span><span>${value}</span></div>`;
     if (e.kind === "unit") {
       const u = UNIT_TYPES[e.id as keyof typeof UNIT_TYPES];
-      const next = u.obsoleteBy ? entryLink(`unit-${u.obsoleteBy}`, UNIT_TYPES[u.obsoleteBy].name) : "";
-      const older = UNIT_TYPE_IDS.filter((o) => UNIT_TYPES[o].obsoleteBy === u.id).map((o) => entryLink(`unit-${o}`, UNIT_TYPES[o].name));
+      const next = u.obsoleteBy ? entryLink(`unit-${u.obsoleteBy}`, unitName(u.obsoleteBy)) : "";
+      const older = UNIT_TYPE_IDS.filter((o) => UNIT_TYPES[o].obsoleteBy === u.id).map((o) => entryLink(`unit-${o}`, unitName(o)));
       return (
-        row("Co umí", escapeHtml(describeUnit(u))) +
-        row("Odemyká ji", techLink(u.requires)) +
-        (u.requiresWonder ? row("Potřebuje div", entryLink(entryKey("building", u.requiresWonder), BUILDINGS[u.requiresWonder].name)) : "") +
-        (next ? row("Povýšíš ji na", next) : "") +
-        (older.length ? row("Povýšíš na ni", older.join(" ")) : "")
+        row(t("Co umí"), escapeHtml(describeUnit(u))) +
+        row(t("Odemyká ji"), techLink(u.requires)) +
+        (u.requiresWonder ? row(t("Potřebuje div"), entryLink(entryKey("building", u.requiresWonder), buildingName(u.requiresWonder))) : "") +
+        (next ? row(t("Povýšíš ji na"), next) : "") +
+        (older.length ? row(t("Povýšíš na ni"), older.join(" ")) : "")
       );
     }
     if (e.kind === "bld" || e.kind === "wdr") {
       const b = BUILDINGS[e.id as keyof typeof BUILDINGS];
       return (
-        row("Co dělá", escapeHtml(describeBuilding(b))) +
-        row("Odemyká", techLink(b.requires)) +
-        (b.requiresBuilding ? row("Potřebuje", entryLink(entryKey("building", b.requiresBuilding), BUILDINGS[b.requiresBuilding].name)) : "") +
-        (b.obsoleteBy ? row("Přestane působit s", techLink(b.obsoleteBy)) : "")
+        row(t("Co dělá"), escapeHtml(describeBuilding(b))) +
+        row(t("Odemyká"), techLink(b.requires)) +
+        (b.requiresBuilding ? row(t("Potřebuje"), entryLink(entryKey("building", b.requiresBuilding), buildingName(b.requiresBuilding))) : "") +
+        (b.obsoleteBy ? row(t("Přestane působit s"), techLink(b.obsoleteBy)) : "")
       );
     }
     if (e.kind === "civ") {
       const c = CIVS[e.id as keyof typeof CIVS];
-      const nature = { expansion: "rád zakládá nová města", war: "spoléhá na armádu", science: "sází na vědu a výzkum" }[c.personality];
+      const nature = { expansion: t("rád zakládá nová města"), war: t("spoléhá na armádu"), science: t("sází na vědu a výzkum") }[c.personality];
       return (
-        row("Vládce", entryLink(`lead-${c.id}`, c.leader)) +
-        row("Barva", `<span class="cx-color" style="background:${c.color}"></span>`) +
-        row("Když hraje počítač", nature) +
-        row("První města", escapeHtml(c.cities.slice(0, 6).join(", ")))
+        row(t("Vládce"), entryLink(`lead-${c.id}`, leaderName(c.id))) +
+        row(t("Barva"), `<span class="cx-color" style="background:${c.color}"></span>`) +
+        row(t("Když hraje počítač"), nature) +
+        row(t("První města"), escapeHtml(c.cities.slice(0, 6).map(cityLabel).join(", ")))
       );
     }
     if (e.kind === "lead") {
       const c = CIVS[e.id as keyof typeof CIVS];
-      return row("Vede národ", entryLink(`civ-${c.id}`, c.name)) + row("Hlavní město", escapeHtml(c.cities[0]!));
+      return row(t("Vede národ"), entryLink(`civ-${c.id}`, civName(c.id))) + row(t("Hlavní město"), escapeHtml(cityLabel(c.cities[0]!)));
     }
     if (e.kind === "gov") {
       const g = GOVERNMENTS[e.id as keyof typeof GOVERNMENTS];
       return (
-        row("Jak se pod ní žije", escapeHtml(describeGovernment(g))) +
-        (g.id === "anarchy" ? row("Kdy přijde", "po každé revoluci") : row("Odemyká", techLink(g.requires)))
+        row(t("Jak se pod ní žije"), escapeHtml(describeGovernment(g))) +
+        (g.id === "anarchy" ? row(t("Kdy přijde"), t("po každé revoluci")) : row(t("Odemyká"), techLink(g.requires)))
       );
     }
     if (e.kind === "ter") {
-      const t = TERRAINS[e.id as keyof typeof TERRAINS];
-      const works = IMPROVEMENT_IDS.filter((i) => IMPROVEMENTS[i].turns[t.id] !== undefined);
+      const ter = TERRAINS[e.id as keyof typeof TERRAINS];
+      const works = IMPROVEMENT_IDS.filter((i) => IMPROVEMENTS[i].turns[ter.id] !== undefined);
+      const sp = ter.special;
       return (
-        row("Výnos", `jídlo ${t.food}, štíty ${t.shields}, obchod ${t.trade}`) +
-        (t.land ? row("Pohyb", `stojí ${t.moveCost === 1 ? "jeden pohyb" : `${t.moveCost} pohyby`}${t.defenseBonus ? `, obrana +${t.defenseBonus} %` : ""}`) : row("Pohyb", "jen lodě a letadla")) +
-        (t.special
+        row(t("Výnos"), t("jídlo {food}, štíty {shields}, obchod {trade}", ter)) +
+        (ter.land
+          ? row(t("Pohyb"), tn("stojí jeden pohyb|stojí {n} pohyby|stojí {n} pohybů", ter.moveCost) + (ter.defenseBonus ? t(", obrana +{pct} %", { pct: ter.defenseBonus }) : ""))
+          : row(t("Pohyb"), t("jen lodě a letadla"))) +
+        (sp
           ? row(
-              "Surovina",
-              `${t.special.name}: ${[t.special.food ? `+${t.special.food} jídla` : "", t.special.shields ? `+${t.special.shields} štíty` : "", t.special.trade ? `+${t.special.trade} obchodu` : ""].filter(Boolean).join(", ")}, objeví se jen na některých políčkách`,
+              t("Surovina"),
+              t("{special}: {bonus}, objeví se jen na některých políčkách", { special: specialName(ter.id), bonus: [sp.food ? t("+{food} jídla", { food: sp.food }) : "", sp.shields ? t("+{shields} štíty", { shields: sp.shields }) : "", sp.trade ? t("+{trade} obchodu", { trade: sp.trade }) : ""].filter(Boolean).join(", ") }),
             )
           : "") +
-        (t.id === "river" ? row("Most", "cestu přes řeku postavíš, až objevíš stavbu mostů") : "") +
-        (works.length ? row("Osadník tu postaví", works.map((i) => entryLink(`imp-${i}`, IMPROVEMENTS[i].name)).join(" ")) : "")
+        (ter.id === "river" ? row(t("Most"), t("cestu přes řeku postavíš, až objevíš stavbu mostů")) : "") +
+        (works.length ? row(t("Osadník tu postaví"), works.map((i) => entryLink(`imp-${i}`, improvementName(i))).join(" ")) : "")
       );
     }
     const imp = IMPROVEMENTS[e.id as keyof typeof IMPROVEMENTS];
-    const where = TERRAIN_IDS.filter((t) => imp.turns[t] !== undefined)
-      .map((t) => {
-        const bonus = imp.bonus[t];
+    const where = TERRAIN_IDS.filter((ter) => imp.turns[ter] !== undefined)
+      .map((ter) => {
+        const bonus = imp.bonus[ter];
         const gain = bonus
-          ? [bonus.food ? `+${bonus.food} jídla` : "", bonus.shields ? `+${bonus.shields} štíty` : "", bonus.trade ? `+${bonus.trade} obchodu` : ""].filter(Boolean).join(", ")
+          ? [bonus.food ? t("+{food} jídla", { food: bonus.food }) : "", bonus.shields ? t("+{shields} štíty", { shields: bonus.shields }) : "", bonus.trade ? t("+{trade} obchodu", { trade: bonus.trade }) : ""].filter(Boolean).join(", ")
           : "";
-        return `${TERRAINS[t].name.toLowerCase()} ${imp.turns[t]} tahů${gain ? ` (${gain})` : ""}`;
+        return tn("{terrain} {n} tah{gain}|{terrain} {n} tahy{gain}|{terrain} {n} tahů{gain}", imp.turns[ter] ?? 0, { terrain: inSentence(terrainName(ter)), gain: gain ? ` (${gain})` : "" });
       })
       .join(" · ");
     const extra =
       e.id === "railroad"
-        ? "staví se na cestu, přidá polovinu štítů a jízda po ní nic nestojí"
+        ? t("staví se na cestu, přidá polovinu štítů a jízda po ní nic nestojí")
         : e.id === "fortress"
-          ? "zdvojí obranu jednotek na políčku (začne platit s bojem ve fázi 3)"
+          ? t("zdvojí obranu jednotek na políčku (začne platit s bojem ve fázi 3)")
           : e.id === "irrigation"
-            ? "potřebuje vodu na sousedním políčku a nesnese se s dolem"
+            ? t("potřebuje vodu na sousedním políčku a nesnese se s dolem")
             : e.id === "mine"
-              ? "nesnese se se zavlažováním"
-              : "jednotky se po ní pohybují třikrát rychleji";
-    return row("Co dělá", extra) + row("Kde a jak dlouho", escapeHtml(where)) + row("Odemyká", techLink(imp.requires ?? null));
+              ? t("nesnese se se zavlažováním")
+              : t("jednotky se po ní pohybují třikrát rychleji");
+    return row(t("Co dělá"), extra) + row(t("Kde a jak dlouho"), escapeHtml(where)) + row(t("Odemyká"), techLink(imp.requires ?? null));
   }
 
   function fallbackPicture(e: Entry): HTMLElement {
@@ -227,7 +257,8 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
 
   function renderPage(): void {
     const e = ALL.find((x) => x.key === current) ?? ALL[0]!;
-    const page = CODEX_PAGES[e.key];
+    const found = codexPage(e.key);
+    const page = found?.page;
     const pic = pictureOf(e.key);
     const host_ = dialog.querySelector<HTMLDivElement>(".cx-page")!;
     host_.innerHTML = `
@@ -238,11 +269,11 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
           <div class="tp-era">${escapeHtml(CATEGORIES.find((c) => c.kind === e.kind)!.title)}</div>
         </div>
         <div class="tp-main">
-          <div class="tp-head"><h2>${escapeHtml(e.name)}</h2><button type="button" class="tp-close" data-act="close" aria-label="Zavřít">×</button></div>
-          ${page ? `<p class="tp-text">${escapeHtml(page.text)}</p><div class="tp-fact"><b>Věděl jsi?</b> ${escapeHtml(page.fact)}</div>` : ""}
-          <h3>Ve hře</h3>
+          <div class="tp-head"><h2>${escapeHtml(e.name)}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button></div>
+          ${page ? `<p class="tp-text">${escapeHtml(page.text)}</p><div class="tp-fact"><b>${t("Věděl jsi?")}</b> ${escapeHtml(page.fact)}</div>` : ""}
+          <h3>${t("Ve hře")}</h3>
           <div class="cx-rules">${rules(e)}</div>
-          ${page ? `<div class="tp-foot"><a href="${wikiUrl(page.wiki)}" target="_blank" rel="noopener">Přečti si víc na Wikipedii: ${escapeHtml(page.wiki)} ↗</a></div>` : ""}
+          ${found ? `<div class="tp-foot"><a href="${found.url}" target="_blank" rel="noopener">${t("Přečti si víc na Wikipedii: {title}", { title: escapeHtml(found.page.wiki) })} ↗</a></div>` : ""}
         </div>
       </div>`;
     if (!pic) host_.querySelector(".cx-fallback")!.append(fallbackPicture(e));

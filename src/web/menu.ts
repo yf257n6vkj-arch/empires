@@ -17,6 +17,8 @@ import {
   type SavePayload,
 } from "./saves";
 import { escapeHtml } from "./texts";
+import { language, LANGUAGES, switchLanguage, t } from "./i18n";
+import { civName } from "./i18n/names";
 
 export interface MenuHost {
   /** The nation and turn of the automatically saved game, or null when there is none. */
@@ -29,6 +31,8 @@ export interface MenuHost {
   openCodex(): void;
   /** Shows the advisor's tips again. */
   openAdvisor(): void;
+  /** Opens the overview of all cities. */
+  openCities(): void;
   /** Player whose game is saved, for slot names. */
   player: number;
 }
@@ -36,9 +40,8 @@ export interface MenuHost {
 const BACKDROPS = ["civ-czechs", "civ-romans", "civ-egyptians", "wdr-pyramids", "civ-english", "civ-aztecs", "wdr-greatWall", "civ-greeks", "wdr-stVitus", "civ-chinese"];
 
 function dateText(ms: number): string {
-  const d = new Date(ms);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const format = new Intl.DateTimeFormat(language().id, { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return format.format(new Date(ms));
 }
 
 export function createMenus(
@@ -66,21 +69,23 @@ export function createMenus(
 
   function renderStart(): void {
     const info = host.autosaveInfo();
-    const cont = info ? `${CIVS[info.civ].name}, tah ${info.turn}` : "žádná rozehraná hra";
+    const cont = info ? t("{civ}, tah {turn}", { civ: civName(info.civ), turn: info.turn }) : t("žádná rozehraná hra");
     start.innerHTML = `
       <div class="st-bg"></div><div class="st-bg"></div><div class="st-shade"></div>
       <div class="st-panel">
         <h1 class="st-title">Empires</h1>
-        <p class="st-sub">tahová strategie o patnácti národech</p>
+        <p class="st-sub">${t("tahová strategie o patnácti národech")}</p>
         <nav class="st-menu">
-          <button type="button" data-act="continue" ${info ? "" : "disabled"}>Pokračovat<span>${escapeHtml(cont)}</span></button>
-          <button type="button" data-act="new">Nová hra</button>
-          <button type="button" data-act="load">Nahrát hru</button>
-          <button type="button" data-act="codex">Encyklopedie</button>
-          <button type="button" data-act="help">Ovládání</button>
+          <button type="button" data-act="continue" ${info ? "" : "disabled"}>${t("Pokračovat")}<span>${escapeHtml(cont)}</span></button>
+          <button type="button" data-act="new">${t("Nová hra")}</button>
+          <button type="button" data-act="load">${t("Nahrát hru")}</button>
+          <button type="button" data-act="codex">${t("Encyklopedie")}</button>
+          <button type="button" data-act="help">${t("Ovládání")}</button>
         </nav>
-        <p class="st-foot">fáze 2 · hra se průběžně ukládá sama</p>
+        <div class="st-langs">${LANGUAGES.map((l) => `<button type="button" data-lang="${l.id}" class="${l.id === language().id ? "on" : ""}" lang="${l.id}">${escapeHtml(l.label)}</button>`).join("")}</div>
+        <p class="st-foot">${t("fáze 2 · hra se průběžně ukládá sama")}</p>
       </div>`;
+    start.querySelectorAll<HTMLButtonElement>("[data-lang]").forEach((b) => b.addEventListener("click", () => switchLanguage(b.dataset.lang!)));
     start.querySelector('[data-act="continue"]')!.addEventListener("click", () => {
       hideStart();
       host.continueGame();
@@ -122,11 +127,20 @@ export function createMenus(
       host.openCodex();
     });
     act("help", () => helpDialog.showModal());
+    act("cities", () => {
+      menuDialog.close();
+      host.openCities();
+    });
     act("advisor", () => {
       menuDialog.close();
       host.openAdvisor();
     });
     act("main", showStart);
+    const picker = menuDialog.querySelector<HTMLSelectElement>("#language");
+    if (picker) {
+      picker.innerHTML = LANGUAGES.map((l) => `<option value="${l.id}" ${l.id === language().id ? "selected" : ""}>${escapeHtml(l.label)}</option>`).join("");
+      picker.addEventListener("change", () => switchLanguage(picker.value));
+    }
   }
   wireMenu();
   helpDialog.querySelector('[data-act="close"]')?.addEventListener("click", () => helpDialog.close());
@@ -142,26 +156,26 @@ export function createMenus(
           .map(
             (s) => `<li class="sv-row" data-id="${s.id}">
               <span class="sv-dot" style="background:${CIVS[s.civ]?.color ?? "#888"}"></span>
-              <div class="sv-info"><b>${escapeHtml(s.name)}</b><span class="muted small">${escapeHtml(CIVS[s.civ]?.name ?? "")} · tah ${s.turn} · ${dateText(s.savedAt)}</span></div>
-              <button type="button" class="${mode === "load" ? "primary" : ""}" data-slot="${s.id}">${mode === "load" ? "Nahrát" : "Přepsat"}</button>
-              <button type="button" class="sv-del" data-del="${s.id}" title="Smazat">Smazat</button>
+              <div class="sv-info"><b>${escapeHtml(s.name)}</b><span class="muted small">${escapeHtml(CIVS[s.civ] ? civName(s.civ) : "")} · ${t("tah {turn}", { turn: s.turn })} · ${dateText(s.savedAt)}</span></div>
+              <button type="button" class="${mode === "load" ? "primary" : ""}" data-slot="${s.id}">${mode === "load" ? t("Nahrát") : t("Přepsat")}</button>
+              <button type="button" class="sv-del" data-del="${s.id}" title="${t("Smazat")}">${t("Smazat")}</button>
             </li>`,
           )
           .join("")
-      : `<li class="muted sv-empty">Zatím tu nic uloženého není.</li>`;
+      : `<li class="muted sv-empty">${t("Zatím tu nic uloženého není.")}</li>`;
     savesDialog.innerHTML = `
       <div class="sv">
-        <div class="dialog-head"><h2>${mode === "save" ? "Uložit hru" : "Nahrát hru"}</h2><button type="button" class="tp-close" data-act="close" aria-label="Zavřít">×</button></div>
+        <div class="dialog-head"><h2>${mode === "save" ? t("Uložit hru") : t("Nahrát hru")}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button></div>
         ${
           mode === "save"
-            ? `<form class="sv-new"><input type="text" maxlength="60" value="${escapeHtml(suggested)}" aria-label="Jméno uložené hry"><button type="submit" class="primary">Uložit</button></form>`
+            ? `<form class="sv-new"><input type="text" maxlength="60" value="${escapeHtml(suggested)}" aria-label="${t("Jméno uložené hry")}"><button type="submit" class="primary">${t("Uložit")}</button></form>`
             : ""
         }
         <p class="sv-msg" aria-live="polite"></p>
         <ul class="sv-list">${rows}</ul>
         <div class="sv-foot">
-          <span class="muted small">V prohlížeči se vejde ${MAX_SLOTS} uložených her. Do souboru si hru přeneseš i na jiný počítač.</span>
-          <button type="button" data-act="file">${mode === "save" ? "Uložit do souboru" : "Nahrát ze souboru"}</button>
+          <span class="muted small">${t("V prohlížeči se vejde {n} uložených her. Do souboru si hru přeneseš i na jiný počítač.", { n: MAX_SLOTS })}</span>
+          <button type="button" data-act="file">${mode === "save" ? t("Uložit do souboru") : t("Nahrát ze souboru")}</button>
         </div>
       </div>`;
     const msg = savesDialog.querySelector<HTMLParagraphElement>(".sv-msg")!;
@@ -173,7 +187,7 @@ export function createMenus(
       const name = savesDialog.querySelector<HTMLInputElement>("form.sv-new input")!.value;
       const error = saveSlot(name, host.currentPayload(), host.player);
       if (error) return say(error);
-      openSaves("save", "Hra je uložená.");
+      openSaves("save", t("Hra je uložená."));
     });
     savesDialog.querySelectorAll<HTMLButtonElement>("[data-slot]").forEach((b) =>
       b.addEventListener("click", () => {
@@ -182,10 +196,10 @@ export function createMenus(
           const slot = slots.find((s) => s.id === id)!;
           const error = saveSlot(slot.name, host.currentPayload(), host.player);
           if (error) return say(error);
-          return openSaves("save", "Hra je uložená.");
+          return openSaves("save", t("Hra je uložená."));
         }
         const loaded = loadSlot(id);
-        if (!loaded) return say("Tuhle uloženou hru už nejde přečíst.");
+        if (!loaded) return say(t("Tuhle uloženou hru už nejde přečíst."));
         finishLoad(loaded);
       }),
     );
@@ -193,7 +207,7 @@ export function createMenus(
       b.addEventListener("click", () => {
         if (b.dataset.confirm !== "1") {
           b.dataset.confirm = "1";
-          b.textContent = "Opravdu?";
+          b.textContent = t("Opravdu?");
           return;
         }
         deleteSlot(b.dataset.del!);
@@ -203,7 +217,7 @@ export function createMenus(
     savesDialog.querySelector('[data-act="file"]')!.addEventListener("click", async () => {
       if (mode === "save") return exportToFile(host.currentPayload(), host.player);
       const loaded = await importFromFile();
-      if (!loaded) return say("Tenhle soubor neobsahuje uloženou hru, kterou bych uměl přečíst.");
+      if (!loaded) return say(t("Tenhle soubor neobsahuje uloženou hru, kterou bych uměl přečíst."));
       finishLoad(loaded);
     });
     if (!savesDialog.open) savesDialog.showModal();

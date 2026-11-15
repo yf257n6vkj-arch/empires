@@ -1,13 +1,6 @@
-/** Czech texts for the screen: error reasons and event messages. */
+/** Texts for the screen: error reasons and event messages. */
 import {
-  BUILDINGS,
-  CIVS,
-  GOVERNMENTS,
-  IMPROVEMENTS,
   RULES,
-  TECHS,
-  productionName,
-  UNIT_TYPES,
   type BuildingRule,
   type CommandError,
   type GameEvent,
@@ -15,208 +8,220 @@ import {
   type GovernmentRule,
   type UnitRule,
 } from "../core";
+import { t, tn } from "./i18n";
+import {
+  buildingName,
+  cityLabel,
+  governmentName,
+  improvementName,
+  inSentence,
+  productionLabel,
+  realmLabel,
+  techName,
+  unitName,
+} from "./i18n/names";
 
 export const ERROR_TEXT: Record<CommandError, string> = {
-  unknownUnit: "Jednotka už neexistuje.",
-  notYourUnit: "Tahle jednotka ti nepatří.",
-  unknownCity: "Město už neexistuje.",
-  notYourCity: "Tohle město ti nepatří.",
-  noMovesLeft: "Jednotka už v tomhle tahu nemá pohyb.",
-  notAdjacent: "Jednotka se může pohnout jen na sousední políčko.",
-  cannotEnter: "Sem jednotka nemůže. Pozemní jednotka vstoupí na moře jen na vlastní loď s volným místem, loď pluje jen po moři a do přímořských měst.",
-  notEnoughMoves: "Na tenhle terén už jednotce nezbývá dost pohybu.",
-  occupiedByOther: "Políčko je obsazené jiným hráčem.",
-  cannotFoundCity: "Město umí založit jen osadník.",
-  cityTooClose: "Město nejde založit hned vedle jiného města.",
-  cannotBuildImprovements: "Vylepšení umí stavět jen osadník.",
-  terrainNotSuitable: "Na tomhle terénu to postavit nejde.",
-  alreadyBuilt: "Tohle už na políčku je.",
-  needsWater: "Zavlažování potřebuje vodu na sousedním políčku (moře, zavlažované políčko nebo město).",
-  onCityTile: "Ve městě je cesta i zavlažování automaticky.",
-  noPath: "Na tohle místo nevede žádná známá cesta.",
-  invalidProduction: "Tohle město teď postavit nemůže.",
-  queueFull: "Do plánu se víc staveb nevejde.",
-  alreadyComplete: "Výroba je už zaplacená, dokončí se na konci tahu.",
-  notEnoughGold: "Na nákup nemáš dost zlata.",
-  unknownTech: "Taková technologie neexistuje.",
-  cannotResearch: "Tuhle technologii teď zkoumat nejde. Buď ji už znáš, nebo ti chybí předchozí.",
-  invalidRate: "Takový poměr výzkumu a zlata nejde. Mění se po deseti procentech a tvoje vláda dovolí dát vědě nebo zlatu jen určitý podíl.",
-  alreadyKnown: "Tuhle technologii už znáš.",
-  tileNotWorkable: "Tohle políčko město obdělávat nemůže. Buď je mimo jeho okolí, nebo ho obdělává jiné město.",
-  tooManyWorkers: "Město nemá tolik obyvatel.",
-  noShip: "Ve městě není tvoje loď s volným místem.",
-  unknownGovernment: "Taková vláda neexistuje.",
-  governmentNotKnown: "Tuhle vládu zatím neznáš, nejdřív ji musíš objevit.",
-  alreadyGovernment: "Tuhle vládu už máš.",
-  revolutionRunning: "Revoluce už probíhá.",
-  spaceshipNotReady: "Loď ještě nemůže odstartovat. Potřebuje palác, aspoň jeden motor, jeden modul a na každý z nich nosnou konstrukci.",
-  wrongUnit: "Tohle tahle jednotka neumí.",
-  notBuildingWonder: "Město zrovna nestaví div světa.",
-  notInCity: "Jednotka musí stát ve vlastním městě.",
-  tooClose: `Obchodní cesta musí vést aspoň ${RULES.tradeRouteMinDistance} políček od domovského města.`,
-  routeExists: "Tahle obchodní cesta už existuje.",
-  tooManyRoutes: `Město může mít nejvýš ${RULES.tradeRoutesPerCity} obchodní cesty.`,
-  noHomeCity: "Karavana nemá domovské město.",
-  notForeign: "Tohle je tvoje vlastní město.",
-  embassyExists: "Velvyslanectví u téhle říše už máš.",
-  nothingToSteal: "Tahle říše nezná nic, co bys neznal ty.",
-  alreadyStolen: "V tomhle městě už tvůj diplomat jednou kradl.",
-  isCapital: "Hlavní město se podplatit nedá.",
-  tooFar: "Tak daleko raketa v tomhle tahu nedoletí.",
-  needsTech: "Na tohle ti chybí technologie.",
-  needsRoad: "Železnice se staví na cestu.",
-  carriesUnits: "Na palubě jsou jednotky. Na moři by se utopily, loď rozpusť až ve městě.",
-  nothingToUpgrade: "Na novější typ zatím nejde povýšit, chybí ti technologie.",
+  unknownUnit: t("Jednotka už neexistuje."),
+  notYourUnit: t("Tahle jednotka ti nepatří."),
+  unknownCity: t("Město už neexistuje."),
+  notYourCity: t("Tohle město ti nepatří."),
+  noMovesLeft: t("Jednotka už v tomhle tahu nemá pohyb."),
+  notAdjacent: t("Jednotka se může pohnout jen na sousední políčko."),
+  cannotEnter: t("Sem jednotka nemůže. Pozemní jednotka vstoupí na moře jen na vlastní loď s volným místem, loď pluje jen po moři a do přímořských měst."),
+  notEnoughMoves: t("Na tenhle terén už jednotce nezbývá dost pohybu."),
+  occupiedByOther: t("Políčko je obsazené jiným hráčem."),
+  cannotFoundCity: t("Město umí založit jen osadník."),
+  cityTooClose: t("Město nejde založit hned vedle jiného města."),
+  cannotBuildImprovements: t("Vylepšení umí stavět jen osadník."),
+  terrainNotSuitable: t("Na tomhle terénu to postavit nejde."),
+  alreadyBuilt: t("Tohle už na políčku je."),
+  needsWater: t("Zavlažování potřebuje vodu na sousedním políčku (moře, zavlažované políčko nebo město)."),
+  onCityTile: t("Ve městě je cesta i zavlažování automaticky."),
+  noPath: t("Na tohle místo nevede žádná známá cesta."),
+  invalidProduction: t("Tohle město teď postavit nemůže."),
+  queueFull: t("Do plánu se víc staveb nevejde."),
+  alreadyComplete: t("Výroba je už zaplacená, dokončí se na konci tahu."),
+  notEnoughGold: t("Na nákup nemáš dost zlata."),
+  unknownTech: t("Taková technologie neexistuje."),
+  cannotResearch: t("Tuhle technologii teď zkoumat nejde. Buď ji už znáš, nebo ti chybí předchozí."),
+  invalidRate: t("Takový poměr výzkumu a zlata nejde. Mění se po deseti procentech a tvoje vláda dovolí dát vědě nebo zlatu jen určitý podíl."),
+  alreadyKnown: t("Tuhle technologii už znáš."),
+  tileNotWorkable: t("Tohle políčko město obdělávat nemůže. Buď je mimo jeho okolí, nebo ho obdělává jiné město."),
+  tooManyWorkers: t("Město nemá tolik obyvatel."),
+  noShip: t("Ve městě není tvoje loď s volným místem."),
+  unknownGovernment: t("Taková vláda neexistuje."),
+  governmentNotKnown: t("Tuhle vládu zatím neznáš, nejdřív ji musíš objevit."),
+  alreadyGovernment: t("Tuhle vládu už máš."),
+  revolutionRunning: t("Revoluce už probíhá."),
+  spaceshipNotReady: t("Loď ještě nemůže odstartovat. Potřebuje palác, aspoň jeden motor, jeden modul a na každý z nich nosnou konstrukci."),
+  wrongUnit: t("Tohle tahle jednotka neumí."),
+  notBuildingWonder: t("Město zrovna nestaví div světa."),
+  notInCity: t("Jednotka musí stát ve vlastním městě."),
+  tooClose: t("Obchodní cesta musí vést aspoň {tradeRouteMinDistance} políček od domovského města.", { tradeRouteMinDistance: RULES.tradeRouteMinDistance }),
+  routeExists: t("Tahle obchodní cesta už existuje."),
+  tooManyRoutes: t("Město může mít nejvýš {tradeRoutesPerCity} obchodní cesty.", { tradeRoutesPerCity: RULES.tradeRoutesPerCity }),
+  noHomeCity: t("Karavana nemá domovské město."),
+  notForeign: t("Tohle je tvoje vlastní město."),
+  embassyExists: t("Velvyslanectví u téhle říše už máš."),
+  nothingToSteal: t("Tahle říše nezná nic, co bys neznal ty."),
+  alreadyStolen: t("V tomhle městě už tvůj diplomat jednou kradl."),
+  isCapital: t("Hlavní město se podplatit nedá."),
+  tooFar: t("Tak daleko raketa v tomhle tahu nedoletí."),
+  needsTech: t("Na tohle ti chybí technologie."),
+  needsRoad: t("Železnice se staví na cestu."),
+  carriesUnits: t("Na palubě jsou jednotky. Na moři by se utopily, loď rozpusť až ve městě."),
+  nothingToUpgrade: t("Na novější typ zatím nejde povýšit, chybí ti technologie."),
 };
 
 /** "Římská říše": the realm of a player, for sentences with a feminine subject. */
 export function realmName(state: GameState, player: number): string {
   const p = state.players[player];
-  if (!p) return "Jiná říše";
-  const adj = CIVS[p.civ].adjective;
-  return `${adj.charAt(0).toUpperCase()}${adj.slice(1)} říše`;
+  if (!p) return t("Jiná říše");
+  return realmLabel(p.civ);
 }
 
 export function cityName(state: GameState, id: number): string {
-  return state.cities.find((c) => c.id === id)?.name ?? "Zaniklé město";
+  const name = state.cities.find((c) => c.id === id)?.name;
+  return name ? cityLabel(name) : t("Zaniklé město");
 }
 
 /** Text for the event log, or null for events the player does not need to read. */
 export function eventText(state: GameState, e: GameEvent, viewer = 0): string | null {
   switch (e.type) {
     case "cityFounded":
-      return `Založil jsi město ${cityName(state, e.cityId)}.`;
+      return t("Založil jsi město {city}.", { city: cityName(state, e.cityId) });
     case "cityGrew":
-      return `${cityName(state, e.cityId)} vyrostlo na velikost ${e.size}.`;
+      return t("{city} vyrostlo na velikost {size}.", { city: cityName(state, e.cityId), size: e.size });
     case "cityStarved":
-      return `${cityName(state, e.cityId)} hladoví a zmenšilo se na ${e.size}.`;
+      return t("{city} hladoví a zmenšilo se na {size}.", { city: cityName(state, e.cityId), size: e.size });
     case "cityNeedsSize":
-      return `${cityName(state, e.cityId)} má hotového osadníka, ale čeká, až bude mít aspoň dva obyvatele.`;
+      return t("{city} má hotového osadníka, ale čeká, až bude mít aspoň dva obyvatele.", { city: cityName(state, e.cityId) });
     case "unitBuilt":
-      return `${cityName(state, e.cityId)} postavilo jednotku ${UNIT_TYPES[e.unitType].name}.`;
+      return t("{city} postavilo jednotku {unit}.", { city: cityName(state, e.cityId), unit: unitName(e.unitType) });
     case "buildingBuilt":
-      return `${cityName(state, e.cityId)} postavilo budovu ${BUILDINGS[e.building].name}.`;
+      return t("{city} postavilo budovu {building}.", { city: cityName(state, e.cityId), building: buildingName(e.building) });
     case "productionNeeded": {
       const city = state.cities.find((c) => c.id === e.cityId);
-      return city ? `${city.name} potřebuje novou výrobu, zatím staví: ${productionName(city.production)}.` : null;
+      return city ? t("{city} potřebuje novou výrobu, zatím staví: {production}.", { city: cityLabel(city.name), production: productionLabel(city.production) }) : null;
     }
     case "wonderBuilt":
       return e.owner === viewer
-        ? `${cityName(state, e.cityId)} dostavělo div světa ${BUILDINGS[e.building].name}!`
-        : `Jiná říše dostavěla div světa ${BUILDINGS[e.building].name}.`;
+        ? t("{city} dostavělo div světa {building}!", { city: cityName(state, e.cityId), building: buildingName(e.building) })
+        : t("Jiná říše dostavěla div světa {building}.", { building: buildingName(e.building) });
     case "buildingSold":
-      return `Nemáš na údržbu, a tak ${cityName(state, e.cityId)} prodalo budovu ${BUILDINGS[e.building].name}.`;
+      return t("Nemáš na údržbu, a tak {city} prodalo budovu {building}.", { city: cityName(state, e.cityId), building: buildingName(e.building) });
     case "cityDisorder":
-      return `V ${cityName(state, e.cityId)} jsou nepokoje, město tento tah nic nevyrobilo.`;
+      return t("V {city} jsou nepokoje, město tento tah nic nevyrobilo.", { city: cityName(state, e.cityId) });
     case "cityAtMaxSize":
-      return `${cityName(state, e.cityId)} dál neroste, na velikost nad ${e.size} potřebuje akvadukt.`;
+      return t("{city} dál neroste, na velikost nad {size} potřebuje akvadukt.", { city: cityName(state, e.cityId), size: e.size });
     case "techLearned":
-      return e.player === viewer ? `Tvoji učenci objevili: ${TECHS[e.tech].name}.` : null;
+      return e.player === viewer ? t("Tvoji učenci objevili: {tech}.", { tech: techName(e.tech) }) : null;
     case "researchNeeded":
-      return e.player === viewer ? "Vyber, co se bude zkoumat dál." : null;
+      return e.player === viewer ? t("Vyber, co se bude zkoumat dál.") : null;
     case "improvementDone":
-      return `Osadník dokončil: ${IMPROVEMENTS[e.improvement].name}.`;
+      return t("Osadník dokončil: {improvement}.", { improvement: improvementName(e.improvement) });
     case "gotoBlocked":
-      return "Jednotka nenašla cestu k cíli a zastavila se.";
+      return t("Jednotka nenašla cestu k cíli a zastavila se.");
     case "routeBuilt":
-      return e.improvement === "road" ? "Osadník dostavěl cestu až do cíle." : "Osadník dostavěl železnici až do cíle.";
+      return e.improvement === "road" ? t("Osadník dostavěl cestu až do cíle.") : t("Osadník dostavěl železnici až do cíle.");
     case "queueAdvanced": {
       const city = state.cities.find((c) => c.id === e.cityId);
-      return city ? `Ve městě ${city.name} se podle plánu začalo stavět: ${productionName(e.item)}.` : null;
+      return city ? t("Ve městě {city} se podle plánu začalo stavět: {production}.", { city: cityLabel(city.name), production: productionLabel(e.item) }) : null;
     }
     case "turnStarted":
       return null;
     case "unitDisbanded":
-      return `${cityName(state, e.cityId)} nemá štíty na údržbu jednotek, a tak rozpustilo jednotku ${UNIT_TYPES[e.unitType].name}.`;
+      return t("{city} nemá štíty na údržbu jednotek, a tak rozpustilo jednotku {unit}.", { city: cityName(state, e.cityId), unit: unitName(e.unitType) });
     case "unitDismissed":
       if (e.owner !== viewer) return null;
       return e.cityId !== null && e.shields > 0
-        ? `Rozpustil jsi jednotku ${UNIT_TYPES[e.unitType].name}. ${cityName(state, e.cityId)} z ní dostalo ${e.shields} štítů do výroby.`
-        : `Rozpustil jsi jednotku ${UNIT_TYPES[e.unitType].name}.`;
+        ? t("Rozpustil jsi jednotku {unit}. {city} z ní dostalo {shields} štítů do výroby.", { unit: unitName(e.unitType), city: cityName(state, e.cityId), shields: e.shields })
+        : t("Rozpustil jsi jednotku {unit}.", { unit: unitName(e.unitType) });
     case "unitUpgraded":
       if (e.owner !== viewer) return null;
-      return `Jednotku ${UNIT_TYPES[e.from].name} jsi povýšil na ${UNIT_TYPES[e.to].name} za ${e.cost} zlata.`;
+      return t("Jednotku {unit} jsi povýšil na {unit2} za {cost} zlata.", { unit: unitName(e.from), unit2: unitName(e.to), cost: e.cost });
     case "unitLost":
       if (e.owner !== viewer) return null;
       return e.reason === "fuel"
-        ? `${UNIT_TYPES[e.unitType].name} nestihla přistát a došlo jí palivo.`
-        : `${UNIT_TYPES[e.unitType].name} se na volném moři potopila.`;
+        ? t("{unit} nestihla přistát a došlo jí palivo.", { unit: unitName(e.unitType) })
+        : t("{unit} se na volném moři potopila.", { unit: unitName(e.unitType) });
     case "spaceshipPartBuilt":
-      return `${cityName(state, e.cityId)} dokončilo ${BUILDINGS[e.building].name.toLowerCase()} pro vesmírnou loď.`;
+      return t("{city} dokončilo {building} pro vesmírnou loď.", { city: cityName(state, e.cityId), building: inSentence(buildingName(e.building)) });
     case "spaceshipLaunched":
       return e.player === viewer
-        ? `Tvoje vesmírná loď odstartovala a přistane v tahu ${e.arrivalTurn}.`
-        : `${realmName(state, e.player)} vypustila vesmírnou loď, přistane v tahu ${e.arrivalTurn}.`;
+        ? t("Tvoje vesmírná loď odstartovala a přistane v tahu {arrivalTurn}.", { arrivalTurn: e.arrivalTurn })
+        : t("{realm} vypustila vesmírnou loď, přistane v tahu {arrivalTurn}.", { realm: realmName(state, e.player), arrivalTurn: e.arrivalTurn });
     case "spaceshipArrived": {
-      if (e.player === viewer) return e.success ? "Tvoje vesmírná loď přistála u cizí hvězdy!" : "Tvoje vesmírná loď se při přistání ztratila.";
+      if (e.player === viewer) return e.success ? t("Tvoje vesmírná loď přistála u cizí hvězdy!") : t("Tvoje vesmírná loď se při přistání ztratila.");
       return e.success
-        ? `${realmName(state, e.player)} přistála se svou vesmírnou lodí u cizí hvězdy!`
-        : `${realmName(state, e.player)} přišla o vesmírnou loď při přistání.`;
+        ? t("{realm} přistála se svou vesmírnou lodí u cizí hvězdy!", { realm: realmName(state, e.player) })
+        : t("{realm} přišla o vesmírnou loď při přistání.", { realm: realmName(state, e.player) });
     }
     case "revolutionStarted":
       return e.player === viewer
-        ? `Začala revoluce. ${e.turns === 1 ? "Jeden tah" : `${e.turns} tahy`} vládne anarchie, pak nastoupí ${GOVERNMENTS[e.target].name.toLowerCase()}.`
+        ? tn("Začala revoluce. Jeden tah vládne anarchie, pak nastoupí {government}.|Začala revoluce. {n} tahy vládne anarchie, pak nastoupí {government}.|Začala revoluce. {n} tahů vládne anarchie, pak nastoupí {government}.", e.turns, { government: inSentence(governmentName(e.target)) })
         : null;
     case "governmentChanged":
-      return e.player === viewer ? `Novou vládou je ${GOVERNMENTS[e.government].name.toLowerCase()}.` : null;
+      return e.player === viewer ? t("Novou vládou je {government}.", { government: inSentence(governmentName(e.government)) }) : null;
     case "tradeRouteOpened":
-      return `Karavana otevřela obchodní cestu z ${cityName(state, e.from)} do ${cityName(state, e.to)} a přivezla ${e.bonus} zlata a stejně vědy.`;
+      return t("Karavana otevřela obchodní cestu z {city} do {city2} a přivezla {bonus} zlata a stejně vědy.", { city: cityName(state, e.from), city2: cityName(state, e.to), bonus: e.bonus });
     case "wonderHelped":
-      return `Karavana přidala ${e.shields} štítů na div v ${cityName(state, e.cityId)}.`;
+      return t("Karavana přidala {shields} štítů na div v {city}.", { shields: e.shields, city: cityName(state, e.cityId) });
     case "embassyOpened":
-      return e.player === viewer ? `Otevřel jsi velvyslanectví. ${realmName(state, e.with)} ti teď neutají, co zkoumá a kolik má zlata.` : null;
+      return e.player === viewer ? t("Otevřel jsi velvyslanectví. {realm} ti teď neutají, co zkoumá a kolik má zlata.", { realm: realmName(state, e.with) }) : null;
     case "techStolen":
       return e.player === viewer
-        ? `Diplomat ukradl technologii ${TECHS[e.tech].name}.`
+        ? t("Diplomat ukradl technologii {tech}.", { tech: techName(e.tech) })
         : e.from === viewer
-          ? `Cizí diplomat ti ukradl technologii ${TECHS[e.tech].name}.`
+          ? t("Cizí diplomat ti ukradl technologii {tech}.", { tech: techName(e.tech) })
           : null;
     case "citySabotaged":
       return e.building
-        ? `Sabotáž v ${cityName(state, e.cityId)} zničila budovu ${BUILDINGS[e.building].name}.`
-        : `Sabotáž v ${cityName(state, e.cityId)} zničila rozestavěnou výrobu.`;
+        ? t("Sabotáž v {city} zničila budovu {building}.", { city: cityName(state, e.cityId), building: buildingName(e.building) })
+        : t("Sabotáž v {city} zničila rozestavěnou výrobu.", { city: cityName(state, e.cityId) });
     case "cityIncited":
-      return e.to === viewer ? `${cityName(state, e.cityId)} se přidalo k tvé říši.` : `${cityName(state, e.cityId)} přešlo k jiné říši.`;
+      return e.to === viewer ? t("{city} se přidalo k tvé říši.", { city: cityName(state, e.cityId) }) : t("{city} přešlo k jiné říši.", { city: cityName(state, e.cityId) });
     case "nuclearStrike":
-      return e.intercepted ? "Protiraketový štít zastavil jadernou raketu." : `Jaderná raketa vybuchla u [${e.at.x}, ${e.at.y}].`;
+      return e.intercepted ? t("Protiraketový štít zastavil jadernou raketu.") : t("Jaderná raketa vybuchla u [{at}, {at2}].", { at: e.at.x, at2: e.at.y });
   }
 }
 
 /** One line about a unit for panels and the encyclopedia. */
 export function describeUnit(u: UnitRule, withCost = true): string {
-  const parts = [`útok ${u.attack}, obrana ${u.defense}, pohyb ${u.moves}`];
-  if (u.foundsCity) parts.push("založí nové město");
-  if (u.buildsImprovements) parts.push("staví cesty, zavlažování a doly");
-  if (u.populationCost) parts.push(`ubere městu ${u.populationCost === 1 ? "jednoho obyvatele" : `${u.populationCost} obyvatele`}`);
-  if (u.domain === "sea") parts.push(u.capacity ? `loď, uveze ${u.capacity} ${u.carries === "air" ? "letadel" : "jednotek"}` : "loď");
-  if (u.domain === "air") parts.push(`letadlo, ve vzduchu vydrží ${u.fuel === 1 ? "jeden tah" : `${u.fuel} tahy`}`);
-  if (u.coastal) parts.push("na volném moři se může potopit");
-  if (u.special === "diplomat") parts.push("otevírá velvyslanectví, krade technologie, sabotuje a podplácí města");
-  if (u.special === "caravan") parts.push("pomáhá stavět divy a otevírá obchodní cesty");
-  if (u.special === "nuclear") parts.push("zničí jednotky a zmenší města kolem cíle");
-  if (u.requiresWonder) parts.push(`jde stavět, až někde stojí ${BUILDINGS[u.requiresWonder].name}`);
+  const parts = [t("útok {attack}, obrana {defense}, pohyb {moves}", { attack: u.attack, defense: u.defense, moves: u.moves })];
+  if (u.foundsCity) parts.push(t("založí nové město"));
+  if (u.buildsImprovements) parts.push(t("staví cesty, zavlažování a doly"));
+  if (u.populationCost) parts.push(tn("ubere městu jednoho obyvatele|ubere městu {n} obyvatele|ubere městu {n} obyvatel", u.populationCost));
+  if (u.domain === "sea") parts.push(u.capacity ? u.carries === "air" ? tn("loď, uveze jedno letadlo|loď, uveze {n} letadla|loď, uveze {n} letadel", u.capacity) : tn("loď, uveze jednu jednotku|loď, uveze {n} jednotky|loď, uveze {n} jednotek", u.capacity) : t("loď"));
+  if (u.domain === "air") parts.push(tn("letadlo, ve vzduchu vydrží jeden tah|letadlo, ve vzduchu vydrží {n} tahy|letadlo, ve vzduchu vydrží {n} tahů", u.fuel ?? 0));
+  if (u.coastal) parts.push(t("na volném moři se může potopit"));
+  if (u.special === "diplomat") parts.push(t("otevírá velvyslanectví, krade technologie, sabotuje a podplácí města"));
+  if (u.special === "caravan") parts.push(t("pomáhá stavět divy a otevírá obchodní cesty"));
+  if (u.special === "nuclear") parts.push(t("zničí jednotky a zmenší města kolem cíle"));
+  if (u.requiresWonder) parts.push(t("jde stavět, až někde stojí {building}", { building: buildingName(u.requiresWonder) }));
   // In short lists the unit's job matters more than its numbers.
-  return withCost ? `${parts.join(", ")} · ${u.cost} štítů` : [...parts.slice(1), parts[0]].join(", ");
+  return withCost ? t("{parts} · {cost} štítů", { parts: parts.join(", "), cost: u.cost }) : [...parts.slice(1), parts[0]].join(", ");
 }
 
 /** One line about a government. */
 export function describeGovernment(g: GovernmentRule): string {
   const parts: string[] = [];
-  if (g.maxRate === 0) parts.push("nevybírá daně a nezkoumá");
-  else parts.push(`vědě nebo zlatu dá nejvýš ${g.maxRate} %`);
-  if (g.tilePenalty) parts.push("políčka s výnosem nad 2 dají o jeden méně");
-  if (g.tradeBonus) parts.push("políčka s obchodem dají o jeden víc");
-  if (g.corruptionFlatPct) parts.push(`korupce ${g.corruptionFlatPct} % všude stejně`);
-  else if (g.corruptionPct === 0) parts.push("bez korupce");
-  else if (g.corruptionPct < 100) parts.push(`korupce ${g.corruptionPct} % proti despocii`);
-  if (g.martialLaw) parts.push("vojáci ve městě uklidní nespokojené");
-  if (g.militaryUnhappy) parts.push(`každý voják mimo vlastní města rozladí ${g.militaryUnhappy === 1 ? "jednoho obyvatele" : `${g.militaryUnhappy} obyvatele`}`);
-  parts.push(g.freeUnits ? `město živí ${g.freeUnits} jednotky zdarma` : "každá jednotka stojí štít");
-  if (g.settlerFood > 1) parts.push(`osadník jí ${g.settlerFood} jídla`);
+  if (g.maxRate === 0) parts.push(t("nevybírá daně a nezkoumá"));
+  else parts.push(t("vědě nebo zlatu dá nejvýš {maxRate} %", { maxRate: g.maxRate }));
+  if (g.tilePenalty) parts.push(t("políčka s výnosem nad 2 dají o jeden méně"));
+  if (g.tradeBonus) parts.push(t("políčka s obchodem dají o jeden víc"));
+  if (g.corruptionFlatPct) parts.push(t("korupce {corruptionFlatPct} % všude stejně", { corruptionFlatPct: g.corruptionFlatPct }));
+  else if (g.corruptionPct === 0) parts.push(t("bez korupce"));
+  else if (g.corruptionPct < 100) parts.push(t("korupce {pct} % proti despocii", { pct: g.corruptionPct }));
+  if (g.martialLaw) parts.push(t("vojáci ve městě uklidní nespokojené"));
+  if (g.militaryUnhappy) parts.push(tn("každý voják mimo vlastní města rozladí jednoho obyvatele|každý voják mimo vlastní města rozladí {n} obyvatele|každý voják mimo vlastní města rozladí {n} obyvatel", g.militaryUnhappy));
+  parts.push(g.freeUnits ? t("město živí {freeUnits} jednotky zdarma", { freeUnits: g.freeUnits }) : t("každá jednotka stojí štít"));
+  if (g.settlerFood > 1) parts.push(t("osadník jí {settlerFood} jídla", { settlerFood: g.settlerFood }));
   return parts.join(", ");
 }
 
-export { productionName };
+export { productionLabel as productionName };
 
 export function escapeHtml(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -226,44 +231,44 @@ export function escapeHtml(s: string): string {
 export function describeBuilding(b: BuildingRule, withCost = true): string {
   const e = b.effects;
   const parts: string[] = [];
-  const where = b.wonder && b.scope === "all" ? " ve všech tvých městech" : "";
-  if (e.content) parts.push(`uklidní ${e.content} ${e.content === 1 ? "nespokojeného" : "nespokojené"}${where}`);
-  if (e.sciencePct) parts.push(`+${e.sciencePct} % vědy${where}`);
-  if (e.goldPct) parts.push(`+${e.goldPct} % zlata${where}`);
-  if (e.shieldsPct) parts.push(`+${e.shieldsPct} % výroby${where}`);
-  if (e.keepFoodOnGrowth) parts.push(`po růstu města zůstane ${Math.round(e.keepFoodOnGrowth * 100)} % jídla`);
-  if (e.maxSize) parts.push(`město může vyrůst až na ${e.maxSize}`);
-  if (e.capital) parts.push("sídlo vlády, v tomto městě není korupce a ostatní města ztrácí obchod podle vzdálenosti od něj");
-  if (e.corruptionCutPct) parts.push(`ubere ${e.corruptionCutPct} % korupce`);
-  if (e.oceanFood) parts.push(`+${e.oceanFood} jídla na každém obdělávaném políčku oceánu`);
-  if (e.industryPollutionPct) parts.push(`znečištění z výroby klesne na ${e.industryPollutionPct} %`);
-  if (e.noPopulationPollution) parts.push("obyvatelé přestanou znečišťovat vzduch");
-  if (e.tradeOnTradeTiles) parts.push(`+${e.tradeOnTradeTiles} obchodu na políčkách s obchodem`);
-  if (e.templePct) parts.push(`chrámy uklidní o ${e.templePct} % víc${where}`);
-  if (e.cathedralPct) parts.push(`katedrály uklidní o ${e.cathedralPct} % víc${where}`);
-  if (e.libraryBoostPct) parts.push(`knihovny, univerzity a výzkumná centra dají o ${e.libraryBoostPct} % vědy víc${where}`);
-  if (e.noUnhappy) parts.push("ve městě nikdo není nespokojený");
-  if (e.plantInEveryCity) parts.push("každé město s továrnou funguje, jako by mělo vodní elektrárnu");
-  if (e.shipMoves) parts.push(`lodě se pohnou o ${e.shipMoves} políčko dál`);
-  if (e.safeTriremes) parts.push("triéry se nepotopí");
-  if (e.techsFromOthers) parts.push(`dostaneš každou technologii, kterou znají aspoň ${e.techsFromOthers} jiné říše`);
-  if (e.freeTechs) parts.push(`hned dá ${e.freeTechs} technologie zdarma`);
-  if (e.fastRevolution) parts.push("revoluce trvá jen jeden tah");
-  if (e.seesAllCities) parts.push("uvidíš všechna města světa a všichni můžou stavět vesmírné lodě");
-  if (e.militaryUnhappyCut) parts.push("vojáci mimo města rozladí méně obyvatel");
-  if (e.peaceOffers) parts.push("soupeři ti budou nabízet mír (začne platit s diplomacií ve fázi 3)");
-  if (e.defenseVsSeaPct) parts.push(`zdvojí obranu proti lodím (začne platit s bojem ve fázi 3)`);
-  if (e.nuclearShield) parts.push(`zastaví jaderné rakety do ${e.nuclearShield} políček od města`);
-  if (b.spaceship) parts.push(b.spaceship === "structural" ? "díl vesmírné lodi, nese motory a moduly" : b.spaceship === "component" ? "díl vesmírné lodi, zkrátí let" : "díl vesmírné lodi, zvýší šanci na přistání");
-  if (b.id === "manhattanProject") parts.push("všichni můžou stavět jaderné rakety");
-  if (b.obsoleteBy) parts.push(`přestane působit, až objevíš ${TECHS[b.obsoleteBy].name.toLowerCase()}`);
-  if (b.requiresBuilding) parts.push(`potřebuje ve městě ${BUILDINGS[b.requiresBuilding].name.toLowerCase()}`);
-  if (b.coastal) parts.push("jde postavit jen u moře");
-  if (b.onePerPlayer) parts.push("máš jen jeden, nový přestěhuje sídlo vlády");
-  if (b.group) parts.push("město má jen jednu elektrárnu, nová nahradí starou");
-  if (b.requiresWonder && !b.spaceship) parts.push(`jde stavět, až stojí ${BUILDINGS[b.requiresWonder].name}`);
-  if (!parts.length) parts.push("začne chránit město, až do hry přibude boj");
-  if (!withCost) return `${parts.join(", ")}${b.upkeep ? ` · údržba ${b.upkeep} zlata za tah` : ""}`;
-  const cost = `${b.cost} štítů${b.upkeep ? `, údržba ${b.upkeep} zlata za tah` : ""}`;
+  const where = b.wonder && b.scope === "all" ? t(" ve všech tvých městech") : "";
+  if (e.content) parts.push(tn("uklidní jednoho nespokojeného{where}|uklidní {n} nespokojené{where}|uklidní {n} nespokojených{where}", e.content, { where }));
+  if (e.sciencePct) parts.push(t("+{sciencePct} % vědy{where}", { sciencePct: e.sciencePct, where }));
+  if (e.goldPct) parts.push(t("+{goldPct} % zlata{where}", { goldPct: e.goldPct, where }));
+  if (e.shieldsPct) parts.push(t("+{shieldsPct} % výroby{where}", { shieldsPct: e.shieldsPct, where }));
+  if (e.keepFoodOnGrowth) parts.push(t("po růstu města zůstane {keepFoodOnGrowth} % jídla", { keepFoodOnGrowth: Math.round(e.keepFoodOnGrowth * 100) }));
+  if (e.maxSize) parts.push(t("město může vyrůst až na {maxSize}", { maxSize: e.maxSize }));
+  if (e.capital) parts.push(t("sídlo vlády, v tomto městě není korupce a ostatní města ztrácí obchod podle vzdálenosti od něj"));
+  if (e.corruptionCutPct) parts.push(t("ubere {pct} % korupce", { pct: e.corruptionCutPct }));
+  if (e.oceanFood) parts.push(t("+{oceanFood} jídla na každém obdělávaném políčku oceánu", { oceanFood: e.oceanFood }));
+  if (e.industryPollutionPct) parts.push(t("znečištění z výroby klesne na {industryPollutionPct} %", { industryPollutionPct: e.industryPollutionPct }));
+  if (e.noPopulationPollution) parts.push(t("obyvatelé přestanou znečišťovat vzduch"));
+  if (e.tradeOnTradeTiles) parts.push(t("+{tradeOnTradeTiles} obchodu na políčkách s obchodem", { tradeOnTradeTiles: e.tradeOnTradeTiles }));
+  if (e.templePct) parts.push(t("chrámy uklidní o {templePct} % víc{where}", { templePct: e.templePct, where }));
+  if (e.cathedralPct) parts.push(t("katedrály uklidní o {cathedralPct} % víc{where}", { cathedralPct: e.cathedralPct, where }));
+  if (e.libraryBoostPct) parts.push(t("knihovny, univerzity a výzkumná centra dají o {libraryBoostPct} % vědy víc{where}", { libraryBoostPct: e.libraryBoostPct, where }));
+  if (e.noUnhappy) parts.push(t("ve městě nikdo není nespokojený"));
+  if (e.plantInEveryCity) parts.push(t("každé město s továrnou funguje, jako by mělo vodní elektrárnu"));
+  if (e.shipMoves) parts.push(t("lodě se pohnou o {shipMoves} políčko dál", { shipMoves: e.shipMoves }));
+  if (e.safeTriremes) parts.push(t("triéry se nepotopí"));
+  if (e.techsFromOthers) parts.push(t("dostaneš každou technologii, kterou znají aspoň {techsFromOthers} jiné říše", { techsFromOthers: e.techsFromOthers }));
+  if (e.freeTechs) parts.push(t("hned dá {freeTechs} technologie zdarma", { freeTechs: e.freeTechs }));
+  if (e.fastRevolution) parts.push(t("revoluce trvá jen jeden tah"));
+  if (e.seesAllCities) parts.push(t("uvidíš všechna města světa a všichni můžou stavět vesmírné lodě"));
+  if (e.militaryUnhappyCut) parts.push(t("vojáci mimo města rozladí méně obyvatel"));
+  if (e.peaceOffers) parts.push(t("soupeři ti budou nabízet mír (začne platit s diplomacií ve fázi 3)"));
+  if (e.defenseVsSeaPct) parts.push(t("zdvojí obranu proti lodím (začne platit s bojem ve fázi 3)"));
+  if (e.nuclearShield) parts.push(t("zastaví jaderné rakety do {nuclearShield} políček od města", { nuclearShield: e.nuclearShield }));
+  if (b.spaceship) parts.push(b.spaceship === "structural" ? t("díl vesmírné lodi, nese motory a moduly") : b.spaceship === "component" ? t("díl vesmírné lodi, zkrátí let") : t("díl vesmírné lodi, zvýší šanci na přistání"));
+  if (b.id === "manhattanProject") parts.push(t("všichni můžou stavět jaderné rakety"));
+  if (b.obsoleteBy) parts.push(t("přestane působit, až objevíš {tech}", { tech: inSentence(techName(b.obsoleteBy)) }));
+  if (b.requiresBuilding) parts.push(t("potřebuje ve městě {building}", { building: inSentence(buildingName(b.requiresBuilding)) }));
+  if (b.coastal) parts.push(t("jde postavit jen u moře"));
+  if (b.onePerPlayer) parts.push(t("máš jen jeden, nový přestěhuje sídlo vlády"));
+  if (b.group) parts.push(t("město má jen jednu elektrárnu, nová nahradí starou"));
+  if (b.requiresWonder && !b.spaceship) parts.push(t("jde stavět, až stojí {building}", { building: buildingName(b.requiresWonder) }));
+  if (!parts.length) parts.push(t("začne chránit město, až do hry přibude boj"));
+  if (!withCost) return `${parts.join(", ")}${b.upkeep ? t(" · údržba {upkeep} zlata za tah", { upkeep: b.upkeep }) : ""}`;
+  const cost = t("{cost} štítů{upkeep}", { cost: b.cost, upkeep: b.upkeep ? t(", údržba {upkeep} zlata za tah", { upkeep: b.upkeep }) : "" });
   return `${parts.join(", ")} · ${cost}`;
 }

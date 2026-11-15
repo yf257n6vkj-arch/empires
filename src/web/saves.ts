@@ -2,7 +2,9 @@
  * Saved games: the automatic save of the running game, named save slots in
  * the browser and export to or import from a file.
  */
-import { CIVS, migrateState, STATE_VERSION, type CivId, type GameState } from "../core";
+import { migrateState, STATE_VERSION, type CivId, type GameState } from "../core";
+import { t } from "./i18n";
+import { civName } from "./i18n/names";
 
 export interface LogEntry {
   turn: number;
@@ -86,8 +88,7 @@ function writeIndex(list: SlotInfo[]): void {
 }
 
 export function defaultSlotName(state: GameState, player: number): string {
-  const civ = CIVS[state.players[player]!.civ];
-  return `${civ.name}, tah ${state.turn}`;
+  return t("{civ}, tah {turn}", { civ: civName(state.players[player]!.civ), turn: state.turn });
 }
 
 /**
@@ -98,7 +99,7 @@ export function saveSlot(name: string, payload: SavePayload, player: number): st
   const clean = name.trim() || defaultSlotName(payload.state, player);
   const list = listSlots();
   const existing = list.find((s) => s.name === clean);
-  if (!existing && list.length >= MAX_SLOTS) return `Uložených her je už ${MAX_SLOTS}. Nějakou nejdřív smaž.`;
+  if (!existing && list.length >= MAX_SLOTS) return t("Uložených her je už {n}. Nějakou nejdřív smaž.", { n: MAX_SLOTS });
   const info: SlotInfo = {
     id: existing?.id ?? `${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`,
     name: clean,
@@ -112,7 +113,7 @@ export function saveSlot(name: string, payload: SavePayload, player: number): st
     writeIndex([info, ...list.filter((s) => s.id !== info.id)]);
     return null;
   } catch {
-    return "Prohlížeč už nemá místo. Smaž nějakou starou uloženou hru, nebo hru ulož do souboru.";
+    return t("Prohlížeč už nemá místo. Smaž nějakou starou uloženou hru, nebo hru ulož do souboru.");
   }
 }
 

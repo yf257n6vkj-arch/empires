@@ -18,6 +18,8 @@ Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti náro
 - `T` otevře strom technologií. Na výzkum klikneš i v hlavičce a posuvníkem vedle nastavíš, kolik obchodu jde do výzkumu a kolik do zlata.
 - Klik na technologii ve stromu otevře její stránku. Vzdálenou technologii jde nastavit jako cíl a hra k ní bude zkoumat sama.
 - Dvojklik na město nebo tlačítko `Otevřít město` ukáže obrazovku města. Klikem na políčko v okolí města přesuneš obyvatele. Tlačítkem + u stavby ji přidáš do plánu a hranici mezi obrázkem a panely jde táhnout myší.
+- `O` nebo tlačítko `Města` nahoře otevře přehled všech měst. U každého města je vidět velikost, růst, výroba, obchod a nálada a v seznamu jde rovnou změnit, co staví.
+- Jazyk hry přepneš na úvodní obrazovce nebo v menu. Hra umí česky a anglicky.
 - Rádce vlevo radí začátečníkům, co dělat dál. Křížkem ho schováš, tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.
 - Ve městě můžeš místo stavby zvolit Vydělávat zlato. Otazník u stavby nebo klik na budovu v obrázku města otevře encyklopedii.
 - Mapu přiblížíš roztažením prstů na trackpadu, `Ctrl` a kolečkem myši, tlačítky v rohu mapy nebo klávesami `+` a `−`. Nula vrátí celou mapu.
@@ -47,6 +49,7 @@ Poslední příkaz vypíše adresu, typicky `http://localhost:5173`. Otevři ji 
 | `npm run check-maps -- 500` | Vygeneruje 500 map bez obrazovky a vypíše statistiky |
 | `npm run pace -- 300` | Automatický hráč odehraje 120 tahů na 300 mapách a vypíše, jak rychle postupuje výzkum a růst |
 | `npm run build` | Připraví hotovou stránku do složky `dist` |
+| `npm run i18n -- en` | Vypíše texty, které v angličtině chybí nebo přebývají |
 
 ## Jak je kód rozdělený
 
@@ -71,7 +74,10 @@ src/core/        herní jádro, žádná vazba na prohlížeč
   workers.ts     osadník staví cestu po celé trase nebo sám vylepšuje okolí měst
   advisor.ts     rady pro začínajícího hráče
   economy.ts     technologie, cíl výzkumu, zlato, co jde stavět
-src/web/         vykreslení do Canvasu, ovládání a české texty
+src/web/         vykreslení do Canvasu, ovládání a texty
+  i18n/          překlady: index.ts (t, tn, výběr jazyka), names.ts (jména z pravidel),
+                 en*.ts (anglické texty, jména a encyklopedie)
+  citiesOverview.ts přehled všech měst
   render.ts      mapa, terén, města
   unitArt.ts     figurky jednotek
   newGame.ts     výběr národa pro novou hru
@@ -99,3 +105,7 @@ tools/preview/   náhledy figurek, budov a uložená hra pro snímky obrazovky
 - Čísla pravidel patří do `src/core/data`, ne do kódu.
 - Hráč i AI dělají všechno přes stejné příkazy v `commands.ts` se stejnými kontrolami.
 - `src/core` nesmí používat nic z prohlížeče, jinak by nešly pouštět turnaje AI v Node.
+
+## Jak přidat další jazyk
+
+Texty píšeme česky přímo v kódu a obalujeme je funkcí `t("...")`, texty s číslem funkcí `tn("1 tvar|2 až 4|5 a víc", n)`. Česká věta slouží jako klíč. Další jazyk vznikne tak, že zkopíruješ `src/web/i18n/en.ts` a soubory `en-*.ts`, přeložíš hodnoty a jazyk přidáš do seznamu `LANGUAGES` v `src/web/i18n/index.ts`. Příkaz `npm run i18n -- kód` vypíše, co v novém jazyce ještě chybí, a test `tests/i18n.test.ts` neprojde, dokud chybí cokoli z textů rozhraní. Encyklopedie se bez překladu ukáže česky.

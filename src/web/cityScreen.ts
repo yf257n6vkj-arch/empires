@@ -32,6 +32,8 @@ import { BUILDING_WIDTH, buildingPortraitCanvas, drawBuilding, drawHouse, tone }
 import { drawTerrainPatch, drawUnitPortrait, playerColor, unitPortraitCanvas, type DrawInput } from "./render";
 import { describeBuilding, describeUnit, escapeHtml } from "./texts";
 import { buildingArtCanvas, drawCityView, hasCityArt, hitAt, loadCityArt } from "./cityView";
+import { t, tn } from "./i18n";
+import { buildingName, cityLabel, productionLabel, terrainName, unitName } from "./i18n/names";
 
 export interface CityHost {
   state(): GameState;
@@ -46,14 +48,8 @@ export interface CityHost {
   openEntry(key: string): void;
 }
 
-function plural(n: number, one: string, few: string, many: string): string {
-  if (n === 1) return one;
-  if (n >= 2 && n <= 4) return few;
-  return many;
-}
-
 function turns(n: number): string {
-  return `${n} ${plural(n, "tah", "tahy", "tahů")}`;
+  return tn("{n} tah|{n} tahy|{n} tahů", n);
 }
 
 function hiDpiCanvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D, number] {
@@ -591,11 +587,11 @@ export function createCityScreen(host: CityHost) {
     const free = new Set(workableTiles(s, c));
     if (c.worked.includes(i)) {
       act({ type: "setWorkedTiles", cityId: c.id, tiles: c.worked.filter((t) => t !== i) });
-      host.say("Obyvatel odešel z pole a baví ostatní ve městě.");
+      host.say(t("Obyvatel odešel z pole a baví ostatní ve městě."));
       return;
     }
     if (!free.has(i)) {
-      host.say("Tohle políčko město obdělávat nemůže.");
+      host.say(t("Tohle políčko město obdělávat nemůže."));
       render();
       return;
     }
@@ -630,19 +626,19 @@ export function createCityScreen(host: CityHost) {
     const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
     const growth =
       c.size >= r.maxSize && r.foodSurplus > 0
-        ? `dál neroste, na víc než ${r.maxSize} obyvatel potřebuje akvadukt`
+        ? t("dál neroste, na víc než {maxSize} obyvatel potřebuje akvadukt", { maxSize: r.maxSize })
         : r.turnsToGrow
-          ? `vyroste za ${turns(r.turnsToGrow)}`
+          ? t("vyroste za {turns}", { turns: turns(r.turnsToGrow) })
           : r.foodSurplus === 0
-            ? "neroste"
-            : "hladoví, zmenší se";
+            ? t("neroste")
+            : t("hladoví, zmenší se");
     const done = r.waitingForSize
-      ? "čeká na druhého obyvatele"
+      ? t("čeká na druhého obyvatele")
       : c.shields >= cost
-        ? "hotovo na konci tahu"
+        ? t("hotovo na konci tahu")
         : r.turnsToComplete
-          ? `hotovo za ${turns(r.turnsToComplete)}`
-          : "nevyrábí";
+          ? t("hotovo za {turns}", { turns: turns(r.turnsToComplete) })
+          : t("nevyrábí");
     const crowd = Math.max(0, c.size - RULES.contentBase);
     const unhappyBase = Math.min(c.size, crowd + r.pollution.unhappy);
     const calmedByBuildings = Math.min(unhappyBase, effects.content);
@@ -654,128 +650,128 @@ export function createCityScreen(host: CityHost) {
     const goldPerTurn = r.shieldSurplus * RULES.wealthGoldPerShield;
     const benefit = (o: ProductionItem) =>
       o.kind === "wealth"
-        ? `město nic nestaví, každý štít se změní na zlato: +${goldPerTurn} zlata za tah`
+        ? t("město nic nestaví, každý štít se změní na zlato: +{goldPerTurn} zlata za tah", { goldPerTurn })
         : o.kind === "building"
           ? describeBuilding(BUILDINGS[o.id], false)
           : describeUnit(UNIT_TYPES[o.id], false);
     const optionRow = (o: ProductionItem, n: number) => {
-      const t = r.shieldSurplus > 0 ? Math.max(1, Math.ceil((productionCost(o) - c.shields) / r.shieldSurplus)) : null;
+      const left = r.shieldSurplus > 0 ? Math.max(1, Math.ceil((productionCost(o) - c.shields) / r.shieldSurplus)) : null;
       const wonder = o.kind === "building" && BUILDINGS[o.id].wonder;
       const planned = o.kind === "building" && [c.production, ...c.queue].some((x) => sameItem(x, o));
       const full = c.queue.length >= RULES.queueLength;
-      const cost = o.kind === "wealth" ? `+${goldPerTurn} zl.` : `${productionCost(o)} ${yieldIcon("shields", 11)}`;
-      const time = o.kind === "wealth" ? "každý tah" : t ? turns(t) : "—";
+      const cost = o.kind === "wealth" ? t("+{gold} zl.", { gold: goldPerTurn }) : `${productionCost(o)} ${yieldIcon("shields", 11)}`;
+      const time = o.kind === "wealth" ? t("každý tah") : left ? turns(left) : "—";
       const entry = o.kind === "wealth" ? "" : o.kind === "unit" ? `unit-${o.id}` : `${wonder ? "wdr" : "bld"}-${o.id}`;
-      return `<div class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}"><button type="button" class="cs-opt-main" data-opt="${n}"><span class="cs-opt-pic"></span><span class="cs-opt-text"><span class="cs-opt-name">${escapeHtml(productionName(o))}</span><span class="cs-opt-desc">${escapeHtml(benefit(o))}</span></span><span class="cs-opt-cost">${cost}</span><span class="cs-opt-turns">${time}</span></button>${entry ? `<button type="button" class="cs-opt-info" data-entry="${entry}" title="Otevřít v encyklopedii">?</button>` : ""}${o.kind === "wealth" ? "" : `<button type="button" class="cs-opt-add" data-add="${n}" ${planned || full ? "disabled" : ""} title="${planned ? "Už je v plánu." : full ? "Plán je plný." : "Přidat do plánu, město to postaví potom"}">+</button>`}</div>`;
+      return `<div class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}"><button type="button" class="cs-opt-main" data-opt="${n}"><span class="cs-opt-pic"></span><span class="cs-opt-text"><span class="cs-opt-name">${escapeHtml(productionLabel(o))}</span><span class="cs-opt-desc">${escapeHtml(benefit(o))}</span></span><span class="cs-opt-cost">${cost}</span><span class="cs-opt-turns">${time}</span></button>${entry ? `<button type="button" class="cs-opt-info" data-entry="${entry}" title="${t("Otevřít v encyklopedii")}">?</button>` : ""}${o.kind === "wealth" ? "" : `<button type="button" class="cs-opt-add" data-add="${n}" ${planned || full ? "disabled" : ""} title="${planned ? t("Už je v plánu.") : full ? t("Plán je plný.") : t("Přidat do plánu, město to postaví potom")}">+</button>`}</div>`;
     };
     const group = (title: string, pick: (o: ProductionItem) => boolean) => {
       const rows = options.map((o, n) => (pick(o) ? optionRow(o, n) : "")).join("");
       return rows ? `<div class="cs-group">${title}</div>${rows}` : "";
     };
     const optionList =
-      group("Jednotky", (o) => o.kind === "unit") +
-      group("Budovy", (o) => o.kind === "building" && !BUILDINGS[o.id].wonder) +
-      group("Divy světa", (o) => o.kind === "building" && BUILDINGS[o.id].wonder) +
-      group("Bez stavby", (o) => o.kind === "wealth");
+      group(t("Jednotky"), (o) => o.kind === "unit") +
+      group(t("Budovy"), (o) => o.kind === "building" && !BUILDINGS[o.id].wonder) +
+      group(t("Divy světa"), (o) => o.kind === "building" && BUILDINGS[o.id].wonder) +
+      group(t("Bez stavby"), (o) => o.kind === "wealth");
     const foodPct = Math.min(100, (c.food / r.growthThreshold) * 100);
 
     dialog.innerHTML = `
       <div class="cs">
         <div class="cs-head">
-          <button type="button" class="cs-nav" data-nav="-1" ${cities.length < 2 ? "disabled" : ""} title="Předchozí město">‹</button>
-          <h2>${escapeHtml(c.name)}</h2>
-          <button type="button" class="cs-nav" data-nav="1" ${cities.length < 2 ? "disabled" : ""} title="Další město">›</button>
-          <span class="cs-sub">velikost ${c.size} · založeno v tahu ${c.foundedTurn} · ${index + 1}. město z ${cities.length}</span>
+          <button type="button" class="cs-nav" data-nav="-1" ${cities.length < 2 ? "disabled" : ""} title="${t("Předchozí město")}">‹</button>
+          <h2>${escapeHtml(cityLabel(c.name))}</h2>
+          <button type="button" class="cs-nav" data-nav="1" ${cities.length < 2 ? "disabled" : ""} title="${t("Další město")}">›</button>
+          <span class="cs-sub">${t("velikost {size} · založeno v tahu {turn} · {n}. město z {all}", { size: c.size, turn: c.foundedTurn, n: index + 1, all: cities.length })}</span>
           <span class="spacer"></span>
-          <button type="button" class="cs-close" data-close>Zavřít <kbd>Esc</kbd></button>
+          <button type="button" class="cs-close" data-close>${t("Zavřít")} <kbd>Esc</kbd></button>
         </div>
         <div class="cs-top">
           <div class="cs-view"></div>
           <div class="cs-citizens">
             <div class="cs-people"></div>
             <div class="cs-mood">
-              ${h.disorder ? `<b class="neg">Nepokoje! Město tento tah nic nevyrobí.</b><br>` : ""}
-              <span>Spokojení ${h.content}</span> · <span class="${h.unhappy ? "neg" : ""}">nespokojení ${h.unhappy}</span>${h.entertainers ? ` · baviči ${h.entertainers}` : ""}
-              <div class="small">Bez pomoci je spokojených ${RULES.contentBase} obyvatel.${r.pollution.unhappy ? ` Znečištěný vzduch rozladí ${r.pollution.unhappy} ${r.pollution.unhappy === 1 ? "dalšího" : "další"}.` : ""}${unhappyBase ? ` Z ${unhappyBase} nespokojených uklidní budovy ${calmedByBuildings} a vojáci ve městě ${calmedBySoldiers}.` : ""}</div>
+              ${h.disorder ? `<b class="neg">${t("Nepokoje! Město tento tah nic nevyrobí.")}</b><br>` : ""}
+              <span>${t("Spokojení {n}", { n: h.content })}</span> · <span class="${h.unhappy ? "neg" : ""}">${t("nespokojení {n}", { n: h.unhappy })}</span>${h.entertainers ? t(" · baviči {entertainers}", { entertainers: h.entertainers }) : ""}
+              <div class="small">${t("Bez pomoci je spokojených {n} obyvatel.", { n: RULES.contentBase })}${r.pollution.unhappy ? tn(" Znečištěný vzduch rozladí jednoho dalšího.| Znečištěný vzduch rozladí {n} další.| Znečištěný vzduch rozladí {n} dalších.", r.pollution.unhappy) : ""}${unhappyBase ? t(" Z {unhappyBase} nespokojených uklidní budovy {calmedByBuildings} a vojáci ve městě {calmedBySoldiers}.", { unhappyBase, calmedByBuildings, calmedBySoldiers }) : ""}</div>
             </div>
           </div>
         </div>
-        <div class="cs-split" data-split title="Táhni nahoru nebo dolů. Dvojklik vrátí původní velikost."><span></span></div>
+        <div class="cs-split" data-split title="${t("Táhni nahoru nebo dolů. Dvojklik vrátí původní velikost.")}"><span></span></div>
         <div class="cs-bottom" ${panelHeight ? `style="height:${panelHeight}px"` : ""}>
           <section class="cs-box cs-land">
-            <h3>Okolí města</h3>
+            <h3>${t("Okolí města")}</h3>
             <div class="cs-map"></div>
             <div class="cs-sum">${yieldIcon("food")} ${r.production.food} &nbsp; ${yieldIcon("shields")} ${r.production.shields} &nbsp; ${yieldIcon("trade")} ${r.production.trade}</div>
-            <p class="muted small">Klikni na políčko a pošli na něj obyvatele, nebo ho z pole odvolej. ${c.manualTiles ? "Rozmístění jsi zvolil sám a platí, dokud město nevyroste nebo se nezmenší." : "Město teď rozmisťuje obyvatele samo."}</p>
-            ${c.manualTiles ? `<button type="button" class="wide" data-auto>Rozmístit obyvatele automaticky</button>` : ""}
+            <p class="muted small">${t("Klikni na políčko a pošli na něj obyvatele, nebo ho z pole odvolej.")} ${c.manualTiles ? t("Rozmístění jsi zvolil sám a platí, dokud město nevyroste nebo se nezmenší.") : t("Město teď rozmisťuje obyvatele samo.")}</p>
+            ${c.manualTiles ? `<button type="button" class="wide" data-auto>${t("Rozmístit obyvatele automaticky")}</button>` : ""}
           </section>
           <section class="cs-box cs-make">
             <div class="cs-prod">
               <div class="cs-prod-pic"></div>
               <div class="cs-prod-text">
-                <h3>Teď vyrábí</h3>
-                <b class="cs-prod-name">${escapeHtml(productionName(c.production))}</b>
+                <h3>${t("Teď vyrábí")}</h3>
+                <b class="cs-prod-name">${escapeHtml(productionLabel(c.production))}</b>
                 ${
                   c.production.kind === "wealth"
-                    ? `<div class="small">Město nic nestaví. ${r.shieldSurplus} ${yieldIcon("shields", 12)} za tah se mění na ${r.shieldSurplus * RULES.wealthGoldPerShield} zlata${c.shields ? `, uložených ${c.shields} štítů počká na další stavbu` : ""}.</div>`
+                    ? `<div class="small">${t("Město nic nestaví. {shields} {icon} za tah se mění na {gold} zlata", { shields: r.shieldSurplus, icon: yieldIcon("shields", 12), gold: r.shieldSurplus * RULES.wealthGoldPerShield })}${c.shields ? t(", uložených {shields} štítů počká na další stavbu", { shields: c.shields }) : ""}.</div>`
                     : `<div class="cs-bar"><div style="width:${Math.min(100, (c.shields / cost) * 100)}%"></div></div>
-                <div class="small">${Math.min(c.shields, cost)} z ${cost} ${yieldIcon("shields", 12)} · ${signed(r.shieldSurplus)} za tah · ${done}</div>`
+                <div class="small">${t("{done} z {cost} {icon} · {change} za tah · {state}", { done: Math.min(c.shields, cost), cost, icon: yieldIcon("shields", 12), change: signed(r.shieldSurplus), state: done })}</div>`
                 }
-                ${r.unitUpkeep ? `<div class="muted small">Údržba jednotek z města stojí ${r.unitUpkeep} ${yieldIcon("shields", 11)} za tah.</div>` : ""}
+                ${r.unitUpkeep ? `<div class="muted small">${t("Údržba jednotek z města stojí {n} {icon} za tah.", { n: r.unitUpkeep, icon: yieldIcon("shields", 11) })}</div>` : ""}
               </div>
-              ${price > 0 ? `<button type="button" class="cs-buy" data-buy ${gold < price ? `disabled title="Máš jen ${gold} zlata."` : ""}>Koupit za ${price} zlata</button>` : ""}
+              ${price > 0 ? `<button type="button" class="cs-buy" data-buy ${gold < price ? `disabled title="${t("Máš jen {gold} zlata.", { gold })}"` : ""}>${t("Koupit za {price} zlata", { price })}</button>` : ""}
             </div>
             <div class="cs-plan">
-              <span class="cs-plan-label">Potom:</span>
+              <span class="cs-plan-label">${t("Potom:")}</span>
               ${
                 c.queue.length
                   ? c.queue
                       .map(
                         (q, n) =>
-                          `<span class="cs-chip">${n + 1}. ${escapeHtml(productionName(q))}${n > 0 ? `<button type="button" data-up="${n}" title="Postavit dřív">‹</button>` : ""}<button type="button" data-unq="${n}" title="Vyřadit z plánu">×</button></span>`,
+                          `<span class="cs-chip">${n + 1}. ${escapeHtml(productionLabel(q))}${n > 0 ? `<button type="button" data-up="${n}" title="${t("Postavit dřív")}">‹</button>` : ""}<button type="button" data-unq="${n}" title="${t("Vyřadit z plánu")}">×</button></span>`,
                       )
                       .join("")
-                  : `<span class="muted small">nic dalšího. Tlačítkem + u stavby ji přidáš do plánu.</span>`
+                  : `<span class="muted small">${t("nic dalšího. Tlačítkem + u stavby ji přidáš do plánu.")}</span>`
               }
             </div>
-            <h3>Co stavět dál <span class="muted">· klik vybere, + naplánuje</span></h3>
+            <h3>${t("Co stavět dál")} <span class="muted">${t("· klik vybere, + naplánuje")}</span></h3>
             <div class="cs-opts">${optionList}</div>
           </section>
           <section class="cs-box cs-info">
-            <h3>Růst</h3>
+            <h3>${t("Růst")}</h3>
             <div class="cs-bar food"><div style="width:${foodPct}%"></div></div>
-            <p class="small">Jídlo ${c.food} z ${r.growthThreshold} · ${signed(r.foodSurplus)} za tah · ${growth}${effects.keepFoodOnGrowth ? `. <span class="muted">Sýpka po růstu ponechá ${Math.round(effects.keepFoodOnGrowth * 100)} % jídla.</span>` : ""}</p>
-            <h3>Obchod</h3>
+            <p class="small">${t("Jídlo {food} z {need} · {change} za tah · {growth}", { food: c.food, need: r.growthThreshold, change: signed(r.foodSurplus), growth })}${effects.keepFoodOnGrowth ? `. <span class="muted">${t("Sýpka po růstu ponechá {pct} % jídla.", { pct: Math.round(effects.keepFoodOnGrowth * 100) })}</span>` : ""}</p>
+            <h3>${t("Obchod")}</h3>
             <div class="cs-trade">
-              <div>${yieldIcon("trade")} obchod <b>${r.production.trade}</b>${r.routes ? ` <span class="muted">(z toho obchodní cesty ${r.routes})</span>` : ""}</div>
-              ${r.corruption ? `<div>korupce <b class="neg">−${r.corruption}</b> <span class="muted">(${corruptionPct(s, c, effects)} % ${effects.corruptionCutPct ? "i se soudním dvorem" : "kvůli vzdálenosti od paláce"})</span></div>` : effects.capital ? `<div class="muted small">Tady sídlí vláda, korupce tu není.</div>` : ""}
-              <div>věda <b>${r.science}</b>${effects.sciencePct ? ` <span class="muted">(+${effects.sciencePct} % z budov)</span>` : ""} · zlato <b>${r.gold}</b>${effects.goldPct ? ` <span class="muted">(+${effects.goldPct} %)</span>` : ""}</div>
+              <div>${yieldIcon("trade")} ${t("obchod <b>{n}</b>", { n: r.production.trade })}${r.routes ? ` <span class="muted">${t("(z toho obchodní cesty {n})", { n: r.routes })}</span>` : ""}</div>
+              ${r.corruption ? `<div>${t("korupce")} <b class="neg">−${r.corruption}</b> <span class="muted">(${corruptionPct(s, c, effects)} % ${effects.corruptionCutPct ? t("i se soudním dvorem") : t("kvůli vzdálenosti od paláce")})</span></div>` : effects.capital ? `<div class="muted small">${t("Tady sídlí vláda, korupce tu není.")}</div>` : ""}
+              <div>${t("věda <b>{n}</b>", { n: r.science })}${effects.sciencePct ? ` <span class="muted">${t("(+{pct} % z budov)", { pct: effects.sciencePct })}</span>` : ""} · ${t("zlato <b>{n}</b>", { n: r.gold })}${effects.goldPct ? ` <span class="muted">(+${effects.goldPct} %)</span>` : ""}</div>
             </div>
-            ${r.pollution.industry + r.pollution.population > 0 ? `<p class="small">Znečištění ${r.pollution.industry + r.pollution.population}, bez potíží město snese ${RULES.pollutionFree} <span class="muted">(z výroby ${r.pollution.industry}, od obyvatel ${r.pollution.population})</span></p>` : ""}
-            ${c.tradeRoutes.length ? `<p class="small">Obchodní cesty do: ${c.tradeRoutes.map((id) => escapeHtml(s.cities.find((x) => x.id === id)?.name ?? "?")).join(", ")}</p>` : ""}
-            <h3>Budovy <span class="muted">${c.buildings.length ? `· údržba ${c.buildings.reduce((n, b) => n + BUILDINGS[b].upkeep, 0)} zlata za tah` : ""}</span></h3>
+            ${r.pollution.industry + r.pollution.population > 0 ? `<p class="small">${t("Znečištění {n}, bez potíží město snese {free}", { n: r.pollution.industry + r.pollution.population, free: RULES.pollutionFree })} <span class="muted">${t("(z výroby {industry}, od obyvatel {people})", { industry: r.pollution.industry, people: r.pollution.population })}</span></p>` : ""}
+            ${c.tradeRoutes.length ? `<p class="small">${t("Obchodní cesty do: {list}", { list: c.tradeRoutes.map((id) => escapeHtml(cityLabel(s.cities.find((x) => x.id === id)?.name ?? "?"))).join(", ") })}</p>` : ""}
+            <h3>${t("Budovy")} <span class="muted">${c.buildings.length ? t("· údržba {upkeep} zlata za tah", { upkeep: c.buildings.reduce((n, b) => n + BUILDINGS[b].upkeep, 0) }) : ""}</span></h3>
             <div class="cs-buildings">${
               c.buildings.length
                 ? c.buildings
                     .map(
                       (b) =>
-                        `<button type="button" class="cs-building ${BUILDINGS[b].wonder ? "wonder" : ""}" data-b="${b}" title="${escapeHtml(describeBuilding(BUILDINGS[b]))}"><span class="pic"></span><span class="name">${escapeHtml(BUILDINGS[b].name)}</span>${BUILDINGS[b].upkeep ? `<span class="muted">${BUILDINGS[b].upkeep} zl.</span>` : ""}</button>`,
+                        `<button type="button" class="cs-building ${BUILDINGS[b].wonder ? "wonder" : ""}" data-b="${b}" title="${escapeHtml(describeBuilding(BUILDINGS[b]))}"><span class="pic"></span><span class="name">${escapeHtml(buildingName(b))}</span>${BUILDINGS[b].upkeep ? `<span class="muted">${t("{gold} zl.", { gold: BUILDINGS[b].upkeep })}</span>` : ""}</button>`,
                     )
                     .join("")
-                : `<span class="muted small">Zatím tu nestojí žádná budova.</span>`
+                : `<span class="muted small">${t("Zatím tu nestojí žádná budova.")}</span>`
             }</div>
-            <h3>Jednotky ve městě</h3>
+            <h3>${t("Jednotky ve městě")}</h3>
             <div class="cs-units">${
               unitsHere.length
                 ? unitsHere
                     .map(
                       (u) =>
-                        `<span class="cs-unit-wrap"><button type="button" class="cs-unit" data-unit="${u.id}" title="Vybrat jednotku a zavřít město"><span class="pic" data-type="${u.type}"></span>${escapeHtml(UNIT_TYPES[u.type].name)}${u.fortified ? " (opevněná)" : ""}</button><button type="button" class="cs-unit-info" data-entry="unit-${u.type}" title="Otevřít v encyklopedii">?</button></span>`,
+                        `<span class="cs-unit-wrap"><button type="button" class="cs-unit" data-unit="${u.id}" title="${t("Vybrat jednotku a zavřít město")}"><span class="pic" data-type="${u.type}"></span>${escapeHtml(unitName(u.type))}${u.fortified ? t(" (opevněná)") : ""}</button><button type="button" class="cs-unit-info" data-entry="unit-${u.type}" title="${t("Otevřít v encyklopedii")}">?</button></span>`,
                     )
                     .join("")
-                : `<span class="muted small">Město nikdo nebrání.</span>`
+                : `<span class="muted small">${t("Město nikdo nebrání.")}</span>`
             }</div>
-            ${supported.some((u) => UNIT_TYPES[u.type].foodUpkeep) ? `<p class="muted small">Osadníci z tohoto města spotřebují ${supported.reduce((n, u) => n + UNIT_TYPES[u.type].foodUpkeep, 0)} jídla za tah.</p>` : ""}
+            ${supported.some((u) => UNIT_TYPES[u.type].foodUpkeep) ? `<p class="muted small">${t("Osadníci z tohoto města spotřebují {n} jídla za tah.", { n: supported.reduce((n, u) => n + UNIT_TYPES[u.type].foodUpkeep, 0) })}</p>` : ""}
           </section>
         </div>
       </div>`;
@@ -802,7 +798,7 @@ export function createCityScreen(host: CityHost) {
       pc.addEventListener("mousemove", (e) => {
         const hit = at(e);
         pc.style.cursor = hit ? "pointer" : "";
-        pc.title = hit ? `${hit.name} · klikni a přečti si o ní v encyklopedii` : "";
+        pc.title = hit ? t("{hit} · klikni a přečti si o ní v encyklopedii", { hit: hit.name }) : "";
       });
       pc.addEventListener("click", (e) => {
         const hit = at(e);
@@ -1014,8 +1010,8 @@ export function createCityScreen(host: CityHost) {
       const mx = x0 + dx;
       const my = y0 + dy;
       const i = my * s.map.width + mx;
-      const t = s.map.terrain[i];
-      canvas.title = t && explored[i] ? `${TERRAINS[t].name}${s.map.road[i] ? ", cesta" : ""}${s.map.irrigation[i] ? ", zavlažování" : ""}${s.map.mine[i] ? ", důl" : ""}` : "";
+      const ter = s.map.terrain[i];
+      canvas.title = ter && explored[i] ? `${terrainName(ter)}${s.map.road[i] ? t(", cesta") : ""}${s.map.irrigation[i] ? t(", zavlažování") : ""}${s.map.mine[i] ? t(", důl") : ""}` : "";
     });
     holder.append(canvas);
   }

@@ -20,10 +20,12 @@ import {
   type UnitTypeId,
 } from "../core";
 import { buildingPortraitCanvas } from "./buildingArt";
-import { ERA_NAMES, TECH_PAGES, techPicture, wikiUrl } from "./encyclopedia";
+import { ERA_NAMES, techPage, techPicture } from "./encyclopedia";
 import { unitPortraitCanvas } from "./render";
 import { ERA_COLORS, techIconSvg } from "./techIcons";
 import { describeBuilding, describeGovernment, describeUnit, escapeHtml } from "./texts";
+import { t, tn } from "./i18n";
+import { buildingName, governmentName, improvementName, inSentence, techName, unitName } from "./i18n/names";
 
 export interface TreeHost {
   me(): Player;
@@ -59,10 +61,10 @@ export function unlocksOf(tech: TechId): Unlock[] {
 }
 
 function unlockName(u: Unlock): string {
-  if (u.kind === "unit") return UNIT_TYPES[u.id].name;
-  if (u.kind === "government") return `vláda ${GOVERNMENTS[u.id].name.toLowerCase()}`;
-  if (u.kind === "improvement") return IMPROVEMENTS[u.id].name;
-  return BUILDINGS[u.id].wonder ? `div ${BUILDINGS[u.id].name}` : BUILDINGS[u.id].name;
+  if (u.kind === "unit") return unitName(u.id);
+  if (u.kind === "government") return t("vláda {government}", { government: inSentence(governmentName(u.id)) });
+  if (u.kind === "improvement") return improvementName(u.id);
+  return BUILDINGS[u.id].wonder ? t("div {wonder}", { wonder: buildingName(u.id) }) : buildingName(u.id);
 }
 
 export function unlockNames(tech: TechId): string[] {
@@ -130,13 +132,13 @@ function computeLayout(): Layout {
       });
     }
   }
-  const minRow = Math.min(...TECH_IDS.map((t) => row[t]));
+  const minRow = Math.min(...TECH_IDS.map((x) => row[x]));
   const pos = {} as Layout["pos"];
   let maxRow = 0;
-  for (const t of TECH_IDS) {
-    const r = row[t] - minRow;
+  for (const x of TECH_IDS) {
+    const r = row[x] - minRow;
     maxRow = Math.max(maxRow, r);
-    pos[t] = { x: PAD + col[t] * (CARD_W + COL_GAP), y: PAD + 26 + r * (CARD_H + ROW_GAP), col: col[t] };
+    pos[x] = { x: PAD + col[x] * (CARD_W + COL_GAP), y: PAD + 26 + r * (CARD_H + ROW_GAP), col: col[x] };
   }
   return {
     pos,
@@ -154,10 +156,10 @@ const GLYPH_BUILDING = `<svg viewBox="0 0 16 16" width="13" height="13"><path d=
 const GLYPH_WONDER = `<svg viewBox="0 0 16 16" width="13" height="13"><path d="M8 1l2 4.2 4.6.6-3.4 3.2.9 4.5L8 11.3 3.9 13.5l.9-4.5L1.4 5.8 6 5.2z" fill="#f2cf6b"/></svg>`;
 
 function unlockChip(u: Unlock): string {
-  if (u.kind === "unit") return `<span class="chip">${GLYPH_UNIT}${escapeHtml(UNIT_TYPES[u.id].name)}</span>`;
+  if (u.kind === "unit") return `<span class="chip">${GLYPH_UNIT}${escapeHtml(unitName(u.id))}</span>`;
   if (u.kind === "government" || u.kind === "improvement") return `<span class="chip">${GLYPH_BUILDING}${escapeHtml(unlockName(u))}</span>`;
   const b = BUILDINGS[u.id];
-  return `<span class="chip ${b.wonder ? "wonder" : ""}">${b.wonder ? GLYPH_WONDER : GLYPH_BUILDING}${escapeHtml(b.name)}</span>`;
+  return `<span class="chip ${b.wonder ? "wonder" : ""}">${b.wonder ? GLYPH_WONDER : GLYPH_BUILDING}${escapeHtml(buildingName(u.id))}</span>`;
 }
 
 // ---------- tree ----------
@@ -188,7 +190,7 @@ export function createTechTree(host: TreeHost) {
     let known = p.techs.length;
     for (let k = 0; k < techs.length; k++) need += researchCost({ ...p, techs: new Array(known++).fill("pottery") });
     const turns = Math.max(1, Math.ceil(need / science));
-    return `asi ${turns} ${turns === 1 ? "tah" : turns < 5 ? "tahy" : "tahů"}`;
+    return tn("asi {n} tah|asi {n} tahy|asi {n} tahů", turns);
   }
 
   /** Builds the chart once per opening; hovering only changes classes, so clicks are never lost. */
@@ -214,15 +216,15 @@ export function createTechTree(host: TreeHost) {
       const x = Math.min(...TECH_IDS.filter((t) => TECHS[t].era === era).map((t) => layout!.pos[t].x));
       eraLabels.push(`<div class="tt-era" style="left:${x}px;top:${PAD - 6}px;--era:${ERA_COLORS[era]}">${ERA_NAMES[era]}</div>`);
     }
-    const cards = TECH_IDS.map((t) => {
-      const { x, y } = layout!.pos[t];
+    const cards = TECH_IDS.map((tech) => {
+      const { x, y } = layout!.pos[tech];
       // A card has room for two lines; the rest is on the technology's page.
-      const all = unlocksOf(t);
+      const all = unlocksOf(tech);
       const shown = all.length > 2 ? all.slice(0, 1) : all;
-      const chips = shown.map(unlockChip).join("") + (all.length > 2 ? `<span class="chip more">a ${all.length - 1} další</span>` : "");
-      return `<button type="button" class="tt-card" data-tech="${t}" style="left:${x}px;top:${y}px">
-        ${techIconSvg(t, TECHS[t].era, 46)}
-        <span class="tt-body"><b>${escapeHtml(TECHS[t].name)}</b><span class="tt-chips">${chips}</span></span>
+      const chips = shown.map(unlockChip).join("") + (all.length > 2 ? `<span class="chip more">${t("a {n} další", { n: all.length - 1 })}</span>` : "");
+      return `<button type="button" class="tt-card" data-tech="${tech}" style="left:${x}px;top:${y}px">
+        ${techIconSvg(tech, TECHS[tech].era, 46)}
+        <span class="tt-body"><b>${escapeHtml(techName(tech))}</b><span class="tt-chips">${chips}</span></span>
         <span class="tt-mark">✓</span>
       </button>`;
     }).join("");
@@ -282,18 +284,18 @@ export function createTechTree(host: TreeHost) {
     if (hovered && !p.techs.includes(hovered)) {
       const path = pathToTech(p, hovered);
       parts.push(
-        `Na <b>${escapeHtml(TECHS[hovered].name)}</b> ${path.length === 1 ? "stačí jeden objev" : `potřebuješ ${path.length} objevů`}${turnsFor(p, path) ? `, ${turnsFor(p, path)}` : ""}.`,
+        tn("Na <b>{tech}</b> stačí jeden objev|Na <b>{tech}</b> potřebuješ {n} objevy|Na <b>{tech}</b> potřebuješ {n} objevů", path.length, { tech: escapeHtml(techName(hovered)) }) + `${turnsFor(p, path) ? `, ${turnsFor(p, path)}` : ""}.`,
       );
     } else if (p.researching) {
-      parts.push(`Zkoumáš <b>${escapeHtml(TECHS[p.researching].name)}</b>.`);
+      parts.push(t("Zkoumáš <b>{tech}</b>.", { tech: escapeHtml(techName(p.researching)) }));
       if (p.researchGoal) {
         const path = pathToTech(p, p.researchGoal);
-        parts.push(`Míříš k <b>${escapeHtml(TECHS[p.researchGoal].name)}</b>, zbývá ${path.length} objevů, ${turnsFor(p, path)}.`);
+        parts.push(tn("Míříš k <b>{tech}</b>, zbývá {n} objev, {turns}.|Míříš k <b>{tech}</b>, zbývají {n} objevy, {turns}.|Míříš k <b>{tech}</b>, zbývá {n} objevů, {turns}.", path.length, { tech: escapeHtml(techName(p.researchGoal)), turns: turnsFor(p, path) }));
       }
     } else {
-      parts.push("Vyber, co se bude zkoumat. Klikni na technologii a přečti si o ní víc.");
+      parts.push(t("Vyber, co se bude zkoumat. Klikni na technologii a přečti si o ní víc."));
     }
-    parts.push(`<span class="muted">Známé technologie: ${p.techs.length} z ${TECH_IDS.length}</span>`);
+    parts.push(`<span class="muted">${t("Známé technologie: {n} z {all}", { n: p.techs.length, all: TECH_IDS.length })}</span>`);
     status.innerHTML = parts.join(" ");
   }
 
@@ -303,59 +305,59 @@ export function createTechTree(host: TreeHost) {
     dialog.showModal();
     // Start where the player is: the leftmost technology that can be researched.
     const p = host.me();
-    const target = p.researching ?? TECH_IDS.find((t) => canResearch(p, t));
+    const target = p.researching ?? TECH_IDS.find((x) => canResearch(p, x));
     if (target && layout) scroller.scrollLeft = Math.max(0, layout.pos[target].x - 260);
     else scroller.scrollLeft = 0;
   }
 
   // ---------- encyclopedia page ----------
 
-  function openPage(t: TechId): void {
+  function openPage(tech: TechId): void {
     const p = host.me();
-    const info = TECH_PAGES[t];
-    const rule = TECHS[t];
-    const s = stateOf(p, t);
-    const path = s === "known" ? [] : pathToTech(p, t);
+    const { page: info, url } = techPage(tech);
+    const rule = TECHS[tech];
+    const s = stateOf(p, tech);
+    const path = s === "known" ? [] : pathToTech(p, tech);
     const action =
       s === "open"
-        ? `<button type="button" class="primary" data-act="research">Zkoumat ${escapeHtml(rule.name)}${turnsFor(p, [t]) ? ` (${turnsFor(p, [t])})` : ""}</button>`
+        ? `<button type="button" class="primary" data-act="research">${t("Zkoumat {tech}", { tech: escapeHtml(techName(tech)) })}${turnsFor(p, [tech]) ? ` (${turnsFor(p, [tech])})` : ""}</button>`
         : s === "locked"
-          ? `<button type="button" class="primary" data-act="goal">${p.researchGoal === t ? "Tohle je tvůj cíl" : `Nastavit jako cíl výzkumu (${path.length} objevů${turnsFor(p, path) ? `, ${turnsFor(p, path)}` : ""})`}</button>`
+          ? `<button type="button" class="primary" data-act="goal">${p.researchGoal === tech ? t("Tohle je tvůj cíl") : tn("Nastavit jako cíl výzkumu ({n} objev{turns})|Nastavit jako cíl výzkumu ({n} objevy{turns})|Nastavit jako cíl výzkumu ({n} objevů{turns})", path.length, { turns: turnsFor(p, path) ? `, ${turnsFor(p, path)}` : "" })}</button>`
           : s === "current"
-            ? `<span class="tp-state">Právě se zkoumá.</span>`
-            : `<span class="tp-state ok">Tuhle technologii už znáš.</span>`;
+            ? `<span class="tp-state">${t("Právě se zkoumá.")}</span>`
+            : `<span class="tp-state ok">${t("Tuhle technologii už znáš.")}</span>`;
     const link = (x: TechId) =>
-      `<button type="button" class="tp-link ${stateOf(p, x)}" data-go="${x}">${techIconSvg(x, TECHS[x].era, 26)}${escapeHtml(TECHS[x].name)}</button>`;
-    const needs = rule.requires.map(link).join("") || `<span class="muted">Nic, s touhle technologií začínali už pravěcí lidé.</span>`;
-    const next = leadsTo(t).map(link).join("") || `<span class="muted">Tady strom končí.</span>`;
-    const unlocks = unlocksOf(t);
-    const picture = techPicture(t);
+      `<button type="button" class="tp-link ${stateOf(p, x)}" data-go="${x}">${techIconSvg(x, TECHS[x].era, 26)}${escapeHtml(techName(x))}</button>`;
+    const needs = rule.requires.map(link).join("") || `<span class="muted">${t("Nic, s touhle technologií začínali už pravěcí lidé.")}</span>`;
+    const next = leadsTo(tech).map(link).join("") || `<span class="muted">${t("Tady strom končí.")}</span>`;
+    const unlocks = unlocksOf(tech);
+    const picture = techPicture(tech);
 
     page.innerHTML = `
       <div class="tp">
         <div class="tp-picture ${picture ? "has-photo" : ""}" style="--era:${ERA_COLORS[rule.era]}">
-          ${picture ? `<img class="tp-photo" src="${picture}" alt="${escapeHtml(rule.name)}"><div class="tp-medal small">${techIconSvg(t, rule.era, 64)}</div>` : `<div class="tp-medal">${techIconSvg(t, rule.era, 168)}</div>`}
+          ${picture ? `<img class="tp-photo" src="${picture}" alt="${escapeHtml(techName(tech))}"><div class="tp-medal small">${techIconSvg(tech, rule.era, 64)}</div>` : `<div class="tp-medal">${techIconSvg(tech, rule.era, 168)}</div>`}
           <div class="tp-when">${escapeHtml(info.when)}</div>
           <div class="tp-era">${ERA_NAMES[rule.era]}</div>
         </div>
         <div class="tp-main">
-          <div class="tp-head"><h2>${escapeHtml(rule.name)}</h2><button type="button" class="tp-close" data-act="close" aria-label="Zavřít">×</button></div>
+          <div class="tp-head"><h2>${escapeHtml(techName(tech))}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button></div>
           <p class="tp-text">${escapeHtml(info.text)}</p>
-          <div class="tp-fact"><b>Věděl jsi?</b> ${escapeHtml(info.fact)}</div>
-          <h3>Co to přinese ve hře</h3>
+          <div class="tp-fact"><b>${t("Věděl jsi?")}</b> ${escapeHtml(info.fact)}</div>
+          <h3>${t("Co to přinese ve hře")}</h3>
           <div class="tp-unlocks">${
             unlocks.length
               ? unlocks
-                  .map((u, k) => `<button type="button" class="tp-unlock" data-k="${k}" title="Otevřít v encyklopedii"><div class="tp-portrait"></div><div>${unlockDetail(u)}</div></button>`)
+                  .map((u, k) => `<button type="button" class="tp-unlock" data-k="${k}" title="${t("Otevřít v encyklopedii")}"><div class="tp-portrait"></div><div>${unlockDetail(u)}</div></button>`)
                   .join("")
-              : `<span class="muted">Sama nic neodemkne, ale bez ní se nedostaneš k dalším objevům.</span>`
+              : `<span class="muted">${t("Sama nic neodemkne, ale bez ní se nedostaneš k dalším objevům.")}</span>`
           }</div>
           <div class="tp-tree">
-            <div><h3>Co je potřeba předem</h3><div class="tp-links">${needs}</div></div>
-            <div><h3>Kam vede dál</h3><div class="tp-links">${next}</div></div>
+            <div><h3>${t("Co je potřeba předem")}</h3><div class="tp-links">${needs}</div></div>
+            <div><h3>${t("Kam vede dál")}</h3><div class="tp-links">${next}</div></div>
           </div>
           <div class="tp-foot">
-            <a href="${wikiUrl(info.wiki)}" target="_blank" rel="noopener">Přečti si víc na Wikipedii: ${escapeHtml(info.wiki)} ↗</a>
+            <a href="${url}" target="_blank" rel="noopener">${t("Přečti si víc na Wikipedii: {title}", { title: escapeHtml(info.wiki) })} ↗</a>
             <span class="spacer"></span>${action}
           </div>
         </div>
@@ -366,7 +368,7 @@ export function createTechTree(host: TreeHost) {
       if (u.kind === "unit") slot.append(unitPortraitCanvas(u.id, 0, 76, 64));
       else if (u.kind === "building") slot.append(buildingPortraitCanvas(u.id, 76, 64));
       else if (u.kind === "government") slot.append(buildingPortraitCanvas("palace", 76, 64));
-      else slot.innerHTML = techIconSvg(t, TECHS[t].era, 56);
+      else slot.innerHTML = techIconSvg(tech, TECHS[tech].era, 56);
     });
     page.querySelectorAll<HTMLButtonElement>(".tp-unlock").forEach((b) =>
       b.addEventListener("click", () => {
@@ -376,13 +378,13 @@ export function createTechTree(host: TreeHost) {
     );
     page.querySelector('[data-act="close"]')?.addEventListener("click", () => page.close());
     page.querySelector('[data-act="research"]')?.addEventListener("click", () => {
-      host.chooseResearch(t);
+      host.chooseResearch(tech);
       page.close();
       if (dialog.open) paint();
     });
     page.querySelector('[data-act="goal"]')?.addEventListener("click", () => {
-      host.chooseGoal(t);
-      openPage(t);
+      host.chooseGoal(tech);
+      openPage(tech);
       if (dialog.open) paint();
     });
     page.querySelectorAll<HTMLButtonElement>("[data-go]").forEach((b) =>
@@ -395,17 +397,17 @@ export function createTechTree(host: TreeHost) {
   function unlockDetail(u: Unlock): string {
     if (u.kind === "unit") {
       const r = UNIT_TYPES[u.id];
-      return `<b>${escapeHtml(r.name)}</b><br><span class="muted">jednotka · ${escapeHtml(describeUnit(r))}</span>`;
+      return `<b>${escapeHtml(unitName(u.id))}</b><br><span class="muted">${t("jednotka")} · ${escapeHtml(describeUnit(r))}</span>`;
     }
     if (u.kind === "government") {
-      return `<b>Vláda ${escapeHtml(GOVERNMENTS[u.id].name.toLowerCase())}</b><br><span class="muted">${escapeHtml(describeGovernment(GOVERNMENTS[u.id]))}</span>`;
+      return `<b>${t("Vláda {government}", { government: escapeHtml(inSentence(governmentName(u.id))) })}</b><br><span class="muted">${escapeHtml(describeGovernment(GOVERNMENTS[u.id]))}</span>`;
     }
     if (u.kind === "improvement") {
-      const text = u.id === "railroad" ? "osadník ji staví na cestu, přidá polovinu štítů a pohyb po ní nic nestojí" : "osadník ji staví v krajině, zdvojí obranu jednotek (s bojem ve fázi 3)";
-      return `<b>${escapeHtml(IMPROVEMENTS[u.id].name)}</b><br><span class="muted">${text}</span>`;
+      const text = u.id === "railroad" ? t("osadník ji staví na cestu, přidá polovinu štítů a pohyb po ní nic nestojí") : t("osadník ji staví v krajině, zdvojí obranu jednotek (s bojem ve fázi 3)");
+      return `<b>${escapeHtml(improvementName(u.id))}</b><br><span class="muted">${text}</span>`;
     }
     const b = BUILDINGS[u.id];
-    return `<b>${b.wonder ? "Div světa " : ""}${escapeHtml(b.name)}</b><br><span class="muted">${escapeHtml(describeBuilding(b))}</span>`;
+    return `<b>${b.wonder ? t("Div světa ") : ""}${escapeHtml(buildingName(u.id))}</b><br><span class="muted">${escapeHtml(describeBuilding(b))}</span>`;
   }
 
   scroller.addEventListener(

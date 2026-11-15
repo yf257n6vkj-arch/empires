@@ -5,6 +5,7 @@
  * Wikipedia articles (downloaded with tools/mac/wiki.sh) on 15 November 2026.
  */
 import type { TechId } from "../core";
+import { language, t } from "./i18n";
 
 export interface TechPage {
   /** Rough time, as a reader would say it. */
@@ -426,11 +427,26 @@ export const TECH_PAGES: Record<TechId, TechPage> = {
   },
 };
 
-/** Era names in Czech, index = era number. */
-export const ERA_NAMES = ["", "Pravěk a starověk", "Antika", "Středověk a renesance", "Novověk", "Moderní doba"];
+/** Era names, index = era number. */
+export const ERA_NAMES = ["", t("Pravěk a starověk"), t("Antika"), t("Středověk a renesance"), t("Novověk"), t("Moderní doba")];
 
-export function wikiUrl(title: string): string {
-  return `https://cs.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`;
+/**
+ * Link to an article on the Wikipedia in the given language. The Czech titles
+ * were checked against the articles; for other languages the link goes through
+ * the search, which opens the article when the title matches and lists close
+ * matches when it does not.
+ */
+export function wikiUrl(title: string, wikipedia = "cs"): string {
+  if (wikipedia === "cs") return `https://cs.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`;
+  return `https://${wikipedia}.wikipedia.org/w/index.php?search=${encodeURIComponent(title)}`;
+}
+
+/** The page of a technology in the current language, with the link to its article. */
+export function techPage(tech: TechId): { page: TechPage; url: string } {
+  const own = language().techPages?.[tech];
+  if (own) return { page: own, url: wikiUrl(own.wiki, language().wikipedia ?? "cs") };
+  const page = TECH_PAGES[tech];
+  return { page, url: wikiUrl(page.wiki) };
 }
 
 /**

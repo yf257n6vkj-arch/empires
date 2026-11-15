@@ -2,6 +2,28 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Strom technologií má všech 67 objevů z Civilizace 1 a lukostřelbu
+
+Michal chtěl celý strom jako v Civilizaci 1, a to hned. Strom má 68 technologií v pěti érách: pravěk a starověk, antika, středověk a renesance, novověk a moderní doba. Vychází z plakátu Civilizace 1 a liší se ve dvou věcech. Písmo je před abecedou, protože lidé psali klínovým písmem a hieroglyfy dávno před vznikem abecedy, takže zákony a matematika navazují na písmo. A přibyla lukostřelba, aby lučištníci měli vlastní objev. Jednotky, budovy a divy se navázaly na nejbližší technologii z Civilizace 1, tank odemyká automobil a akvadukt stavitelství. Náboženství odemyká novou budovu katedrálu, která uklidní tři nespokojené.
+
+Aby se strom vešel do 120 tahů, stojí výzkum 6 + 0,55 × počet známých technologií. Na 300 mapách měl automatický hráč antiku kolem 44. tahu, středověk kolem 56., novověk kolem 70. a moderní dobu kolem 88. tahu. Celý strom měl v mediánu ve 106. tahu, ve 29 % partií ho do konce nedokončil. Objev teď přichází zhruba každé dva tahy, proto přibyl cíl výzkumu. Hráč klikne na vzdálenou technologii a hra k ní zkoumá sama, cíl umí použít i AI.
+
+Ze 68 technologií zatím 45 nic neodemyká a jen otvírá cestu dál. Hlavně od novověku je strom chudý na budovy a jednotky. O jejich doplnění rozhodneme zvlášť.
+
+## 15. 11. 2026: Každá technologie má stránku pro zvídavé dítě
+
+Michal chtěl, aby se ze hry něco naučil i syn. Každá technologie má kreslenou ikonu, kdy vznikla, krátké vyprávění, zajímavost s nadpisem Věděl jsi? a odkaz na článek v české Wikipedii. Kde to jde, zajímavosti míří do Česka, třeba Únětice, Karlův most, píšťala a pistole, tolar a dolar, Mendel nebo Čapkův robot. Strom technologií je teď plakát s ikonami a šipkami, kde je vidět, co hráč zná, co zkoumá a kudy vede cesta k cíli.
+
+Michal chce na stránkách i fotografie a obrázky z internetu, čímž mění pravidlo ze zadání, že cizí obrázky v první verzi nebudou. Pravidlo platí dál pro samotnou hru, fotky budou jen v encyklopedii a s uvedeným autorem a licencí. Zatím je stáhnout nejde, protože prostředí, ve kterém Claude pracuje, nemá Wikimedia Commons mezi povolenými weby. Michal je může povolit v nastavení Clauda pod Settings > Capabilities.
+
+## 15. 11. 2026: Město má vlastní obrazovku a obyvatele jde přesouvat ručně
+
+Dvojklik na město nebo tlačítko Otevřít město ukáže obrazovku inspirovanou Civilizací 1 a 3. Nahoře je malovaný pohled na město, kde stojí každá postavená budova a div a domů přibývá s velikostí. Pod ním jsou obyvatelé jako postavičky (spokojení, nespokojení, baviči), okolí města s výnosy políček, zásoby jídla, výroba s obrázky všeho, co jde stavět, obchod, budovy a jednotky. Klikem na políčko hráč pošle obyvatele na pole nebo ho z pole odvolá a z volného obyvatele je bavič. Ruční rozmístění platí, dokud město nevyroste nebo se nezmenší, pak město rozmisťuje samo. AI bude používat automatické rozmístění, ruční volbu ale může použít stejným příkazem.
+
+## 15. 11. 2026: Postavy jsou realističtější
+
+Postavy mají klouby, stínování a výstroj podle doby: válečník s kyjem a kožešinou, hoplít s bronzovou přilbou a štítem, lukostřelec v kápi s napjatým lukem, legionář v plátové zbroji se štítem, mušketýr s kloboukem a mušketou, voják s přilbou a puškou s bajonetem. Jezdci sedí na koních s hřívou a ohonem, rytířův kůň má čaprák v barvě hráče. Katapult, dělo a tank jsou podrobnější a osadníka táhne vůl s rohy.
+
 ## 14. 11. 2026: Hospodářství běží zhruba dvakrát rychleji než v Civilizaci 1
 
 Čísla převzatá z Civilizace 1 jsou stavěná na partii o více než 500 tazích. Při 120 tazích by hráč do konce hry objevil jen pár technologií. Měřidlo tempa (`npm run pace`) to ukázalo hned. Automatický hráč, který jen zakládá města, staví budovy, cesty a zavlažování a zkoumá, měl ve 120. tahu 4 technologie z 24. Proto jsme upravili čísla v datech: města rostou dvakrát rychleji, jednotky a budovy stojí polovinu a výzkum stojí 10 + 6 × počet známých technologií. Na 300 mapách teď automatický hráč dosáhne antiky kolem 47. tahu, středověku kolem 70. a novověku kolem 93. tahu. Celý strom má v mediánu ve 110. tahu, takže na Velké dílo zbývá zhruba deset tahů. Rozumný člověk by měl být o kousek rychlejší. Až si fázi zahraješ, čísla podle dojmu doladíme.

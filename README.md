@@ -2,7 +2,7 @@
 
 Tahová strategie do prohlížeče ve stylu Civilizace 1. Jedna partie má trvat 45 až 60 minut proti třem počítačovým soupeřům, kteří hrají rozumně a nepodvádějí. Celé zadání je v projektu Empires v Claudovi.
 
-Hotová je fáze 1 a probíhá fáze 2. Hráč zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 24 technologií ve 4 érách a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají spokojenost, 10 budov a 5 divů světa a jde vyrábět 12 typů jednotek. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče.
+Hotová je fáze 1 a probíhá fáze 2. Hráč zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají vlastní obrazovku s pohledem na město, spokojenost, 11 budov a 5 divů světa a jde vyrábět 12 typů jednotek. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče.
 
 ## Jak se hra ovládá
 
@@ -12,6 +12,8 @@ Hotová je fáze 1 a probíhá fáze 2. Hráč zakládá a rozvíjí města, sta
 - `B` založí město, `R` postaví cestu, `I` zavlažování, `M` důl, `F` opevní jednotku, mezerník ji nechá do příštího tahu, `N` vybere další jednotku.
 - `Enter` ukončí tah, `Esc` zruší výběr.
 - `T` otevře strom technologií. Na výzkum klikneš i v hlavičce a posuvníkem vedle nastavíš, kolik obchodu jde do výzkumu a kolik do zlata.
+- Klik na technologii ve stromu otevře její stránku. Vzdálenou technologii jde nastavit jako cíl a hra k ní bude zkoumat sama.
+- Dvojklik na město nebo tlačítko `Otevřít město` ukáže obrazovku města. Klikem na políčko v okolí města přesuneš obyvatele.
 - Mapu přiblížíš roztažením prstů na trackpadu, `Ctrl` a kolečkem myši, tlačítky v rohu mapy nebo klávesami `+` a `−`. Nula vrátí celou mapu.
 - Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením.
 
@@ -59,9 +61,18 @@ src/core/        herní jádro, žádná vazba na prohlížeč
   world.ts       pomocné funkce pro čtení mapy a výnosů
   events.ts      události pro záznam a pro AI
   view.ts        pohled hráče, jediný vstup pro AI
+  economy.ts     technologie, cíl výzkumu, zlato, co jde stavět
 src/web/         vykreslení do Canvasu, ovládání a české texty
+  render.ts      mapa, terén, města
+  unitArt.ts     figurky jednotek
+  buildingArt.ts budovy a divy pro obrazovku města a encyklopedii
+  cityScreen.ts  obrazovka města
+  techTree.ts    plakát se stromem technologií a stránky technologií
+  techIcons.ts   ikony technologií
+  encyclopedia.ts texty ke každé technologii
 tests/           automatické testy
 tools/           skripty, které běží v Node bez prohlížeče
+tools/preview/   náhledy figurek, budov a uložená hra pro snímky obrazovky
 ```
 
 ## Pravidla, která v kódu držíme

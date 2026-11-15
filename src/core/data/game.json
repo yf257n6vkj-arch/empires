@@ -14,7 +14,7 @@
   "martialLawMax": 3,
   "maxCitySize": 8,
   "researchCostBase": 6,
-  "researchCostPerTech": 0.65,
+  "researchCostPerTech": 0.55,
   "startingGold": 30,
   "startingScienceRate": 50,
   "rateStep": 10,

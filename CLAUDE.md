@@ -19,7 +19,7 @@ Browser turn-based strategy in the style of Civilization 1, built by Michal with
 4. `GameState` is a plain JSON-serialisable object. Turn functions are pure: they return a new state and never mutate the input.
 5. Rule numbers live in `src/core/data/*.json`, not in code.
 6. `src/core` has no dependency on the browser (enforced by `tsconfig.core.json`).
-7. No names, graphics or texts from the original Civilization games. Graphics are drawn with code.
+7. No names, graphics or texts from the original Civilization games. Graphics are drawn with code or painted for us by Gemini (encyclopedia pictures, unit and city sprites); terrain stays drawn with code.
 
 ## Conventions
 

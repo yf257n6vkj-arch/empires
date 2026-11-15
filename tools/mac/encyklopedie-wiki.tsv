@@ -1,0 +1,98 @@
+unit-settlers	Kolonizace
+unit-warriors	Válečník
+unit-spearmen	Hoplíté
+unit-horsemen	Jízda
+unit-archers	Lučištník
+unit-swordsmen	Římská legie
+unit-chariot	Válečný vůz
+unit-catapult	Katapult
+unit-knights	Rytíř
+unit-musketeers	Mušketýr
+unit-cannon	Kanón
+unit-riflemen	Pěchota
+unit-artillery	Dělostřelectvo
+unit-mechInf	Bojové vozidlo pěchoty
+unit-tank	Tank
+unit-diplomat	Diplomat
+unit-caravan	Karavana
+unit-trireme	Triéra
+unit-sail	Karavela
+unit-frigate	Fregata
+unit-ironclad	Pancéřová loď
+unit-cruiser	Křižník
+unit-battleship	Bitevní loď
+unit-submarine	Ponorka
+unit-transport	Nákladní loď
+unit-carrier	Letadlová loď
+unit-fighter	Stíhací letoun
+unit-bomber	Bombardovací letoun
+unit-nuclear	Jaderná zbraň
+gov-anarchy	Anarchie
+gov-despotism	Despocie
+gov-monarchy	Monarchie
+gov-communism	Komunismus
+gov-republic	Republika
+gov-democracy	Demokracie
+bld-palace	Palác
+bld-granary	Sýpka
+bld-temple	Chrám
+bld-walls	Hradby
+bld-barracks	Kasárna
+bld-library	Knihovna
+bld-marketplace	Tržiště
+bld-courthouse	Soud
+bld-harbour	Přístav
+bld-amphitheater	Amfiteátr
+bld-aqueduct	Akvadukt
+bld-cathedral	Katedrála
+bld-university	Univerzita
+bld-bank	Banka
+bld-factory	Továrna
+bld-powerPlant	Tepelná elektrárna
+bld-hydroPlant	Vodní elektrárna
+bld-nuclearPlant	Jaderná elektrárna
+bld-manufacturingPlant	Průmyslový robot
+bld-massTransit	Městská hromadná doprava
+bld-recyclingCenter	Recyklace
+bld-researchLab	Laboratoř
+bld-coastalFortress	Pobřežní dělostřelectvo
+bld-sdiDefense	Protiraketová obrana
+bld-ssStructural	Mezinárodní vesmírná stanice
+bld-ssComponent	Raketový motor
+bld-ssModule	Kosmická loď
+wdr-stoneCircle	Stonehenge
+wdr-pyramids	Pyramidy v Gíze
+wdr-colossus	Rhódský kolos
+wdr-hangingGardens	Visuté zahrady Semiramidiny
+wdr-greatWall	Velká čínská zeď
+wdr-lighthouse	Alexandrijský maják
+wdr-oracle	Delfská věštírna
+wdr-greatLibrary	Alexandrijská knihovna
+wdr-hallOfScholars	Platónská Akademie
+wdr-greatObservatory	Hvězdárna
+wdr-circumnavigation	Magalhãesova výprava
+wdr-sistineChapel	Sixtinská kaple
+wdr-stVitus	Katedrála svatého Víta, Václava a Vojtěcha
+wdr-globeTheatre	Globe Theatre
+wdr-grandBazaar	Velký bazar
+wdr-royalSociety	Královská společnost
+wdr-darwinVoyage	HMS Beagle
+wdr-womensSuffrage	Volební právo žen
+wdr-hooverDam	Hooverova přehrada
+wdr-unitedNations	Organizace spojených národů
+wdr-manhattanProject	Projekt Manhattan
+wdr-setiProgram	SETI
+wdr-apolloProgram	Program Apollo
+wdr-genomeProject	Projekt lidského genomu
+ter-ocean	Oceán
+ter-grassland	Louka
+ter-plains	Step
+ter-forest	Les
+ter-hills	Pahorkatina
+ter-mountains	Hora
+ter-desert	Poušť
+imp-road	Silnice
+imp-irrigation	Zavlažování
+imp-mine	Důl
+imp-railroad	Železniční trať
+imp-fortress	Pevnost

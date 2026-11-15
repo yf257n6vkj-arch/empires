@@ -1,15 +1,17 @@
 #!/bin/bash
 # Stáhne z české Wikipedie texty článků k technologiím hry Empires, aby je Claude mohl porovnat s texty ve hře.
-# Spuštění v Terminálu:  bash ~/Desktop/Claude/Empires/wiki.sh
+# Spuštění v Terminálu:  bash ~/Desktop/Claude/Empires/wiki.sh [seznam.tsv] [složka]
 # Články, které už jsou stažené, přeskočí. Wikipedie nemá ráda rychlé dotazy, proto skript mezi nimi čeká.
 cd "$(dirname "$0")" || exit 1
-mkdir -p wiki
-total=$(grep -c . wiki.tsv)
+LIST="${1:-wiki.tsv}"
+OUT="${2:-wiki}"
+mkdir -p "$OUT"
+total=$(grep -c . "$LIST")
 n=0
 while IFS=$'\t' read -r id title; do
   n=$((n + 1))
   [ -z "$id" ] && continue
-  if [ -s "wiki/$id.json" ] && head -c 1 "wiki/$id.json" | grep -q '{' && ! grep -q '"missing"' "wiki/$id.json"; then
+  if [ -s "$OUT/$id.json" ] && head -c 1 "$OUT/$id.json" | grep -q '{' && ! grep -q '"missing"' "$OUT/$id.json"; then
     echo "[$n/$total] $title už je stažený"
     continue
   fi
@@ -18,12 +20,12 @@ while IFS=$'\t' read -r id title; do
       -H "User-Agent: EmpiresGame/1.0 (rodinny projekt; michal)" \
       --data-urlencode "action=query" --data-urlencode "format=json" --data-urlencode "redirects=1" \
       --data-urlencode "prop=extracts|info" --data-urlencode "explaintext=1" --data-urlencode "inprop=url" \
-      --data-urlencode "titles=$title" -o "wiki/$id.json"
-    if head -c 1 "wiki/$id.json" | grep -q '{'; then break; fi
+      --data-urlencode "titles=$title" -o "$OUT/$id.json"
+    if head -c 1 "$OUT/$id.json" | grep -q '{'; then break; fi
     echo "  Wikipedie chce zpomalit, čekám $((attempt * 10)) s"
     sleep $((attempt * 10))
   done
   echo "[$n/$total] $title"
   sleep 2
-done < wiki.tsv
+done < "$LIST"
 echo "Hotovo. Napiš Claudovi."

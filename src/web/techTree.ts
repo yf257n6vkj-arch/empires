@@ -31,6 +31,8 @@ export interface TreeHost {
   sciencePerTurn(): number;
   chooseResearch(tech: TechId): void;
   chooseGoal(tech: TechId): void;
+  /** Opens the encyclopedia page of something a technology unlocks. */
+  openEntry?(kind: "unit" | "building" | "government" | "improvement", id: string): void;
 }
 
 type Unlock =
@@ -344,7 +346,7 @@ export function createTechTree(host: TreeHost) {
           <div class="tp-unlocks">${
             unlocks.length
               ? unlocks
-                  .map((u, k) => `<div class="tp-unlock" data-k="${k}"><div class="tp-portrait"></div><div>${unlockDetail(u)}</div></div>`)
+                  .map((u, k) => `<button type="button" class="tp-unlock" data-k="${k}" title="Otevřít v encyklopedii"><div class="tp-portrait"></div><div>${unlockDetail(u)}</div></button>`)
                   .join("")
               : `<span class="muted">Sama nic neodemkne, ale bez ní se nedostaneš k dalším objevům.</span>`
           }</div>
@@ -366,6 +368,12 @@ export function createTechTree(host: TreeHost) {
       else if (u.kind === "government") slot.append(buildingPortraitCanvas("palace", 76, 64));
       else slot.innerHTML = techIconSvg(t, TECHS[t].era, 56);
     });
+    page.querySelectorAll<HTMLButtonElement>(".tp-unlock").forEach((b) =>
+      b.addEventListener("click", () => {
+        const u = unlocks[Number(b.dataset.k)];
+        if (u && host.openEntry) host.openEntry(u.kind, u.id);
+      }),
+    );
     page.querySelector('[data-act="close"]')?.addEventListener("click", () => page.close());
     page.querySelector('[data-act="research"]')?.addEventListener("click", () => {
       host.chooseResearch(t);

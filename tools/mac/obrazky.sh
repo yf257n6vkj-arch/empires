@@ -1,6 +1,6 @@
 #!/bin/bash
 # Vygeneruje obrázky k technologiím hry Empires přes Gemini API od Googlu.
-# Spuštění v Terminálu ve složce s tímto souborem:  bash obrazky.sh TVŮJ_API_KLÍČ
+# Spuštění v Terminálu ve složce s tímto souborem:  bash obrazky.sh TVŮJ_API_KLÍČ [zadani.tsv] [složka]
 # Hotové obrázky přeskakuje, takže přerušený běh stačí pustit znovu.
 
 KEY="${1:-$GEMINI_API_KEY}"
@@ -10,13 +10,15 @@ if [ -z "$KEY" ]; then
   echo "Chybí klíč. Spusť: bash obrazky.sh TVŮJ_API_KLÍČ"
   exit 1
 fi
-mkdir -p obrazky
-total=$(grep -c . zadani.tsv)
+LIST="${2:-zadani.tsv}"
+OUT="${3:-obrazky}"
+mkdir -p "$OUT"
+total=$(grep -c . "$LIST")
 n=0
 while IFS=$'\t' read -r id prompt; do
   n=$((n + 1))
   [ -z "$id" ] && continue
-  if [ -s "obrazky/$id.jpg" ]; then
+  if [ -s "$OUT/$id.jpg" ]; then
     echo "[$n/$total] $id už je hotový"
     continue
   fi
@@ -32,7 +34,7 @@ while IFS=$'\t' read -r id prompt; do
       data=$(grep -o '"data": *"[A-Za-z0-9+/=\\u]*"' /tmp/empires-response.json | head -1 \
         | sed -e 's/^"data": *"//' -e 's/"$//' -e 's/\\u003d/=/g')
       if [ -n "$data" ]; then
-        printf '%s' "$data" | base64 -D > "obrazky/$id.jpg" 2>/dev/null || printf '%s' "$data" | base64 -d > "obrazky/$id.jpg"
+        printf '%s' "$data" | base64 -D > "$OUT/$id.jpg" 2>/dev/null || printf '%s' "$data" | base64 -d > "$OUT/$id.jpg"
         echo "[$n/$total] $id hotovo"
         ok=1
         break
@@ -51,6 +53,6 @@ while IFS=$'\t' read -r id prompt; do
     fi
   done
   [ "$ok" = "1" ] || echo "[$n/$total] $id se nepovedl, při dalším spuštění ho zkusím znovu"
-done < zadani.tsv
+done < "$LIST"
 rm -f /tmp/empires-request.json /tmp/empires-response.json
-echo "Hotovo. Obrázky jsou ve složce obrazky. Napiš Claudovi."
+echo "Hotovo. Obrázky jsou ve složce $OUT."

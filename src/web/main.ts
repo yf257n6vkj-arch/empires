@@ -64,6 +64,7 @@ import { createTechTree, unlockNames } from "./techTree";
 import { techIconSvg } from "./techIcons";
 import { createCityScreen } from "./cityScreen";
 import { createEmpireDialogs } from "./empire";
+import { createCodex, entryKey } from "./codex";
 
 const HUMAN = 0;
 const PLAYER_COUNT = 4;
@@ -477,8 +478,11 @@ const empire = createEmpireDialogs($<HTMLDialogElement>("#empire-dialog"), {
   player: () => HUMAN,
   run,
   refresh,
+  openEntry: (key) => codex.show(key),
 });
 governmentButton.addEventListener("click", () => empire.openGovernment());
+const codex = createCodex($<HTMLDialogElement>("#codex-dialog"), { openTech: (t) => techTree.openPage(t) });
+$<HTMLButtonElement>("#codex").addEventListener("click", () => codex.open());
 spaceshipButton.addEventListener("click", () => empire.openSpaceship());
 
 function chooseResearch(tech: TechId): void {
@@ -499,6 +503,7 @@ const techTree = createTechTree({
   sciencePerTurn: () => empireTotals().science,
   chooseResearch,
   chooseGoal,
+  openEntry: (kind, id) => codex.show(entryKey(kind, id)),
 });
 
 function renderResearchPick(): void {
@@ -538,6 +543,7 @@ const cityScreen = createCityScreen({
   },
   drawInput: () => buildDrawInput(),
   say,
+  openEntry: (key) => codex.show(key),
 });
 
 function cityScreenOpen(): boolean {
@@ -659,7 +665,7 @@ function renderUnit(unit: Unit): void {
 
   const home = unit.homeCity !== null ? state.cities.find((c) => c.id === unit.homeCity)?.name : undefined;
   selectionPanel.innerHTML = `
-    <div class="panel-title"><h3>${rule.name}</h3><span class="sub">[${unit.x}, ${unit.y}] ${TERRAINS[terrain].name}</span></div>
+    <div class="panel-title"><h3><button type="button" class="linklike" data-codex="${entryKey("unit", unit.type)}" title="Co je to za jednotku? (klávesa E)">${rule.name}</button></h3><span class="sub">[${unit.x}, ${unit.y}] ${TERRAINS[terrain].name}</span></div>
     <p class="facts">Pohyb: ${moves}${home ? ` · domov: ${escapeHtml(home)}` : ""}<br>
     <span class="muted">${status || "Klikni na mapu, kam má jít."}</span></p>
     <div class="actions">${buttons.join("")}</div>`;
@@ -667,6 +673,7 @@ function renderUnit(unit: Unit): void {
   selectionPanel.querySelectorAll<HTMLButtonElement>("button[data-action]").forEach((b) =>
     b.addEventListener("click", () => doUnitAction(b.dataset.action!)),
   );
+  selectionPanel.querySelector<HTMLButtonElement>("[data-codex]")?.addEventListener("click", (e) => codex.show((e.currentTarget as HTMLElement).dataset.codex!));
 }
 
 function doUnitAction(action: string): void {
@@ -1038,10 +1045,15 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen()) return;
+  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen()) return;
   if (e.key.toLowerCase() === "t") {
     e.preventDefault();
     return techTree.open();
+  }
+  if (e.key.toLowerCase() === "e") {
+    e.preventDefault();
+    const unit = selectedUnit();
+    return unit ? codex.show(entryKey("unit", unit.type)) : codex.open();
   }
   const unit = selectedUnit();
   const dir = DIRECTIONS[e.key];

@@ -20,6 +20,7 @@ export interface EmpireHost {
   player(): number;
   run(command: Command): boolean;
   refresh(): void;
+  openEntry(key: string): void;
 }
 
 export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost) {
@@ -50,12 +51,18 @@ export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost)
         const button = current
           ? `<span class="tag">vládne teď</span>`
           : `<button type="button" data-gov="${g}" ${!known || p.revolution ? "disabled" : ""}>${known ? "Vyhlásit revoluci" : "Zatím neznáš"}</button>`;
-        return `<div class="gov ${current ? "on" : ""} ${known ? "" : "locked"}"><div><b>${escapeHtml(rule.name)}</b><div class="muted small">${escapeHtml(describeGovernment(rule))}</div></div>${button}</div>`;
+        return `<div class="gov ${current ? "on" : ""} ${known ? "" : "locked"}"><div><button type="button" class="linklike" data-entry="gov-${g}"><b>${escapeHtml(rule.name)}</b></button><div class="muted small">${escapeHtml(describeGovernment(rule))}</div></div>${button}</div>`;
       })
       .join("");
     frame(
       `Vláda: ${now.name}`,
       `${running}<p class="small">Revoluce znamená ${RULES.anarchyTurns} tahy anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami trvá jen jeden tah.</p>${rows}`,
+    );
+    dialog.querySelectorAll<HTMLButtonElement>("[data-entry]").forEach((b) =>
+      b.addEventListener("click", () => {
+        close();
+        host.openEntry(b.dataset.entry!);
+      }),
     );
     dialog.querySelectorAll<HTMLButtonElement>("[data-gov]").forEach((b) =>
       b.addEventListener("click", () => {

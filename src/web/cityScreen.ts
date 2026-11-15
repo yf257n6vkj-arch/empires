@@ -39,6 +39,8 @@ export interface CityHost {
   /** Background input for drawing the land around the city. */
   drawInput(): DrawInput;
   say(text: string): void;
+  /** Opens the encyclopedia at an entry. */
+  openEntry(key: string): void;
 }
 
 function plural(n: number, one: string, few: string, many: string): string {
@@ -732,9 +734,10 @@ export function createCityScreen(host: CityHost) {
       b.querySelector(".cs-opt-pic")!.append(pictureOf(o, 52, 40, c.owner));
       b.addEventListener("click", () => act({ type: "setProduction", cityId: c.id, item: o }));
     });
-    dialog.querySelectorAll<HTMLDivElement>(".cs-building").forEach((d) =>
-      d.querySelector(".pic")!.append(buildingPortraitCanvas(d.dataset.b as BuildingId, 44, 34)),
-    );
+    dialog.querySelectorAll<HTMLDivElement>(".cs-building").forEach((d) => {
+      d.querySelector(".pic")!.append(buildingPortraitCanvas(d.dataset.b as BuildingId, 44, 34));
+      d.addEventListener("click", () => host.openEntry(`${BUILDINGS[d.dataset.b as BuildingId].wonder ? "wdr" : "bld"}-${d.dataset.b}`));
+    });
     dialog.querySelectorAll<HTMLButtonElement>(".cs-unit").forEach((b) => {
       const pic = b.querySelector<HTMLSpanElement>(".pic")!;
       pic.append(unitPortraitCanvas(pic.dataset.type as never, c.owner, 40, 34));

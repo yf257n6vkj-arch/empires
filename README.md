@@ -2,7 +2,7 @@
 
 Tahová strategie do prohlížeče ve stylu Civilizace 1. Jedna partie má trvat 45 až 60 minut proti třem počítačovým soupeřům, kteří hrají rozumně a nepodvádějí. Celé zadání je v projektu Empires v Claudovi.
 
-Hotová je fáze 1 a probíhá fáze 2. Hráč zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají vlastní obrazovku s pohledem na město, spokojenost, korupci a znečištění, 21 budov a 5 divů světa a jde vyrábět 12 typů jednotek. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče.
+Hotová je fáze 1 a probíhá fáze 2. Hráč zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají vlastní obrazovku s pohledem na město, spokojenost, korupci a znečištění, 27 budov a 24 divů světa a jde vyrábět 29 typů jednotek včetně lodí a letadel. Říše si volí ze šesti vlád a může vyhrát vesmírnou lodí. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče.
 
 ## Jak se hra ovládá
 
@@ -47,7 +47,7 @@ Poslední příkaz vypíše adresu, typicky `http://localhost:5173`. Otevři ji 
 src/core/        herní jádro, žádná vazba na prohlížeč
   rng.ts         generátor náhody se semenem, jeho stav jde uložit
   rules.ts       načtení pravidel z datových souborů
-  data/          čísla pravidel v JSON (terén, jednotky, budovy, vylepšení, konstanty)
+  data/          čísla pravidel v JSON (terén, jednotky, budovy, vylepšení, vlády, konstanty)
   geometry.ts    mřížka, vzdálenosti, okruh města 21 políček
   mapgen.ts      generátor kontinentu
   start.ts       výběr startovních pozic
@@ -67,6 +67,7 @@ src/web/         vykreslení do Canvasu, ovládání a české texty
   unitArt.ts     figurky jednotek
   buildingArt.ts budovy a divy pro obrazovku města a encyklopedii
   cityScreen.ts  obrazovka města
+  empire.ts      dialogy vlády, vesmírné lodi a vítězství
   techTree.ts    plakát se stromem technologií a stránky technologií
   techIcons.ts   ikony technologií
   encyclopedia.ts texty ke každé technologii

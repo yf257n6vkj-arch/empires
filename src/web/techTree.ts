@@ -4,6 +4,8 @@
  */
 import {
   BUILDINGS,
+  GOVERNMENTS,
+  IMPROVEMENTS,
   canResearch,
   pathToTech,
   researchCost,
@@ -11,6 +13,8 @@ import {
   TECHS,
   UNIT_TYPES,
   type BuildingId,
+  type GovernmentId,
+  type ImprovementId,
   type Player,
   type TechId,
   type UnitTypeId,
@@ -19,7 +23,7 @@ import { buildingPortraitCanvas } from "./buildingArt";
 import { ERA_NAMES, TECH_PAGES, techPicture, wikiUrl } from "./encyclopedia";
 import { unitPortraitCanvas } from "./render";
 import { ERA_COLORS, techIconSvg } from "./techIcons";
-import { describeBuilding, escapeHtml } from "./texts";
+import { describeBuilding, describeGovernment, describeUnit, escapeHtml } from "./texts";
 
 export interface TreeHost {
   me(): Player;
@@ -29,10 +33,20 @@ export interface TreeHost {
   chooseGoal(tech: TechId): void;
 }
 
-type Unlock = { kind: "unit"; id: UnitTypeId } | { kind: "building"; id: BuildingId };
+type Unlock =
+  | { kind: "unit"; id: UnitTypeId }
+  | { kind: "building"; id: BuildingId }
+  | { kind: "government"; id: GovernmentId }
+  | { kind: "improvement"; id: ImprovementId };
 
 export function unlocksOf(tech: TechId): Unlock[] {
   return [
+    ...Object.values(GOVERNMENTS)
+      .filter((g) => g.requires === tech)
+      .map((g) => ({ kind: "government" as const, id: g.id })),
+    ...Object.values(IMPROVEMENTS)
+      .filter((i) => i.requires === tech)
+      .map((i) => ({ kind: "improvement" as const, id: i.id })),
     ...Object.values(UNIT_TYPES)
       .filter((u) => u.requires === tech)
       .map((u) => ({ kind: "unit" as const, id: u.id })),
@@ -42,10 +56,15 @@ export function unlocksOf(tech: TechId): Unlock[] {
   ];
 }
 
+function unlockName(u: Unlock): string {
+  if (u.kind === "unit") return UNIT_TYPES[u.id].name;
+  if (u.kind === "government") return `vláda ${GOVERNMENTS[u.id].name.toLowerCase()}`;
+  if (u.kind === "improvement") return IMPROVEMENTS[u.id].name;
+  return BUILDINGS[u.id].wonder ? `div ${BUILDINGS[u.id].name}` : BUILDINGS[u.id].name;
+}
+
 export function unlockNames(tech: TechId): string[] {
-  return unlocksOf(tech).map((u) =>
-    u.kind === "unit" ? UNIT_TYPES[u.id].name : BUILDINGS[u.id].wonder ? `div ${BUILDINGS[u.id].name}` : BUILDINGS[u.id].name,
-  );
+  return unlocksOf(tech).map(unlockName);
 }
 
 /** Technologies that need `tech`. */
@@ -134,6 +153,7 @@ const GLYPH_WONDER = `<svg viewBox="0 0 16 16" width="13" height="13"><path d="M
 
 function unlockChip(u: Unlock): string {
   if (u.kind === "unit") return `<span class="chip">${GLYPH_UNIT}${escapeHtml(UNIT_TYPES[u.id].name)}</span>`;
+  if (u.kind === "government" || u.kind === "improvement") return `<span class="chip">${GLYPH_BUILDING}${escapeHtml(unlockName(u))}</span>`;
   const b = BUILDINGS[u.id];
   return `<span class="chip ${b.wonder ? "wonder" : ""}">${b.wonder ? GLYPH_WONDER : GLYPH_BUILDING}${escapeHtml(b.name)}</span>`;
 }
@@ -338,7 +358,10 @@ export function createTechTree(host: TreeHost) {
     unlocks.forEach((u, k) => {
       const slot = page.querySelector<HTMLDivElement>(`.tp-unlock[data-k="${k}"] .tp-portrait`);
       if (!slot) return;
-      slot.append(u.kind === "unit" ? unitPortraitCanvas(u.id, 0, 76, 64) : buildingPortraitCanvas(u.id, 76, 64));
+      if (u.kind === "unit") slot.append(unitPortraitCanvas(u.id, 0, 76, 64));
+      else if (u.kind === "building") slot.append(buildingPortraitCanvas(u.id, 76, 64));
+      else if (u.kind === "government") slot.append(buildingPortraitCanvas("palace", 76, 64));
+      else slot.innerHTML = techIconSvg(t, TECHS[t].era, 56);
     });
     page.querySelector('[data-act="close"]')?.addEventListener("click", () => page.close());
     page.querySelector('[data-act="research"]')?.addEventListener("click", () => {
@@ -361,7 +384,14 @@ export function createTechTree(host: TreeHost) {
   function unlockDetail(u: Unlock): string {
     if (u.kind === "unit") {
       const r = UNIT_TYPES[u.id];
-      return `<b>${escapeHtml(r.name)}</b><br><span class="muted">jednotka · útok ${r.attack}, obrana ${r.defense}, pohyb ${r.moves} · ${r.cost} štítů</span>`;
+      return `<b>${escapeHtml(r.name)}</b><br><span class="muted">jednotka · ${escapeHtml(describeUnit(r))}</span>`;
+    }
+    if (u.kind === "government") {
+      return `<b>Vláda ${escapeHtml(GOVERNMENTS[u.id].name.toLowerCase())}</b><br><span class="muted">${escapeHtml(describeGovernment(GOVERNMENTS[u.id]))}</span>`;
+    }
+    if (u.kind === "improvement") {
+      const text = u.id === "railroad" ? "osadník ji staví na cestu, přidá polovinu štítů a pohyb po ní nic nestojí" : "osadník ji staví v krajině, zdvojí obranu jednotek (s bojem ve fázi 3)";
+      return `<b>${escapeHtml(IMPROVEMENTS[u.id].name)}</b><br><span class="muted">${text}</span>`;
     }
     const b = BUILDINGS[u.id];
     return `<b>${b.wonder ? "Div světa " : ""}${escapeHtml(b.name)}</b><br><span class="muted">${escapeHtml(describeBuilding(b))}</span>`;

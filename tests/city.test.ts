@@ -42,7 +42,7 @@ describe("city economy", () => {
   it("gives the centre a free road and irrigation", () => {
     const s = foundAt(GRASS);
     const report = cityReport(s, s.cities[0]!);
-    // centre grassland 2+1 food, min 1 shield, 1 trade; one worked grassland 2 food
+    // centre grassland 2+1 food (spared by despotism), min 1 shield, 1 trade; one worked grassland 2 food
     expect(report.production).toEqual({ food: 5, shields: 1, trade: 1 });
     expect(report.foodSurplus).toBe(5 - RULES.foodPerCitizen);
   });

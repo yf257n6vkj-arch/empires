@@ -4,7 +4,7 @@ document.body.style.background = "#2a2622";
 for (const id of BUILDING_IDS) {
   const d = document.createElement("div");
   d.style.cssText = "display:inline-block;margin:6px;color:#eee;font:12px sans-serif;text-align:center";
-  d.append(buildingPortraitCanvas(id, 220, 170), document.createElement("br"), id);
+  d.append(buildingPortraitCanvas(id, 160, 124), document.createElement("br"), id);
   document.body.append(d);
 }
 const c = document.createElement("canvas");

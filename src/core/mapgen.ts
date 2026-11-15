@@ -60,6 +60,8 @@ export function generateMap(rng: Rng, options: MapOptions = DEFAULT_MAP_OPTIONS)
         road: empty(),
         irrigation: empty(),
         mine: empty(),
+        railroad: empty(),
+        fortress: empty(),
       };
     }
   }

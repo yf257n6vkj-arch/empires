@@ -76,7 +76,7 @@ describe("technologies", () => {
 
   it("keeps science collected while nothing is being researched", () => {
     let s = cityState();
-    s = apply(s, { type: "setScienceRate", rate: 100 });
+    s.players[0]!.scienceRate = 100;
     const science = cityReport(s, s.cities[0]!).science;
     expect(science).toBeGreaterThan(0);
     s = apply(s, { type: "endTurn" });
@@ -118,25 +118,26 @@ describe("technologies", () => {
 });
 
 describe("trade, science and gold", () => {
-  it("splits trade by the slider and refuses odd rates", () => {
+  it("splits trade by the slider and refuses odd rates and rates the government does not allow", () => {
     let s = cityState();
     s.map.road.fill(1);
-    s = apply(s, { type: "setScienceRate", rate: 100 });
-    const all = cityReport(s, s.cities[0]!);
-    expect(all.gold).toBe(0);
-    s = apply(s, { type: "setScienceRate", rate: 0 });
-    const none = cityReport(s, s.cities[0]!);
-    expect(none.science).toBe(0);
-    expect(none.gold).toBe(all.science);
+    s = apply(s, { type: "setScienceRate", rate: 60 });
+    const most = cityReport(s, s.cities[0]!);
+    s = apply(s, { type: "setScienceRate", rate: 40 });
+    const least = cityReport(s, s.cities[0]!);
+    expect(most.science + most.gold).toBe(least.science + least.gold);
+    expect(most.science).toBe(least.gold);
     expect(applyCommand(s, { type: "setScienceRate", rate: 55 })).toEqual({ ok: false, error: "invalidRate" });
     expect(applyCommand(s, { type: "setScienceRate", rate: 110 })).toEqual({ ok: false, error: "invalidRate" });
+    // Despotism lets at most 60 % go to either side.
+    expect(applyCommand(s, { type: "setScienceRate", rate: 70 })).toEqual({ ok: false, error: "invalidRate" });
   });
 
   it("adds the library bonus to science", () => {
     let s = cityState();
     s.map.road.fill(1);
     s.cities[0]!.size = 3;
-    s = apply(s, { type: "setScienceRate", rate: 100 });
+    s.players[0]!.scienceRate = 100;
     s = apply(s, { type: "endTurn" });
     const before = cityReport(s, s.cities[0]!).science;
     s.cities[0]!.buildings.push("library");
@@ -145,7 +146,7 @@ describe("trade, science and gold", () => {
 
   it("pays building upkeep and sells a building when gold runs out", () => {
     let s = cityState();
-    s = apply(s, { type: "setScienceRate", rate: 100 });
+    s.players[0]!.scienceRate = 100;
     s.cities[0]!.buildings.push("temple", "amphitheater");
     s.players[0]!.gold = 0;
     const result = applyCommand(s, { type: "endTurn" });

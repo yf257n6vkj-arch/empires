@@ -1,0 +1,11 @@
+{
+  "_comment": "Vlády podle Civilizace 1, zjednodušené. tilePenalty: políčko, které dává víc než 2 jídla, štíty nebo obchodu, dá o jedno méně (střed města ne). tradeBonus: políčko s obchodem dá o jeden víc. maxRate: nejvyšší podíl obchodu pro vědu i pro zlato v procentech, anarchie nedá nic. corruptionPct: kolik procent korupce podle vzdálenosti od paláce platí, corruptionFlatPct: korupce stejná ve všech městech. martialLaw: vojáci ve městě uklidní nespokojené. militaryUnhappy: kolik obyvatel rozladí každá vojenská jednotka mimo vlastní města. freeUnits: kolik jednotek město živí zdarma, každá další stojí štít. settlerFood: kolik jídla stojí osadník. senate: senát vynutí mír, začne platit s diplomacií ve fázi 3.",
+  "governments": [
+    { "id": "anarchy", "name": "Anarchie", "requires": null, "tilePenalty": true, "tradeBonus": false, "maxRate": 0, "corruptionPct": 100, "corruptionFlatPct": 0, "martialLaw": true, "militaryUnhappy": 0, "freeUnits": 3, "settlerFood": 1, "senate": false },
+    { "id": "despotism", "name": "Despocie", "requires": null, "tilePenalty": true, "tradeBonus": false, "maxRate": 60, "corruptionPct": 100, "corruptionFlatPct": 0, "martialLaw": true, "militaryUnhappy": 0, "freeUnits": 3, "settlerFood": 1, "senate": false },
+    { "id": "monarchy", "name": "Monarchie", "requires": "monarchy", "tilePenalty": false, "tradeBonus": false, "maxRate": 70, "corruptionPct": 70, "corruptionFlatPct": 0, "martialLaw": true, "militaryUnhappy": 0, "freeUnits": 3, "settlerFood": 1, "senate": false },
+    { "id": "communism", "name": "Komunismus", "requires": "communism", "tilePenalty": false, "tradeBonus": false, "maxRate": 80, "corruptionPct": 0, "corruptionFlatPct": 15, "martialLaw": true, "militaryUnhappy": 0, "freeUnits": 3, "settlerFood": 1, "senate": false },
+    { "id": "republic", "name": "Republika", "requires": "republic", "tilePenalty": false, "tradeBonus": true, "maxRate": 80, "corruptionPct": 50, "corruptionFlatPct": 0, "martialLaw": false, "militaryUnhappy": 1, "freeUnits": 0, "settlerFood": 2, "senate": true },
+    { "id": "democracy", "name": "Demokracie", "requires": "democracy", "tilePenalty": false, "tradeBonus": true, "maxRate": 90, "corruptionPct": 0, "corruptionFlatPct": 0, "martialLaw": false, "militaryUnhappy": 2, "freeUnits": 0, "settlerFood": 2, "senate": true }
+  ]
+}

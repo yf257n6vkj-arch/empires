@@ -2,13 +2,23 @@
  * Ending a player's turn and starting the next one. Players move one after
  * another; when the last player ends, a new game turn begins.
  */
-import { processCityDraft } from "./city";
-import { buildingUpkeep, nextStepToGoal, researchCost, sellBuildingsForUpkeepDraft } from "./economy";
-import { continueGotoDraft } from "./units";
+import { processCityDraft, removeUnitDraft } from "./city";
+import {
+  buildingUpkeep,
+  clampRate,
+  learnTechDraft,
+  nextStepToGoal,
+  researchCost,
+  sellBuildingsForUpkeepDraft,
+  wonderFlag,
+  wonderOwner,
+} from "./economy";
+import { aircraftSafe, continueGotoDraft, turnMoves } from "./units";
 import type { GameEvent } from "./events";
-import { IMPROVEMENTS, type ImprovementId } from "./rules";
+import { BUILDINGS, IMPROVEMENTS, RULES, TECH_IDS, UNIT_TYPES, type ImprovementId } from "./rules";
+import { Rng } from "./rng";
 import type { GameState, PlayerId, Unit } from "./state";
-import { fullMoves, idx } from "./world";
+import { cityAt, idx, touchesLand } from "./world";
 
 /** Ends the current player's turn and starts the next player's (mutates the draft). */
 export function endTurnDraft(draft: GameState, events: GameEvent[]): void {
@@ -25,11 +35,61 @@ export function endTurnDraft(draft: GameState, events: GameEvent[]): void {
   for (const unit of draft.units.filter((u) => u.owner === player && u.work)) {
     progressWorkDraft(draft, unit, events);
   }
+  perilsDraft(draft, player, events);
 
   const next = (player + 1) % draft.players.length;
-  if (next === 0) draft.turn += 1;
+  if (next === 0) {
+    draft.turn += 1;
+    spaceshipsDraft(draft, events);
+  }
   draft.currentPlayer = next;
   startTurnDraft(draft, next, events);
+}
+
+/**
+ * Dangers at the end of a turn: aircraft away from a city or carrier burn
+ * fuel and crash when it runs out, triremes away from the coast may sink.
+ */
+function perilsDraft(draft: GameState, player: PlayerId, events: GameEvent[]): void {
+  const rng = Rng.fromState(draft.rng);
+  const safeTriremes = wonderFlag(draft, player, "safeTriremes");
+  for (const unit of draft.units.filter((u) => u.owner === player)) {
+    if (!draft.units.includes(unit)) continue;
+    const rule = UNIT_TYPES[unit.type];
+    if (rule.domain === "air") {
+      if (aircraftSafe(draft, unit)) {
+        unit.turnsAloft = 0;
+        continue;
+      }
+      unit.turnsAloft += 1;
+      if (unit.turnsAloft >= (rule.fuel ?? 1)) {
+        removeUnitDraft(draft, unit.id);
+        events.push({ type: "unitLost", unitId: unit.id, unitType: unit.type, owner: player, reason: "fuel" });
+      }
+    } else if (rule.coastal && !safeTriremes && !cityAt(draft, unit)) {
+      const nearCoast = touchesLand(draft, unit);
+      if (!nearCoast && rng.chance(RULES.triremeLossPct / 100)) {
+        removeUnitDraft(draft, unit.id);
+        events.push({ type: "unitLost", unitId: unit.id, unitType: unit.type, owner: player, reason: "sea" });
+      }
+    }
+  }
+  draft.rng = rng.getState();
+}
+
+/** Spaceships that reach their destination this turn land, or are lost. */
+function spaceshipsDraft(draft: GameState, events: GameEvent[]): void {
+  const rng = Rng.fromState(draft.rng);
+  for (const p of draft.players) {
+    const ship = p.spaceship;
+    if (ship.arrivalTurn === null || draft.turn < ship.arrivalTurn) continue;
+    const success = rng.int(100) < ship.successPct;
+    events.push({ type: "spaceshipArrived", player: p.id, success });
+    if (success && !draft.victory) draft.victory = { player: p.id, kind: "space", turn: draft.turn };
+    if (!success) Object.assign(ship, { structural: 0, component: 0, module: 0, launchedTurn: null, arrivalTurn: null, successPct: 0 });
+    else ship.arrivalTurn = null;
+  }
+  draft.rng = rng.getState();
 }
 
 /** Pays upkeep, adds gold and science, and finishes research (mutates the draft). */
@@ -55,9 +115,34 @@ function economyDraft(draft: GameState, playerId: PlayerId, science: number, gol
   }
 }
 
+/** A library of the world: the owner learns every technology that enough other players know. */
+function libraryDraft(draft: GameState, playerId: PlayerId, events: GameEvent[]): void {
+  for (const id of Object.keys(BUILDINGS) as (keyof typeof BUILDINGS)[]) {
+    const need = BUILDINGS[id].effects.techsFromOthers;
+    if (!need || wonderOwner(draft, id) !== playerId) continue;
+    const me = draft.players[playerId]!;
+    for (const tech of TECH_IDS) {
+      if (me.techs.includes(tech)) continue;
+      const knownBy = draft.players.filter((p) => p.id !== playerId && p.techs.includes(tech)).length;
+      if (knownBy >= need) learnTechDraft(draft, playerId, tech, events);
+    }
+  }
+}
+
 function startTurnDraft(draft: GameState, player: PlayerId, events: GameEvent[]): void {
+  const p = draft.players[player];
+  if (p?.revolution) {
+    p.revolution.turnsLeft -= 1;
+    if (p.revolution.turnsLeft <= 0) {
+      p.government = p.revolution.target;
+      p.revolution = null;
+      p.scienceRate = clampRate(p.scienceRate, p.government);
+      events.push({ type: "governmentChanged", player, government: p.government });
+    }
+  }
+  libraryDraft(draft, player, events);
   for (const unit of draft.units.filter((u) => u.owner === player)) {
-    unit.movesLeft = unit.work || unit.fortified ? 0 : fullMoves(unit);
+    unit.movesLeft = unit.work || unit.fortified ? 0 : turnMoves(draft, unit);
   }
   for (const unit of draft.units.filter((u) => u.owner === player && u.goto)) {
     continueGotoDraft(draft, unit, events);

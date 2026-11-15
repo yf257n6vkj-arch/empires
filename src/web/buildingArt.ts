@@ -869,6 +869,713 @@ function recyclingCenter(ctx: Ctx): void {
   }
 }
 
+function researchLab(ctx: Ctx): void {
+  block(ctx, -20, 0, 34, 16, 14, "#eef0f2");
+  ctx.fillStyle = "#6fa3c8";
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 7; c++) ctx.fillRect(-18.6 + c * 4.6, -14 + r * 4.4, 3.6, 3);
+  ctx.fillStyle = "#3a3f46";
+  ctx.fillRect(-4, -5, 6, 5);
+  // Dish on the roof.
+  ctx.save();
+  ctx.translate(6, -22);
+  ctx.rotate(-0.5);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 6, 2.2, 0, 0, Math.PI);
+  ctx.fillStyle = "#f6f7f8";
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = "#5b6670";
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(6, -21);
+  ctx.lineTo(6, -16);
+  ctx.stroke();
+  dome(ctx, -12, -16 + 14 * DY * 0.5, 4.5, "#d8dde2");
+}
+
+function coastalFortress(ctx: Ctx): void {
+  ctx.fillStyle = "#4f86b4";
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 30, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Angled bastion.
+  poly(ctx, [-24, 0, -18, -10, 18, -10, 24, 0], tone(STONE, 0.95));
+  poly(ctx, [-18, -10, -14, -13, 14, -13, 18, -10], tone(STONE, 1.12));
+  for (const x of [-12, -2, 8]) {
+    ctx.fillStyle = "#2b2b2b";
+    ctx.beginPath();
+    ctx.ellipse(x, -6, 1.6, 1.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#3a3a3a";
+    ctx.fillRect(x - 6, -6.6, 6, 1.2);
+  }
+  block(ctx, -4, -13, 9, 7, 6, STONE);
+  flag(ctx, 1, -20, 8, "#c2412f");
+}
+
+function sdiDefense(ctx: Ctx): void {
+  block(ctx, -20, 0, 18, 7, 10, "#c9cdd2");
+  dome(ctx, -11 + 5 * DX, -7 + 5 * DY, 8, "#eef0f2");
+  // Launcher with missiles pointing up.
+  poly(ctx, [4, 0, 20, 0, 20, -4, 4, -4], "#6d7780");
+  for (const x of [7, 11, 15]) {
+    ctx.save();
+    ctx.translate(x, -4);
+    ctx.rotate(-0.25);
+    ctx.fillStyle = "#f2f2ee";
+    ctx.fillRect(-1, -16, 2, 16);
+    ctx.fillStyle = "#c2412f";
+    ctx.beginPath();
+    ctx.moveTo(-1, -16);
+    ctx.lineTo(0, -19);
+    ctx.lineTo(1, -16);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function ssStructural(ctx: Ctx): void {
+  ctx.strokeStyle = "#8a96a2";
+  ctx.lineWidth = 1.2;
+  for (const x of [-10, 10]) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x * 0.6, -40);
+    ctx.stroke();
+  }
+  ctx.lineWidth = 0.6;
+  for (let y = 0; y > -40; y -= 6) {
+    const w = 10 - (-y / 40) * 4;
+    ctx.beginPath();
+    ctx.moveTo(-w, y);
+    ctx.lineTo(w, y - 6);
+    ctx.moveTo(w, y);
+    ctx.lineTo(-w, y - 6);
+    ctx.moveTo(-w, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+}
+
+function ssComponent(ctx: Ctx): void {
+  poly(ctx, [-10, 0, 10, 0, 7, -6, -7, -6], "#6d7780");
+  const g = ctx.createLinearGradient(-8, 0, 8, 0);
+  g.addColorStop(0, "#d9dde0");
+  g.addColorStop(1, "#5d656c");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-3, -30);
+  ctx.lineTo(3, -30);
+  ctx.lineTo(4, -20);
+  ctx.quadraticCurveTo(9, -12, 9, -6);
+  ctx.lineTo(-9, -6);
+  ctx.quadraticCurveTo(-9, -12, -4, -20);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.fillStyle = "#c2412f";
+  ctx.fillRect(-3, -28, 6, 2);
+}
+
+function ssModule(ctx: Ctx): void {
+  // Solar panels.
+  for (const dir of [-1, 1]) {
+    ctx.fillStyle = "#2f4f86";
+    ctx.fillRect(dir > 0 ? 8 : -26, -24, 18, 8);
+    ctx.strokeStyle = "#9fb6d8";
+    ctx.lineWidth = 0.4;
+    for (let k = 1; k < 6; k++) {
+      ctx.beginPath();
+      ctx.moveTo((dir > 0 ? 8 : -26) + k * 3, -24);
+      ctx.lineTo((dir > 0 ? 8 : -26) + k * 3, -16);
+      ctx.stroke();
+    }
+  }
+  const g = ctx.createLinearGradient(-8, 0, 8, 0);
+  g.addColorStop(0, "#f2f3f4");
+  g.addColorStop(1, "#8e98a2");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.roundRect(-8, -34, 16, 30, 4);
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.fillStyle = "#2c3440";
+  ctx.beginPath();
+  ctx.arc(0, -22, 2.4, 0, Math.PI * 2);
+  ctx.fill();
+  poly(ctx, [-4, -4, 4, -4, 6, 0, -6, 0], "#6d7780");
+}
+
+// ---------- wonders of Civilization 1, under their historical names ----------
+
+function pyramid(ctx: Ctx, cx: number, base: number, w: number, h: number): void {
+  poly(ctx, [cx - w / 2, base, cx, base - h, cx + w * 0.1, base + 1], "#e8cf92");
+  poly(ctx, [cx + w * 0.1, base + 1, cx, base - h, cx + w / 2 + w * 0.2, base - 3], "#b89656");
+  ctx.strokeStyle = "rgba(120, 90, 40, 0.35)";
+  ctx.lineWidth = 0.4;
+  for (let k = 1; k < 6; k++) {
+    const t = k / 6;
+    ctx.beginPath();
+    ctx.moveTo(cx - (w / 2) * (1 - t), base - h * t);
+    ctx.lineTo(cx + w * 0.1 * (1 - t), base + 1 - (h + 1) * t);
+    ctx.stroke();
+  }
+}
+
+function pyramids(ctx: Ctx): void {
+  ctx.fillStyle = "#e4cf9a";
+  ctx.beginPath();
+  ctx.ellipse(0, -2, 34, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  pyramid(ctx, 16, -4, 18, 16);
+  pyramid(ctx, 4, -2, 24, 22);
+  pyramid(ctx, -14, 0, 30, 30);
+}
+
+function colossus(ctx: Ctx): void {
+  ctx.fillStyle = "#4f86b4";
+  ctx.beginPath();
+  ctx.ellipse(0, 1, 30, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  for (const x of [-18, 8]) block(ctx, x, 0, 10, 8, 6, STONE);
+  const bronze = "#b5813e";
+  // Legs astride the harbour entrance, body, arm with a torch.
+  ctx.strokeStyle = bronze;
+  ctx.lineCap = "round";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(-13, -8);
+  ctx.lineTo(-4, -28);
+  ctx.moveTo(13, -8);
+  ctx.lineTo(4, -28);
+  ctx.stroke();
+  const g = ctx.createLinearGradient(-6, 0, 6, 0);
+  g.addColorStop(0, "#e2b06a");
+  g.addColorStop(1, "#7a5224");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.roundRect(-5.5, -46, 11, 20, 3);
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(4, -43);
+  ctx.lineTo(10, -54);
+  ctx.moveTo(-4, -43);
+  ctx.lineTo(-8, -34);
+  ctx.stroke();
+  ctx.lineCap = "butt";
+  ctx.beginPath();
+  ctx.arc(0, -50, 3.6, 0, Math.PI * 2);
+  ctx.fillStyle = "#c8924a";
+  ctx.fill();
+  ctx.fillStyle = "#f7c94a";
+  ctx.beginPath();
+  ctx.moveTo(8.5, -56);
+  ctx.quadraticCurveTo(10, -62, 12, -56);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function hangingGardens(ctx: Ctx): void {
+  const levels = [[-28, 0, 56, 9], [-22, -9, 44, 9], [-16, -18, 32, 9], [-10, -27, 20, 8]] as const;
+  for (const [x, y, w, h] of levels) {
+    block(ctx, x, y, w, h, 14 - (y / -9) * 2, "#d9b98a");
+    for (let k = 0; k < w; k += 4) {
+      ctx.fillStyle = k % 8 ? "#4d8a3f" : "#3e7434";
+      ctx.beginPath();
+      ctx.ellipse(x + k + 2, y - h + 1, 2.4, 1.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#3e7434";
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(x + k + 2, y - h + 1);
+      ctx.lineTo(x + k + 2.3, y - h + 5);
+      ctx.stroke();
+    }
+  }
+  for (const x of [-30, 28]) {
+    ctx.fillStyle = "#3e7434";
+    ctx.beginPath();
+    ctx.ellipse(x, -12, 3, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#6a4a2c";
+    ctx.fillRect(x - 0.5, -6, 1, 6);
+  }
+}
+
+function greatWall(ctx: Ctx): void {
+  ctx.fillStyle = "#7da35a";
+  ctx.beginPath();
+  ctx.moveTo(-34, 0);
+  ctx.quadraticCurveTo(-18, -18, 0, -10);
+  ctx.quadraticCurveTo(18, -2, 34, -16);
+  ctx.lineTo(34, 0);
+  ctx.closePath();
+  ctx.fill();
+  // The wall follows the ridge.
+  ctx.strokeStyle = "#b7a98a";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(-34, -2);
+  ctx.quadraticCurveTo(-18, -20, 0, -12);
+  ctx.quadraticCurveTo(18, -4, 34, -18);
+  ctx.stroke();
+  ctx.strokeStyle = "#d8ccb0";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([1.4, 1.2]);
+  ctx.beginPath();
+  ctx.moveTo(-34, -4.4);
+  ctx.quadraticCurveTo(-18, -22.4, 0, -14.4);
+  ctx.quadraticCurveTo(18, -6.4, 34, -20.4);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  for (const [x, y] of [[-24, -10], [0, -12], [26, -12]] as const) block(ctx, x - 3, y + 2, 6, 9, 5, "#cbbd9c");
+}
+
+function lighthouse(ctx: Ctx): void {
+  ctx.fillStyle = "#4f86b4";
+  ctx.beginPath();
+  ctx.ellipse(0, 1, 28, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  block(ctx, -14, 0, 28, 4, 12, STONE);
+  block(ctx, -9, -4, 18, 22, 9, LIMESTONE);
+  windows(ctx, -9, -4, 18, [-6, -14], 1.6, 2.4, 3);
+  block(ctx, -6, -26, 12, 14, 6, tone(LIMESTONE, 0.96));
+  block(ctx, -3.5, -40, 7, 10, 4, LIMESTONE);
+  const fire = ctx.createRadialGradient(0, -54, 0, 0, -54, 8);
+  fire.addColorStop(0, "#fff4c0");
+  fire.addColorStop(0.5, "rgba(255, 170, 40, 0.9)");
+  fire.addColorStop(1, "rgba(255, 140, 20, 0)");
+  ctx.fillStyle = fire;
+  ctx.beginPath();
+  ctx.arc(0, -54, 8, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function oracle(ctx: Ctx): void {
+  ctx.fillStyle = "#a9a06e";
+  ctx.beginPath();
+  ctx.moveTo(-32, 0);
+  ctx.quadraticCurveTo(-10, -12, 30, -6);
+  ctx.lineTo(30, 0);
+  ctx.closePath();
+  ctx.fill();
+  block(ctx, -20, -4, 40, 3, 14, LIMESTONE);
+  columns(ctx, -17, -7, 34, 14, 7, LIMESTONE);
+  block(ctx, -19, -21, 38, 2.4, 13, LIMESTONE);
+  frontGable(ctx, -19, -23.4, 38, 13, 6, LIMESTONE, LIMESTONE);
+  // Smoke from the tripod.
+  ctx.strokeStyle = "#8a6a2a";
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(-26, -2);
+  ctx.lineTo(-24, -8);
+  ctx.lineTo(-22, -2);
+  ctx.stroke();
+  for (let i = 0; i < 4; i++) {
+    ctx.fillStyle = `rgba(230, 230, 240, ${0.6 - i * 0.12})`;
+    ctx.beginPath();
+    ctx.arc(-24 + i * 1.5, -11 - i * 4, 2 + i, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function greatLibrary(ctx: Ctx): void {
+  block(ctx, -28, 0, 56, 4, 18, LIMESTONE);
+  block(ctx, -25, -4, 50, 18, 16, tone(LIMESTONE, 0.84));
+  // Shelves with scrolls seen between the columns.
+  for (let k = 0; k < 9; k++) {
+    const x = -23 + k * 5.6;
+    ctx.fillStyle = "#6b4a2c";
+    ctx.fillRect(x, -19, 3.8, 13);
+    ctx.fillStyle = "#efe2be";
+    for (let r = 0; r < 4; r++) {
+      ctx.beginPath();
+      ctx.arc(x + 1, -17.4 + r * 3.2, 0.8, 0, Math.PI * 2);
+      ctx.arc(x + 2.8, -17.4 + r * 3.2, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  columns(ctx, -26, -4, 52, 18, 11, LIMESTONE);
+  block(ctx, -27, -22, 54, 3, 17, LIMESTONE);
+  frontGable(ctx, -27, -25, 54, 17, 8, ROOF_RED, LIMESTONE);
+}
+
+function circumnavigation(ctx: Ctx): void {
+  // Globe with the route around it.
+  const g = ctx.createRadialGradient(-6, -32, 2, 0, -26, 18);
+  g.addColorStop(0, "#9fd0f0");
+  g.addColorStop(1, "#2e6a9a");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, -26, 17, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#6f9a4a";
+  for (const [x, y, rx, ry] of [[-6, -32, 6, 4], [7, -22, 5, 7], [-9, -18, 3, 4]] as const) {
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = "#f2d36a";
+  ctx.setLineDash([1.6, 1.2]);
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.ellipse(0, -26, 20, 6, -0.2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.strokeStyle = "#5a3b25";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(0, -9);
+  ctx.lineTo(0, 0);
+  ctx.stroke();
+  poly(ctx, [-8, 0, 8, 0, 6, -3, -6, -3], "#7a5232");
+  // A small ship on the route.
+  poly(ctx, [14, -18, 22, -18, 21, -15.6, 15, -15.6], "#7a4a28");
+  poly(ctx, [17.6, -18, 17.6, -25, 21.4, -18.4], "#f4efe2");
+}
+
+function sistineChapel(ctx: Ctx): void {
+  block(ctx, -24, 0, 48, 26, 18, "#c79a72");
+  windows(ctx, -24, 0, 48, [-18], 2.4, 5, 6, true);
+  // Battlements along the top.
+  for (let x = -24; x < 24; x += 4) block(ctx, x, -26, 2.2, 2.6, 18, "#c79a72");
+  // A glimpse of the painted ceiling through the open door.
+  ctx.fillStyle = "#3a2a1e";
+  ctx.fillRect(-3, -9, 6, 9);
+  const fresco = ctx.createLinearGradient(-3, -9, 3, -4);
+  fresco.addColorStop(0, "#8fb6d8");
+  fresco.addColorStop(1, "#e8c08a");
+  ctx.fillStyle = fresco;
+  ctx.fillRect(-2.3, -8.3, 4.6, 3);
+}
+
+function stVitus(ctx: Ctx): void {
+  const wall = "#cfc6b3";
+  block(ctx, -24, 0, 30, 20, 16, wall);
+  windows(ctx, -24, 0, 30, [-8], 2.6, 9, 5, true);
+  gableRoof(ctx, -24, -20, 30, 16, 6, ROOF_SLATE, wall);
+  // Flying buttresses.
+  for (let x = -22; x < 6; x += 6) {
+    ctx.strokeStyle = tone(wall, 0.75);
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.quadraticCurveTo(x - 2, -12, x + 2, -18);
+    ctx.stroke();
+  }
+  // Main tower with a green copper top.
+  block(ctx, 6, 0, 12, 42, 12, wall);
+  windows(ctx, 6, 0, 12, [-24, -34], 2.4, 5, 2, true);
+  dome(ctx, 12 + 6 * DX, -42 + 6 * DY, 6, ROOF_COPPER);
+  poly(ctx, [12 + 6 * DX - 1.4, -48 + 6 * DY, 12 + 6 * DX + 1.4, -48 + 6 * DY, 12 + 6 * DX, -58 + 6 * DY], ROOF_COPPER);
+  // Front spires.
+  for (const tx of [-28, -20]) {
+    block(ctx, tx, 0, 6, 28, 6, wall);
+    poly(ctx, [tx - 0.4, -28, tx + 6.4, -28, tx + 3, -40], ROOF_SLATE);
+  }
+  ctx.fillStyle = "#3e5f8f";
+  ctx.beginPath();
+  ctx.arc(-17, -14, 3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function globeTheatre(ctx: Ctx): void {
+  const sides = 8;
+  const r = 20;
+  for (let k = 0; k < sides; k++) {
+    const a0 = Math.PI * (0.05 + (k / sides) * 0.9);
+    const a1 = Math.PI * (0.05 + ((k + 1) / sides) * 0.9);
+    const x0 = -Math.cos(a0) * r;
+    const x1 = -Math.cos(a1) * r;
+    const y0 = Math.sin(a0) * 4;
+    const y1 = Math.sin(a1) * 4;
+    poly(ctx, [x0, y0, x1, y1, x1, y1 - 18, x0, y0 - 18], k % 2 ? "#f2ead8" : "#e8dfc8");
+    ctx.strokeStyle = "#5a3b25";
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0 - 9);
+    ctx.lineTo(x1, y1 - 9);
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x0, y0 - 18);
+    ctx.moveTo(x0, y0 - 18);
+    ctx.lineTo(x1, y1 - 9);
+    ctx.stroke();
+  }
+  // Thatched roof ring.
+  ctx.fillStyle = "#b99a5a";
+  ctx.beginPath();
+  ctx.ellipse(0, -19, r + 2, 6, 0, Math.PI, 0);
+  ctx.ellipse(0, -18, r - 5, 3, 0, 0, Math.PI, true);
+  ctx.closePath();
+  ctx.fill();
+  flag(ctx, 0, -22, 10, "#c2412f");
+}
+
+function royalSociety(ctx: Ctx): void {
+  block(ctx, -24, 0, 40, 18, 14, "#e2d6bb");
+  windows(ctx, -24, 0, 40, [-4, -11], 2.4, 4, 7);
+  block(ctx, -25, -18, 42, 2, 15, LIMESTONE);
+  frontGable(ctx, -10, -20, 12, 15, 5, LIMESTONE, LIMESTONE);
+  // Telescope on the roof.
+  ctx.save();
+  ctx.translate(8, -22);
+  ctx.rotate(-0.6);
+  ctx.fillStyle = "#b08a3c";
+  ctx.fillRect(-1, -9, 2.2, 9);
+  ctx.restore();
+  // Newton's apple tree.
+  ctx.fillStyle = "#6a4a2c";
+  ctx.fillRect(22, -10, 1.6, 10);
+  ctx.fillStyle = "#4d8a3f";
+  ctx.beginPath();
+  ctx.arc(23, -14, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#c8442e";
+  for (const [x, y] of [[20, -16], [25, -13], [22, -11], [27, -17]] as const) {
+    ctx.beginPath();
+    ctx.arc(x, y, 0.9, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(19, -1, 0.9, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function darwinVoyage(ctx: Ctx): void {
+  ctx.fillStyle = "#4f86b4";
+  ctx.beginPath();
+  ctx.ellipse(-4, 1, 30, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  poly(ctx, [-26, -3, 12, -3, 10, 2, -22, 2], "#4a3426");
+  for (const [x, h] of [[-16, 26], [-6, 30], [4, 22]] as const) {
+    ctx.strokeStyle = "#5a3b25";
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x, -3);
+    ctx.lineTo(x, -3 - h);
+    ctx.stroke();
+    for (let k = 0; k < 3; k++) {
+      const top = -3 - h + 2 + k * 7;
+      poly(ctx, [x - 5 + k * 0.5, top, x + 5 - k * 0.5, top, x + 5.6, top + 5.6, x - 5.6, top + 5.6], "#f4eedd");
+    }
+  }
+  // A giant tortoise on the shore.
+  ctx.fillStyle = "#c9b48a";
+  ctx.beginPath();
+  ctx.ellipse(24, 0, 10, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#6b5a3a";
+  ctx.beginPath();
+  ctx.ellipse(24, -3, 5, 3.4, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = "#8a7a5a";
+  ctx.beginPath();
+  ctx.arc(30, -3, 1.4, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function womensSuffrage(ctx: Ctx): void {
+  block(ctx, -24, 0, 48, 16, 14, "#e6dfcf");
+  columns(ctx, -10, 0, 20, 14, 5, LIMESTONE);
+  frontGable(ctx, -12, -16, 24, 14, 6, ROOF_SLATE, "#e6dfcf");
+  windows(ctx, -24, 0, 12, [-5, -11], 2, 3.4, 2);
+  windows(ctx, 12, 0, 12, [-5, -11], 2, 3.4, 2);
+  // Banners in purple, white and green.
+  const banner = ["#6b3fa0", "#f4f1e8", "#3f8f4a"];
+  for (let k = 0; k < 3; k++) {
+    const x = -22 + k * 3.6;
+    ctx.fillStyle = banner[k]!;
+    ctx.fillRect(x, -14, 3, 9);
+  }
+  // Ballot box.
+  block(ctx, 16, 0, 8, 6, 6, "#c79a42");
+  ctx.fillStyle = "#3a2a1e";
+  ctx.fillRect(18, -6.4 + 6 * DY * 0.5, 4, 0.8);
+  ctx.fillStyle = "#f4f1e8";
+  ctx.fillRect(19, -10, 2.4, 3.4);
+}
+
+function hooverDam(ctx: Ctx): void {
+  // Canyon walls.
+  poly(ctx, [-36, 0, -36, -34, -24, -30, -20, 0], "#b0764c");
+  poly(ctx, [36, 0, 36, -36, 24, -30, 20, 0], "#9c6642");
+  ctx.fillStyle = "#4f86b4";
+  ctx.fillRect(-24, -32, 48, 4);
+  const g = ctx.createLinearGradient(0, -30, 0, 0);
+  g.addColorStop(0, "#e2dfd6");
+  g.addColorStop(1, "#a29f96");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-24, -30);
+  ctx.quadraticCurveTo(0, -24, 24, -30);
+  ctx.lineTo(18, 0);
+  ctx.quadraticCurveTo(0, 4, -18, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  for (const x of [-14, 14]) block(ctx, x - 2, -26, 4, 8, 3, "#d8d4ca");
+  block(ctx, -10, 0, 20, 5, 6, "#c9c3b5");
+  ctx.fillStyle = "rgba(140, 190, 225, 0.8)";
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 16, 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function unitedNations(ctx: Ctx): void {
+  block(ctx, -10, 0, 18, 58, 7, "#d8e2e8");
+  ctx.fillStyle = "#5f8fb0";
+  for (let y = -4; y > -56; y -= 3) ctx.fillRect(-9.4, y - 2, 16.8, 2);
+  block(ctx, -26, 0, 16, 8, 10, "#e6e8ea");
+  for (let k = 0; k < 4; k++) flag(ctx, 12 + k * 5, 0, 12, ["#5b92e5", "#c2412f", "#3f8f4a", "#e2b62c"][k]!);
+}
+
+function manhattanProject(ctx: Ctx): void {
+  block(ctx, -26, 0, 26, 12, 12, "#9aa0a6");
+  windows(ctx, -26, 0, 26, [-5], 2.6, 3, 5, false, true);
+  gableRoof(ctx, -26, -12, 26, 12, 4, ROOF_SLATE, "#9aa0a6");
+  block(ctx, 4, 0, 16, 18, 14, "#c9c3b5");
+  dome(ctx, 12 + 7 * DX, -18 + 7 * DY, 7, "#d8dde2");
+  // Atom sign.
+  ctx.strokeStyle = "#2f6fb2";
+  ctx.lineWidth = 0.7;
+  for (let k = 0; k < 3; k++) {
+    ctx.beginPath();
+    ctx.ellipse(12, -8, 5, 1.8, (k * Math.PI) / 3, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#c2412f";
+  ctx.beginPath();
+  ctx.arc(12, -8, 1, 0, Math.PI * 2);
+  ctx.fill();
+  // Water tower.
+  ctx.strokeStyle = "#5b6670";
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(-30, 0);
+  ctx.lineTo(-28, -20);
+  ctx.moveTo(-22, 0);
+  ctx.lineTo(-24, -20);
+  ctx.stroke();
+  block(ctx, -31, -20, 10, 6, 6, "#8a959f");
+}
+
+function setiProgram(ctx: Ctx): void {
+  // Support frame.
+  ctx.strokeStyle = "#7d8790";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(-10, 0);
+  ctx.lineTo(0, -18);
+  ctx.lineTo(10, 0);
+  ctx.stroke();
+  ctx.save();
+  ctx.translate(0, -26);
+  ctx.rotate(-0.45);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 24, 9, 0, 0, Math.PI);
+  const g = ctx.createLinearGradient(-24, 0, 24, 0);
+  g.addColorStop(0, "#f6f7f8");
+  g.addColorStop(1, "#9aa4ad");
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.strokeStyle = "#5b6670";
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(-14, 3);
+  ctx.lineTo(0, -14);
+  ctx.lineTo(14, 3);
+  ctx.stroke();
+  ctx.restore();
+  block(ctx, 14, 0, 12, 6, 8, "#e6e8ea");
+}
+
+function apolloProgram(ctx: Ctx): void {
+  // Launch tower.
+  ctx.strokeStyle = "#c2412f";
+  ctx.lineWidth = 0.8;
+  for (const x of [8, 14]) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, -62);
+    ctx.stroke();
+  }
+  for (let y = 0; y > -62; y -= 5) {
+    ctx.beginPath();
+    ctx.moveTo(8, y);
+    ctx.lineTo(14, y - 5);
+    ctx.moveTo(14, y);
+    ctx.lineTo(8, y - 5);
+    ctx.stroke();
+  }
+  // The rocket: white stages with black bands.
+  const g = ctx.createLinearGradient(-4, 0, 4, 0);
+  g.addColorStop(0, "#ffffff");
+  g.addColorStop(1, "#a8a8a4");
+  ctx.fillStyle = g;
+  ctx.fillRect(-4, -48, 8, 46);
+  ctx.fillStyle = "#1c1c1c";
+  ctx.fillRect(-4, -12, 8, 3);
+  ctx.fillRect(-4, -30, 8, 2);
+  ctx.fillRect(-1.8, -40, 3.6, 6);
+  ctx.fillStyle = ctx.createLinearGradient(-3, 0, 3, 0) as unknown as string;
+  ctx.fillStyle = "#f2f2ee";
+  ctx.beginPath();
+  ctx.moveTo(-4, -48);
+  ctx.lineTo(0, -60);
+  ctx.lineTo(4, -48);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#5b6670";
+  ctx.beginPath();
+  ctx.moveTo(0, -60);
+  ctx.lineTo(0, -66);
+  ctx.stroke();
+  for (const dir of [-1, 1]) poly(ctx, [dir * 4, -2, dir * 7, 0, dir * 4, -8], "#1c1c1c");
+  block(ctx, -16, 0, 34, 2, 8, "#9a9a96");
+}
+
+function genomeProject(ctx: Ctx): void {
+  block(ctx, -26, 0, 34, 14, 12, "#eef0f2");
+  ctx.fillStyle = "#6fa3c8";
+  for (let c = 0; c < 6; c++) ctx.fillRect(-24.4 + c * 5.4, -11, 4, 7);
+  // A double helix sculpture.
+  for (let k = 0; k < 24; k++) {
+    const y = -2 - k * 1.8;
+    const a = k * 0.55;
+    const x1 = 18 + Math.sin(a) * 5;
+    const x2 = 18 - Math.sin(a) * 5;
+    ctx.strokeStyle = "rgba(200, 200, 200, 0.8)";
+    ctx.lineWidth = 0.4;
+    if (k % 2 === 0) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y);
+      ctx.lineTo(x2, y);
+      ctx.stroke();
+    }
+    ctx.fillStyle = Math.cos(a) > 0 ? "#2f6fb2" : "#5b8fc8";
+    ctx.beginPath();
+    ctx.arc(x1, y, 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = Math.cos(a) > 0 ? "#c2412f" : "#d86a5a";
+    ctx.beginPath();
+    ctx.arc(x2, y, 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 // ---------- wonders ----------
 
 function stoneCircle(ctx: Ctx): void {
@@ -953,40 +1660,6 @@ function grandBazaar(ctx: Ctx): void {
   }
 }
 
-function greatWork(ctx: Ctx): void {
-  block(ctx, -22, 0, 44, 6, 22, "#cfd6dc");
-  const g = ctx.createLinearGradient(-6, 0, 6, 0);
-  g.addColorStop(0, "#f2f6f8");
-  g.addColorStop(1, "#8e9aa4");
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.moveTo(-8, -6);
-  ctx.lineTo(-3, -50);
-  ctx.lineTo(3, -50);
-  ctx.lineTo(8, -6);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = OUTLINE;
-  ctx.lineWidth = 0.5;
-  ctx.stroke();
-  // Glowing ring.
-  for (const [w, c] of [[5, "rgba(192, 90, 216, 0.35)"], [2.2, "#e7a6ff"], [0.8, "#ffffff"]] as const) {
-    ctx.strokeStyle = c;
-    ctx.lineWidth = w;
-    ctx.beginPath();
-    ctx.ellipse(0, -36, 16, 5, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  const glow = ctx.createRadialGradient(0, -54, 0, 0, -54, 9);
-  glow.addColorStop(0, "#fff7d0");
-  glow.addColorStop(0.5, "rgba(255, 200, 80, 0.8)");
-  glow.addColorStop(1, "rgba(255, 160, 40, 0)");
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(0, -54, 9, 0, Math.PI * 2);
-  ctx.fill();
-}
-
 /** Width of each building's footprint in design units, for placing them in a row. */
 export const BUILDING_WIDTH: Record<BuildingId, number> = {
   palace: 62,
@@ -1014,7 +1687,32 @@ export const BUILDING_WIDTH: Record<BuildingId, number> = {
   hallOfScholars: 66,
   greatObservatory: 42,
   grandBazaar: 66,
-  greatWork: 50,
+  researchLab: 42,
+  coastalFortress: 62,
+  sdiDefense: 44,
+  ssStructural: 24,
+  ssComponent: 22,
+  ssModule: 54,
+  pyramids: 70,
+  colossus: 62,
+  hangingGardens: 64,
+  greatWall: 70,
+  lighthouse: 56,
+  oracle: 64,
+  greatLibrary: 66,
+  circumnavigation: 48,
+  sistineChapel: 60,
+  stVitus: 56,
+  globeTheatre: 46,
+  royalSociety: 62,
+  darwinVoyage: 62,
+  womensSuffrage: 56,
+  hooverDam: 72,
+  unitedNations: 52,
+  manhattanProject: 56,
+  setiProgram: 54,
+  apolloProgram: 40,
+  genomeProject: 52,
 };
 
 /** Height above the ground in design units, so a portrait can fit the picture. */
@@ -1044,7 +1742,32 @@ export const BUILDING_HEIGHT: Record<BuildingId, number> = {
   hallOfScholars: 48,
   greatObservatory: 50,
   grandBazaar: 40,
-  greatWork: 64,
+  researchLab: 34,
+  coastalFortress: 24,
+  sdiDefense: 26,
+  ssStructural: 42,
+  ssComponent: 32,
+  ssModule: 36,
+  pyramids: 32,
+  colossus: 64,
+  hangingGardens: 40,
+  greatWall: 26,
+  lighthouse: 64,
+  oracle: 32,
+  greatLibrary: 36,
+  circumnavigation: 46,
+  sistineChapel: 30,
+  stVitus: 60,
+  globeTheatre: 32,
+  royalSociety: 30,
+  darwinVoyage: 36,
+  womensSuffrage: 26,
+  hooverDam: 38,
+  unitedNations: 62,
+  manhattanProject: 30,
+  setiProgram: 44,
+  apolloProgram: 68,
+  genomeProject: 46,
 };
 
 export function drawBuilding(ctx: Ctx, id: BuildingId, color: string): void {
@@ -1099,8 +1822,58 @@ export function drawBuilding(ctx: Ctx, id: BuildingId, color: string): void {
       return greatObservatory(ctx);
     case "grandBazaar":
       return grandBazaar(ctx);
-    case "greatWork":
-      return greatWork(ctx);
+    case "researchLab":
+      return researchLab(ctx);
+    case "coastalFortress":
+      return coastalFortress(ctx);
+    case "sdiDefense":
+      return sdiDefense(ctx);
+    case "ssStructural":
+      return ssStructural(ctx);
+    case "ssComponent":
+      return ssComponent(ctx);
+    case "ssModule":
+      return ssModule(ctx);
+    case "pyramids":
+      return pyramids(ctx);
+    case "colossus":
+      return colossus(ctx);
+    case "hangingGardens":
+      return hangingGardens(ctx);
+    case "greatWall":
+      return greatWall(ctx);
+    case "lighthouse":
+      return lighthouse(ctx);
+    case "oracle":
+      return oracle(ctx);
+    case "greatLibrary":
+      return greatLibrary(ctx);
+    case "circumnavigation":
+      return circumnavigation(ctx);
+    case "sistineChapel":
+      return sistineChapel(ctx);
+    case "stVitus":
+      return stVitus(ctx);
+    case "globeTheatre":
+      return globeTheatre(ctx);
+    case "royalSociety":
+      return royalSociety(ctx);
+    case "darwinVoyage":
+      return darwinVoyage(ctx);
+    case "womensSuffrage":
+      return womensSuffrage(ctx);
+    case "hooverDam":
+      return hooverDam(ctx);
+    case "unitedNations":
+      return unitedNations(ctx);
+    case "manhattanProject":
+      return manhattanProject(ctx);
+    case "setiProgram":
+      return setiProgram(ctx);
+    case "apolloProgram":
+      return apolloProgram(ctx);
+    case "genomeProject":
+      return genomeProject(ctx);
   }
 }
 

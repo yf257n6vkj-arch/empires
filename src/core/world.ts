@@ -3,8 +3,8 @@
  * `draft` mutate it and must only be called on a fresh copy made by
  * `cloneState`, never on a state somebody else holds.
  */
-import { cityRadiusTiles, distance, inBounds, tilesInRadius, type Point } from "./geometry";
-import { IMPROVEMENTS, RULES, TERRAINS, UNIT_TYPES, type ImprovementId, type Yield } from "./rules";
+import { cityRadiusTiles, distance, inBounds, neighbors8, tilesInRadius, type Point } from "./geometry";
+import { IMPROVEMENTS, RULES, TERRAINS, UNIT_TYPES, type ImprovementId, type UnitDomain, type Yield } from "./rules";
 import type { City, GameMap, GameState, Player, PlayerId, Unit } from "./state";
 
 export function cloneState(state: GameState): GameState {
@@ -33,6 +33,26 @@ export function fullMoves(unit: Unit): number {
   return UNIT_TYPES[unit.type].moves * RULES.movesFraction;
 }
 
+/** A new unit with no orders and full movement. */
+export function makeUnit(id: number, owner: PlayerId, type: Unit["type"], at: Point, homeCity: City["id"] | null): Unit {
+  const unit: Unit = {
+    id,
+    owner,
+    type,
+    x: at.x,
+    y: at.y,
+    movesLeft: 0,
+    homeCity,
+    fortified: false,
+    work: null,
+    goto: null,
+    carriedBy: null,
+    turnsAloft: 0,
+  };
+  unit.movesLeft = fullMoves(unit);
+  return unit;
+}
+
 /** Marks tiles around `center` as explored for `player` (mutates the draft). */
 export function reveal(draft: GameState, player: PlayerId, center: Point, radius: number): void {
   const explored = getPlayer(draft, player).explored;
@@ -43,14 +63,42 @@ export function hasRoad(state: GameState, p: Point): boolean {
   return state.map.road[idx(state.map, p)] === 1 || cityAt(state, p) !== undefined;
 }
 
+/** Cities count as railroad stations, so a railroad leading to a city is free to use. */
+export function hasRailroad(state: GameState, p: Point): boolean {
+  return state.map.railroad[idx(state.map, p)] === 1 || cityAt(state, p) !== undefined;
+}
+
+export function domainOf(unit: Pick<Unit, "type">): UnitDomain {
+  return UNIT_TYPES[unit.type].domain;
+}
+
+/** True when some land tile touches `p` (or `p` is land itself). */
+export function touchesLand(state: GameState, p: Point): boolean {
+  const i = idx(state.map, p);
+  const land = (t: number) => {
+    const terrain = state.map.terrain[t];
+    return terrain !== undefined && TERRAINS[terrain].land;
+  };
+  return land(i) || neighbors8(state.map, i).some(land);
+}
+
 /**
- * Movement cost in fractions of a move from `from` to the adjacent tile `to`,
- * or null when a land unit cannot go there at all.
+ * Movement cost in fractions of a move from `from` to the adjacent tile `to`
+ * for a unit of the given domain, or null when it cannot go there at all.
+ * Land units walk over land; boarding a ship is checked by the move rules.
+ * Ships sail on the ocean and into cities on the coast. Aircraft fly anywhere.
  */
-export function moveCost(state: GameState, from: Point, to: Point): number | null {
+export function moveCost(state: GameState, from: Point, to: Point, domain: UnitDomain = "land"): number | null {
   if (!inBounds(state.map, to.x, to.y) || distance(from, to) !== 1) return null;
   const terrain = state.map.terrain[idx(state.map, to)];
-  if (!terrain || !TERRAINS[terrain].land) return null;
+  if (!terrain) return null;
+  if (domain === "air") return RULES.movesFraction;
+  if (domain === "sea") {
+    if (!TERRAINS[terrain].land) return RULES.movesFraction;
+    return cityAt(state, to) ? RULES.movesFraction : null;
+  }
+  if (!TERRAINS[terrain].land) return null;
+  if (hasRailroad(state, from) && hasRailroad(state, to) && (state.map.railroad[idx(state.map, from)] || state.map.railroad[idx(state.map, to)])) return 0;
   if (hasRoad(state, from) && hasRoad(state, to)) return RULES.roadMoveCost;
   return TERRAINS[terrain].moveCost * RULES.movesFraction;
 }
@@ -71,6 +119,7 @@ export function tileYield(map: GameMap, index: number, isCityCenter: boolean): Y
   if (map.road[index] || isCityCenter) add("road");
   if (map.irrigation[index] || (isCityCenter && !map.mine[index])) add("irrigation");
   if (map.mine[index]) add("mine");
+  if (map.railroad[index]) result.shields = Math.floor((result.shields * (100 + (IMPROVEMENTS.railroad.shieldsPct ?? 0))) / 100);
   if (isCityCenter) result.shields = Math.max(result.shields, RULES.cityCenterMinShields);
   return result;
 }

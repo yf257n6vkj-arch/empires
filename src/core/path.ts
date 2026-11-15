@@ -5,12 +5,18 @@
  * terrain of unexplored tiles is never looked at, so the AI cannot cheat here.
  */
 import { distance, fromIndex, neighbors8, type GridSize, type Point } from "./geometry";
-import { RULES, TERRAINS } from "./rules";
+import { RULES, TERRAINS, type UnitDomain } from "./rules";
 import type { GameState, PlayerId, Unit } from "./state";
-import { fullMoves, getPlayer, idx, moveCost } from "./world";
+import { domainOf, fullMoves, getPlayer, idx, moveCost } from "./world";
 
 /** Returns the tiles to step on, excluding `from`, or null when there is no known route. */
-export function findPath(state: GameState, player: PlayerId, from: Point, to: Point): Point[] | null {
+export function findPath(
+  state: GameState,
+  player: PlayerId,
+  from: Point,
+  to: Point,
+  domain: UnitDomain = "type" in from ? domainOf(from as Unit) : "land",
+): Point[] | null {
   const map = state.map;
   const explored = getPlayer(state, player).explored;
   const start = idx(map, from);
@@ -37,7 +43,7 @@ export function findPath(state: GameState, player: PlayerId, from: Point, to: Po
     const currentPoint = fromIndex(map, current);
 
     for (const n of neighbors8(map, current)) {
-      const cost = knownMoveCost(state, explored, current, currentPoint, n);
+      const cost = knownMoveCost(state, explored, current, currentPoint, n, domain);
       if (cost === null) continue;
       const tentative = (g.get(current) ?? Infinity) + cost;
       if (tentative < (g.get(n) ?? Infinity)) {
@@ -58,15 +64,16 @@ function knownMoveCost(
   from: number,
   fromPoint: Point,
   to: number,
+  domain: UnitDomain = "land",
 ): number | null {
   const toPoint = fromIndex(state.map, to);
-  if (!explored[to]) return RULES.movesFraction;
-  if (!explored[from]) {
+  if (domain === "air" || !explored[to]) return RULES.movesFraction;
+  if (!explored[from] && domain === "land") {
     // Roads on unexplored tiles are unknown, so only the terrain counts.
     const terrain = state.map.terrain[to];
     return terrain && TERRAINS[terrain].land ? TERRAINS[terrain].moveCost * RULES.movesFraction : null;
   }
-  return moveCost(state, fromPoint, toPoint);
+  return moveCost(state, fromPoint, toPoint, domain);
 }
 
 export interface PathPlan {
@@ -90,7 +97,7 @@ export function planPath(state: GameState, unit: Unit, path: Point[]): PathPlan 
   let from: Point = unit;
   for (const step of path) {
     const cost =
-      knownMoveCost(state, explored, idx(state.map, from), from, idx(state.map, step)) ?? full;
+      knownMoveCost(state, explored, idx(state.map, from), from, idx(state.map, step), domainOf(unit)) ?? full;
     if (moves <= 0 || (moves < cost && moves < full)) {
       turn += 1;
       moves = full;

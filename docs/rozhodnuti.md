@@ -2,6 +2,24 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Hra má všechno, co technologie v Civilizaci 1 odemykají
+
+Michal schválil výzkumné centrum a pak chtěl projít strom Civilizace 1 a doplnit ke každé technologii, co odemyká. Claude doporučoval vynechat vlády, diplomata a karavanu, protože je zadání vyřadilo kvůli AI. Michal se rozhodl pro úplně všechno, takže hra teď jde v těchto věcech nad rámec zadání první verze.
+
+Jednotek je 29. Přibyl válečný vůz, dělostřelectvo, mechanizovaná pěchota, diplomat, karavana, devět lodí od triéry po letadlovou loď a stíhačka, bombardér a jaderná raketa. Lodě se staví jen v přímořských městech, plují po moři a vezou pozemní jednotky. Jednotka nastoupí, když vstoupí na loď z pobřeží, a vystoupí krokem na pevninu. Triéra se může na volném moři potopit. Letadla musí do jednoho nebo dvou tahů přistát ve městě nebo na letadlové lodi. Útok a obranu všech jednotek použije boj ve fázi 3.
+
+Budov je 27 včetně výzkumného centra, pobřežní pevnosti, protiraketového štítu a tří dílů vesmírné lodi. Divů je 24: všech 21 z Civilizace 1 a k nim naše Síň učenců, Velký bazar a Kamenný kruh, který se přestěhoval k pohřebním obřadům. Divy nesou skutečná historická jména, třeba Pyramidy v Gíze, Alexandrijská knihovna, Sixtinská kaple nebo Program Apollo. Kde Civilizace jen spojila jméno se stavbou, jsme vybrali skutečné místo: Bachovu katedrálu nahradil Chrám svatého Víta, Newtonovu kolej Královská společnost a lék na rakovinu Projekt lidského genomu. Div přestane působit, když jeho majitel objeví technologii, která ho v Civilizaci 1 ruší.
+
+Cestou k vítězství je teď vesmírná loď a nahradila Velké dílo. Program Apollo dovolí všem stavět díly. Loď potřebuje motory a moduly a na každý z nich nosnou konstrukci, motory zkracují let a moduly zvyšují šanci na přistání. Kdo první přistane, vyhrál.
+
+Vlád je šest. Despocie bere jedno z políček s výnosem nad 2, střed města ale nechává, jinak města v partii na 120 tahů skoro nerostla. Monarchie a komunismus mají stanné právo, republika a demokracie dávají víc obchodu, zato je rozladí vojáci mimo vlastní města. Každá vláda omezuje, kolik obchodu jde na vědu nebo na zlato. Revoluce znamená dva tahy anarchie, s pyramidami jeden. Jednotky nad počet, který město živí zdarma, stojí štít, a když město na údržbu nemá, rozpustí nejnovější jednotku.
+
+Diplomat umí otevřít velvyslanectví, ukrást technologii, sabotovat a podplatit město. Karavana pomáhá stavět divy a otevírá obchodní cesty do vzdálených měst. Jaderná raketa zmenší města a zničí jednotky kolem cíle, protiraketový štít ji zastaví. Osadník staví železnici, po které se jezdí zadarmo a která přidá štíty, a pevnost.
+
+Měřidlo tempa na 100 mapách ukázalo, že na vládě záleží. Automatický hráč, který zůstane v monarchii, má ve 120. tahu 10 měst a moderní dobu kolem 92. tahu. Když přejde do republiky, má jen 7 měst, protože jeho jednotky stojí štíty, zato moderní dobu má kolem 87. tahu a celý strom kolem 104. tahu.
+
+Co zatím nefunguje: boj, a s ním obrana pevností, pobřežní pevnosti a hradeb, a diplomacie, a s ní nabídky míru od Velké zdi a OSN a senát republiky. Přijdou ve fázi 3. Most přes řeku z technologie stavba mostů chybí, protože mapa nemá řeky. Jaderná elektrárna nemůže vybuchnout. Dvanáct technologií neodemyká nic, stejně jako v Civilizaci 1.
+
 ## 15. 11. 2026: Hra má všechny budovy z Civilizace 1, které dávají smysl bez lodí a jaderných zbraní
 
 Michal chtěl doplnit aspoň všechny budovy z Civilizace 1. Přibylo jich deset: palác, soudní dvůr, přístav, banka, tepelná, vodní a jaderná elektrárna, robotizovaná továrna, městská hromadná doprava a recyklační centrum. Ceny jsou jako u ostatních budov zhruba poloviční proti originálu, údržba zůstala skoro stejná. Hra teď má 21 budov a 5 divů.

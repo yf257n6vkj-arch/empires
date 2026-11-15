@@ -1,20 +1,10 @@
 {
-  "_comment": "turns = počet tahů práce osadníka, bonus se přičte k výnosu políčka. Hodnoty podle Civilizace 1.",
+  "_comment": "turns = počet tahů práce osadníka, bonus se přičte k výnosu políčka. Hodnoty podle Civilizace 1. Železnice potřebuje cestu, přidá polovinu štítů políčka a pohyb po ní nic nestojí. Pevnost zdvojí obranu jednotek na políčku, až přibude boj ve fázi 3.",
   "improvements": [
-    {
-      "id": "road", "name": "Cesta",
-      "turns": { "grassland": 2, "plains": 2, "desert": 2, "forest": 4, "hills": 4, "mountains": 6 },
-      "bonus": { "grassland": { "trade": 1 }, "plains": { "trade": 1 }, "desert": { "trade": 1 } }
-    },
-    {
-      "id": "irrigation", "name": "Zavlažování",
-      "turns": { "grassland": 5, "plains": 5, "desert": 5, "hills": 10 },
-      "bonus": { "grassland": { "food": 1 }, "plains": { "food": 1 }, "desert": { "food": 1 }, "hills": { "food": 1 } }
-    },
-    {
-      "id": "mine", "name": "Důl",
-      "turns": { "desert": 5, "hills": 10, "mountains": 10 },
-      "bonus": { "desert": { "shields": 1 }, "hills": { "shields": 3 }, "mountains": { "shields": 1 } }
-    }
+    {"id": "road", "name": "Cesta", "turns": {"grassland": 2, "plains": 2, "desert": 2, "forest": 4, "hills": 4, "mountains": 6}, "bonus": {"grassland": {"trade": 1}, "plains": {"trade": 1}, "desert": {"trade": 1}}},
+    {"id": "irrigation", "name": "Zavlažování", "turns": {"grassland": 5, "plains": 5, "desert": 5, "hills": 10}, "bonus": {"grassland": {"food": 1}, "plains": {"food": 1}, "desert": {"food": 1}, "hills": {"food": 1}}},
+    {"id": "mine", "name": "Důl", "turns": {"desert": 5, "hills": 10, "mountains": 10}, "bonus": {"desert": {"shields": 1}, "hills": {"shields": 3}, "mountains": {"shields": 1}}},
+    {"id": "railroad", "name": "Železnice", "requires": "railroad", "requiresImprovement": "road", "shieldsPct": 50, "turns": {"grassland": 3, "plains": 3, "desert": 3, "forest": 5, "hills": 5, "mountains": 8}, "bonus": {}},
+    {"id": "fortress", "name": "Pevnost", "requires": "construction", "turns": {"grassland": 3, "plains": 3, "desert": 3, "forest": 4, "hills": 4, "mountains": 5}, "bonus": {}}
   ]
 }

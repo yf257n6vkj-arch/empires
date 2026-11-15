@@ -46,7 +46,8 @@ dt { color: var(--muted); }
 dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
 
 .spacer { flex: 1; }
-.turn { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.turn { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+#end-turn { white-space: nowrap; }
 button.primary { background: #8a6a24; border-color: #b8913d; font-weight: 600; }
 button.primary.ready { background: #c9962e; color: #1a1408; box-shadow: 0 0 0 2px rgba(217, 164, 65, 0.4); }
 button:disabled { opacity: 0.45; cursor: not-allowed; border-color: var(--line); }
@@ -253,3 +254,23 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .cs-unit canvas { background: linear-gradient(#cfe0ea, #e9efe4); border-radius: 4px; }
 .cs-close { font-size: 13px; }
 @media (max-width: 1100px) { .cs-grid { grid-template-columns: 290px 1fr; } .cs-info { grid-column: 1 / -1; } }
+
+/* ---------- government and spaceship ---------- */
+button.government,
+button.spaceship { font-size: 13px; padding: 4px 10px; white-space: nowrap; }
+button.government b,
+button.spaceship b { color: #e7c98a; }
+.empire-dialog { background: #1f1b17; border: 1px solid #5a4a36; border-radius: 10px; padding: 12px 16px; width: min(640px, 94vw); color: inherit; }
+.empire-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.empire-dialog .spacer { flex: 1; }
+.empire-body p { margin: 6px 0 10px; line-height: 1.45; }
+.empire-body .small { font-size: 12.5px; }
+.empire-body .warn { color: #f0b46a; }
+.gov { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; margin: 6px 0; border: 1px solid #3d342a; border-radius: 8px; }
+.gov.on { border-color: #d9a441; background: rgba(217, 164, 65, 0.08); }
+.gov.locked { opacity: 0.6; }
+.gov .tag { font-size: 12px; color: #e7c98a; white-space: nowrap; }
+.gov button { white-space: nowrap; }
+.ss-parts { display: flex; gap: 12px; margin: 10px 0; }
+.ss-part { display: flex; gap: 8px; align-items: center; padding: 6px; border: 1px solid #3d342a; border-radius: 8px; flex: 1; }
+.ss-part canvas { border-radius: 6px; display: block; }

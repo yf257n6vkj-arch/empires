@@ -11,10 +11,12 @@ import {
   canBuildImprovement,
   cityRadiusTiles,
   findPath,
+  GOVERNMENTS,
   type ImprovementId,
   BUILDINGS,
   buildingUpkeep,
   buyCost,
+  clampRate,
   cityReport,
   currentEra,
   distance,
@@ -44,6 +46,12 @@ for (const pair of (process.env.PACE_SET ?? "").split(",").filter(Boolean)) {
   const [key, value] = pair.split("=");
   (RULES as unknown as Record<string, number>)[key!] = Number(value);
 }
+//   PACE_GOV="despotism.tilePenalty=0,despotism.freeUnits=4" npm run pace -- 50
+for (const pair of (process.env.PACE_GOV ?? "").split(",").filter(Boolean)) {
+  const [key, value] = pair.split("=");
+  const [gov, field] = key!.split(".");
+  (GOVERNMENTS as unknown as Record<string, Record<string, unknown>>)[gov!]![field!] = field === "tilePenalty" || field === "tradeBonus" ? value === "1" : Number(value);
+}
 const costScale = Number(process.env.PACE_COST ?? 1);
 if (costScale !== 1) {
   for (const u of Object.values(UNIT_TYPES)) (u as { cost: number }).cost = Math.round(u.cost * costScale);
@@ -66,7 +74,9 @@ const BUILD_ORDER: BuildingId[] = [
   "factory",
   "powerPlant",
   "manufacturingPlant",
-  "greatWork",
+  "researchLab",
+  "setiProgram",
+  "apolloProgram",
 ];
 
 function run(state: GameState, command: Command): GameState {
@@ -246,12 +256,19 @@ function manageCities(state: GameState): GameState {
 
 function manageEconomy(state: GameState): GameState {
   const me = state.players[ME]!;
+  // Better government as soon as it is known: monarchy first, then the republic.
+  if (!me.revolution) {
+    const wish = ((process.env.PACE_REPUBLIC === "0" ? ["monarchy"] : ["republic", "monarchy"]) as ("republic" | "monarchy")[]).find((g) => me.techs.includes(g));
+    const rank = { anarchy: 0, despotism: 1, monarchy: 2, communism: 2, republic: 3, democracy: 4 };
+    if (wish && rank[wish] > rank[me.government]) state = run(state, { type: "revolution", government: wish });
+  }
   if (me.researching === null) {
     const options = researchableTechs(me).sort((a, b) => TECHS[a].era - TECHS[b].era);
     if (options[0]) state = run(state, { type: "setResearch", tech: options[0] });
   }
   // Highest science rate that does not drain the treasury.
   for (let rate = 100; rate >= 0; rate -= RULES.rateStep) {
+    if (clampRate(rate, state.players[ME]!.government) !== rate) continue;
     const trial = run(state, { type: "setScienceRate", rate });
     let gold = 0;
     for (const c of trial.cities) if (c.owner === ME) gold += cityReport(trial, c).gold;
@@ -273,6 +290,7 @@ interface Result {
   /** Citizens unhappy from pollution at turn 120. */
   smog: number;
   wonders: number;
+  government: string;
 }
 
 function playOne(seed: string): Result {
@@ -319,16 +337,19 @@ function playOne(seed: string): Result {
     })(),
     smog: mine.reduce((n, c) => n + cityReport(state, c).pollution.unhappy, 0),
     wonders: mine.reduce((n, c) => n + c.buildings.filter((b) => BUILDINGS[b].wonder).length, 0),
+    government: state.players[ME]!.government,
   };
 }
 
 const results: Result[] = [];
+const governments = new Map<string, number>();
 const stuck: string[] = [];
 const started = performance.now();
 for (let i = 1; i <= games; i++) {
   const r = playOne(process.env.PACE_SEED ?? `pace-${i}`);
   results.push(r);
   if (r.cities < 3) stuck.push(`pace-${i}`);
+  governments.set(r.government, (governments.get(r.government) ?? 0) + 1);
 }
 const seconds = ((performance.now() - started) / 1000).toFixed(0);
 
@@ -350,4 +371,5 @@ console.log(`největší město v tahu 120: ${quantiles(results.map((r) => r.lar
 console.log(`korupce v tahu 120 (% obchodu): ${quantiles(results.map((r) => r.corruption))}`);
 console.log(`nespokojení ze smogu v tahu 120: ${quantiles(results.map((r) => r.smog))}`);
 console.log(`divy: ${quantiles(results.map((r) => r.wonders))}`);
+console.log(`vláda v tahu 120: ${[...governments].map(([g, n]) => `${g} ${n}×`).join(", ")}`);
 if (stuck.length) console.log(`zaseknuté partie (méně než 3 města): ${stuck.join(", ")}`);

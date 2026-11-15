@@ -64,6 +64,8 @@ export interface DrawInput {
   road: number[];
   irrigation: number[];
   mine: number[];
+  railroad?: number[];
+  fortress?: number[];
   units: DrawUnit[];
   cities: DrawCity[];
   /** Start markers, only used by the map preview. */
@@ -167,7 +169,7 @@ function inputKey(input: DrawInput): string {
     h = Math.imul(h, 16777619);
   };
   for (const t of input.terrain) mix(t ? t.charCodeAt(0) + t.length : 0);
-  for (const arr of [input.road, input.irrigation, input.mine]) for (const v of arr) mix(v);
+  for (const arr of [input.road, input.irrigation, input.mine, input.railroad ?? [], input.fortress ?? []]) for (const v of arr) mix(v);
   for (const c of input.cities) mix(c.x * 1000 + c.y);
   for (const [owner, tiles] of input.territory ?? []) {
     mix(owner + 7);
@@ -927,6 +929,52 @@ function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void
             ctx.lineTo(ex, ey);
           }
           ctx.stroke();
+        }
+      }
+      if (input.railroad?.[i]) {
+        // Two steel rails with sleepers, joined to neighbouring railroads and cities.
+        const c = TILE / 2;
+        const railAt = (nx: number, ny: number) =>
+          nx >= 0 && ny >= 0 && nx < width && ny < height && (input.railroad?.[ny * width + nx] === 1 || cityTiles.has(ny * width + nx));
+        const ends: [number, number][] = [];
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if ((dx || dy) && railAt(x + dx, y + dy)) ends.push([dx, dy]);
+          }
+        }
+        if (ends.length === 0) ends.push([1, 0], [-1, 0]);
+        for (const [dx, dy] of ends) {
+          const len = Math.hypot(dx, dy);
+          const nx = (-dy / len) * 1.6;
+          const ny = (dx / len) * 1.6;
+          ctx.strokeStyle = "#6b5a48";
+          ctx.lineWidth = 1;
+          for (let k = 1; k <= 3; k++) {
+            const t = k / 3.5;
+            const mx = px + c + (dx * TILE * t) / 2;
+            const my = py + c + (dy * TILE * t) / 2;
+            ctx.beginPath();
+            ctx.moveTo(mx - nx * 1.6, my - ny * 1.6);
+            ctx.lineTo(mx + nx * 1.6, my + ny * 1.6);
+            ctx.stroke();
+          }
+          ctx.strokeStyle = "#2f3236";
+          ctx.lineWidth = 0.9;
+          for (const side of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(px + c + nx * side, py + c + ny * side);
+            ctx.lineTo(px + c + (dx * TILE) / 2 + nx * side, py + c + (dy * TILE) / 2 + ny * side);
+            ctx.stroke();
+          }
+        }
+      }
+      if (input.fortress?.[i]) {
+        ctx.strokeStyle = "#8a7f6a";
+        ctx.lineWidth = 2.2;
+        ctx.strokeRect(px + 3, py + 3, TILE - 6, TILE - 6);
+        ctx.fillStyle = "#b5aa92";
+        for (const [fx, fy] of [[3, 3], [TILE - 3, 3], [3, TILE - 3], [TILE - 3, TILE - 3]] as const) {
+          ctx.fillRect(px + fx - 2.2, py + fy - 2.2, 4.4, 4.4);
         }
       }
     }

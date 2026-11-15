@@ -63,9 +63,9 @@ describe("technology tree", () => {
     }
   });
 
-  it("puts the victory wonder behind the last technology", () => {
-    const victory = Object.values(BUILDINGS).find((b) => b.victory);
-    expect(victory?.requires).toBe("fusionPower");
+  it("puts the spaceship behind the late technologies", () => {
+    const parts = Object.values(BUILDINGS).filter((b) => b.spaceship);
+    expect(parts.map((b) => b.requires).sort()).toEqual(["plastics", "robotics", "spaceFlight"]);
     expect(pathToTech({ techs: [] } as never, "fusionPower").length).toBe(
       new Set(pathToTech({ techs: [] } as never, "fusionPower")).size,
     );

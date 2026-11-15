@@ -5,6 +5,12 @@
 import {
   applyCommand,
   buildingUpkeep,
+  canOpenTradeRoute,
+  GOVERNMENTS,
+  inciteCost,
+  knowsTech,
+  shipWithRoom,
+  type DiplomatAction,
   BUILDINGS,
   buyCost,
   canBuildImprovement,
@@ -57,6 +63,7 @@ import { ERROR_TEXT, escapeHtml, eventText } from "./texts";
 import { createTechTree, unlockNames } from "./techTree";
 import { techIconSvg } from "./techIcons";
 import { createCityScreen } from "./cityScreen";
+import { createEmpireDialogs } from "./empire";
 
 const HUMAN = 0;
 const PLAYER_COUNT = 4;
@@ -83,6 +90,8 @@ const researchPanel = $<HTMLElement>("#research-pick");
 const zoomInButton = $<HTMLButtonElement>("#zoom-in");
 const zoomOutButton = $<HTMLButtonElement>("#zoom-out");
 const zoomResetButton = $<HTMLButtonElement>("#zoom-reset");
+const governmentButton = $<HTMLButtonElement>("#government");
+const spaceshipButton = $<HTMLButtonElement>("#spaceship");
 
 interface LogEntry {
   turn: number;
@@ -99,6 +108,8 @@ let ctx: CanvasRenderingContext2D;
 let camera: Camera = DEFAULT_CAMERA;
 /** Selected unit and its position when the view last followed it. */
 let followed = "";
+/** A missile waiting for the player to click its target. */
+let targetingUnitId: number | null = null;
 
 // ---------- saving ----------
 
@@ -137,6 +148,8 @@ function startNewGame(seed: string): void {
   log = [{ turn: 1, text: "Začíná nová hra. Najdi osadníkem dobré místo a založ první město (klávesa B)." }];
   selectedCityId = null;
   selectedUnitId = null;
+  targetingUnitId = null;
+  empire.resetVictory();
   camera = DEFAULT_CAMERA;
   updateZoomButtons();
   selectNextUnit();
@@ -294,6 +307,8 @@ function buildDrawInput(): DrawInput {
     road: showAll ? state.map.road : view.road,
     irrigation: showAll ? state.map.irrigation : view.irrigation,
     mine: showAll ? state.map.mine : view.mine,
+    railroad: showAll ? state.map.railroad : view.railroad,
+    fortress: showAll ? state.map.fortress : view.fortress,
     units: view.units.map((u) => ({
       id: u.id,
       owner: u.owner,
@@ -305,7 +320,7 @@ function buildDrawInput(): DrawInput {
       workProgress: u.work ? workShare(u) : undefined,
       hasMoves: needsOrders(u),
     })),
-    cities: view.cities.map((c) => ({
+    cities: [...view.cities, ...view.foreignCities].map((c) => ({
       id: c.id,
       owner: c.owner,
       name: c.name,
@@ -438,9 +453,33 @@ function renderEconomy(): void {
     researchButton.innerHTML = `Všechno je vyzkoumané`;
     researchButton.classList.remove("attention");
   }
+  const gov = GOVERNMENTS[p.government];
+  rateInput.disabled = gov.maxRate === 0;
+  if (gov.maxRate > 0) {
+    rateInput.min = String(100 - gov.maxRate);
+    rateInput.max = String(gov.maxRate);
+  }
   rateInput.value = String(p.scienceRate);
-  rateLabel.textContent = `${p.scienceRate} % · zlato ${100 - p.scienceRate} %`;
+  rateLabel.textContent = gov.maxRate === 0 ? "anarchie: nic" : `${p.scienceRate} % · zlato ${100 - p.scienceRate} %`;
+  governmentButton.innerHTML = p.revolution
+    ? `Vláda: <b>Anarchie</b> <span class="muted">${GOVERNMENTS[p.revolution.target].name} za ${turnsText(p.revolution.turnsLeft)}</span>`
+    : `Vláda: <b>${gov.name}</b>`;
+  const ship = p.spaceship;
+  const apollo = state.cities.some((c) => c.buildings.includes("apolloProgram"));
+  spaceshipButton.hidden = !apollo && ship.structural + ship.component + ship.module === 0 && !state.players.some((x) => x.spaceship.arrivalTurn !== null);
+  spaceshipButton.innerHTML =
+    ship.arrivalTurn !== null ? `Loď letí, přistání v tahu <b>${ship.arrivalTurn}</b>` : `Vesmírná loď <span class="muted">${ship.structural}/${ship.component}/${ship.module}</span>`;
+  empire.checkVictory();
 }
+
+const empire = createEmpireDialogs($<HTMLDialogElement>("#empire-dialog"), {
+  state: () => state,
+  player: () => HUMAN,
+  run,
+  refresh,
+});
+governmentButton.addEventListener("click", () => empire.openGovernment());
+spaceshipButton.addEventListener("click", () => empire.openSpaceship());
 
 function chooseResearch(tech: TechId): void {
   if (run({ type: "setResearch", tech })) say(`Zkoumáme: ${TECHS[tech].name}.`);
@@ -553,11 +592,23 @@ function renderUnit(unit: Unit): void {
     status = `Míří na políčko [${unit.goto.x}, ${unit.goto.y}]` + (turns ? `, ${turns === 1 ? "dojde v tomhle tahu" : `dojde za ${turnsText(turns)}`}.` : ".");
   }
   else if (unit.fortified) status = "Opevněná.";
+  if (unit.carriedBy !== null) {
+    const ship = state.units.find((u) => u.id === unit.carriedBy);
+    status = `Je na palubě: ${ship ? UNIT_TYPES[ship.type].name : "loď"}. ${rule.domain === "land" ? "Vystoupí krokem na pevninu." : ""}` + (status ? ` ${status}` : "");
+  }
+  if (rule.capacity) {
+    const cargo = state.units.filter((u) => u.carriedBy === unit.id).length;
+    status = `Na palubě ${cargo} z ${rule.capacity}. ` + status;
+  }
+  if (rule.domain === "air" && rule.fuel) {
+    const left = rule.fuel - unit.turnsAloft;
+    status = `Palivo ještě na ${left === 1 ? "tento tah" : `${left} tahy`}, pak musí přistát ve městě nebo na letadlové lodi. ` + status;
+  }
 
   const buttons: string[] = [];
   const button = (action: string, label: string, key: string, error: string | null) =>
     buttons.push(
-      `<button type="button" data-action="${action}" ${error ? `disabled title="${escapeHtml(error)}"` : ""}>${label}<kbd>${key}</kbd></button>`,
+      `<button type="button" data-action="${action}" ${error ? `disabled title="${escapeHtml(error)}"` : ""}>${label}${key ? `<kbd>${key}</kbd>` : ""}</button>`,
     );
 
   if (rule.foundsCity) {
@@ -565,15 +616,42 @@ function renderUnit(unit: Unit): void {
     button("found", "Založit město", "B", err ? ERROR_TEXT[err] : null);
   }
   if (rule.buildsImprovements) {
-    const keys: Record<ImprovementId, string> = { road: "R", irrigation: "I", mine: "M" };
-    for (const imp of ["road", "irrigation", "mine"] as ImprovementId[]) {
+    const keys: Record<ImprovementId, string> = { road: "R", irrigation: "I", mine: "M", railroad: "Z", fortress: "P" };
+    for (const imp of ["road", "irrigation", "mine", "railroad", "fortress"] as ImprovementId[]) {
+      const needs = IMPROVEMENTS[imp].requires;
+      if (needs && !knowsTech(me(), needs)) continue;
       const err = canBuildImprovement(state, unit, imp);
       const turns = IMPROVEMENTS[imp].turns[terrain];
       const label = turns ? `${IMPROVEMENTS[imp].name} (${turnsText(turns)})` : IMPROVEMENTS[imp].name;
       button(`build:${imp}`, label, keys[imp], err ? ERROR_TEXT[err] : null);
     }
-  } else {
+  } else if (rule.domain === "land") {
     button("fortify", "Opevnit", "F", unit.fortified ? "Jednotka už je opevněná." : null);
+  }
+  const here = state.cities.find((c) => c.x === unit.x && c.y === unit.y);
+  if (rule.domain !== "sea" && here && unit.carriedBy === null && state.units.some((u) => u.x === unit.x && u.y === unit.y && UNIT_TYPES[u.type].capacity)) {
+    button("board", "Nalodit", "L", shipWithRoom(state, unit, unit) ? null : ERROR_TEXT.noShip);
+  }
+  const near = state.cities.filter((c) => distance(c, unit) <= 1);
+  if (rule.special === "caravan") {
+    const wonder = here && here.owner === HUMAN && here.production.kind === "building" && BUILDINGS[here.production.id].wonder;
+    button("help", "Pomoct se stavbou divu", "H", wonder ? null : ERROR_TEXT.notBuildingWonder);
+    for (const c of near) {
+      const err = canOpenTradeRoute(state, unit, c.id);
+      if (c.id !== unit.homeCity) button(`route:${c.id}`, `Obchodní cesta: ${escapeHtml(c.name)}`, "", err ? ERROR_TEXT[err] : null);
+    }
+  }
+  if (rule.special === "diplomat") {
+    for (const c of near.filter((x) => x.owner !== HUMAN)) {
+      const price = inciteCost(state, c);
+      button(`dip:embassy:${c.id}`, `Velvyslanectví: ${escapeHtml(c.name)}`, "", me().embassies.includes(c.owner) ? ERROR_TEXT.embassyExists : null);
+      button(`dip:stealTech:${c.id}`, "Ukrást technologii", "", c.stolenBy.includes(HUMAN) ? ERROR_TEXT.alreadyStolen : null);
+      button(`dip:sabotage:${c.id}`, "Sabotáž", "", null);
+      button(`dip:incite:${c.id}`, `Podplatit město (${price} zlata)`, "", c.buildings.includes("palace") ? ERROR_TEXT.isCapital : me().gold < price ? ERROR_TEXT.notEnoughGold : null);
+    }
+  }
+  if (rule.special === "nuclear") {
+    button("aim", targetingUnitId === unit.id ? "Klikni na cíl na mapě" : "Zamířit a odpálit", "X", unit.movesLeft > 0 ? null : ERROR_TEXT.noMovesLeft);
   }
   button("skip", "Počkat", "mezera", unit.movesLeft > 0 ? null : "Jednotka už nemá pohyb.");
   if (unit.goto || unit.work || unit.fortified) button("cancel", "Zrušit rozkaz", "C", null);
@@ -607,6 +685,19 @@ function doUnitAction(action: string): void {
   }
   if (action.startsWith("build:")) {
     return unitAction({ type: "buildImprovement", unitId: unit.id, improvement: action.slice(6) as ImprovementId });
+  }
+  if (action === "board") return unitAction({ type: "board", unitId: unit.id });
+  if (action === "help") return unitAction({ type: "helpWonder", unitId: unit.id });
+  if (action.startsWith("route:")) return unitAction({ type: "tradeRoute", unitId: unit.id, cityId: Number(action.slice(6)) });
+  if (action.startsWith("dip:")) {
+    const [, what, city] = action.split(":");
+    return unitAction({ type: "diplomat", unitId: unit.id, cityId: Number(city), action: what as DiplomatAction });
+  }
+  if (action === "aim") {
+    if (UNIT_TYPES[unit.type].special !== "nuclear") return;
+    targetingUnitId = targetingUnitId === unit.id ? null : unit.id;
+    say(targetingUnitId ? "Klikni na políčko, kam má raketa dopadnout. Esc zamíření zruší." : "");
+    return refresh();
   }
 }
 
@@ -831,6 +922,11 @@ canvas.addEventListener("click", (e) => {
   const p = tileFromEvent(e);
   if (!p) return;
   const unit = selectedUnit();
+  if (targetingUnitId !== null) {
+    const missile = targetingUnitId;
+    targetingUnitId = null;
+    return unitAction({ type: "detonate", unitId: missile, at: p });
+  }
   const myCity = state.cities.find((c) => c.x === p.x && c.y === p.y && c.owner === HUMAN);
   const myUnits = state.units.filter((u) => u.x === p.x && u.y === p.y && u.owner === HUMAN);
 
@@ -873,6 +969,8 @@ canvas.addEventListener("mousemove", (e) => {
       state.map.road[i] ? "cesta" : "",
       state.map.irrigation[i] ? "zavlažování" : "",
       state.map.mine[i] ? "důl" : "",
+      state.map.railroad[i] ? "železnice" : "",
+      state.map.fortress[i] ? "pevnost" : "",
     ].filter(Boolean);
     const r = TERRAINS[t];
     tooltip.innerHTML =
@@ -925,6 +1023,11 @@ const KEY_ACTIONS: Record<string, string> = {
   r: "build:road",
   i: "build:irrigation",
   m: "build:mine",
+  z: "build:railroad",
+  p: "build:fortress",
+  l: "board",
+  h: "help",
+  x: "aim",
   f: "fortify",
   " ": "skip",
   c: "cancel",
@@ -935,7 +1038,7 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techTree.isOpen() || cityScreenOpen()) return;
+  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen()) return;
   if (e.key.toLowerCase() === "t") {
     e.preventDefault();
     return techTree.open();
@@ -968,6 +1071,11 @@ document.addEventListener("keydown", (e) => {
     return zoomTo(1);
   }
   if (e.key === "Escape") {
+    if (targetingUnitId !== null) {
+      targetingUnitId = null;
+      say("");
+      return refresh();
+    }
     if (selectedCityId !== null) return closeCity();
     selectedUnitId = null;
     refresh();

@@ -10,11 +10,13 @@
   <body>
     <header>
       <h1>Empires</h1>
-      <span class="phase">fáze 2 · technologie, města a hospodářství</span>
+      <span class="phase">fáze 2</span>
       <div class="economy">
         <button id="research" type="button" class="research" title="Strom technologií"></button>
         <span id="gold" class="gold"></span>
         <label class="rate" title="Kolik obchodu jde do výzkumu, zbytek je zlato">Věda <input id="rate" type="range" min="0" max="100" step="10" /> <span id="rate-label"></span></label>
+        <button id="government" type="button" class="government" title="Vláda a revoluce"></button>
+        <button id="spaceship" type="button" class="spaceship" title="Vesmírná loď" hidden></button>
       </div>
       <span class="spacer"></span>
       <span id="turn" class="turn"></span>
@@ -45,7 +47,9 @@
               <li>Klikni na svou jednotku nebo město a vyber ho.</li>
               <li>Klik na sousední políčko jednotku posune, klik dál ji tam pošle i na víc tahů.</li>
               <li>Šipky nebo číslice 1 až 9 posouvají vybranou jednotku.</li>
-              <li><kbd>B</kbd> založit město, <kbd>R</kbd> cesta, <kbd>I</kbd> zavlažování, <kbd>M</kbd> důl</li>
+              <li><kbd>B</kbd> založit město, <kbd>R</kbd> cesta, <kbd>I</kbd> zavlažování, <kbd>M</kbd> důl, <kbd>Z</kbd> železnice, <kbd>P</kbd> pevnost</li>
+              <li>Pozemní jednotka nastoupí na loď, když na ni vstoupí z pobřeží. Ve městě ji nalodíš klávesou <kbd>L</kbd>. Z lodi vystoupí krokem na pevninu.</li>
+              <li>Letadla musí včas přistát ve městě nebo na letadlové lodi, jinak jim dojde palivo.</li>
               <li><kbd>F</kbd> opevnit, <kbd>mezerník</kbd> nechat jednotku do příštího tahu, <kbd>N</kbd> další jednotka</li>
               <li><kbd>Enter</kbd> konec tahu, <kbd>Esc</kbd> zrušit výběr, <kbd>T</kbd> strom technologií</li>
               <li>Dvojklik na město nebo tlačítko <b>Otevřít město</b> ukáže celé město. Klikem na políčko v okolí města přesuneš obyvatele.</li>
@@ -68,6 +72,7 @@
         </section>
       </aside>
     </main>
+    <dialog id="empire-dialog" class="empire-dialog"></dialog>
     <dialog id="tech-dialog" class="tt-dialog">
       <div class="dialog-head">
         <h2>Strom technologií</h2>

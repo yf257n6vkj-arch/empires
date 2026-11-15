@@ -3,10 +3,10 @@
  * A turn is a function from the old state and commands to a new state.
  */
 import type { Point } from "./geometry";
-import type { BuildingId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
+import type { BuildingId, GovernmentId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 5;
+export const STATE_VERSION = 6;
 
 export interface GameMap {
   width: number;
@@ -19,6 +19,10 @@ export interface GameMap {
   irrigation: number[];
   /** 1 = the tile has a mine. */
   mine: number[];
+  /** 1 = the tile has a railroad (always on top of a road). */
+  railroad: number[];
+  /** 1 = the tile has a fortress. */
+  fortress: number[];
 }
 
 export type PlayerId = number;
@@ -46,6 +50,27 @@ export interface Player {
   gold: number;
   /** Share of trade that goes to science, in percent; the rest is gold. */
   scienceRate: number;
+  government: GovernmentId;
+  /** A revolution in progress: anarchy until turnsLeft reaches 0, then `target`. */
+  revolution: { target: GovernmentId; turnsLeft: number } | null;
+  spaceship: Spaceship;
+  /** Players whose capital hosts an embassy of this player. */
+  embassies: PlayerId[];
+}
+
+export interface Spaceship {
+  structural: number;
+  component: number;
+  module: number;
+  /** Turn of the launch, null while the ship is on the ground. */
+  launchedTurn: number | null;
+  arrivalTurn: number | null;
+  /** Chance of a safe landing in percent, fixed at launch. */
+  successPct: number;
+}
+
+export function emptySpaceship(): Spaceship {
+  return { structural: 0, component: 0, module: 0, launchedTurn: null, arrivalTurn: null, successPct: 0 };
 }
 
 export interface WorkOrder {
@@ -69,6 +94,10 @@ export interface Unit {
   work: WorkOrder | null;
   /** Multi-turn move target, continued at the start of every turn. */
   goto: Point | null;
+  /** The ship (or carrier) this unit travels on. */
+  carriedBy: UnitId | null;
+  /** Turns an aircraft has ended away from a city or carrier. */
+  turnsAloft: number;
 }
 
 export type ProductionItem =
@@ -96,6 +125,10 @@ export interface City {
    */
   manualTiles: boolean;
   foundedTurn: number;
+  /** Cities this one trades with; each route brings trade every turn. */
+  tradeRoutes: CityId[];
+  /** Players whose diplomats already stole a technology here. */
+  stolenBy: PlayerId[];
 }
 
 export interface GameState {
@@ -111,4 +144,6 @@ export interface GameState {
   players: Player[];
   units: Unit[];
   cities: City[];
+  /** Set when somebody has won; the game can go on, but the result stays. */
+  victory: { player: PlayerId; kind: "space"; turn: number } | null;
 }

@@ -5,6 +5,7 @@
 import buildingData from "./data/buildings.json";
 import cityNameData from "./data/city-names.json";
 import gameData from "./data/game.json";
+import governmentData from "./data/governments.json";
 import improvementData from "./data/improvements.json";
 import techData from "./data/techs.json";
 import terrainData from "./data/terrain.json";
@@ -28,12 +29,29 @@ export const UNIT_TYPE_IDS = [
   "horsemen",
   "archers",
   "swordsmen",
+  "chariot",
   "catapult",
   "knights",
   "musketeers",
   "cannon",
   "riflemen",
+  "artillery",
+  "mechInf",
   "tank",
+  "diplomat",
+  "caravan",
+  "trireme",
+  "sail",
+  "frigate",
+  "ironclad",
+  "cruiser",
+  "battleship",
+  "submarine",
+  "transport",
+  "carrier",
+  "fighter",
+  "bomber",
+  "nuclear",
 ] as const;
 export type UnitTypeId = (typeof UNIT_TYPE_IDS)[number];
 
@@ -59,11 +77,36 @@ export const BUILDING_IDS = [
   "manufacturingPlant",
   "massTransit",
   "recyclingCenter",
+  "researchLab",
+  "coastalFortress",
+  "sdiDefense",
+  "ssStructural",
+  "ssComponent",
+  "ssModule",
   "stoneCircle",
+  "pyramids",
+  "colossus",
+  "hangingGardens",
+  "greatWall",
+  "lighthouse",
+  "oracle",
+  "greatLibrary",
   "hallOfScholars",
   "greatObservatory",
+  "circumnavigation",
+  "sistineChapel",
+  "stVitus",
+  "globeTheatre",
   "grandBazaar",
-  "greatWork",
+  "royalSociety",
+  "darwinVoyage",
+  "womensSuffrage",
+  "hooverDam",
+  "unitedNations",
+  "manhattanProject",
+  "setiProgram",
+  "apolloProgram",
+  "genomeProject",
 ] as const;
 export type BuildingId = (typeof BUILDING_IDS)[number];
 
@@ -139,8 +182,13 @@ export const TECH_IDS = [
 ] as const;
 export type TechId = (typeof TECH_IDS)[number];
 
-export const IMPROVEMENT_IDS = ["road", "irrigation", "mine"] as const;
+export const IMPROVEMENT_IDS = ["road", "irrigation", "mine", "railroad", "fortress"] as const;
 export type ImprovementId = (typeof IMPROVEMENT_IDS)[number];
+
+export const GOVERNMENT_IDS = ["anarchy", "despotism", "monarchy", "communism", "republic", "democracy"] as const;
+export type GovernmentId = (typeof GOVERNMENT_IDS)[number];
+
+export type UnitDomain = "land" | "sea" | "air";
 
 export interface Yield {
   food: number;
@@ -174,6 +222,20 @@ export interface UnitRule {
   requires: TechId | null;
   /** Once this unit can be built, the old one disappears from the production list. */
   obsoleteBy: UnitTypeId | null;
+  /** Land units walk, ships sail on the ocean, aircraft fly over anything. */
+  domain: UnitDomain;
+  /** Units a ship carries: land units, or aircraft when `carries` is "air". */
+  capacity?: number;
+  carries?: "land" | "air";
+  /** Turns an aircraft can stay in the air before it must land in a city or on a carrier. */
+  fuel?: number;
+  /** A trireme may sink when it ends a turn away from the coast. */
+  coastal?: boolean;
+  /** How far the unit sees; RULES.unitSight when missing. */
+  sight?: number;
+  special?: "diplomat" | "caravan" | "nuclear";
+  /** A wonder that must stand somewhere in the world before anyone can build the unit. */
+  requiresWonder?: BuildingId;
 }
 
 /** What a building changes in a city. Missing fields mean no change. */
@@ -197,6 +259,37 @@ export interface BuildingEffects {
   industryPollutionPct?: number;
   /** Citizens no longer pollute the air. */
   noPopulationPollution?: boolean;
+  /** Extra trade on every worked tile that already yields trade. */
+  tradeOnTradeTiles?: number;
+  /** Percent added to what temples and cathedrals calm. */
+  templePct?: number;
+  cathedralPct?: number;
+  /** Percent added to the science bonus of every library, university and research lab. */
+  libraryBoostPct?: number;
+  /** Nobody in the city is unhappy. */
+  noUnhappy?: boolean;
+  /** Every city with a factory and no power plant works as if it had a hydro plant. */
+  plantInEveryCity?: boolean;
+  /** Extra moves for the owner's ships. */
+  shipMoves?: number;
+  /** Triremes no longer sink. */
+  safeTriremes?: boolean;
+  /** The owner learns every technology that this many other players know. */
+  techsFromOthers?: number;
+  /** Technologies given at once when the wonder is finished. */
+  freeTechs?: number;
+  /** A change of government takes one turn of anarchy. */
+  fastRevolution?: boolean;
+  /** The owner sees every city in the world. */
+  seesAllCities?: boolean;
+  /** Military units abroad make this many fewer citizens unhappy each. */
+  militaryUnhappyCut?: number;
+  /** Other leaders keep offering peace (diplomacy comes in phase 3). */
+  peaceOffers?: boolean;
+  /** Defence bonus against ships in percent (combat comes in phase 3). */
+  defenseVsSeaPct?: number;
+  /** Nuclear attacks within this many tiles fail. */
+  nuclearShield?: number;
 }
 
 export interface BuildingRule {
@@ -216,10 +309,14 @@ export interface BuildingRule {
   onePerPlayer?: boolean;
   /** A city has only one building of the group; a new one replaces the old one. */
   group?: string;
+  /** Once the owner knows this technology, the building (usually a wonder) stops working. */
+  obsoleteBy?: TechId;
+  /** A wonder that must stand somewhere in the world first. */
+  requiresWonder?: BuildingId;
+  /** A part of the spaceship: built in a city, but it goes to the player's ship. */
+  spaceship?: "structural" | "component" | "module";
   /** For wonders: "all" = the effect applies in every city of the owner. */
   scope?: "city" | "all";
-  /** The last wonder; building it wins the game (victory rules come in phase 3). */
-  victory?: boolean;
   effects: BuildingEffects;
 }
 
@@ -233,9 +330,41 @@ export interface TechRule {
 export interface ImprovementRule {
   id: ImprovementId;
   name: string;
+  /** Technology needed to build it. */
+  requires?: TechId;
+  /** Improvement that must already be on the tile. */
+  requiresImprovement?: ImprovementId;
+  /** Percent more shields on the tile (railroad). */
+  shieldsPct?: number;
   /** Work turns per terrain; terrain missing here cannot get the improvement. */
   turns: Partial<Record<TerrainId, number>>;
   bonus: Partial<Record<TerrainId, Partial<Yield>>>;
+}
+
+export interface GovernmentRule {
+  id: GovernmentId;
+  name: string;
+  requires: TechId | null;
+  /** Tiles yielding more than 2 of something give one less (despotism). */
+  tilePenalty: boolean;
+  /** Tiles that yield trade give one more. */
+  tradeBonus: boolean;
+  /** Highest share of trade for science or for gold, in percent; 0 = neither (anarchy). */
+  maxRate: number;
+  /** Percent of the distance-based corruption that applies. */
+  corruptionPct: number;
+  /** Corruption that does not depend on distance (communism). */
+  corruptionFlatPct: number;
+  /** Soldiers in a city calm unhappy citizens. */
+  martialLaw: boolean;
+  /** Unhappy citizens per military unit outside the owner's cities. */
+  militaryUnhappy: number;
+  /** Units every city supports for free; each further unit costs one shield. */
+  freeUnits: number;
+  /** Food each settler costs its home city. */
+  settlerFood: number;
+  /** A senate forces peace (diplomacy comes in phase 3). */
+  senate: boolean;
 }
 
 export interface GameConstants {
@@ -280,6 +409,26 @@ export interface GameConstants {
   pollutionPerUnhappy: number;
   /** Each known technology here makes every fourth citizen add one point of pollution. */
   pollutionTechs: TechId[];
+  /** Turns of anarchy after a revolution (one with the pyramids). */
+  anarchyTurns: number;
+  /** Chance in percent that a trireme sinks when it ends a turn away from the coast. */
+  triremeLossPct: number;
+  /** Shortest distance between two cities joined by a trade route. */
+  tradeRouteMinDistance: number;
+  tradeRoutesPerCity: number;
+  /** Nuclear attack: radius of destruction and of the protection of a missile shield. */
+  nuclearRadius: number;
+  spaceship: {
+    maxStructural: number;
+    maxComponent: number;
+    maxModule: number;
+    /** Flight time = baseTurns - turnsPerComponent × components, at least minTurns. */
+    baseTurns: number;
+    turnsPerComponent: number;
+    minTurns: number;
+    /** Chance of a safe landing = successPerModule × modules, at most 100. */
+    successPerModule: number;
+  };
 }
 
 function indexById<Id extends string, T extends { id: string }>(
@@ -328,6 +477,12 @@ export const IMPROVEMENTS: Readonly<Record<ImprovementId, ImprovementRule>> = in
 
 export const RULES: Readonly<GameConstants> = gameData as GameConstants;
 
+export const GOVERNMENTS: Readonly<Record<GovernmentId, GovernmentRule>> = indexById(
+  "governments.json",
+  GOVERNMENT_IDS,
+  governmentData.governments as GovernmentRule[],
+);
+
 export const CITY_NAMES: readonly string[] = cityNameData.names;
 
 export function isLand(terrain: TerrainId): boolean {
@@ -347,8 +502,16 @@ function checkReferences(): void {
       throw new Error(`units.json ${u.id}: unknown obsoleteBy "${u.obsoleteBy}"`);
     }
   }
+  const building = (where: string, id: string | null | undefined) => {
+    if (id && !(BUILDING_IDS as readonly string[]).includes(id)) throw new Error(`${where}: unknown building "${id}"`);
+  };
+  for (const u of Object.values(UNIT_TYPES)) building(`units.json ${u.id}`, u.requiresWonder);
+  for (const g of Object.values(GOVERNMENTS)) tech(`governments.json ${g.id}`, g.requires);
+  for (const i of Object.values(IMPROVEMENTS)) tech(`improvements.json ${i.id}`, i.requires ?? null);
   for (const b of Object.values(BUILDINGS)) {
     tech(`buildings.json ${b.id}`, b.requires);
+    tech(`buildings.json ${b.id}`, b.obsoleteBy ?? null);
+    building(`buildings.json ${b.id}`, b.requiresWonder);
     if (b.requiresBuilding !== null && !(BUILDING_IDS as readonly string[]).includes(b.requiresBuilding)) {
       throw new Error(`buildings.json ${b.id}: unknown requiresBuilding "${b.requiresBuilding}"`);
     }

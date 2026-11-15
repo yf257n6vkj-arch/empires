@@ -31,7 +31,7 @@ export function stateFromAscii(rows: string[], players = 1): GameState {
     turn: 1,
     currentPlayer: 0,
     nextId: 100,
-    map: { width, height, terrain, road: zeros(), irrigation: zeros(), mine: zeros() },
+    map: { width, height, terrain, road: zeros(), irrigation: zeros(), mine: zeros(), railroad: zeros(), fortress: zeros() },
     players: Array.from({ length: players }, (_, id) => ({
       id,
       name: `P${id}`,
@@ -43,6 +43,7 @@ export function stateFromAscii(rows: string[], players = 1): GameState {
     })),
     units: [],
     cities: [],
+    victory: null,
   };
 }
 
@@ -58,6 +59,8 @@ export function addUnit(state: GameState, type: UnitTypeId, x: number, y: number
     fortified: false,
     work: null,
     goto: null,
+    carriedBy: null,
+    turnsAloft: 0,
   };
   unit.movesLeft = fullMoves(unit);
   state.units.push(unit);

@@ -3,7 +3,7 @@
  * only; the screen turns them into Czech text, the AI can read them directly.
  */
 import type { Point } from "./geometry";
-import type { BuildingId, ImprovementId, TechId, UnitTypeId } from "./rules";
+import type { BuildingId, GovernmentId, ImprovementId, TechId, UnitTypeId } from "./rules";
 import type { CityId, PlayerId, ProductionItem, UnitId } from "./state";
 
 export type GameEvent =
@@ -22,4 +22,18 @@ export type GameEvent =
   | { type: "cityDisorder"; cityId: CityId }
   | { type: "cityAtMaxSize"; cityId: CityId; size: number }
   | { type: "techLearned"; player: PlayerId; tech: TechId }
-  | { type: "researchNeeded"; player: PlayerId };
+  | { type: "researchNeeded"; player: PlayerId }
+  | { type: "unitDisbanded"; cityId: CityId; unitType: UnitTypeId }
+  | { type: "unitLost"; unitId: UnitId; unitType: UnitTypeId; owner: PlayerId; reason: "sea" | "fuel" }
+  | { type: "spaceshipPartBuilt"; cityId: CityId; building: BuildingId }
+  | { type: "spaceshipLaunched"; player: PlayerId; arrivalTurn: number }
+  | { type: "spaceshipArrived"; player: PlayerId; success: boolean }
+  | { type: "revolutionStarted"; player: PlayerId; target: GovernmentId; turns: number }
+  | { type: "governmentChanged"; player: PlayerId; government: GovernmentId }
+  | { type: "tradeRouteOpened"; from: CityId; to: CityId; bonus: number }
+  | { type: "wonderHelped"; cityId: CityId; shields: number }
+  | { type: "embassyOpened"; player: PlayerId; with: PlayerId }
+  | { type: "techStolen"; player: PlayerId; from: PlayerId; tech: TechId }
+  | { type: "citySabotaged"; cityId: CityId; building: BuildingId | null }
+  | { type: "cityIncited"; cityId: CityId; from: PlayerId; to: PlayerId }
+  | { type: "nuclearStrike"; at: Point; owner: PlayerId; intercepted: boolean };

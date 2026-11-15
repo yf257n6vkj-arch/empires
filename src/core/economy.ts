@@ -5,21 +5,33 @@
 import type { GameEvent } from "./events";
 import {
   BUILDINGS,
+  GOVERNMENTS,
   RULES,
   TECHS,
   UNIT_TYPES,
   type BuildingEffects,
   type BuildingId,
   type BuildingRule,
+  type GovernmentId,
   type TechId,
+  type UnitTypeId,
 } from "./rules";
 import { distance, neighbors8 } from "./geometry";
-import type { City, GameState, Player, PlayerId, ProductionItem } from "./state";
+import { emptySpaceship, type City, type GameState, type Player, type PlayerId, type ProductionItem } from "./state";
 
 /** Economy fields of a player at the start of a game. */
 export function startingEconomy(): Pick<
   Player,
-  "techs" | "researching" | "researchGoal" | "research" | "gold" | "scienceRate"
+  | "techs"
+  | "researching"
+  | "researchGoal"
+  | "research"
+  | "gold"
+  | "scienceRate"
+  | "government"
+  | "revolution"
+  | "spaceship"
+  | "embassies"
 > {
   return {
     techs: [],
@@ -28,6 +40,10 @@ export function startingEconomy(): Pick<
     research: 0,
     gold: RULES.startingGold,
     scienceRate: RULES.startingScienceRate,
+    government: "despotism",
+    revolution: null,
+    spaceship: emptySpaceship(),
+    embassies: [],
   };
 }
 
@@ -71,9 +87,79 @@ export function researchCost(player: Player): number {
   return Math.round(RULES.researchCostBase + RULES.researchCostPerTech * player.techs.length);
 }
 
+/**
+ * Gives the player a technology (mutates the draft). Research in progress
+ * moves on towards the goal, as when the player discovers it himself.
+ */
+export function learnTechDraft(draft: GameState, playerId: PlayerId, tech: TechId, events: GameEvent[]): void {
+  const player = draft.players[playerId];
+  if (!player || player.techs.includes(tech)) return;
+  player.techs.push(tech);
+  events.push({ type: "techLearned", player: playerId, tech });
+  if (player.researching === tech || (player.researching !== null && !canResearch(player, player.researching))) player.researching = null;
+  if (player.researching === null && player.researchGoal !== null) {
+    player.researching = nextStepToGoal(player, player.researchGoal);
+    if (player.researching === null) player.researchGoal = null;
+  }
+  if (player.researching === null && researchableTechs(player).length > 0) events.push({ type: "researchNeeded", player: playerId });
+}
+
+/** The technology a free discovery goes to: the current research, or the cheapest available one. */
+export function freeTechChoice(player: Player): TechId | null {
+  if (player.researching !== null) return player.researching;
+  const options = researchableTechs(player).sort((a, b) => TECHS[a].era - TECHS[b].era);
+  return options[0] ?? null;
+}
+
 /** Highest era among known technologies, 0 before the first one. */
 export function currentEra(player: Player): number {
   return player.techs.reduce((e, t) => Math.max(e, TECHS[t].era), 0);
+}
+
+// ---------- governments ----------
+
+/** Science rate allowed under the government: neither science nor gold may exceed maxRate. */
+export function clampRate(rate: number, government: GovernmentId): number {
+  const max = GOVERNMENTS[government].maxRate;
+  if (max === 0) return rate;
+  return Math.min(max, Math.max(100 - max, rate));
+}
+
+export function canChooseGovernment(player: Player, government: GovernmentId): boolean {
+  if (government === "anarchy") return false;
+  return knowsTech(player, GOVERNMENTS[government].requires);
+}
+
+// ---------- wonders ----------
+
+/** The player who owns the wonder while it still works (its owner does not know the technology that ends it). */
+export function wonderOwner(state: GameState, id: BuildingId): PlayerId | null {
+  const city = state.cities.find((c) => c.buildings.includes(id));
+  if (!city) return null;
+  const obsolete = BUILDINGS[id].obsoleteBy;
+  const player = state.players[city.owner];
+  if (obsolete && player?.techs.includes(obsolete)) return null;
+  return city.owner;
+}
+
+export function hasWonder(state: GameState, player: PlayerId, id: BuildingId): boolean {
+  return wonderOwner(state, id) === player;
+}
+
+/** Sum of a numeric effect over the player's working wonders. */
+export function wonderEffect(state: GameState, player: PlayerId, key: "shipMoves" | "militaryUnhappyCut"): number {
+  let total = 0;
+  for (const c of state.cities) {
+    if (c.owner !== player) continue;
+    for (const b of c.buildings) if (BUILDINGS[b].wonder && wonderOwner(state, b) === player) total += BUILDINGS[b].effects[key] ?? 0;
+  }
+  return total;
+}
+
+export function wonderFlag(state: GameState, player: PlayerId, key: "safeTriremes" | "fastRevolution" | "seesAllCities"): boolean {
+  return state.cities.some(
+    (c) => c.owner === player && c.buildings.some((b) => BUILDINGS[b].effects[key] && wonderOwner(state, b) === player),
+  );
 }
 
 // ---------- what can be built ----------
@@ -85,7 +171,7 @@ export function builtWonders(state: GameState): BuildingId[] {
   return result;
 }
 
-export function canBuildUnitType(player: Player, id: keyof typeof UNIT_TYPES): boolean {
+export function canBuildUnitType(player: Player, id: UnitTypeId): boolean {
   const rule = UNIT_TYPES[id];
   if (!knowsTech(player, rule.requires)) return false;
   // A unit disappears from the list once its replacement can be built.
@@ -98,9 +184,25 @@ export function isCoastal(state: GameState, city: City): boolean {
   return neighbors8(state.map, city.y * state.map.width + city.x).some((i) => state.map.terrain[i] === "ocean");
 }
 
+/** Whether this city can build the unit: the technology, a coast for ships, a wonder some units need. */
+export function canBuildUnit(state: GameState, city: City, id: UnitTypeId): boolean {
+  const player = state.players[city.owner];
+  if (!player || !canBuildUnitType(player, id)) return false;
+  const rule = UNIT_TYPES[id];
+  if (rule.domain === "sea" && !isCoastal(state, city)) return false;
+  if (rule.requiresWonder && !builtWonders(state).includes(rule.requiresWonder)) return false;
+  return true;
+}
+
 export function canBuildBuilding(state: GameState, city: City, rule: BuildingRule): boolean {
   const player = state.players[city.owner];
   if (!player || !knowsTech(player, rule.requires)) return false;
+  if (rule.requiresWonder && !builtWonders(state).includes(rule.requiresWonder)) return false;
+  if (rule.spaceship) {
+    const ship = player.spaceship;
+    const max = { structural: RULES.spaceship.maxStructural, component: RULES.spaceship.maxComponent, module: RULES.spaceship.maxModule }[rule.spaceship];
+    return ship.launchedTurn === null && ship[rule.spaceship] < max && capitalOf(state, city.owner) !== undefined;
+  }
   if (city.buildings.includes(rule.id)) return false;
   if (rule.requiresBuilding !== null && !city.buildings.includes(rule.requiresBuilding)) return false;
   if (rule.coastal && !isCoastal(state, city)) return false;
@@ -111,7 +213,7 @@ export function canBuildBuilding(state: GameState, city: City, rule: BuildingRul
 export function canBuild(state: GameState, city: City, item: ProductionItem): boolean {
   const player = state.players[city.owner];
   if (!player) return false;
-  return item.kind === "unit" ? canBuildUnitType(player, item.id) : canBuildBuilding(state, city, BUILDINGS[item.id]);
+  return item.kind === "unit" ? canBuildUnit(state, city, item.id) : canBuildBuilding(state, city, BUILDINGS[item.id]);
 }
 
 /** What the city can be set to produce, units first. */
@@ -119,7 +221,7 @@ export function productionOptions(state: GameState, city: City): ProductionItem[
   const player = state.players[city.owner];
   if (!player) return [];
   const units: ProductionItem[] = Object.values(UNIT_TYPES)
-    .filter((u) => canBuildUnitType(player, u.id))
+    .filter((u) => canBuildUnit(state, city, u.id))
     .map((u) => ({ kind: "unit", id: u.id }));
   const buildings: ProductionItem[] = Object.values(BUILDINGS)
     .filter((b) => canBuildBuilding(state, city, b))
@@ -134,7 +236,7 @@ export function productionOptions(state: GameState, city: City): ProductionItem[
 export function fallbackProduction(state: GameState, owner: PlayerId): ProductionItem {
   const player = state.players[owner];
   const military = Object.values(UNIT_TYPES)
-    .filter((u) => !u.foundsCity && player && canBuildUnitType(player, u.id))
+    .filter((u) => u.domain === "land" && u.attack > 0 && !u.special && player && canBuildUnitType(player, u.id))
     .sort((a, b) => b.defense - a.defense || a.cost - b.cost);
   return { kind: "unit", id: military[0]?.id ?? "warriors" };
 }
@@ -154,22 +256,53 @@ export interface CityEffects {
   /** Multiplier for pollution from shields, in percent. */
   industryPollutionPct: number;
   noPopulationPollution: boolean;
+  tradeOnTradeTiles: number;
+  noUnhappy: boolean;
+  militaryUnhappyCut: number;
+  defenseVsSeaPct: number;
+  nuclearShield: number;
+}
+
+/** Buildings of the city that work: the needed building stands and the owner does not know what makes them obsolete. */
+export function workingBuildings(state: GameState, city: City): BuildingId[] {
+  const player = state.players[city.owner];
+  return city.buildings.filter((b) => {
+    const rule = BUILDINGS[b];
+    if (rule.requiresBuilding !== null && !city.buildings.includes(rule.requiresBuilding)) return false;
+    return !(rule.obsoleteBy && player?.techs.includes(rule.obsoleteBy));
+  });
 }
 
 /**
  * Combined effect of the city's buildings and of its owner's wonders that work everywhere.
- * A building that needs another one (a power plant needs a factory) does nothing without it.
+ * A building that needs another one (a power plant needs a factory) does nothing without it,
+ * and a wonder stops working once its owner knows the technology that makes it obsolete.
  */
 export function cityEffects(state: GameState, city: City): CityEffects {
-  const sources: BuildingEffects[] = city.buildings
-    .filter((b) => {
-      const needs = BUILDINGS[b].requiresBuilding;
-      return needs === null || city.buildings.includes(needs);
-    })
-    .map((b) => BUILDINGS[b].effects);
+  const own = workingBuildings(state, city);
+  const empireWide: BuildingId[] = [];
   for (const other of state.cities) {
     if (other.owner !== city.owner || other.id === city.id) continue;
-    for (const b of other.buildings) if (BUILDINGS[b].wonder && BUILDINGS[b].scope === "all") sources.push(BUILDINGS[b].effects);
+    for (const b of workingBuildings(state, other)) if (BUILDINGS[b].wonder && BUILDINGS[b].scope === "all") empireWide.push(b);
+  }
+  const all = [...own, ...empireWide];
+  const sum = (key: "templePct" | "cathedralPct" | "libraryBoostPct") => all.reduce((n, b) => n + (BUILDINGS[b].effects[key] ?? 0), 0);
+  const templePct = sum("templePct");
+  const cathedralPct = sum("cathedralPct");
+  const libraryBoostPct = sum("libraryBoostPct");
+
+  const sources: BuildingEffects[] = all.map((b) => {
+    const e = BUILDINGS[b].effects;
+    if (b === "temple" && templePct) return { ...e, content: Math.round(((e.content ?? 0) * (100 + templePct)) / 100) };
+    if (b === "cathedral" && cathedralPct) return { ...e, content: Math.round(((e.content ?? 0) * (100 + cathedralPct)) / 100) };
+    if ((b === "library" || b === "university" || b === "researchLab") && libraryBoostPct) {
+      return { ...e, sciencePct: (e.sciencePct ?? 0) + libraryBoostPct };
+    }
+    return e;
+  });
+  // A dam for everyone: a city with a factory and no power plant works as if it had a hydro plant.
+  if (all.some((b) => BUILDINGS[b].effects.plantInEveryCity) && own.includes("factory") && !own.some((b) => BUILDINGS[b].group === "power")) {
+    sources.push(BUILDINGS.hydroPlant.effects);
   }
   const result: CityEffects = {
     content: 0,
@@ -183,6 +316,11 @@ export function cityEffects(state: GameState, city: City): CityEffects {
     oceanFood: 0,
     industryPollutionPct: 100,
     noPopulationPollution: false,
+    tradeOnTradeTiles: 0,
+    noUnhappy: false,
+    militaryUnhappyCut: 0,
+    defenseVsSeaPct: 0,
+    nuclearShield: 0,
   };
   for (const e of sources) {
     result.content += e.content ?? 0;
@@ -196,6 +334,11 @@ export function cityEffects(state: GameState, city: City): CityEffects {
     result.oceanFood += e.oceanFood ?? 0;
     result.industryPollutionPct = Math.round((result.industryPollutionPct * (e.industryPollutionPct ?? 100)) / 100);
     result.noPopulationPollution ||= e.noPopulationPollution ?? false;
+    result.tradeOnTradeTiles += e.tradeOnTradeTiles ?? 0;
+    result.noUnhappy ||= e.noUnhappy ?? false;
+    result.militaryUnhappyCut += e.militaryUnhappyCut ?? 0;
+    result.defenseVsSeaPct += e.defenseVsSeaPct ?? 0;
+    result.nuclearShield = Math.max(result.nuclearShield, e.nuclearShield ?? 0);
   }
   return result;
 }
@@ -211,8 +354,10 @@ export function capitalOf(state: GameState, player: PlayerId): City | undefined 
  */
 export function corruptionPct(state: GameState, city: City, effects = cityEffects(state, city)): number {
   if (effects.capital) return 0;
+  const gov = GOVERNMENTS[state.players[city.owner]?.government ?? "despotism"];
   const capital = capitalOf(state, city.owner);
-  const raw = capital ? Math.min(RULES.corruptionMaxPct, distance(city, capital) * RULES.corruptionPerTile) : RULES.corruptionMaxPct;
+  const byDistance = capital ? distance(city, capital) * RULES.corruptionPerTile : RULES.corruptionMaxPct;
+  const raw = Math.min(RULES.corruptionMaxPct, (byDistance * gov.corruptionPct) / 100 + gov.corruptionFlatPct);
   return Math.round((raw * (100 - effects.corruptionCutPct)) / 100);
 }
 
@@ -222,6 +367,27 @@ export function buildingUpkeep(state: GameState, player: PlayerId): number {
   let total = 0;
   for (const c of state.cities) if (c.owner === player) for (const b of c.buildings) total += BUILDINGS[b].upkeep;
   return total;
+}
+
+/** Turns a spaceship with these parts flies, and its chance of a safe landing. */
+export function spaceshipFlight(ship: { component: number; module: number }): { turns: number; successPct: number } {
+  const r = RULES.spaceship;
+  return {
+    turns: Math.max(r.minTurns, r.baseTurns - r.turnsPerComponent * ship.component),
+    successPct: Math.min(100, r.successPerModule * ship.module),
+  };
+}
+
+/** Null when the ship can start, otherwise why not. */
+export function spaceshipLaunchProblem(state: GameState, player: PlayerId): "launched" | "noCapital" | "noComponent" | "noModule" | "tooFewStructures" | null {
+  const ship = state.players[player]?.spaceship;
+  if (!ship) return "noCapital";
+  if (ship.launchedTurn !== null) return "launched";
+  if (!capitalOf(state, player)) return "noCapital";
+  if (ship.component < 1) return "noComponent";
+  if (ship.module < 1) return "noModule";
+  if (ship.structural < ship.component + ship.module) return "tooFewStructures";
+  return null;
 }
 
 /** Gold needed to finish the city's current production this turn, 0 when it is already paid. */

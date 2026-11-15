@@ -1,5 +1,5 @@
 {
-  "_comment": "Obecné konstanty pravidel. movesFraction: pohyb se počítá v třetinách, cesta stojí jednu třetinu. contentBase: kolik obyvatel je spokojených bez pomoci. maxCitySize: největší město bez akvaduktu. Růst a ceny jsou zrychlené proti Civilizaci 1, aby se partie vešla do 120 tahů (ověřeno nástrojem npm run pace). Cena výzkumu = researchCostBase + researchCostPerTech × počet známých technologií, zaokrouhleno. Strom má 68 technologií, takže jednotlivý objev je levný. Nákup zbytku výroby stojí buyPerShield × r + r² / buyQuadratic zlata (r = chybějící štíty), dvojnásobek, když město ještě nic nevyrobilo, a dvojnásobek u divů. Korupce: město ztratí corruptionPerTile procent obchodu za každé políčko vzdálenosti od paláce, nejvýš corruptionMaxPct procent, a tolik ztratí i všechna města hráče bez paláce. Znečištění = štíty po bonusech (zmenšené elektrárnou a recyklací) + čtvrtina obyvatel za každou známou technologii z pollutionTechs. Nad pollutionFree rozladí každých započatých pollutionPerUnhappy bodů jednoho obyvatele.",
+  "_comment": "Obecné konstanty pravidel. movesFraction: pohyb se počítá v třetinách, cesta stojí jednu třetinu. contentBase: kolik obyvatel je spokojených bez pomoci. maxCitySize: největší město bez akvaduktu. Růst a ceny jsou zrychlené proti Civilizaci 1, aby se partie vešla do 120 tahů (ověřeno nástrojem npm run pace). Cena výzkumu = researchCostBase + researchCostPerTech × počet známých technologií, zaokrouhleno. Strom má 68 technologií, takže jednotlivý objev je levný. Nákup zbytku výroby stojí buyPerShield × r + r² / buyQuadratic zlata (r = chybějící štíty), dvojnásobek, když město ještě nic nevyrobilo, a dvojnásobek u divů. Korupce: město ztratí corruptionPerTile procent obchodu za každé políčko vzdálenosti od paláce, nejvýš corruptionMaxPct procent, a tolik ztratí i všechna města hráče bez paláce. Znečištění = štíty po bonusech (zmenšené elektrárnou a recyklací) + čtvrtina obyvatel za každou známou technologii z pollutionTechs. Nad pollutionFree rozladí každých započatých pollutionPerUnhappy bodů jednoho obyvatele. anarchyTurns: kolik tahů trvá anarchie po revoluci (s pyramidami jeden). triremeLossPct: šance, že se triéra mimo pobřeží potopí. Obchodní cesta vede jen do města aspoň tradeRouteMinDistance políček daleko, město jich má nejvýš tradeRoutesPerCity. nuclearRadius: kolik políček kolem cíle zničí jaderná raketa, protiraketový štít chrání třikrát tak daleko. spaceship: vesmírná loď potřebuje aspoň jednu nosnou konstrukci na každý motor a modul, let trvá baseTurns − turnsPerComponent × motory (nejméně minTurns) a přistane se šancí successPerModule × moduly procent.",
   "maxTurns": 120,
   "movesFraction": 3,
   "roadMoveCost": 1,
@@ -26,5 +26,19 @@
   "corruptionMaxPct": 50,
   "pollutionFree": 20,
   "pollutionPerUnhappy": 10,
-  "pollutionTechs": ["industrialization", "automobile", "massProduction", "plastics"]
+  "pollutionTechs": ["industrialization", "automobile", "massProduction", "plastics"],
+  "anarchyTurns": 2,
+  "triremeLossPct": 50,
+  "tradeRouteMinDistance": 9,
+  "tradeRoutesPerCity": 3,
+  "nuclearRadius": 1,
+  "spaceship": {
+    "maxStructural": 12,
+    "maxComponent": 6,
+    "maxModule": 3,
+    "baseTurns": 16,
+    "turnsPerComponent": 2,
+    "minTurns": 5,
+    "successPerModule": 34
+  }
 }

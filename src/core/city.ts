@@ -2,11 +2,24 @@
  * City economy: which tiles citizens work, what the city yields, happiness,
  * growth, starvation and production. Functions named *Draft mutate a cloned state.
  */
-import { canBuild, cityEffects, corruptionPct, fallbackProduction, type CityEffects } from "./economy";
+import {
+  canBuild,
+  cityEffects,
+  corruptionPct,
+  fallbackProduction,
+  freeTechChoice,
+  learnTechDraft,
+  type CityEffects,
+} from "./economy";
 import type { GameEvent } from "./events";
-import { BUILDINGS, RULES, UNIT_TYPES, type Yield } from "./rules";
-import type { City, GameState, ProductionItem } from "./state";
-import { fullMoves, idx, tileYield, workableTiles } from "./world";
+import { distance } from "./geometry";
+import { BUILDINGS, GOVERNMENTS, RULES, UNIT_TYPES, type GovernmentRule, type Yield } from "./rules";
+import type { City, GameState, ProductionItem, Unit } from "./state";
+import { cityAt, idx, makeUnit, tileYield, workableTiles } from "./world";
+
+function governmentOf(state: GameState, city: City): GovernmentRule {
+  return GOVERNMENTS[state.players[city.owner]?.government ?? "despotism"];
+}
 
 
 export function growthThreshold(size: number): number {
@@ -29,7 +42,60 @@ export function sameItem(a: ProductionItem, b: ProductionItem): boolean {
 export function cityTileYield(state: GameState, city: City, index: number, effects = cityEffects(state, city)): Yield {
   const y = tileYield(state.map, index, index === idx(state.map, city));
   if (state.map.terrain[index] === "ocean") y.food += effects.oceanFood;
+  const gov = governmentOf(state, city);
+  // Despotism wastes the best tiles: anything above 2 gives one less. The city
+  // centre is spared, otherwise new cities would barely grow in a 120-turn game.
+  if (gov.tilePenalty && index !== idx(state.map, city)) {
+    if (y.food > 2) y.food -= 1;
+    if (y.shields > 2) y.shields -= 1;
+    if (y.trade > 2) y.trade -= 1;
+  }
+  if (y.trade > 0) y.trade += effects.tradeOnTradeTiles + (gov.tradeBonus ? 1 : 0);
   return y;
+}
+
+/** Trade a city gets from its trade routes; a route to another player's city counts double. */
+export function routeTrade(state: GameState, city: City): number {
+  const base = (c: City) => grossYield(state, c, cityEffects(state, c)).trade;
+  let total = 0;
+  for (const id of city.tradeRoutes) {
+    const other = state.cities.find((c) => c.id === id);
+    if (!other) continue;
+    const value = Math.floor((base(city) + base(other) + 4) / 8);
+    total += other.owner === city.owner ? Math.floor(value / 2) : value;
+  }
+  return total;
+}
+
+/** Units the city pays for: everything whose home it is. */
+export function supportedUnits(state: GameState, city: City): Unit[] {
+  return state.units.filter((u) => u.homeCity === city.id);
+}
+
+/** Shields per turn the city pays for its units beyond those it keeps for free. */
+export function unitShieldUpkeep(state: GameState, city: City): number {
+  return Math.max(0, supportedUnits(state, city).length - governmentOf(state, city).freeUnits);
+}
+
+/** Food per turn for the city's settlers. */
+function settlerFood(state: GameState, city: City): number {
+  const perSettler = governmentOf(state, city).settlerFood;
+  return supportedUnits(state, city).filter((u) => UNIT_TYPES[u.type].foodUpkeep > 0).length * perSettler;
+}
+
+/** Citizens made unhappy by the city's soldiers away from home, under a republic or democracy. */
+export function militaryUnhappiness(state: GameState, city: City, effects: CityEffects): number {
+  const per = Math.max(0, governmentOf(state, city).militaryUnhappy - effects.militaryUnhappyCut);
+  if (per === 0) return 0;
+  const abroad = supportedUnits(state, city).filter((u) => {
+    if (UNIT_TYPES[u.type].attack === 0) return false;
+    const there = cityAt(state, u);
+    if (there && there.owner === u.owner) return false;
+    // A fortress near one of the owner's cities counts as home.
+    if (state.map.fortress[idx(state.map, u)] && state.cities.some((c) => c.owner === u.owner && distance(c, u) <= 3)) return false;
+    return true;
+  });
+  return abroad.length * per;
 }
 
 /** Centre plus worked tiles. */
@@ -74,8 +140,10 @@ const TARGET_FOOD_SURPLUS = 1;
 
 /** Military units of the owner standing in the city, each calming one unhappy citizen up to a limit. */
 export function martialLaw(state: GameState, city: City): number {
+  if (!governmentOf(state, city).martialLaw) return 0;
   const soldiers = state.units.filter(
-    (u) => u.owner === city.owner && u.x === city.x && u.y === city.y && UNIT_TYPES[u.type].attack > 0,
+    (u) =>
+      u.owner === city.owner && u.x === city.x && u.y === city.y && UNIT_TYPES[u.type].attack > 0 && UNIT_TYPES[u.type].domain === "land",
   ).length;
   return Math.min(soldiers, RULES.martialLawMax);
 }
@@ -91,8 +159,10 @@ export interface Happiness {
 
 /** Unhappy citizens left after buildings and soldiers have calmed whom they can, before entertainers. */
 function unhappyAfterHelp(state: GameState, city: City, effects: CityEffects): number {
+  if (effects.noUnhappy) return 0;
   const crowd = Math.max(0, city.size - RULES.contentBase);
-  const unhappy = Math.min(city.size, crowd + cityPollution(state, city, effects).unhappy);
+  const extra = cityPollution(state, city, effects).unhappy + militaryUnhappiness(state, city, effects);
+  const unhappy = Math.min(city.size, crowd + extra);
   return Math.max(0, unhappy - effects.content - martialLaw(state, city));
 }
 
@@ -124,9 +194,7 @@ export function assignWorkersDraft(draft: GameState, city: City): void {
   const workers = city.size - entertainers;
 
   const candidates = workableTiles(draft, city).map((i) => ({ i, y: cityTileYield(draft, city, i, effects) }));
-  const settlerUpkeep = draft.units
-    .filter((u) => u.homeCity === city.id)
-    .reduce((sum, u) => sum + UNIT_TYPES[u.type].foodUpkeep, 0);
+  const settlerUpkeep = settlerFood(draft, city);
   let food = cityTileYield(draft, city, idx(draft.map, city), effects).food - city.size * RULES.foodPerCitizen - settlerUpkeep;
   const worked: number[] = [];
   for (let n = 0; n < workers && candidates.length > 0; n++) {
@@ -148,8 +216,12 @@ export interface CityReport {
   foodSurplus: number;
   /** Shields added to production this turn, after buildings and disorder. */
   shieldSurplus: number;
+  /** Trade from trade routes, included in production.trade. */
+  routes: number;
   /** Trade lost on the way to the capital. */
   corruption: number;
+  /** Shields paid for units beyond the free ones. */
+  unitUpkeep: number;
   /** Trade split by the owner's slider, after corruption, buildings and disorder. */
   science: number;
   gold: number;
@@ -169,22 +241,26 @@ export interface CityReport {
 export function cityReport(state: GameState, city: City): CityReport {
   const effects = cityEffects(state, city);
   const production = grossYield(state, city, effects);
-  const settlerUpkeep = state.units
-    .filter((u) => u.homeCity === city.id)
-    .reduce((sum, u) => sum + UNIT_TYPES[u.type].foodUpkeep, 0);
+  const routes = routeTrade(state, city);
+  production.trade += routes;
+  const settlerUpkeep = settlerFood(state, city);
   const foodUpkeep = city.size * RULES.foodPerCitizen + settlerUpkeep;
   const foodSurplus = production.food - foodUpkeep;
   const happiness = cityHappiness(state, city, effects);
 
+  const gov = governmentOf(state, city);
   const rate = state.players[city.owner]?.scienceRate ?? 0;
   const corruption = Math.round((production.trade * corruptionPct(state, city, effects)) / 100);
   const trade = production.trade - corruption;
   const baseScience = Math.round((trade * rate) / 100);
   const baseGold = trade - baseScience;
   const calm = !happiness.disorder;
-  const shieldSurplus = calm ? Math.floor((production.shields * (100 + effects.shieldsPct)) / 100) : 0;
-  const science = calm ? Math.floor((baseScience * (100 + effects.sciencePct)) / 100) : 0;
-  const gold = calm ? Math.floor((baseGold * (100 + effects.goldPct)) / 100) : 0;
+  const unitUpkeep = unitShieldUpkeep(state, city);
+  const shieldSurplus = calm ? Math.max(0, Math.floor((production.shields * (100 + effects.shieldsPct)) / 100) - unitUpkeep) : 0;
+  // In anarchy trade only keeps people busy: no science and no gold.
+  const paid = calm && gov.maxRate > 0;
+  const science = paid ? Math.floor((baseScience * (100 + effects.sciencePct)) / 100) : 0;
+  const gold = paid ? Math.floor((baseGold * (100 + effects.goldPct)) / 100) : 0;
 
   const threshold = growthThreshold(city.size);
   const cost = productionCost(city.production);
@@ -195,7 +271,9 @@ export function cityReport(state: GameState, city: City): CityReport {
     foodUpkeep,
     foodSurplus,
     shieldSurplus,
+    routes,
     corruption,
+    unitUpkeep,
     science,
     gold,
     happiness,
@@ -245,6 +323,16 @@ export function processCityDraft(draft: GameState, city: City, events: GameEvent
     }
   }
 
+  // Units the city cannot pay for go home: the newest one is disbanded.
+  const gross = Math.floor((report.production.shields * (100 + effects.shieldsPct)) / 100);
+  if (!report.happiness.disorder && report.unitUpkeep > gross) {
+    const newest = supportedUnits(draft, city).sort((a, b) => b.id - a.id)[0];
+    if (newest) {
+      removeUnitDraft(draft, newest.id);
+      events.push({ type: "unitDisbanded", cityId: city.id, unitType: newest.type });
+    }
+  }
+
   // Production. Something that became impossible (a wonder built elsewhere,
   // an obsolete unit) is replaced before shields are added.
   if (!canBuild(draft, city, city.production)) {
@@ -272,25 +360,23 @@ function completeProductionDraft(draft: GameState, city: City, cost: number, eve
     if (rule.populationCost > 0) city.manualTiles = false;
     city.shields -= cost;
     const unitId = draft.nextId++;
-    draft.units.push({
-      id: unitId,
-      owner: city.owner,
-      type: item.id,
-      x: city.x,
-      y: city.y,
-      movesLeft: 0,
-      homeCity: city.id,
-      fortified: false,
-      work: null,
-      goto: null,
-    });
-    const unit = draft.units[draft.units.length - 1];
-    if (unit) unit.movesLeft = fullMoves(unit);
+    draft.units.push(makeUnit(unitId, city.owner, item.id, city, city.id));
     events.push({ type: "unitBuilt", cityId: city.id, unitId, unitType: item.id });
     return;
   }
   city.shields -= cost;
   const rule = BUILDINGS[item.id];
+  if (rule.spaceship) {
+    const player = draft.players[city.owner]!;
+    player.spaceship[rule.spaceship] += 1;
+    events.push({ type: "spaceshipPartBuilt", cityId: city.id, building: item.id });
+    // The city keeps building parts while it can.
+    if (!canBuild(draft, city, item)) {
+      city.production = fallbackProduction(draft, city.owner);
+      events.push({ type: "productionNeeded", cityId: city.id });
+    }
+    return;
+  }
   // A new palace moves the capital; a new power plant replaces the old one.
   if (rule.onePerPlayer) {
     for (const other of draft.cities) {
@@ -304,7 +390,19 @@ function completeProductionDraft(draft: GameState, city: City, cost: number, eve
       ? { type: "wonderBuilt", cityId: city.id, owner: city.owner, building: item.id }
       : { type: "buildingBuilt", cityId: city.id, building: item.id },
   );
+  for (let k = 0; k < (rule.effects.freeTechs ?? 0); k++) {
+    const player = draft.players[city.owner]!;
+    const tech = freeTechChoice(player);
+    if (tech) learnTechDraft(draft, city.owner, tech, events);
+  }
   // A building cannot be built twice, so the city falls back to a defender.
   city.production = fallbackProduction(draft, city.owner);
   events.push({ type: "productionNeeded", cityId: city.id });
+}
+
+/** Removes a unit together with everything it carries (mutates the draft). */
+export function removeUnitDraft(draft: GameState, unitId: number): void {
+  const gone = new Set([unitId]);
+  for (const u of draft.units) if (u.carriedBy === unitId) gone.add(u.id);
+  draft.units = draft.units.filter((u) => !gone.has(u.id));
 }

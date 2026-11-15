@@ -4,15 +4,50 @@
 import type { GameEvent } from "./events";
 import { distance, type Point } from "./geometry";
 import { findPath } from "./path";
-import { RULES } from "./rules";
+import { wonderEffect } from "./economy";
+import { RULES, TERRAINS, UNIT_TYPES } from "./rules";
 import type { GameState, Unit } from "./state";
 import type { CommandError } from "./commands";
-import { cityAt, fullMoves, moveCost, reveal, unitsAt } from "./world";
+import { cityAt, domainOf, fullMoves, idx, moveCost, reveal, unitsAt } from "./world";
+
+/** Units on board of a ship or carrier. */
+export function cargoOf(state: GameState, carrier: Unit): Unit[] {
+  return state.units.filter((u) => u.carriedBy === carrier.id);
+}
+
+/** An own ship on the tile with room for this unit, or undefined. */
+export function shipWithRoom(state: GameState, unit: Unit, at: Point): Unit | undefined {
+  const kind = domainOf(unit) === "air" ? "air" : "land";
+  return unitsAt(state, at).find((s) => {
+    const rule = UNIT_TYPES[s.type];
+    if (s.owner !== unit.owner || s.id === unit.id || rule.domain !== "sea" || !rule.capacity) return false;
+    if ((rule.carries ?? "land") !== kind) return false;
+    return cargoOf(state, s).length < rule.capacity;
+  });
+}
+
+/** Moves a unit has at the start of its turn: ships get more from the owner's wonders. */
+export function turnMoves(state: GameState, unit: Unit): number {
+  const base = fullMoves(unit);
+  if (domainOf(unit) !== "sea") return base;
+  return base + wonderEffect(state, unit.owner, "shipMoves") * RULES.movesFraction;
+}
+
+/** Move cost including boarding: a land unit may step onto an ocean tile where its own ship has room. */
+export function stepCost(state: GameState, unit: Unit, to: Point): number | null {
+  const domain = domainOf(unit);
+  const cost = moveCost(state, unit, to, domain);
+  if (cost !== null) return cost;
+  if (distance(unit, to) !== 1) return null;
+  const terrain = state.map.terrain[idx(state.map, to)];
+  if (domain !== "sea" && terrain && !TERRAINS[terrain].land && shipWithRoom(state, unit, to)) return RULES.movesFraction;
+  return null;
+}
 
 export function canMove(state: GameState, unit: Unit, to: Point): CommandError | null {
   if (unit.movesLeft <= 0) return "noMovesLeft";
   if (distance(unit, to) !== 1) return "notAdjacent";
-  const cost = moveCost(state, unit, to);
+  const cost = stepCost(state, unit, to);
   if (cost === null) return "cannotEnter";
   // A unit with full movement may always make one step, even into mountains.
   if (unit.movesLeft < cost && unit.movesLeft < fullMoves(unit)) return "notEnoughMoves";
@@ -24,14 +59,44 @@ export function canMove(state: GameState, unit: Unit, to: Point): CommandError |
 
 /** Moves a unit one tile (mutates the draft; the move must already be checked). */
 export function moveDraft(draft: GameState, unit: Unit, to: Point): void {
-  const cost = moveCost(draft, unit, to) ?? 0;
+  const cost = stepCost(draft, unit, to) ?? 0;
+  const ship = domainOf(unit) === "sea" ? undefined : shipWithRoom(draft, unit, to);
   unit.x = to.x;
   unit.y = to.y;
   unit.movesLeft = Math.max(0, unit.movesLeft - cost);
   unit.fortified = false;
   unit.work = null;
-  reveal(draft, unit.owner, unit, RULES.unitSight);
+  // Stepping onto open sea means boarding; any other step leaves the ship.
+  const terrain = draft.map.terrain[idx(draft.map, to)];
+  const atSea = terrain !== undefined && !TERRAINS[terrain].land;
+  unit.carriedBy = atSea && ship ? ship.id : null;
+  if (unit.carriedBy !== null && domainOf(unit) === "air") unit.turnsAloft = 0;
+  reveal(draft, unit.owner, unit, UNIT_TYPES[unit.type].sight ?? RULES.unitSight);
+  // A ship takes its cargo along.
+  for (const passenger of draft.units) {
+    if (passenger.carriedBy !== unit.id) continue;
+    passenger.x = to.x;
+    passenger.y = to.y;
+  }
 }
+
+/** Puts a unit standing in a city on board an own ship in the same city (mutates the draft). */
+export function boardDraft(draft: GameState, unit: Unit): CommandError | null {
+  const ship = shipWithRoom(draft, unit, unit);
+  if (!ship) return "noShip";
+  unit.carriedBy = ship.id;
+  unit.fortified = false;
+  unit.work = null;
+  unit.goto = null;
+  return null;
+}
+
+/** True when an aircraft can refuel where it stands: in an own city or on a carrier. */
+export function aircraftSafe(state: GameState, unit: Unit): boolean {
+  const city = cityAt(state, unit);
+  return (city !== undefined && city.owner === unit.owner) || unit.carriedBy !== null;
+}
+
 
 /**
  * Follows the unit's goto order as far as its movement allows this turn
@@ -41,7 +106,7 @@ export function moveDraft(draft: GameState, unit: Unit, to: Point): void {
 export function continueGotoDraft(draft: GameState, unit: Unit, events: GameEvent[]): void {
   const target = unit.goto;
   if (!target) return;
-  const path = findPath(draft, unit.owner, unit, target);
+  const path = findPath(draft, unit.owner, unit, target, domainOf(unit));
   if (!path) {
     unit.goto = null;
     events.push({ type: "gotoBlocked", unitId: unit.id });

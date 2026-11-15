@@ -28,7 +28,7 @@ import {
 } from "../core";
 import { BUILDING_WIDTH, buildingPortraitCanvas, drawBuilding, drawHouse, tone } from "./buildingArt";
 import { drawTerrainPatch, drawUnitPortrait, PLAYER_COLORS, unitPortraitCanvas, type DrawInput } from "./render";
-import { describeBuilding, escapeHtml } from "./texts";
+import { describeBuilding, describeUnit, escapeHtml } from "./texts";
 
 export interface CityHost {
   state(): GameState;
@@ -77,7 +77,9 @@ function seeded(seed: number): () => number {
 /** Industry stands on the edge of town, further away. */
 const FAR_ROW: BuildingId[] = ["hydroPlant", "nuclearPlant", "powerPlant"];
 const BACK_ROW: BuildingId[] = [
-  "greatWork",
+  "apolloProgram",
+  "unitedNations",
+  "stVitus",
   "palace",
   "cathedral",
   "university",
@@ -90,7 +92,23 @@ const BACK_ROW: BuildingId[] = [
   "stoneCircle",
   "courthouse",
   "bank",
+  "researchLab",
+  "sdiDefense",
+  "pyramids",
+  "colossus",
+  "hangingGardens",
+  "oracle",
+  "greatLibrary",
+  "sistineChapel",
+  "globeTheatre",
+  "royalSociety",
+  "womensSuffrage",
+  "manhattanProject",
+  "setiProgram",
+  "genomeProject",
 ];
+/** Wonders that stand out of town: by the sea or in the hills. */
+const EDGE_ROW: BuildingId[] = ["lighthouse", "greatWall", "circumnavigation", "darwinVoyage", "hooverDam", "coastalFortress"];
 const FRONT_ROW: BuildingId[] = ["marketplace", "granary", "barracks", "amphitheater", "manufacturingPlant", "recyclingCenter", "massTransit"];
 
 function drawPanorama(ctx: CanvasRenderingContext2D, w: number, h: number, state: GameState, city: City): void {
@@ -259,6 +277,7 @@ function drawPanorama(ctx: CanvasRenderingContext2D, w: number, h: number, state
       },
     });
   });
+  placeRow(EDGE_ROW.filter(has), horizon + 20, scale * 0.6);
   placeRow(BACK_ROW.filter(has), horizon + 34, scale);
   if (has("harbour")) {
     // The harbour sits by the sea, or in front when the panorama shows no sea.
@@ -595,7 +614,7 @@ export function createCityScreen(host: CityHost) {
         const t = r.shieldSurplus > 0 ? Math.max(1, Math.ceil((productionCost(o) - c.shields) / r.shieldSurplus)) : null;
         const wonder = o.kind === "building" && BUILDINGS[o.id].wonder;
         return `<button type="button" class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}" data-opt="${n}" title="${escapeHtml(
-          o.kind === "building" ? describeBuilding(BUILDINGS[o.id]) : `útok ${UNIT_TYPES[o.id].attack}, obrana ${UNIT_TYPES[o.id].defense}, pohyb ${UNIT_TYPES[o.id].moves}`,
+          o.kind === "building" ? describeBuilding(BUILDINGS[o.id]) : describeUnit(UNIT_TYPES[o.id]),
         )}"><span class="cs-opt-pic"></span><span class="cs-opt-name">${wonder ? "Div: " : ""}${escapeHtml(productionName(o))}</span><span class="cs-opt-cost">${productionCost(o)} ${yieldIcon("shields", 11)}${t ? ` · ${turns(t)}` : ""}</span></button>`;
       })
       .join("");
@@ -638,6 +657,7 @@ export function createCityScreen(host: CityHost) {
                 <b>${escapeHtml(productionName(c.production))}</b>
                 <div class="cs-bar"><div style="width:${Math.min(100, (c.shields / cost) * 100)}%"></div></div>
                 <div class="small">${Math.min(c.shields, cost)} z ${cost} ${yieldIcon("shields", 12)} · ${signed(r.shieldSurplus)} za tah · ${done}</div>
+                ${r.unitUpkeep ? `<div class="muted small">Údržba jednotek z města stojí ${r.unitUpkeep} ${yieldIcon("shields", 11)} za tah.</div>` : ""}
                 ${price > 0 ? `<button type="button" data-buy ${gold < price ? `disabled title="Máš jen ${gold} zlata."` : ""}>Koupit hned za ${price} zlata</button>` : ""}
               </div>
             </div>
@@ -647,12 +667,13 @@ export function createCityScreen(host: CityHost) {
           <div class="cs-box cs-info">
             <h3>Obchod</h3>
             <div class="cs-trade">
-              <div>${yieldIcon("trade")} obchod <b>${r.production.trade}</b></div>
+              <div>${yieldIcon("trade")} obchod <b>${r.production.trade}</b>${r.routes ? ` <span class="muted">(z toho obchodní cesty ${r.routes})</span>` : ""}</div>
               ${r.corruption ? `<div>korupce <b class="neg">−${r.corruption}</b> <span class="muted">(${corruptionPct(s, c, effects)} % ${effects.corruptionCutPct ? "i se soudním dvorem" : "kvůli vzdálenosti od paláce"})</span></div>` : effects.capital ? `<div class="muted small">Tady sídlí vláda, korupce tu není.</div>` : ""}
               <div>věda <b>${r.science}</b>${effects.sciencePct ? ` <span class="muted">(+${effects.sciencePct} % z budov)</span>` : ""}</div>
               <div>zlato <b>${r.gold}</b>${effects.goldPct ? ` <span class="muted">(+${effects.goldPct} % z budov)</span>` : ""}</div>
             </div>
             ${r.pollution.industry + r.pollution.population > 0 ? `<p class="small">Znečištění ${r.pollution.industry + r.pollution.population}, bez potíží město snese ${RULES.pollutionFree} <span class="muted">(z výroby ${r.pollution.industry}, od obyvatel ${r.pollution.population})</span></p>` : ""}
+            ${c.tradeRoutes.length ? `<p class="small">Obchodní cesty do: ${c.tradeRoutes.map((id) => escapeHtml(s.cities.find((x) => x.id === id)?.name ?? "?")).join(", ")}</p>` : ""}
             <h3>Budovy</h3>
             <div class="cs-buildings">${
               c.buildings.length

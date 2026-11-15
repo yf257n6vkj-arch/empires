@@ -6,11 +6,11 @@ import { applyCommand } from "./commands";
 import type { GameEvent } from "./events";
 import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
-import { RULES, TECH_IDS, type TechId } from "./rules";
+import { BUILDING_IDS, RULES, TECH_IDS, type TechId } from "./rules";
 import { chooseStartPositions } from "./start";
-import { canResearch, startingEconomy } from "./economy";
-import { STATE_VERSION, type GameState, type Player, type Unit } from "./state";
-import { fullMoves, reveal } from "./world";
+import { canResearch, clampRate, fallbackProduction, startingEconomy } from "./economy";
+import { emptySpaceship, STATE_VERSION, type GameState, type Player } from "./state";
+import { makeUnit, reveal } from "./world";
 
 export interface NewGameOptions {
   seed: string;
@@ -50,27 +50,13 @@ export function newGame(options: NewGameOptions): GameState {
     players,
     units: [],
     cities: [],
+    victory: null,
   };
 
   for (const player of players) {
     reveal(state, player.id, player.start, RULES.unitSight);
     if (!player.isHuman && !options.opponentUnits) continue;
-    for (const type of RULES.startingUnits) {
-      const unit: Unit = {
-        id: state.nextId++,
-        owner: player.id,
-        type,
-        x: player.start.x,
-        y: player.start.y,
-        movesLeft: 0,
-        homeCity: null,
-        fortified: false,
-        work: null,
-        goto: null,
-      };
-      unit.movesLeft = fullMoves(unit);
-      state.units.push(unit);
-    }
+    for (const type of RULES.startingUnits) state.units.push(makeUnit(state.nextId++, player.id, type, player.start, null));
   }
   return state;
 }
@@ -94,39 +80,68 @@ export function passComputerTurns(state: GameState): { state: GameState; events:
 
 /**
  * Brings a saved game from an older version up to date, or returns null when
- * that is not possible. Version 2 saves only lack the economy of phase 2.
+ * that is not possible. Each step lifts the save by one or more versions.
  */
 export function migrateState(saved: { version?: number } & Record<string, unknown>): GameState | null {
   if (saved.version === STATE_VERSION) return saved as unknown as GameState;
-  if (saved.version !== 2 && saved.version !== 3 && saved.version !== 4) return null;
+  const version = saved.version ?? 0;
+  if (version < 2 || version > STATE_VERSION) return null;
   const state = JSON.parse(JSON.stringify(saved)) as GameState;
-  // Version 5 adds the palace: the oldest city of every player becomes the capital.
-  for (const p of state.players) {
-    const own = state.cities.filter((c) => c.owner === p.id);
-    if (own.length > 0 && !own.some((c) => c.buildings.includes("palace"))) {
-      const oldest = own.reduce((a, b) => (b.foundedTurn < a.foundedTurn || (b.foundedTurn === a.foundedTurn && b.id < a.id) ? b : a));
-      oldest.buildings.unshift("palace");
+
+  if (version === 2) state.players = state.players.map((p) => ({ ...startingEconomy(), ...p }));
+  if (version <= 3) {
+    // Version 4 has the full tree of phase 2b. Renamed technologies keep their
+    // place, ones that no longer exist are dropped, research in progress stays.
+    const renamed: Record<string, TechId | undefined> = { scholarship: "university", industry: "industrialization" };
+    const fix = (t: string): TechId | null => {
+      const id = renamed[t] ?? t;
+      return (TECH_IDS as readonly string[]).includes(id) ? (id as TechId) : null;
+    };
+    for (const p of state.players) {
+      p.techs = p.techs.map(fix).filter((t): t is TechId => t !== null);
+      p.researching = p.researching === null ? null : fix(p.researching);
+      if (p.researching && !canResearch(p, p.researching)) p.researching = null;
+      p.researchGoal = null;
+    }
+    for (const c of state.cities) c.manualTiles = false;
+  }
+  if (version <= 4) {
+    // Version 5 adds the palace: the oldest city of every player becomes the capital.
+    for (const p of state.players) {
+      const own = state.cities.filter((c) => c.owner === p.id);
+      if (own.length > 0 && !own.some((c) => c.buildings.includes("palace"))) {
+        const oldest = own.reduce((a, b) => (b.foundedTurn < a.foundedTurn || (b.foundedTurn === a.foundedTurn && b.id < a.id) ? b : a));
+        oldest.buildings.unshift("palace");
+      }
     }
   }
-  if (saved.version === 4) {
-    state.version = STATE_VERSION;
-    return state;
+  if (version <= 5) {
+    // Version 6 adds governments, ships, railroads, the spaceship and trade routes.
+    // The last wonder made way for the spaceship and is dropped.
+    const zeros = () => new Array<number>(state.map.width * state.map.height).fill(0);
+    state.map.railroad ??= zeros();
+    state.map.fortress ??= zeros();
+    for (const p of state.players) {
+      p.government ??= "despotism";
+      p.revolution ??= null;
+      p.spaceship ??= emptySpaceship();
+      p.embassies ??= [];
+      p.scienceRate = clampRate(p.scienceRate, p.government);
+    }
+    for (const u of state.units) {
+      u.carriedBy ??= null;
+      u.turnsAloft ??= 0;
+    }
+    for (const c of state.cities) {
+      c.tradeRoutes ??= [];
+      c.stolenBy ??= [];
+      c.buildings = c.buildings.filter((b) => (BUILDING_IDS as readonly string[]).includes(b));
+      if (!(BUILDING_IDS as readonly string[]).includes(c.production.id) && c.production.kind === "building") {
+        c.production = fallbackProduction(state, c.owner);
+      }
+    }
+    state.victory ??= null;
   }
-  if (saved.version === 2) state.players = state.players.map((p) => ({ ...startingEconomy(), ...p }));
-  // Version 4 has the full tree of phase 2b. Renamed technologies keep their
-  // place, ones that no longer exist are dropped, research in progress stays.
-  const renamed: Record<string, TechId | undefined> = { scholarship: "university", industry: "industrialization" };
-  const fix = (t: string): TechId | null => {
-    const id = renamed[t] ?? t;
-    return (TECH_IDS as readonly string[]).includes(id) ? (id as TechId) : null;
-  };
-  for (const p of state.players) {
-    p.techs = p.techs.map(fix).filter((t): t is TechId => t !== null);
-    p.researching = p.researching === null ? null : fix(p.researching);
-    if (p.researching && !canResearch(p, p.researching)) p.researching = null;
-    p.researchGoal = null;
-  }
-  for (const c of state.cities) c.manualTiles = false;
   state.version = STATE_VERSION;
   return state;
 }

@@ -6,7 +6,7 @@ for (const owner of [1]) {
   for (const id of UNIT_TYPE_IDS) {
     const d = document.createElement("div");
     d.style.cssText = "display:inline-block;margin:2px;font:11px sans-serif;text-align:center";
-    d.append(unitPortraitCanvas(id, owner, 240, 200), document.createElement("br"), id);
+    d.append(unitPortraitCanvas(id, owner, 180, 150), document.createElement("br"), id);
     row.append(d);
   }
   document.body.append(row);

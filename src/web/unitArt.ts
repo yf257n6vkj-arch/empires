@@ -1294,8 +1294,749 @@ function tank(ctx: Ctx, color: string): void {
   ctx.fill();
 }
 
+// ---------- new land units ----------
+
+function chariot(ctx: Ctx, color: string): void {
+  ctx.save();
+  ctx.translate(-6.5, 0);
+  ctx.scale(0.82, 0.82);
+  horse(ctx, "#6e4a2e", null);
+  ctx.restore();
+  // Pole from the cart to the horse.
+  line(ctx, [2.5, -6.2, -6, -8.6], "#5a3b25", 0.6);
+  // Cart body (wicker box) with the driver.
+  drawPerson(
+    ctx,
+    { ...STAND, nearArm: [[-3, -17], [-5, -14.6], [-7.2, -13.4]], farArm: [[3, -17], [2.4, -13.8], [-0.4, -12.6]] },
+    { legs: SKIN, boots: LEATHER, body: color, sleeves: SKIN, skirt: 3, belt: LEATHER, hat: (c, h) => {
+      c.beginPath();
+      c.ellipse(h[0], h[1] - 1.4, 2.1, 1.3, 0, Math.PI, 0);
+      fillShaded(c, h[0] - 2.1, h[0] + 2.1, BRONZE, 1.3, 0.6);
+    } },
+  );
+  ctx.save();
+  ctx.translate(5.5, 0);
+  ctx.beginPath();
+  ctx.moveTo(-6.4, -11.6);
+  ctx.lineTo(4.6, -11.6);
+  ctx.lineTo(4.2, -6.2);
+  ctx.lineTo(-6, -6.2);
+  ctx.closePath();
+  fillShaded(ctx, -6.4, 4.6, "#a77a45");
+  stroke(ctx, 0.3);
+  ctx.strokeStyle = "rgba(70, 45, 25, 0.5)";
+  ctx.lineWidth = 0.3;
+  ctx.beginPath();
+  for (let x = -5.6; x < 4; x += 1.4) {
+    ctx.moveTo(x, -11.4);
+    ctx.lineTo(x + 0.3, -6.4);
+  }
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.fillRect(-6.2, -9.6, 10.6, 1);
+  spokedWheel(ctx, -0.6, -4.2, 4.1, "#5a3b25");
+  ctx.restore();
+}
+
+function artillery(ctx: Ctx, color: string): void {
+  const olive = "#5f6b45";
+  // Split trail.
+  ctx.beginPath();
+  ctx.moveTo(-1, -5.4);
+  ctx.lineTo(11, -0.6);
+  ctx.lineTo(10.4, 0.2);
+  ctx.lineTo(-1.6, -3.8);
+  ctx.closePath();
+  fillShaded(ctx, -1.6, 11, olive);
+  stroke(ctx, 0.3);
+  // Long barrel with a muzzle brake, raised.
+  ctx.save();
+  ctx.translate(0.6, -8.4);
+  ctx.rotate(-0.32);
+  ctx.beginPath();
+  ctx.rect(-17, -0.75, 20, 1.5);
+  fillShaded(ctx, -17, 3, "#4a5034", 1.35, 0.7);
+  stroke(ctx, 0.25);
+  ctx.fillStyle = "#33372a";
+  ctx.fillRect(-18.2, -1.15, 1.6, 2.3);
+  ctx.beginPath();
+  ctx.rect(-2.5, -1.6, 6.5, 3.2);
+  fillShaded(ctx, -2.5, 4, olive, 1.3, 0.65);
+  stroke(ctx, 0.3);
+  ctx.restore();
+  // Gun shield.
+  ctx.beginPath();
+  ctx.moveTo(-3.4, -11.6);
+  ctx.lineTo(1.2, -12.4);
+  ctx.lineTo(1.6, -5.2);
+  ctx.lineTo(-3, -5.2);
+  ctx.closePath();
+  fillShaded(ctx, -3.4, 1.6, olive, 1.25, 0.65);
+  stroke(ctx, 0.3);
+  ctx.fillStyle = color;
+  ctx.fillRect(-2.6, -9.6, 3.4, 1.1);
+  // Rubber wheel.
+  ctx.beginPath();
+  ctx.arc(0.2, -3, 3, 0, Math.PI * 2);
+  fillShaded(ctx, -2.8, 3.2, "#2a2a2a", 1.4, 0.6);
+  ctx.beginPath();
+  ctx.arc(0.2, -3, 1.5, 0, Math.PI * 2);
+  fillShaded(ctx, -1.3, 1.7, olive, 1.3, 0.6);
+  stroke(ctx, 0.25);
+}
+
+function mechInf(ctx: Ctx, color: string): void {
+  const paint = "#6c7350";
+  // Six road wheels.
+  for (const x of [-8.6, -4.8, -1, 2.8, 6.6]) {
+    ctx.beginPath();
+    ctx.arc(x, -2.2, 2, 0, Math.PI * 2);
+    fillShaded(ctx, x - 2, x + 2, "#2b2b2b", 1.5, 0.6);
+    ctx.beginPath();
+    ctx.arc(x, -2.2, 0.9, 0, Math.PI * 2);
+    ctx.fillStyle = "#7d8460";
+    ctx.fill();
+  }
+  // Boxy hull with a sloped nose.
+  ctx.beginPath();
+  ctx.moveTo(-12, -4.2);
+  ctx.lineTo(-10.6, -9.6);
+  ctx.lineTo(-6.4, -11.2);
+  ctx.lineTo(10.4, -11.2);
+  ctx.lineTo(10.4, -4.2);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, -11.2, 0, -4.2);
+  g.addColorStop(0, tone(paint, 1.25));
+  g.addColorStop(1, tone(paint, 0.72));
+  ctx.fillStyle = g;
+  ctx.fill();
+  stroke(ctx, 0.35);
+  // Windows, rear door and a small turret.
+  ctx.fillStyle = "#2a3238";
+  ctx.fillRect(-8.6, -9.6, 2.2, 1.4);
+  for (const x of [-2, 1.6, 5.2]) ctx.fillRect(x, -9.4, 1.6, 1);
+  ctx.strokeStyle = tone(paint, 0.6);
+  ctx.lineWidth = 0.3;
+  ctx.strokeRect(7.2, -10.2, 2.6, 5.4);
+  ctx.beginPath();
+  ctx.ellipse(-1, -12, 2.4, 1.1, 0, Math.PI, 0);
+  fillShaded(ctx, -3.4, 1.4, paint, 1.3, 0.65);
+  stroke(ctx, 0.3);
+  line(ctx, [-3, -12.2, -8.8, -12.6], "#3a3d40", 0.6);
+  ctx.fillStyle = color;
+  ctx.fillRect(3.6, -7.4, 3, 1.4);
+}
+
+function diplomat(ctx: Ctx, color: string): void {
+  drawPerson(
+    ctx,
+    { ...STAND, nearArm: [[-3, -17], [-3.6, -13.6], [-3.2, -10.2]] },
+    {
+      legs: "#2c2c34",
+      boots: "#1c1c1f",
+      body: "#2f3242",
+      sleeves: "#2f3242",
+      skirt: 4.5,
+      chest: (c) => {
+        c.beginPath();
+        c.moveTo(-0.9, -17.6);
+        c.lineTo(0.9, -17.6);
+        c.lineTo(0, -14.4);
+        c.closePath();
+        c.fillStyle = "#f4f1e8";
+        c.fill();
+        c.fillStyle = color;
+        c.fillRect(-0.3, -16.8, 0.6, 2.2);
+      },
+      hat: (c, h) => {
+        c.beginPath();
+        c.ellipse(h[0], h[1] - 1.5, 2.8, 0.6, 0, 0, Math.PI * 2);
+        c.fillStyle = "#1c1c20";
+        c.fill();
+        c.beginPath();
+        c.rect(h[0] - 1.7, h[1] - 5.2, 3.4, 3.8);
+        fillShaded(c, h[0] - 1.7, h[0] + 1.7, "#26262b", 1.4, 0.6);
+        c.fillStyle = color;
+        c.fillRect(h[0] - 1.7, h[1] - 2.4, 3.4, 0.6);
+      },
+    },
+  );
+  // Briefcase with the treaty.
+  ctx.beginPath();
+  ctx.roundRect(-5.6, -10, 4.4, 3.2, 0.5);
+  fillShaded(ctx, -5.6, -1.2, "#6b4426", 1.3, 0.6);
+  stroke(ctx, 0.3);
+  ctx.fillStyle = "#d8b25a";
+  ctx.fillRect(-3.8, -10.6, 1, 0.6);
+  grip(ctx, [-3.3, -10.2]);
+}
+
+function caravan(ctx: Ctx, color: string): void {
+  ctx.save();
+  ctx.translate(-2, 0);
+  ctx.scale(0.86, 0.86);
+  horse(ctx, "#9a7a52", null);
+  ctx.restore();
+  // Bales and jars on the pack saddle.
+  const bales: [number, number, number, string][] = [[-5.4, -12.6, 2.6, "#c9a46a"], [-1.8, -13.2, 3, color], [1.8, -12.4, 2.5, "#b88b4a"]];
+  for (const [x, y, r, c] of bales) {
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r * 0.8, 0, 0, Math.PI * 2);
+    fillShaded(ctx, x - r, x + r, c, 1.25, 0.62);
+    stroke(ctx, 0.3);
+    line(ctx, [x - r * 0.9, y, x + r * 0.9, y], tone(c, 0.55), 0.35);
+  }
+  // The merchant leads the horse.
+  ctx.save();
+  ctx.translate(-12.5, 0);
+  ctx.scale(0.86, 0.86);
+  drawPerson(
+    ctx,
+    { ...STAND, farArm: [[3, -17], [5, -14.4], [7.2, -13]] },
+    {
+      legs: "#d8c8a8",
+      boots: LEATHER,
+      body: "#e6dcc4",
+      sleeves: "#e6dcc4",
+      skirt: 7,
+      skirtColor: "#c8b896",
+      belt: color,
+      beard: true,
+      hat: (c, h) => {
+        c.beginPath();
+        c.ellipse(h[0], h[1] - 1, 2.5, 1.7, 0, Math.PI, 0);
+        fillShaded(c, h[0] - 2.5, h[0] + 2.5, "#f2ece0", 1.1, 0.75);
+        stroke(c, 0.25);
+      },
+    },
+  );
+  ctx.restore();
+  line(ctx, [-6.3, -11.2, -9.4, -14.6], "#3a2a1e", 0.25);
+}
+
+// ---------- ships ----------
+
+/** A wooden or steel hull on the water line, bow to the left. */
+function hull(ctx: Ctx, x0: number, x1: number, h: number, color: string, deck: string, bowRake = 3): void {
+  ctx.beginPath();
+  ctx.moveTo(x0, -h);
+  ctx.lineTo(x1, -h - 0.4);
+  ctx.quadraticCurveTo(x1 + 0.6, -h * 0.4, x1 - 1.2, 0);
+  ctx.lineTo(x0 + bowRake, 0);
+  ctx.quadraticCurveTo(x0 + bowRake * 0.3, -h * 0.4, x0, -h);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, -h, 0, 0);
+  g.addColorStop(0, tone(color, 1.25));
+  g.addColorStop(1, tone(color, 0.6));
+  ctx.fillStyle = g;
+  ctx.fill();
+  stroke(ctx, 0.35);
+  ctx.fillStyle = deck;
+  ctx.fillRect(x0 + 0.8, -h - 0.6, x1 - x0 - 1.6, 0.6);
+}
+
+function water(ctx: Ctx, w: number): void {
+  ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+  ctx.beginPath();
+  ctx.ellipse(0, 0.3, w, 0.9, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function sailCloth(ctx: Ctx, x: number, top: number, bottom: number, w: number, color: string, belly = 1.4): void {
+  ctx.beginPath();
+  ctx.moveTo(x - w / 2, top);
+  ctx.lineTo(x + w / 2, top);
+  ctx.quadraticCurveTo(x + w / 2 + belly, (top + bottom) / 2, x + w / 2, bottom);
+  ctx.lineTo(x - w / 2, bottom);
+  ctx.quadraticCurveTo(x - w / 2 + belly, (top + bottom) / 2, x - w / 2, top);
+  ctx.closePath();
+  fillShaded(ctx, x - w / 2, x + w / 2 + belly, color, 1.12, 0.78);
+  stroke(ctx, 0.25);
+}
+
+function mast(ctx: Ctx, x: number, bottom: number, top: number): void {
+  line(ctx, [x, bottom, x, top], "#5a3b25", 0.55);
+}
+
+function trireme(ctx: Ctx, color: string): void {
+  water(ctx, 13);
+  // Oars in the water.
+  for (let k = 0; k < 7; k++) line(ctx, [-7 + k * 2.4, -3.4, -8.6 + k * 2.4, 0.6], "#7d5532", 0.3);
+  hull(ctx, -12, 11, 4, "#8a5a32", "#b88a52", 2);
+  // Ram and an eye on the bow.
+  ctx.beginPath();
+  ctx.moveTo(-10.6, -0.8);
+  ctx.lineTo(-14.4, -0.4);
+  ctx.lineTo(-10.2, 0.2);
+  ctx.closePath();
+  fillShaded(ctx, -14.4, -10.2, BRONZE, 1.3, 0.6);
+  ctx.fillStyle = "#f4f0e2";
+  ctx.beginPath();
+  ctx.ellipse(-9.4, -2.6, 0.8, 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#1a1a1a";
+  ctx.beginPath();
+  ctx.arc(-9.5, -2.6, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  // Curved stern.
+  line(ctx, [10.4, -4.2, 12.4, -7.4, 11.4, -8.6], "#8a5a32", 0.8);
+  mast(ctx, -0.5, -4.4, -18);
+  line(ctx, [-6, -17.4, 5, -17.4], "#5a3b25", 0.45);
+  sailCloth(ctx, -0.5, -17.2, -7.6, 10.4, "#efe6cf", 1.6);
+  ctx.fillStyle = color;
+  ctx.fillRect(-5.5, -13.8, 10, 1.2);
+  ctx.fillRect(-5.5, -11.2, 10, 1.2);
+}
+
+function sailShip(ctx: Ctx, color: string): void {
+  water(ctx, 12);
+  hull(ctx, -11, 10, 4.6, "#7a4a28", "#a87a48", 3);
+  // Raised castle at the stern.
+  ctx.beginPath();
+  ctx.rect(5.4, -7.6, 5, 3);
+  fillShaded(ctx, 5.4, 10.4, "#8a5a32");
+  stroke(ctx, 0.3);
+  mast(ctx, -2.6, -4.6, -19.6);
+  mast(ctx, 4.4, -7.6, -16);
+  sailCloth(ctx, -2.6, -18.6, -12, 8.4, "#f2ead6");
+  sailCloth(ctx, -2.6, -11.4, -6, 9.4, "#f2ead6");
+  // Lateen sail on the mizzen.
+  ctx.beginPath();
+  ctx.moveTo(4.4, -16);
+  ctx.lineTo(9.6, -8.4);
+  ctx.lineTo(3.2, -8.4);
+  ctx.closePath();
+  fillShaded(ctx, 3.2, 9.6, "#ece2c8", 1.1, 0.8);
+  stroke(ctx, 0.25);
+  // Cross on the main sail and a pennant.
+  ctx.fillStyle = color;
+  ctx.fillRect(-3.2, -17.4, 1.2, 4.6);
+  ctx.fillRect(-5.2, -15.6, 5.2, 1.2);
+  ctx.beginPath();
+  ctx.moveTo(-2.6, -19.6);
+  ctx.lineTo(-6.4, -19.1);
+  ctx.lineTo(-2.6, -18.6);
+  ctx.fill();
+}
+
+function frigate(ctx: Ctx, color: string): void {
+  water(ctx, 14);
+  hull(ctx, -13, 12, 5.4, "#3c3026", "#9c7a50", 2.6);
+  // Yellow gun stripe with ports.
+  ctx.fillStyle = "#d9b24a";
+  ctx.fillRect(-11, -4.2, 22, 1.4);
+  ctx.fillStyle = "#1c1612";
+  for (let x = -9.4; x < 10; x += 2.2) ctx.fillRect(x, -4, 0.9, 1);
+  // Bowsprit.
+  line(ctx, [-12, -5.2, -17, -8.4], "#5a3b25", 0.5);
+  for (const [x, h] of [[-5.6, 22], [1.4, 24], [7.8, 19]] as const) {
+    mast(ctx, x, -5.4, -h);
+    sailCloth(ctx, x, -h + 1.4, -h + 6.6, 6.6, "#f4eedd", 1);
+    sailCloth(ctx, x, -h + 7.2, -h + 12.4, 7.6, "#f4eedd", 1.1);
+    if (h > 20) sailCloth(ctx, x, -h + 13, -8, 8.4, "#f4eedd", 1.2);
+  }
+  ctx.beginPath();
+  ctx.moveTo(-17, -8.4);
+  ctx.lineTo(-5.6, -19);
+  ctx.lineTo(-5.6, -9);
+  ctx.closePath();
+  fillShaded(ctx, -17, -5.6, "#ece4cc", 1.1, 0.8);
+  stroke(ctx, 0.25);
+  ctx.fillStyle = color;
+  ctx.fillRect(12, -14, 3.6, 2.2);
+  line(ctx, [12, -14, 12, -6], "#3a2a1e", 0.3);
+}
+
+function steamFunnel(ctx: Ctx, x: number, bottom: number, h: number, color: string, puffs = true): void {
+  ctx.beginPath();
+  ctx.rect(x - 1, bottom - h, 2, h);
+  fillShaded(ctx, x - 1, x + 1, color, 1.3, 0.6);
+  stroke(ctx, 0.25);
+  ctx.fillStyle = "#1f1f1f";
+  ctx.fillRect(x - 1, bottom - h, 2, 0.8);
+  if (!puffs) return;
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = `rgba(90, 90, 92, ${0.6 - i * 0.16})`;
+    ctx.beginPath();
+    ctx.arc(x + 1.8 + i * 2.2, bottom - h - 1.4 - i * 1.6, 1.2 + i * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function turret(ctx: Ctx, x: number, y: number, w: number, gun: number, color: string): void {
+  ctx.beginPath();
+  ctx.moveTo(x - w / 2, y);
+  ctx.lineTo(x - w / 2 + 0.8, y - 2.2);
+  ctx.lineTo(x + w / 2, y - 2.2);
+  ctx.lineTo(x + w / 2, y);
+  ctx.closePath();
+  fillShaded(ctx, x - w / 2, x + w / 2, color, 1.3, 0.6);
+  stroke(ctx, 0.3);
+  line(ctx, [x - w / 2 + 0.6, y - 1.3, x - w / 2 - gun, y - 1.6], tone(color, 0.6), 0.6);
+}
+
+function ironclad(ctx: Ctx, color: string): void {
+  water(ctx, 13);
+  hull(ctx, -12, 11, 3.4, "#2c2f33", "#55595e", 1.6);
+  steamFunnel(ctx, 1.8, -4, 7, "#3a3d40");
+  turret(ctx, -5, -4, 5, 4, "#4a4e52");
+  ctx.beginPath();
+  ctx.rect(5, -6.4, 4, 2.4);
+  fillShaded(ctx, 5, 9, "#4a4e52");
+  stroke(ctx, 0.3);
+  line(ctx, [8, -6.4, 8, -12], "#3a2a1e", 0.35);
+  ctx.fillStyle = color;
+  ctx.fillRect(8, -12, 3, 1.8);
+}
+
+function cruiser(ctx: Ctx, color: string): void {
+  water(ctx, 14);
+  hull(ctx, -14, 13, 4, "#7a8590", "#a8b2ba", 2.4);
+  turret(ctx, -8, -4.6, 4, 4, "#8a959f");
+  turret(ctx, 9, -4.6, 4, -4, "#8a959f");
+  ctx.beginPath();
+  ctx.moveTo(-4, -4.6);
+  ctx.lineTo(-3, -9);
+  ctx.lineTo(3, -9);
+  ctx.lineTo(5, -4.6);
+  ctx.closePath();
+  fillShaded(ctx, -4, 5, "#9aa4ad");
+  stroke(ctx, 0.3);
+  ctx.fillStyle = "#2a3238";
+  ctx.fillRect(-2.6, -8.2, 4.4, 0.8);
+  steamFunnel(ctx, 0.6, -9, 4, "#6d7780", false);
+  steamFunnel(ctx, 3.2, -9, 3.4, "#6d7780", false);
+  line(ctx, [-1.4, -9, -1.4, -15.6], "#3a3d40", 0.35);
+  ctx.fillStyle = color;
+  ctx.fillRect(-1.4, -15.6, 2.8, 1.6);
+}
+
+function battleship(ctx: Ctx, color: string): void {
+  water(ctx, 15);
+  hull(ctx, -15, 14, 5, "#68727c", "#98a2ab", 3);
+  turret(ctx, -9.6, -5.6, 5, 6, "#7b8691");
+  turret(ctx, -4.6, -7.6, 4.4, 5, "#7b8691");
+  turret(ctx, 10, -5.6, 5, -6, "#7b8691");
+  // Tower superstructure.
+  ctx.beginPath();
+  ctx.moveTo(-2, -5.6);
+  ctx.lineTo(-1.4, -11);
+  ctx.lineTo(0.4, -15.6);
+  ctx.lineTo(2.4, -15.6);
+  ctx.lineTo(3.4, -11);
+  ctx.lineTo(6, -5.6);
+  ctx.closePath();
+  fillShaded(ctx, -2, 6, "#8a959f", 1.25, 0.6);
+  stroke(ctx, 0.3);
+  ctx.fillStyle = "#2a3238";
+  ctx.fillRect(-0.6, -12.6, 3.4, 0.7);
+  ctx.fillRect(-1, -9.6, 4.6, 0.7);
+  steamFunnel(ctx, 5.2, -7.6, 4, "#59636c", false);
+  line(ctx, [1.4, -15.6, 1.4, -21], "#3a3d40", 0.4);
+  ctx.fillStyle = color;
+  ctx.fillRect(1.4, -21, 3.2, 1.8);
+}
+
+function submarine(ctx: Ctx, color: string): void {
+  ctx.fillStyle = "rgba(60, 110, 150, 0.35)";
+  ctx.beginPath();
+  ctx.ellipse(0, -0.2, 14, 1.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-13, -1);
+  ctx.quadraticCurveTo(-12, -4.4, -6, -4.4);
+  ctx.lineTo(9, -4.4);
+  ctx.quadraticCurveTo(13, -4.2, 14, -1.4);
+  ctx.lineTo(-13, -1);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, -4.4, 0, -1);
+  g.addColorStop(0, "#4a545c");
+  g.addColorStop(1, "#1e2428");
+  ctx.fillStyle = g;
+  ctx.fill();
+  stroke(ctx, 0.3);
+  ctx.beginPath();
+  ctx.moveTo(-2, -4.4);
+  ctx.lineTo(-1.4, -8.4);
+  ctx.lineTo(3.4, -8.4);
+  ctx.lineTo(4.4, -4.4);
+  ctx.closePath();
+  fillShaded(ctx, -2, 4.4, "#3a434a", 1.35, 0.6);
+  stroke(ctx, 0.3);
+  line(ctx, [0.6, -8.4, 0.6, -11.6, -0.6, -11.6], "#2a2f33", 0.35);
+  ctx.fillStyle = color;
+  ctx.fillRect(0, -7.2, 2.6, 1.1);
+  water(ctx, 14);
+}
+
+function transportShip(ctx: Ctx, color: string): void {
+  water(ctx, 15);
+  hull(ctx, -15, 14, 5.4, "#3d4e5c", "#8a6a4a", 2.2);
+  ctx.fillStyle = "#b8412e";
+  ctx.fillRect(-14, -1.6, 27, 1.4);
+  // Containers on deck.
+  const boxes: [number, string][] = [[-12, "#c2412f"], [-8.4, "#2f6fb2"], [-4.8, color], [-1.2, "#d99b2b"]];
+  for (const [x, c] of boxes) {
+    ctx.beginPath();
+    ctx.rect(x, -8.6, 3.3, 3);
+    fillShaded(ctx, x, x + 3.3, c, 1.2, 0.65);
+    stroke(ctx, 0.25);
+  }
+  line(ctx, [-6, -8.6, -6, -14.4, -12, -10.8], "#3a3a3a", 0.4);
+  // Bridge at the stern.
+  ctx.beginPath();
+  ctx.rect(5, -12.4, 7, 6.8);
+  fillShaded(ctx, 5, 12, "#e8e4da", 1.1, 0.75);
+  stroke(ctx, 0.3);
+  ctx.fillStyle = "#2a3238";
+  for (const y of [-11.4, -9.2]) ctx.fillRect(5.6, y, 5.8, 0.8);
+  steamFunnel(ctx, 10.2, -12.4, 3, "#b8412e", false);
+}
+
+function carrierShip(ctx: Ctx, color: string): void {
+  water(ctx, 16);
+  hull(ctx, -15, 15, 5, "#6c7680", "#6c7680", 2);
+  // Flight deck overhanging the hull.
+  ctx.beginPath();
+  ctx.moveTo(-17, -5.4);
+  ctx.lineTo(16.4, -5.4);
+  ctx.lineTo(15.6, -6.8);
+  ctx.lineTo(-16, -6.8);
+  ctx.closePath();
+  fillShaded(ctx, -17, 16.4, "#5a636c", 1.25, 0.7);
+  stroke(ctx, 0.3);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+  ctx.lineWidth = 0.25;
+  ctx.setLineDash([1.2, 1]);
+  ctx.beginPath();
+  ctx.moveTo(-15, -6.1);
+  ctx.lineTo(8, -6.1);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Island on the right side.
+  ctx.beginPath();
+  ctx.rect(9, -12.6, 4, 5.8);
+  fillShaded(ctx, 9, 13, "#7d8790", 1.25, 0.6);
+  stroke(ctx, 0.3);
+  ctx.fillStyle = "#2a3238";
+  ctx.fillRect(9.4, -11.6, 3.2, 0.7);
+  line(ctx, [11, -12.6, 11, -16.6], "#3a3d40", 0.35);
+  ctx.fillStyle = color;
+  ctx.fillRect(11, -16.6, 2.8, 1.6);
+  // Two small planes parked on deck.
+  for (const x of [-11, -4]) {
+    ctx.fillStyle = "#3c4a58";
+    ctx.beginPath();
+    ctx.moveTo(x - 2.4, -7.2);
+    ctx.lineTo(x + 2.4, -7.4);
+    ctx.lineTo(x + 2.4, -8.4);
+    ctx.lineTo(x - 1.6, -7.8);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+// ---------- aircraft ----------
+
+function shadow(ctx: Ctx, w: number): void {
+  ctx.fillStyle = "rgba(20, 20, 20, 0.22)";
+  ctx.beginPath();
+  ctx.ellipse(1, -0.2, w, 1.1, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function fighter(ctx: Ctx, color: string): void {
+  shadow(ctx, 9);
+  ctx.save();
+  ctx.translate(0, -11);
+  // Far wing.
+  ctx.beginPath();
+  ctx.moveTo(-1, -0.6);
+  ctx.lineTo(4.4, -4.6);
+  ctx.lineTo(6.4, -4.6);
+  ctx.lineTo(4.4, -0.4);
+  ctx.closePath();
+  ctx.fillStyle = "#6c7880";
+  ctx.fill();
+  // Fuselage, nose to the left.
+  ctx.beginPath();
+  ctx.moveTo(-12, 0.4);
+  ctx.quadraticCurveTo(-9, -1.6, -3, -1.6);
+  ctx.lineTo(9, -1.4);
+  ctx.lineTo(11, -5.4);
+  ctx.lineTo(12.4, -5.4);
+  ctx.lineTo(12, 0.6);
+  ctx.quadraticCurveTo(0, 1.8, -12, 0.4);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, -2, 0, 1.6);
+  g.addColorStop(0, "#c8d0d6");
+  g.addColorStop(1, "#6c7880");
+  ctx.fillStyle = g;
+  ctx.fill();
+  stroke(ctx, 0.3);
+  // Cockpit, near wing and a coloured tail.
+  ctx.beginPath();
+  ctx.ellipse(-5.4, -1.6, 2.4, 1, 0, Math.PI, 0);
+  ctx.fillStyle = "#4f7fa6";
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-2, 0.4);
+  ctx.lineTo(5.4, 4.6);
+  ctx.lineTo(7.4, 4.6);
+  ctx.lineTo(4.4, 0.4);
+  ctx.closePath();
+  fillShaded(ctx, -2, 7.4, "#9aa6ae", 1.25, 0.7);
+  stroke(ctx, 0.3);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(10, -1.2);
+  ctx.lineTo(11.2, -4.6);
+  ctx.lineTo(12.2, -4.6);
+  ctx.lineTo(11.8, -1.2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function bomber(ctx: Ctx, color: string): void {
+  shadow(ctx, 12);
+  ctx.save();
+  ctx.translate(0, -12);
+  // Far wing with engines.
+  ctx.beginPath();
+  ctx.moveTo(-3, -0.8);
+  ctx.lineTo(1, -6);
+  ctx.lineTo(4, -6);
+  ctx.lineTo(3, -0.8);
+  ctx.closePath();
+  ctx.fillStyle = "#59613f";
+  ctx.fill();
+  // Long fuselage with a glazed nose.
+  ctx.beginPath();
+  ctx.moveTo(-14, 0);
+  ctx.quadraticCurveTo(-13, -2.4, -9, -2.4);
+  ctx.lineTo(10, -2);
+  ctx.lineTo(13.6, -6.4);
+  ctx.lineTo(15, -6.4);
+  ctx.lineTo(14.4, 0.6);
+  ctx.quadraticCurveTo(0, 2.2, -14, 0);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, -2.4, 0, 1.8);
+  g.addColorStop(0, "#8d9668");
+  g.addColorStop(1, "#4c5434");
+  ctx.fillStyle = g;
+  ctx.fill();
+  stroke(ctx, 0.3);
+  ctx.beginPath();
+  ctx.ellipse(-12.4, -0.6, 1.6, 1.4, 0, Math.PI * 0.5, Math.PI * 1.5);
+  ctx.fillStyle = "#9cc2da";
+  ctx.fill();
+  // Near wing with two engines and propellers.
+  ctx.beginPath();
+  ctx.moveTo(-4, 0.6);
+  ctx.lineTo(1, 6.6);
+  ctx.lineTo(4.4, 6.6);
+  ctx.lineTo(3, 0.6);
+  ctx.closePath();
+  fillShaded(ctx, -4, 4.4, "#79825a", 1.25, 0.7);
+  stroke(ctx, 0.3);
+  for (const [x, y] of [[-1.4, 2.6], [0.8, 5.2]] as const) {
+    ctx.beginPath();
+    ctx.ellipse(x, y, 1.8, 0.8, 0, 0, Math.PI * 2);
+    fillShaded(ctx, x - 1.8, x + 1.8, "#3c4230", 1.3, 0.6);
+    line(ctx, [x - 2.2, y - 1.4, x - 2.2, y + 1.4], "rgba(40,40,40,0.6)", 0.35);
+  }
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(5, -0.4, 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(12.8, -5.6, 1.6, 2.6);
+  ctx.restore();
+}
+
+function nuclear(ctx: Ctx, color: string): void {
+  // Launch stand.
+  line(ctx, [-6, 0, -2, -6, 2, -6, 6, 0], "#4a4e52", 0.6);
+  ctx.save();
+  ctx.translate(0, -12);
+  ctx.rotate(-0.25);
+  ctx.beginPath();
+  ctx.moveTo(-12, 0);
+  ctx.quadraticCurveTo(-10, -1.8, -6.4, -1.8);
+  ctx.lineTo(9, -1.8);
+  ctx.lineTo(9, 1.8);
+  ctx.lineTo(-6.4, 1.8);
+  ctx.quadraticCurveTo(-10, 1.8, -12, 0);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, -1.8, 0, 1.8);
+  g.addColorStop(0, "#f2f2ee");
+  g.addColorStop(1, "#9a9a96");
+  ctx.fillStyle = g;
+  ctx.fill();
+  stroke(ctx, 0.3);
+  ctx.fillStyle = color;
+  ctx.fillRect(-4, -1.8, 1.4, 3.6);
+  // Warning sign.
+  ctx.fillStyle = "#e2b62c";
+  ctx.beginPath();
+  ctx.arc(2.4, 0, 1.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#1a1a1a";
+  for (let k = 0; k < 3; k++) {
+    ctx.beginPath();
+    ctx.moveTo(2.4, 0);
+    ctx.arc(2.4, 0, 1.15, (k * 2 * Math.PI) / 3 - 0.45, (k * 2 * Math.PI) / 3 + 0.45);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Fins.
+  for (const dir of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(5.6, dir * 1.8);
+    ctx.lineTo(9.6, dir * 4.4);
+    ctx.lineTo(9.6, dir * 1.8);
+    ctx.closePath();
+    fillShaded(ctx, 5.6, 9.6, "#b0b0aa", 1.2, 0.7);
+    stroke(ctx, 0.25);
+  }
+  // Flame.
+  const f = ctx.createLinearGradient(9, 0, 14, 0);
+  f.addColorStop(0, "#fff1b0");
+  f.addColorStop(1, "rgba(255, 120, 30, 0)");
+  ctx.fillStyle = f;
+  ctx.beginPath();
+  ctx.moveTo(9, -1.2);
+  ctx.lineTo(14, 0);
+  ctx.lineTo(9, 1.2);
+  ctx.fill();
+  ctx.restore();
+}
+
 /** Units drawn wider than tall; they get a wider base. */
-export const WIDE_UNITS: readonly UnitTypeId[] = ["settlers", "horsemen", "knights", "catapult", "cannon", "tank"];
+export const WIDE_UNITS: readonly UnitTypeId[] = [
+  "settlers",
+  "horsemen",
+  "chariot",
+  "knights",
+  "catapult",
+  "cannon",
+  "artillery",
+  "mechInf",
+  "tank",
+  "caravan",
+  "trireme",
+  "sail",
+  "frigate",
+  "ironclad",
+  "cruiser",
+  "battleship",
+  "submarine",
+  "transport",
+  "carrier",
+  "fighter",
+  "bomber",
+  "nuclear",
+];
 
 export function drawUnitArt(ctx: Ctx, type: UnitTypeId, color: string, working: boolean): void {
   ctx.save();
@@ -1340,6 +2081,57 @@ export function drawUnitArt(ctx: Ctx, type: UnitTypeId, color: string, working: 
       break;
     case "tank":
       tank(ctx, color);
+      break;
+    case "chariot":
+      chariot(ctx, color);
+      break;
+    case "artillery":
+      artillery(ctx, color);
+      break;
+    case "mechInf":
+      mechInf(ctx, color);
+      break;
+    case "diplomat":
+      diplomat(ctx, color);
+      break;
+    case "caravan":
+      caravan(ctx, color);
+      break;
+    case "trireme":
+      trireme(ctx, color);
+      break;
+    case "sail":
+      sailShip(ctx, color);
+      break;
+    case "frigate":
+      frigate(ctx, color);
+      break;
+    case "ironclad":
+      ironclad(ctx, color);
+      break;
+    case "cruiser":
+      cruiser(ctx, color);
+      break;
+    case "battleship":
+      battleship(ctx, color);
+      break;
+    case "submarine":
+      submarine(ctx, color);
+      break;
+    case "transport":
+      transportShip(ctx, color);
+      break;
+    case "carrier":
+      carrierShip(ctx, color);
+      break;
+    case "fighter":
+      fighter(ctx, color);
+      break;
+    case "bomber":
+      bomber(ctx, color);
+      break;
+    case "nuclear":
+      nuclear(ctx, color);
       break;
   }
   ctx.restore();

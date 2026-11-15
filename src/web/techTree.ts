@@ -214,7 +214,10 @@ export function createTechTree(host: TreeHost) {
     }
     const cards = TECH_IDS.map((t) => {
       const { x, y } = layout!.pos[t];
-      const chips = unlocksOf(t).map(unlockChip).join("");
+      // A card has room for two lines; the rest is on the technology's page.
+      const all = unlocksOf(t);
+      const shown = all.length > 2 ? all.slice(0, 1) : all;
+      const chips = shown.map(unlockChip).join("") + (all.length > 2 ? `<span class="chip more">a ${all.length - 1} další</span>` : "");
       return `<button type="button" class="tt-card" data-tech="${t}" style="left:${x}px;top:${y}px">
         ${techIconSvg(t, TECHS[t].era, 46)}
         <span class="tt-body"><b>${escapeHtml(TECHS[t].name)}</b><span class="tt-chips">${chips}</span></span>

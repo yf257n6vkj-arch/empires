@@ -9,6 +9,8 @@ import type {
 } from "../../core";
 import type { CodexPage } from "../codexPages";
 import type { TechPage } from "../encyclopedia";
+import type { GuideKey, GuidePage } from "../guidePages";
+import type { PageMore } from "../pageMore";
 
 /** Names of everything defined in the rule data, in one language. */
 export interface Names {
@@ -48,6 +50,10 @@ export interface Language {
   /** Encyclopedia pages; null means the Czech pages. Missing pages fall back to Czech. */
   codex: Record<string, CodexPage> | null;
   techPages: Partial<Record<TechId, TechPage>> | null;
+  /** The "How to play" chapter; null means the Czech pages. */
+  guide: Record<GuideKey, GuidePage> | null;
+  /** Second paragraphs and further facts of encyclopedia pages; null means Czech. */
+  more: Record<string, PageMore> | null;
   /** Wikipedia the encyclopedia links to, e.g. "en" for en.wikipedia.org. */
   wikipedia?: string;
 }

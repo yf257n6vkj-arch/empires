@@ -29,6 +29,8 @@ const CS: Language = {
   names: null,
   codex: null,
   techPages: null,
+  guide: null,
+  more: null,
 };
 
 /** Every language the game offers, in the order the picker shows them. */

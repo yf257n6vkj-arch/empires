@@ -7,6 +7,8 @@ import { LANGUAGES, t, tn, useLanguageForTest } from "../src/web/i18n";
 import { cityLabel, productionLabel, realmLabel, unitName } from "../src/web/i18n/names";
 import { codexKeys, codexPage } from "../src/web/codex";
 import { techPage } from "../src/web/encyclopedia";
+import { GUIDE_KEYS } from "../src/web/guidePages";
+import { PAGE_MORE } from "../src/web/pageMore";
 
 const keys = collectKeys();
 const unique = new Map(keys.map((k) => [k.text, k]));
@@ -45,10 +47,20 @@ describe("translations", () => {
     });
 
     it(`${lang.id} encyclopedia pages, where present, cover every entry`, () => {
-      if (lang.codex) expect(codexKeys().filter((k) => !lang.codex![k])).toEqual([]);
+      if (lang.codex) expect(codexKeys().filter((k) => !k.startsWith("how-") && !lang.codex![k])).toEqual([]);
+      if (lang.guide) expect(GUIDE_KEYS.filter((k) => !lang.guide![k])).toEqual([]);
+      if (lang.more) expect(Object.keys(PAGE_MORE).filter((k) => !lang.more![k])).toEqual([]);
+      if (lang.more) for (const [k, m] of Object.entries(lang.more)) expect(m.facts.length, k).toBe(PAGE_MORE[k]?.facts.length);
       if (lang.techPages) expect(TECH_IDS.filter((x) => !lang.techPages![x])).toEqual([]);
     });
   }
+
+  it("gives every encyclopedia page and technology a second paragraph and two more facts", () => {
+    const wanted = [...codexKeys().filter((k) => !k.startsWith("how-")), ...TECH_IDS.map((x) => `tech-${x}`)];
+    expect(wanted.filter((k) => !PAGE_MORE[k])).toEqual([]);
+    expect(Object.keys(PAGE_MORE).filter((k) => !wanted.includes(k))).toEqual([]);
+    for (const [k, m] of Object.entries(PAGE_MORE)) expect(m.facts.length, k).toBe(2);
+  });
 
   it("uses plain ASCII placeholder names", () => {
     for (const text of unique.keys()) expect(text, text).not.toMatch(/\{[^}]*[^\w}][^}]*\}/);
@@ -60,7 +72,7 @@ describe("translations", () => {
 
   it("leaves no Czech text in the web code outside t()", () => {
     const czech = /[ěščřžýáíéůúňťďĚŠČŘŽÝÁÍÉŮÚŇŤĎ]/;
-    const skip = ["codexPages.ts", "encyclopedia.ts", join("web", "i18n")];
+    const skip = ["codexPages.ts", "encyclopedia.ts", "guidePages.ts", "pageMore.ts", join("web", "i18n")];
     const files = (dir: string): string[] =>
       readdirSync(dir).flatMap((n) => {
         const p = join(dir, n);

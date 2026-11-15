@@ -13,8 +13,8 @@ export const EN_STRINGS: Record<string, string> = {
     "Your scholars don't know what to research. Pick their next discovery, otherwise research stands still.",
   "Vybrat objev":
     "Choose a discovery",
-  "Ve městě {city} se lidé bouří a město nic nevyrábí. Postav tam chrám, pošli do města vojáka nebo udělej z jednoho obyvatele baviče.":
-    "People in {city} are rioting and the city produces nothing. Build a temple there, send a soldier into the city or turn one citizen into an entertainer.",
+  "Ve městě {city} se lidé bouří a město nic nevyrábí. Postav tam chrám, pošli do města vojáka, udělej z jednoho obyvatele baviče nebo posuň nahoře posuvník Zábava doprava.":
+    "People in {city} are rioting and the city produces nothing. Build a temple there, send a soldier into the city, turn one citizen into an entertainer or move the Luxuries slider at the top to the right.",
   "Otevřít město":
     "Open city",
   "{city} hladoví a brzy se zmenší. Přesuň obyvatele na políčka s jídlem, nebo tam pošli osadníka zavlažovat.":
@@ -451,10 +451,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Choose research",
   "Všechno je vyzkoumané":
     "Everything has been researched",
-  "anarchie: nic":
-    "anarchy: nothing",
-  "{scienceRate} % · zlato {scienceRate2} %":
-    "{scienceRate} % · gold {scienceRate2} %",
   "Vláda: <b>{gov}</b>":
     "Government: <b>{gov}</b>",
   "{gov} za {turns}":
@@ -897,8 +893,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Another empire completed the wonder {building}.",
   "Nemáš na údržbu, a tak {city} prodalo budovu {building}.":
     "You can't pay the upkeep, so {city} sold its {building}.",
-  "V {city} jsou nepokoje, město tento tah nic nevyrobilo.":
-    "There are riots in {city}, the city produced nothing this turn.",
   "{city} dál neroste, na velikost nad {size} potřebuje akvadukt.":
     "{city} stopped growing, it needs an aqueduct to grow beyond size {size}.",
   "Tvoji učenci objevili: {tech}.":
@@ -923,12 +917,8 @@ export const EN_STRINGS: Record<string, string> = {
     "You disbanded a unit: {unit}.",
   "Jednotku {unit} jsi povýšil na {unit2} za {cost} zlata.":
     "You upgraded {unit} to {unit2} for {cost} gold.",
-  "{unit} nestihla přistát a došlo jí palivo.":
-    "{unit} didn't land in time and ran out of fuel.",
   "{unit} se na volném moři potopila.":
     "{unit} sank on the open sea.",
-  "{city} dokončilo {building} pro vesmírnou loď.":
-    "{city} completed a {building} for the spaceship.",
   "Tvoje vesmírná loď odstartovala a přistane v tahu {arrivalTurn}.":
     "Your spaceship launched and will land in turn {arrivalTurn}.",
   "{realm} vypustila vesmírnou loď, přistane v tahu {arrivalTurn}.":
@@ -945,20 +935,12 @@ export const EN_STRINGS: Record<string, string> = {
     "A revolution began. Anarchy rules for one turn, then {government} takes over.|A revolution began. Anarchy rules for {n} turns, then {government} takes over.",
   "Novou vládou je {government}.":
     "The new government is {government}.",
-  "Karavana otevřela obchodní cestu z {city} do {city2} a přivezla {bonus} zlata a stejně vědy.":
-    "A caravan opened a trade route from {city} to {city2} and brought {bonus} gold and as much science.",
-  "Karavana přidala {shields} štítů na div v {city}.":
-    "A caravan added {shields} shields to the wonder in {city}.",
   "Otevřel jsi velvyslanectví. {realm} ti teď neutají, co zkoumá a kolik má zlata.":
     "You opened an embassy. {realm} can no longer hide what it researches and how much gold it has.",
   "Diplomat ukradl technologii {tech}.":
     "Your diplomat stole the technology {tech}.",
   "Cizí diplomat ti ukradl technologii {tech}.":
     "A foreign diplomat stole the technology {tech} from you.",
-  "Sabotáž v {city} zničila budovu {building}.":
-    "Sabotage in {city} destroyed the {building}.",
-  "Sabotáž v {city} zničila rozestavěnou výrobu.":
-    "Sabotage in {city} destroyed the production in progress.",
   "{city} se přidalo k tvé říši.":
     "{city} joined your empire.",
   "{city} přešlo k jiné říši.":
@@ -995,8 +977,6 @@ export const EN_STRINGS: Record<string, string> = {
     "{parts} · {cost} shields",
   "nevybírá daně a nezkoumá":
     "collects no taxes and does no research",
-  "vědě nebo zlatu dá nejvýš {maxRate} %":
-    "gives at most {maxRate} % to science or gold",
   "políčka s výnosem nad 2 dají o jeden méně":
     "tiles yielding more than 2 give one less",
   "políčka s obchodem dají o jeden víc":
@@ -1005,8 +985,6 @@ export const EN_STRINGS: Record<string, string> = {
     "corruption {corruptionFlatPct} % everywhere alike",
   "bez korupce":
     "no corruption",
-  "korupce {pct} % proti despocii":
-    "corruption {pct} % of despotism's",
   "vojáci ve městě uklidní nespokojené":
     "soldiers in a city calm unhappy citizens",
   "každý voják mimo vlastní města rozladí jednoho obyvatele|každý voják mimo vlastní města rozladí {n} obyvatele|každý voják mimo vlastní města rozladí {n} obyvatel":
@@ -1171,8 +1149,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Menu: save, load, new game (key Esc)",
   "Strom technologií (klávesa T)":
     "Technology tree (key T)",
-  "Kolik obchodu jde do výzkumu, zbytek je zlato":
-    "How much trade goes to research, the rest is gold",
   "Vláda a revoluce":
     "Government and revolution",
   "Encyklopedie všeho, co ve hře je (klávesa E)":
@@ -1203,4 +1179,62 @@ export const EN_STRINGS: Record<string, string> = {
     "Earn gold",
   "div {wonder}":
     "{wonder} (wonder)",
+  " Zábava uklidní {n}.":
+    " Luxuries calm {n}.",
+  "Přetáhni a změň pořadí":
+    "Drag to change the order",
+  "Postavit později":
+    "Build later",
+  "zábava <b>{n}</b>":
+    "luxuries <b>{n}</b>",
+  "(uklidní {calm})":
+    "(calm {calm})",
+  "anarchie: jen zábava":
+    "anarchy: luxuries only",
+  "daně {tax} %":
+    "taxes {tax} %",
+  ", zábava {luxury}":
+    ", luxuries {luxury}",
+  "Zábava":
+    "Luxuries",
+  "Kolik obchodu jde do výzkumu":
+    "How much trade goes to research",
+  "Kolik obchodu jde na zábavu. Každé dva body zábavy ve městě udělají z nespokojeného obyvatele spokojeného.":
+    "How much trade goes to luxuries. Every two luxury points in a city make one unhappy citizen content.",
+  "Daně dostanou, co zbude po vědě a zábavě":
+    "Taxes get what is left after science and luxuries",
+  "Div světa je hotový!":
+    "A wonder of the world is finished!",
+  "Postavilo ho město {city}. Žádná jiná říše už ho mít nebude.":
+    "{city} built it. No other empire can ever have it.",
+  "Co ti přinese:":
+    "What it gives you:",
+  "Přečíst v encyklopedii":
+    "Read in the encyclopedia",
+  "Další div":
+    "Next wonder",
+  "Jak hrát":
+    "How to play",
+  "Ukázat další zajímavost":
+    "Show another fact",
+  "Další zajímavost":
+    "Another fact",
+  "Ve městě {city} jsou nepokoje, tento tah nic nevyrobilo.":
+    "There are riots in {city}, it produced nothing this turn.",
+  "Letadlu {unit} došlo palivo, než stihlo přistát.":
+    "{unit} ran out of fuel before it could land.",
+  "{city} dokončilo díl vesmírné lodi: {building}.":
+    "{city} completed a spaceship part: {building}.",
+  "Karavana otevřela obchodní cestu z města {city} do města {city2} a přivezla {bonus} zlata a stejně vědy.":
+    "A caravan opened a trade route from {city} to {city2} and brought {bonus} gold and as much science.",
+  "Karavana přidala {shields} štítů na div ve městě {city}.":
+    "A caravan added {shields} shields to the wonder in {city}.",
+  "Sabotáž ve městě {city} zničila budovu {building}.":
+    "Sabotage in {city} destroyed the {building}.",
+  "Sabotáž ve městě {city} zničila rozestavěnou výrobu.":
+    "Sabotage in {city} destroyed the production in progress.",
+  "vědě, daním ani zábavě nedá víc než {maxRate} %":
+    "gives no more than {maxRate} % to science, taxes or luxuries",
+  "korupce je jen {pct} % té za despocie":
+    "corruption is only {pct} % of that under despotism",
 };

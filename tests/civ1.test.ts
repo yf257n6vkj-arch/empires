@@ -202,6 +202,18 @@ describe("governments", () => {
     expect(s.players[0]!.government).toBe("republic");
   });
 
+  it("keep luxuries after a revolution and move science up when taxes would pass the limit", () => {
+    let s = cityOn(["....."], 2, 0);
+    s.players[0]!.techs.push("republic");
+    s = apply(s, { type: "setRates", science: 50, luxury: 10 });
+    s = apply(s, { type: "revolution", government: "republic" });
+    s.players[0]!.scienceRate = 0; // what a player may leave behind during anarchy
+    s = nextTurn(nextTurn(s));
+    expect(s.players[0]!.government).toBe("republic");
+    expect(s.players[0]!.luxuryRate).toBe(10);
+    expect(s.players[0]!.scienceRate).toBe(10);
+  });
+
   it("give republics one more trade on tiles with trade and a wider slider", () => {
     let s = cityOn(["....."], 2, 0);
     s.map.road.fill(1);
@@ -351,6 +363,18 @@ describe("spaceship", () => {
     expect(s.players[0]!.spaceship.structural).toBe(1);
     expect(s.cities[0]!.buildings).not.toContain("ssStructural");
     expect(s.cities[0]!.production).toEqual({ kind: "building", id: "ssStructural" });
+  });
+
+  it("lets the city plan the same spaceship part several times", () => {
+    const s = shipyard();
+    const city = s.cities[0]!;
+    city.production = { kind: "building", id: "ssStructural" };
+    const part = { kind: "building", id: "ssStructural" } as const;
+    const engine = { kind: "building", id: "ssComponent" } as const;
+    const result = applyCommand(s, { type: "setQueue", cityId: city.id, queue: [part, engine, engine, part] });
+    expect(result.ok).toBe(true);
+    // Ordinary buildings still can be planned only once.
+    expect(applyCommand(s, { type: "setQueue", cityId: city.id, queue: [{ kind: "building", id: "granary" }, { kind: "building", id: "granary" }] }).ok).toBe(false);
   });
 
   it("starts only with a motor, a module and enough structure, then lands and wins", () => {

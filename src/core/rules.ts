@@ -393,6 +393,8 @@ export interface GameConstants {
   queueLength: number;
   /** Gold per shield when a city builds nothing and earns gold instead. */
   wealthGoldPerShield: number;
+  /** Luxury points that turn one unhappy citizen content. */
+  luxuryPerContent: number;
   /** Name of that choice in the production list. */
   wealthName: string;
   /** How far (in tiles) an automatic settler looks for work around its owner's cities. */

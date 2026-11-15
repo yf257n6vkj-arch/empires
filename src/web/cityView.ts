@@ -486,47 +486,33 @@ function solidArt(a: Art): Art {
 type Segment = [number, number, number, number];
 
 /**
- * The wall around the town follows the outer edge of its blocks, just outside
- * the streets. Sides facing away from the viewer are drawn behind the
- * buildings, the others in front. Towers stand where wall segments end.
+ * The wall around the town is one rectangle around all its blocks, just
+ * outside the streets, with a round tower in each corner. The two sides
+ * facing away from the viewer are drawn behind the buildings, the other two
+ * in front of them.
  */
 function townWalls(used: { a: number; b: number }[]): { back: Segment[]; front: Segment[]; towers: [number, number][]; frontTowers: [number, number][] } {
-  const has = new Set(used.map((u) => `${u.a},${u.b}`));
-  const back: Segment[] = [];
-  const front: Segment[] = [];
-  for (const { a, b } of used) {
-    const i0 = a * BLOCK;
-    const i1 = a * BLOCK + BLOCK + 1;
-    const j0 = b * BLOCK;
-    const j1 = b * BLOCK + BLOCK + 1;
-    if (!has.has(`${a - 1},${b}`)) back.push([i0, j0, i0, j1]);
-    if (!has.has(`${a},${b - 1}`)) back.push([i0, j0, i1, j0]);
-    if (!has.has(`${a + 1},${b}`)) front.push([i1, j0, i1, j1]);
-    if (!has.has(`${a},${b + 1}`)) front.push([i0, j1, i1, j1]);
-  }
-  // Towers stand only where the wall turns: a point where a wall along i meets a wall along j.
-  const dirs = new Map<string, { p: [number, number]; alongI: boolean; alongJ: boolean }>();
-  for (const [ai, aj, bi, bj] of [...back, ...front]) {
-    for (const p of [
-      [ai, aj],
-      [bi, bj],
-    ] as [number, number][]) {
-      const key = `${p[0]},${p[1]}`;
-      const d = dirs.get(key) ?? { p, alongI: false, alongJ: false };
-      if (ai === bi) d.alongJ = true;
-      else d.alongI = true;
-      dirs.set(key, d);
-    }
-  }
-  const corners = new Map([...dirs].filter(([, d]) => d.alongI && d.alongJ).map(([k, d]) => [k, d.p] as const));
-  const frontKeys = new Set(front.flatMap(([ai, aj, bi, bj]) => [`${ai},${aj}`, `${bi},${bj}`]));
-  const all = corners;
-  const frontEnds = new Map([...corners].filter(([k]) => frontKeys.has(k)));
+  const as = used.map((u) => u.a);
+  const bs = used.map((u) => u.b);
+  const i0 = Math.min(...as) * BLOCK;
+  const i1 = Math.max(...as) * BLOCK + BLOCK + 1;
+  const j0 = Math.min(...bs) * BLOCK;
+  const j1 = Math.max(...bs) * BLOCK + BLOCK + 1;
   return {
-    back,
-    front,
-    towers: [...all.entries()].filter(([k]) => !frontEnds.has(k)).map(([, p]) => p),
-    frontTowers: [...frontEnds.values()],
+    back: [
+      [i0, j0, i0, j1],
+      [i0, j0, i1, j0],
+    ],
+    front: [
+      [i1, j0, i1, j1],
+      [i0, j1, i1, j1],
+    ],
+    towers: [[i0, j0]],
+    frontTowers: [
+      [i0, j1],
+      [i1, j0],
+      [i1, j1],
+    ],
   };
 }
 

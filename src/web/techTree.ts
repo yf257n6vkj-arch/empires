@@ -21,6 +21,7 @@ import {
 } from "../core";
 import { buildingPortraitCanvas } from "./buildingArt";
 import { ERA_NAMES, techPage, techPicture } from "./encyclopedia";
+import { factBox, moreParagraph, wireFacts } from "./pageExtras";
 import { unitPortraitCanvas } from "./render";
 import { ERA_COLORS, techIconSvg } from "./techIcons";
 import { describeBuilding, describeGovernment, describeUnit, escapeHtml } from "./texts";
@@ -343,7 +344,8 @@ export function createTechTree(host: TreeHost) {
         <div class="tp-main">
           <div class="tp-head"><h2>${escapeHtml(techName(tech))}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button></div>
           <p class="tp-text">${escapeHtml(info.text)}</p>
-          <div class="tp-fact"><b>${t("Věděl jsi?")}</b> ${escapeHtml(info.fact)}</div>
+          ${moreParagraph(`tech-${tech}`)}
+          ${factBox(`tech-${tech}`, info.fact)}
           <h3>${t("Co to přinese ve hře")}</h3>
           <div class="tp-unlocks">${
             unlocks.length
@@ -376,6 +378,7 @@ export function createTechTree(host: TreeHost) {
         if (u && host.openEntry) host.openEntry(u.kind, u.id);
       }),
     );
+    wireFacts(page);
     page.querySelector('[data-act="close"]')?.addEventListener("click", () => page.close());
     page.querySelector('[data-act="research"]')?.addEventListener("click", () => {
       host.chooseResearch(tech);

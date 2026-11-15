@@ -60,7 +60,7 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
         return { text: t("Tví vědci nevědí, co mají zkoumat. Vyber jim další objev, jinak výzkum stojí."), button: t("Vybrat objev"), act: host.openTechTree };
       case "cityInDisorder":
         return {
-          text: t("Ve městě {city} se lidé bouří a město nic nevyrábí. Postav tam chrám, pošli do města vojáka nebo udělej z jednoho obyvatele baviče.", { city: cityName(a.cityId) }),
+          text: t("Ve městě {city} se lidé bouří a město nic nevyrábí. Postav tam chrám, pošli do města vojáka, udělej z jednoho obyvatele baviče nebo posuň nahoře posuvník Zábava doprava.", { city: cityName(a.cityId) }),
           button: t("Otevřít město"),
           act: () => host.openCity(a.cityId),
         };

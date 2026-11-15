@@ -62,6 +62,7 @@ export interface PlayerView {
     researchCost: number;
     gold: number;
     scienceRate: number;
+    luxuryRate: number;
     government: GovernmentId;
     revolution: { target: GovernmentId; turnsLeft: number } | null;
     spaceship: Spaceship;
@@ -116,6 +117,7 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
       researchCost: researchCost(player),
       gold: player.gold,
       scienceRate: player.scienceRate,
+      luxuryRate: player.luxuryRate,
       government: player.government,
       revolution: player.revolution ? { ...player.revolution } : null,
       spaceship: { ...player.spaceship },

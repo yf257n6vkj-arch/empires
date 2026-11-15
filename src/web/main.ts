@@ -26,6 +26,7 @@ import {
   cityTileYield,
   distance,
   findPath,
+  fitRates,
   IMPROVEMENTS,
   newGame,
   passComputerTurns,
@@ -75,6 +76,7 @@ import { createNewGameDialog } from "./newGame";
 import { createMenus } from "./menu";
 import { createAdvisor } from "./advisorPanel";
 import { createCitiesOverview } from "./citiesOverview";
+import { createCelebration } from "./celebration";
 import { payloadOf, readAutosave, writeAutosave, type LogEntry, type SavePayload } from "./saves";
 import { t, tn, translatePage } from "./i18n";
 import {
@@ -116,6 +118,9 @@ const researchButton = $<HTMLButtonElement>("#research");
 const goldLabel = $<HTMLSpanElement>("#gold");
 const rateInput = $<HTMLInputElement>("#rate");
 const rateLabel = $<HTMLSpanElement>("#rate-label");
+const luxInput = $<HTMLInputElement>("#lux");
+const luxLabel = $<HTMLSpanElement>("#lux-label");
+const taxLabel = $<HTMLSpanElement>("#tax-label");
 const researchPanel = $<HTMLElement>("#research-pick");
 const zoomInButton = $<HTMLButtonElement>("#zoom-in");
 const zoomOutButton = $<HTMLButtonElement>("#zoom-out");
@@ -233,6 +238,12 @@ function run(command: Command): boolean {
     events.push(...passed.events);
   }
   addLog(events);
+  for (const e of events) {
+    if (e.type === "wonderBuilt" && e.owner === HUMAN) {
+      const city = state.cities.find((c) => c.id === e.cityId);
+      celebration.show(e.building, city ? cityLabel(city.name) : "");
+    }
+  }
   if (command.type === "foundCity") {
     const founded = events.find((e) => e.type === "cityFounded");
     if (founded && founded.type === "cityFounded") {
@@ -490,7 +501,7 @@ function empireTotals(): { science: number; gold: number; upkeep: number } {
     if (c.owner !== HUMAN) continue;
     const r = cityReport(state, c);
     science += r.science;
-    gold += r.gold;
+    gold += r.gold + r.wealthGold;
   }
   return { science, gold, upkeep: buildingUpkeep(state, HUMAN) };
 }
@@ -519,13 +530,16 @@ function renderEconomy(): void {
     researchButton.classList.remove("attention");
   }
   const gov = GOVERNMENTS[p.government];
-  rateInput.disabled = gov.maxRate === 0;
-  if (gov.maxRate > 0) {
-    rateInput.min = String(100 - gov.maxRate);
-    rateInput.max = String(gov.maxRate);
-  }
-  rateInput.value = String(p.scienceRate);
-  rateLabel.textContent = gov.maxRate === 0 ? t("anarchie: nic") : t("{scienceRate} % · zlato {scienceRate2} %", { scienceRate: p.scienceRate, scienceRate2: 100 - p.scienceRate });
+  // Science and luxuries have sliders, taxes get the rest; the government caps each share.
+  const anarchy = gov.maxRate === 0;
+  rateInput.disabled = anarchy;
+  luxInput.disabled = anarchy;
+  rateInput.max = luxInput.max = String(anarchy ? 100 : gov.maxRate);
+  rateInput.value = String(anarchy ? 0 : p.scienceRate);
+  luxInput.value = String(anarchy ? 100 : p.luxuryRate);
+  rateLabel.textContent = anarchy ? "0 %" : `${p.scienceRate} %`;
+  luxLabel.textContent = anarchy ? "100 %" : `${p.luxuryRate} %`;
+  taxLabel.textContent = anarchy ? t("anarchie: jen zábava") : t("daně {tax} %", { tax: 100 - p.scienceRate - p.luxuryRate });
   governmentButton.innerHTML = p.revolution
     ? t("Vláda: <b>{gov}</b>", { gov: governmentName("anarchy") }) + ` <span class="muted">${t("{gov} za {turns}", { gov: governmentName(p.revolution.target), turns: turnsText(p.revolution.turnsLeft) })}</span>`
     : t("Vláda: <b>{gov}</b>", { gov: governmentName(p.government) });
@@ -636,6 +650,7 @@ const advisor = createAdvisor($<HTMLElement>("#advisor"), $<HTMLInputElement>("#
 
 $<HTMLButtonElement>("#advisor-button").addEventListener("click", () => advisor.toggleShown());
 
+const celebration = createCelebration($<HTMLDialogElement>("#celebration-dialog"), { openEntry: (key) => codex.show(key) });
 const citiesOverview = createCitiesOverview($<HTMLDialogElement>("#cities-dialog"), {
   state: () => state,
   player: () => HUMAN,
@@ -648,8 +663,14 @@ $<HTMLButtonElement>("#cities-button").addEventListener("click", () => citiesOve
 function cityScreenOpen(): boolean {
   return cityScreen.isOpen();
 }
+function setRates(keep: "science" | "luxury"): void {
+  const fitted = fitRates(Number(rateInput.value), Number(luxInput.value), me().government, keep);
+  run({ type: "setRates", science: fitted.science, luxury: fitted.luxury });
+  refresh();
+}
+luxInput.addEventListener("input", () => setRates("luxury"));
 rateInput.addEventListener("input", () => {
-  run({ type: "setScienceRate", rate: Number(rateInput.value) });
+  setRates("science");
   refresh();
 });
 
@@ -924,7 +945,7 @@ function renderCity(city: City): void {
     <p class="facts" style="margin-top:8px">${
       h.disorder ? `<span class="neg">${t("Nepokoje! Město nic nevyrábí.")}</span><br>` : ""
     }${t("Spokojení {content} · nespokojení {unhappy}", { content: h.content, unhappy: h.unhappy })}${h.entertainers ? t(" · baviči {entertainers}", { entertainers: h.entertainers }) : ""}<br>
-    ${t("Obchod {trade}", { trade: r.production.trade })}${r.corruption ? t(", korupce −{corruption}", { corruption: r.corruption }) : ""}: ${t("věda {science}, zlato {gold}", { science: r.science, gold: r.gold })}<br>${
+    ${t("Obchod {trade}", { trade: r.production.trade })}${r.corruption ? t(", korupce −{corruption}", { corruption: r.corruption }) : ""}: ${t("věda {science}, zlato {gold}", { science: r.science, gold: r.gold + r.wealthGold })}${r.luxury ? t(", zábava {luxury}", { luxury: r.luxury }) : ""}}<br>${
       r.pollution.unhappy ? `<span class="neg">${t("Znečištěný vzduch rozladí {n} obyvatel.", { n: r.pollution.unhappy })}</span><br>` : ""
     }
     <span class="muted">${t("Budovy: {list}", { list: buildings })}</span><br>
@@ -1233,7 +1254,7 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen()) return;
+  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen() || celebration.isOpen()) return;
   if (e.key.toLowerCase() === "o") {
     e.preventDefault();
     return citiesOverview.open();

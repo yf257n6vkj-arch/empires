@@ -6,7 +6,7 @@ Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti náro
 
 ## Jak se hra ovládá
 
-- Po spuštění se ukáže hlavní nabídka. Odtud pokračuješ v rozehrané hře, začneš novou, nahraješ uloženou nebo otevřeš encyklopedii.
+- Po spuštění se ukáže hlavní nabídka. Odtud pokračuješ v rozehrané hře, začneš novou, nahraješ uloženou nebo otevřeš encyklopedii. Kapitola Jak hrát v encyklopedii vysvětluje, jak nechat města růst, jak udržet obyvatele spokojené a jak rychle bádat.
 - Tlačítko `Menu` vlevo nahoře nebo `Esc` bez vybrané jednotky otevře nabídku ve hře. Tam hru uložíš, nahraješ jinou nebo se vrátíš do hlavní nabídky.
 - Klikni na svou jednotku nebo město a vyber ho.
 - Klik na sousední políčko jednotku posune, klik dál ji tam pošle i na víc tahů. Cestu ukáže přerušovaná čára.
@@ -15,9 +15,9 @@ Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti náro
 - `B` založí město, `R` postaví cestu, `I` zavlažování, `M` důl, `F` opevní jednotku, mezerník ji nechá do příštího tahu, `N` vybere další jednotku, `U` ji povýší a `D` rozpustí.
 - `K` a klik na cíl pošle osadníka stavět cestu po celé trase, `A` mu zapne automatickou práci kolem měst. Obojí zastaví `C`.
 - `Enter` ukončí tah, `Esc` zruší výběr. Druhé `Esc` otevře nabídku.
-- `T` otevře strom technologií. Na výzkum klikneš i v hlavičce a posuvníkem vedle nastavíš, kolik obchodu jde do výzkumu a kolik do zlata.
+- `T` otevře strom technologií. Na výzkum klikneš i v hlavičce. Posuvníky Věda a Zábava vedle nastavíš, kolik obchodu jde do výzkumu a kolik na zábavu, zbytek jsou daně. Zábava dělá obyvatele spokojenými.
 - Klik na technologii ve stromu otevře její stránku. Vzdálenou technologii jde nastavit jako cíl a hra k ní bude zkoumat sama.
-- Dvojklik na město nebo tlačítko `Otevřít město` ukáže obrazovku města. Klikem na políčko v okolí města přesuneš obyvatele. Tlačítkem + u stavby ji přidáš do plánu a hranici mezi obrázkem a panely jde táhnout myší.
+- Dvojklik na město nebo tlačítko `Otevřít město` ukáže obrazovku města. Klikem na políčko v okolí města přesuneš obyvatele. Tlačítkem + u stavby ji přidáš do plánu. Pořadí v plánu změníš šipkami nebo přetažením a hranici mezi obrázkem a panely jde táhnout myší.
 - `O` nebo tlačítko `Města` nahoře otevře přehled všech měst. U každého města je vidět velikost, růst, výroba, obchod a nálada a v seznamu jde rovnou změnit, co staví.
 - Jazyk hry přepneš na úvodní obrazovce nebo v menu. Hra umí česky a anglicky.
 - Rádce vlevo radí začátečníkům, co dělat dál. Křížkem ho schováš, tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.

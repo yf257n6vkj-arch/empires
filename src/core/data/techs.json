@@ -3,7 +3,7 @@
   "techs": [
     {"id": "pottery", "name": "Hrnčířství", "era": 1, "requires": []},
     {"id": "bronze", "name": "Zpracování bronzu", "era": 1, "requires": []},
-    {"id": "masonry", "name": "Zednictví", "era": 1, "requires": []},
+    {"id": "masonry", "name": "Stavitelství", "era": 1, "requires": []},
     {"id": "ceremonies", "name": "Pohřební obřady", "era": 1, "requires": []},
     {"id": "horseback", "name": "Jízda na koni", "era": 1, "requires": []},
     {"id": "wheel", "name": "Kolo", "era": 1, "requires": []},
@@ -19,7 +19,7 @@
     {"id": "literacy", "name": "Gramotnost", "era": 2, "requires": ["alphabet", "codeOfLaws"]},
     {"id": "monarchy", "name": "Monarchie", "era": 2, "requires": ["ceremonies", "codeOfLaws"]},
     {"id": "republic", "name": "Republika", "era": 2, "requires": ["codeOfLaws", "literacy"]},
-    {"id": "construction", "name": "Stavitelství", "era": 2, "requires": ["pottery", "currency"]},
+    {"id": "construction", "name": "Beton", "era": 2, "requires": ["pottery", "currency"]},
     {"id": "trade", "name": "Obchod", "era": 2, "requires": ["currency", "codeOfLaws"]},
     {"id": "astronomy", "name": "Astronomie", "era": 2, "requires": ["mysticism", "mathematics"]},
     {"id": "philosophy", "name": "Filozofie", "era": 2, "requires": ["mysticism", "literacy"]},
@@ -61,12 +61,12 @@
     {"id": "geneticEngineering", "name": "Genetické inženýrství", "era": 5, "requires": ["medicine", "corporation"]},
     {"id": "computers", "name": "Počítače", "era": 5, "requires": ["mathematics", "electronics"]},
     {"id": "rocketry", "name": "Rakety", "era": 5, "requires": ["advancedFlight", "electronics"]},
-    {"id": "nuclearFission", "name": "Štěpení atomu", "era": 5, "requires": ["atomicTheory", "massProduction"]},
+    {"id": "nuclearFission", "name": "Štěpení jádra", "era": 5, "requires": ["atomicTheory", "massProduction"]},
     {"id": "spaceFlight", "name": "Lety do vesmíru", "era": 5, "requires": ["computers", "rocketry"]},
     {"id": "plastics", "name": "Plasty", "era": 5, "requires": ["refining", "spaceFlight"]},
     {"id": "robotics", "name": "Robotika", "era": 5, "requires": ["plastics", "computers"]},
     {"id": "superconductor", "name": "Supravodivost", "era": 5, "requires": ["plastics", "massProduction"]},
-    {"id": "nuclearPower", "name": "Jaderná elektrárna", "era": 5, "requires": ["nuclearFission", "electronics"]},
+    {"id": "nuclearPower", "name": "Jaderná energie", "era": 5, "requires": ["nuclearFission", "electronics"]},
     {"id": "recycling", "name": "Recyklace", "era": 5, "requires": ["massProduction", "democracy"]},
     {"id": "fusionPower", "name": "Jaderná fúze", "era": 5, "requires": ["nuclearPower", "superconductor"]}
   ]

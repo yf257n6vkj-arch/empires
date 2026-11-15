@@ -161,13 +161,40 @@ export interface Happiness {
   disorder: boolean;
 }
 
-/** Unhappy citizens left after buildings and soldiers have calmed whom they can, before entertainers. */
+/** Trade of the city after corruption, before it is split into science, luxuries and taxes. */
+function netTrade(state: GameState, city: City, effects: CityEffects): { trade: number; corruption: number } {
+  const gross = grossYield(state, city, effects).trade + routeTrade(state, city);
+  const corruption = Math.round((gross * corruptionPct(state, city, effects)) / 100);
+  return { trade: gross - corruption, corruption };
+}
+
+/** Science, luxury and tax shares of the owner, in percent. In anarchy all trade goes to luxuries. */
+function rates(state: GameState, city: City): { science: number; luxury: number } {
+  if (governmentOf(state, city).maxRate === 0) return { science: 0, luxury: 100 };
+  const p = state.players[city.owner];
+  return { science: p?.scienceRate ?? 0, luxury: p?.luxuryRate ?? 0 };
+}
+
+/** Luxury points of the city: its share of trade, raised by the buildings that raise gold. */
+export function cityLuxury(state: GameState, city: City, effects = cityEffects(state, city)): number {
+  const share = rates(state, city).luxury;
+  if (share === 0) return 0;
+  const base = Math.round((netTrade(state, city, effects).trade * share) / 100);
+  return Math.floor((base * (100 + effects.goldPct)) / 100);
+}
+
+/** Unhappy citizens the luxuries make content. */
+function calmedByLuxury(state: GameState, city: City, effects: CityEffects): number {
+  return Math.floor(cityLuxury(state, city, effects) / RULES.luxuryPerContent);
+}
+
+/** Unhappy citizens left after buildings, soldiers and luxuries have calmed whom they can, before entertainers. */
 function unhappyAfterHelp(state: GameState, city: City, effects: CityEffects): number {
   if (effects.noUnhappy) return 0;
   const crowd = Math.max(0, city.size - RULES.contentBase);
   const extra = cityPollution(state, city, effects).unhappy + militaryUnhappiness(state, city, effects);
   const unhappy = Math.min(city.size, crowd + extra);
-  return Math.max(0, unhappy - effects.content - martialLaw(state, city));
+  return Math.max(0, unhappy - effects.content - martialLaw(state, city) - calmedByLuxury(state, city, effects));
 }
 
 export function cityHappiness(state: GameState, city: City, effects = cityEffects(state, city)): Happiness {
@@ -226,9 +253,13 @@ export interface CityReport {
   corruption: number;
   /** Shields paid for units beyond the free ones. */
   unitUpkeep: number;
-  /** Trade split by the owner's slider, after corruption, buildings and disorder. */
+  /** Trade split by the owner's shares, after corruption, buildings and disorder. */
   science: number;
   gold: number;
+  /** Luxury points; every RULES.luxuryPerContent of them calm one unhappy citizen. */
+  luxury: number;
+  /** Gold from shields when the city earns gold instead of building. */
+  wealthGold: number;
   happiness: Happiness;
   pollution: Pollution;
   growthThreshold: number;
@@ -253,11 +284,11 @@ export function cityReport(state: GameState, city: City): CityReport {
   const happiness = cityHappiness(state, city, effects);
 
   const gov = governmentOf(state, city);
-  const rate = state.players[city.owner]?.scienceRate ?? 0;
-  const corruption = Math.round((production.trade * corruptionPct(state, city, effects)) / 100);
-  const trade = production.trade - corruption;
-  const baseScience = Math.round((trade * rate) / 100);
-  const baseGold = trade - baseScience;
+  const share = rates(state, city);
+  const { trade, corruption } = netTrade(state, city, effects);
+  const baseScience = Math.round((trade * share.science) / 100);
+  const baseLuxury = Math.round((trade * share.luxury) / 100);
+  const baseGold = trade - baseScience - baseLuxury;
   const calm = !happiness.disorder;
   const unitUpkeep = unitShieldUpkeep(state, city);
   const shieldSurplus = calm ? Math.max(0, Math.floor((production.shields * (100 + effects.shieldsPct)) / 100) - unitUpkeep) : 0;
@@ -280,6 +311,8 @@ export function cityReport(state: GameState, city: City): CityReport {
     unitUpkeep,
     science,
     gold,
+    luxury: cityLuxury(state, city, effects),
+    wealthGold: city.production.kind === "wealth" ? shieldSurplus * RULES.wealthGoldPerShield : 0,
     happiness,
     pollution: cityPollution(state, city, effects),
     growthThreshold: threshold,
@@ -352,7 +385,7 @@ export function processCityDraft(draft: GameState, city: City, events: GameEvent
     // Nothing is built: this turn's shields become gold, stored shields wait.
     city.shields -= report.shieldSurplus;
     assignWorkersDraft(draft, city);
-    return { science: report.science, gold: report.gold + report.shieldSurplus * RULES.wealthGoldPerShield };
+    return { science: report.science, gold: report.gold + report.wealthGold };
   }
   const cost = productionCost(item);
   if (city.shields >= cost) completeProductionDraft(draft, city, cost, events);

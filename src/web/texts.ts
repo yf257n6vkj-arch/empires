@@ -112,7 +112,7 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
     case "buildingSold":
       return t("Nemáš na údržbu, a tak {city} prodalo budovu {building}.", { city: cityName(state, e.cityId), building: buildingName(e.building) });
     case "cityDisorder":
-      return t("V {city} jsou nepokoje, město tento tah nic nevyrobilo.", { city: cityName(state, e.cityId) });
+      return t("Ve městě {city} jsou nepokoje, tento tah nic nevyrobilo.", { city: cityName(state, e.cityId) });
     case "cityAtMaxSize":
       return t("{city} dál neroste, na velikost nad {size} potřebuje akvadukt.", { city: cityName(state, e.cityId), size: e.size });
     case "techLearned":
@@ -144,10 +144,10 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
     case "unitLost":
       if (e.owner !== viewer) return null;
       return e.reason === "fuel"
-        ? t("{unit} nestihla přistát a došlo jí palivo.", { unit: unitName(e.unitType) })
+        ? t("Letadlu {unit} došlo palivo, než stihlo přistát.", { unit: unitName(e.unitType) })
         : t("{unit} se na volném moři potopila.", { unit: unitName(e.unitType) });
     case "spaceshipPartBuilt":
-      return t("{city} dokončilo {building} pro vesmírnou loď.", { city: cityName(state, e.cityId), building: inSentence(buildingName(e.building)) });
+      return t("{city} dokončilo díl vesmírné lodi: {building}.", { city: cityName(state, e.cityId), building: inSentence(buildingName(e.building)) });
     case "spaceshipLaunched":
       return e.player === viewer
         ? t("Tvoje vesmírná loď odstartovala a přistane v tahu {arrivalTurn}.", { arrivalTurn: e.arrivalTurn })
@@ -165,9 +165,9 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
     case "governmentChanged":
       return e.player === viewer ? t("Novou vládou je {government}.", { government: inSentence(governmentName(e.government)) }) : null;
     case "tradeRouteOpened":
-      return t("Karavana otevřela obchodní cestu z {city} do {city2} a přivezla {bonus} zlata a stejně vědy.", { city: cityName(state, e.from), city2: cityName(state, e.to), bonus: e.bonus });
+      return t("Karavana otevřela obchodní cestu z města {city} do města {city2} a přivezla {bonus} zlata a stejně vědy.", { city: cityName(state, e.from), city2: cityName(state, e.to), bonus: e.bonus });
     case "wonderHelped":
-      return t("Karavana přidala {shields} štítů na div v {city}.", { shields: e.shields, city: cityName(state, e.cityId) });
+      return t("Karavana přidala {shields} štítů na div ve městě {city}.", { shields: e.shields, city: cityName(state, e.cityId) });
     case "embassyOpened":
       return e.player === viewer ? t("Otevřel jsi velvyslanectví. {realm} ti teď neutají, co zkoumá a kolik má zlata.", { realm: realmName(state, e.with) }) : null;
     case "techStolen":
@@ -178,8 +178,8 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
           : null;
     case "citySabotaged":
       return e.building
-        ? t("Sabotáž v {city} zničila budovu {building}.", { city: cityName(state, e.cityId), building: buildingName(e.building) })
-        : t("Sabotáž v {city} zničila rozestavěnou výrobu.", { city: cityName(state, e.cityId) });
+        ? t("Sabotáž ve městě {city} zničila budovu {building}.", { city: cityName(state, e.cityId), building: buildingName(e.building) })
+        : t("Sabotáž ve městě {city} zničila rozestavěnou výrobu.", { city: cityName(state, e.cityId) });
     case "cityIncited":
       return e.to === viewer ? t("{city} se přidalo k tvé říši.", { city: cityName(state, e.cityId) }) : t("{city} přešlo k jiné říši.", { city: cityName(state, e.cityId) });
     case "nuclearStrike":
@@ -208,12 +208,12 @@ export function describeUnit(u: UnitRule, withCost = true): string {
 export function describeGovernment(g: GovernmentRule): string {
   const parts: string[] = [];
   if (g.maxRate === 0) parts.push(t("nevybírá daně a nezkoumá"));
-  else parts.push(t("vědě nebo zlatu dá nejvýš {maxRate} %", { maxRate: g.maxRate }));
+  else parts.push(t("vědě, daním ani zábavě nedá víc než {maxRate} %", { maxRate: g.maxRate }));
   if (g.tilePenalty) parts.push(t("políčka s výnosem nad 2 dají o jeden méně"));
   if (g.tradeBonus) parts.push(t("políčka s obchodem dají o jeden víc"));
   if (g.corruptionFlatPct) parts.push(t("korupce {corruptionFlatPct} % všude stejně", { corruptionFlatPct: g.corruptionFlatPct }));
   else if (g.corruptionPct === 0) parts.push(t("bez korupce"));
-  else if (g.corruptionPct < 100) parts.push(t("korupce {pct} % proti despocii", { pct: g.corruptionPct }));
+  else if (g.corruptionPct < 100) parts.push(t("korupce je jen {pct} % té za despocie", { pct: g.corruptionPct }));
   if (g.martialLaw) parts.push(t("vojáci ve městě uklidní nespokojené"));
   if (g.militaryUnhappy) parts.push(tn("každý voják mimo vlastní města rozladí jednoho obyvatele|každý voják mimo vlastní města rozladí {n} obyvatele|každý voják mimo vlastní města rozladí {n} obyvatel", g.militaryUnhappy));
   parts.push(g.freeUnits ? t("město živí {freeUnits} jednotky zdarma", { freeUnits: g.freeUnits }) : t("každá jednotka stojí štít"));

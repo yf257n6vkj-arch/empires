@@ -8,6 +8,7 @@ import {
   cityEffects,
   cityHappiness,
   cityReport,
+  fitRates,
   growthThreshold,
   migrateState,
   playerView,
@@ -210,6 +211,42 @@ describe("happiness", () => {
     expect(report.happiness.disorder).toBe(true);
     expect(report.shieldSurplus).toBe(0);
     expect(report.science + report.gold).toBe(0);
+  });
+
+  it("lets luxuries calm unhappy citizens, two points for each", () => {
+    let s = cityState();
+    s.map.road.fill(1);
+    const city = s.cities[0]!;
+    city.size = RULES.contentBase + 3;
+    city.worked = Array.from({ length: city.size }, (_, i) => i);
+    const before = cityHappiness(s, city).unhappy;
+    s = apply(s, { type: "setRates", science: 0, luxury: 60 });
+    const c = s.cities[0]!;
+    const report = cityReport(s, c);
+    expect(report.luxury).toBeGreaterThan(0);
+    expect(cityHappiness(s, c).unhappy).toBe(Math.max(0, before - Math.floor(report.luxury / RULES.luxuryPerContent)));
+    // Taxes get what science and luxuries leave.
+    expect(report.science).toBe(0);
+  });
+
+  it("checks the three-way split against the government", () => {
+    const s = cityState();
+    expect(applyCommand(s, { type: "setRates", science: 50, luxury: 20 }).ok).toBe(true);
+    // Despotism: no share above 60 %, taxes included.
+    expect(applyCommand(s, { type: "setRates", science: 30, luxury: 0 })).toEqual({ ok: false, error: "invalidRate" });
+    expect(applyCommand(s, { type: "setRates", science: 70, luxury: 0 })).toEqual({ ok: false, error: "invalidRate" });
+    expect(applyCommand(s, { type: "setRates", science: 50, luxury: 60 })).toEqual({ ok: false, error: "invalidRate" });
+    expect(applyCommand(s, { type: "setRates", science: 45, luxury: 10 })).toEqual({ ok: false, error: "invalidRate" });
+    expect(fitRates(50, 60, "despotism", "luxury")).toEqual({ science: 40, luxury: 60 });
+    expect(fitRates(0, 0, "despotism")).toEqual({ science: 0, luxury: 40 });
+  });
+
+  it("counts gold from a city that earns gold in its report", () => {
+    const s = cityState();
+    const city = s.cities[0]!;
+    city.production = { kind: "wealth" };
+    const report = cityReport(s, city);
+    expect(report.wealthGold).toBe(report.shieldSurplus * RULES.wealthGoldPerShield);
   });
 
   it("lets soldiers in the city calm unhappy citizens", () => {

@@ -1,4 +1,6 @@
 import { EN_CODEX } from "./en-codex";
+import { EN_GUIDE } from "./en-guide";
+import { EN_MORE } from "./en-more";
 import { EN_NAMES } from "./en-names";
 import { EN_STRINGS } from "./en-strings";
 import { EN_TECH_PAGES } from "./en-techs";
@@ -12,5 +14,7 @@ export const EN: Language = {
   names: EN_NAMES,
   codex: EN_CODEX,
   techPages: EN_TECH_PAGES,
+  guide: EN_GUIDE,
+  more: EN_MORE,
   wikipedia: "en",
 };

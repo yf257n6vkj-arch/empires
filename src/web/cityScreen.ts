@@ -608,12 +608,31 @@ export function createCityScreen(host: CityHost) {
     act({ type: "setWorkedTiles", cityId: c.id, tiles });
   }
 
+  /** Scrolled panels keep their place when the same city is drawn again, e.g. after adding to the plan. */
+  const SCROLLERS = [".cs-opts", ".cs-info", ".cs-land", ".cs-make", ".cs-bottom"];
+  let renderedCity: number | null = null;
+
   function render(): void {
     const c = city();
     if (!c) {
       if (dialog.open) dialog.close();
       return;
     }
+    const scrolled = renderedCity === c.id ? SCROLLERS.map((sel) => dialog.querySelector<HTMLElement>(sel)?.scrollTop ?? 0) : null;
+    renderedCity = c.id;
+    try {
+      renderCity(c);
+    } finally {
+      if (scrolled) {
+        SCROLLERS.forEach((sel, k) => {
+          const el = dialog.querySelector<HTMLElement>(sel);
+          if (el) el.scrollTop = scrolled[k]!;
+        });
+      }
+    }
+  }
+
+  function renderCity(c: City): void {
     const s = host.state();
     const r = cityReport(s, c);
     const effects = cityEffects(s, c);
@@ -643,6 +662,7 @@ export function createCityScreen(host: CityHost) {
     const unhappyBase = Math.min(c.size, crowd + r.pollution.unhappy);
     const calmedByBuildings = Math.min(unhappyBase, effects.content);
     const calmedBySoldiers = Math.min(unhappyBase - calmedByBuildings, martialLaw(s, c));
+    const calmedByLuxury = Math.min(unhappyBase - calmedByBuildings - calmedBySoldiers, Math.floor(r.luxury / RULES.luxuryPerContent));
     const unitsHere = s.units.filter((u) => u.x === c.x && u.y === c.y && u.owner === c.owner);
     const supported = s.units.filter((u) => u.homeCity === c.id);
     const options = productionOptions(s, c);
@@ -657,7 +677,7 @@ export function createCityScreen(host: CityHost) {
     const optionRow = (o: ProductionItem, n: number) => {
       const left = r.shieldSurplus > 0 ? Math.max(1, Math.ceil((productionCost(o) - c.shields) / r.shieldSurplus)) : null;
       const wonder = o.kind === "building" && BUILDINGS[o.id].wonder;
-      const planned = o.kind === "building" && [c.production, ...c.queue].some((x) => sameItem(x, o));
+      const planned = o.kind === "building" && !BUILDINGS[o.id].spaceship && [c.production, ...c.queue].some((x) => sameItem(x, o));
       const full = c.queue.length >= RULES.queueLength;
       const cost = o.kind === "wealth" ? t("+{gold} zl.", { gold: goldPerTurn }) : `${productionCost(o)} ${yieldIcon("shields", 11)}`;
       const time = o.kind === "wealth" ? t("každý tah") : left ? turns(left) : "—";
@@ -692,7 +712,7 @@ export function createCityScreen(host: CityHost) {
             <div class="cs-mood">
               ${h.disorder ? `<b class="neg">${t("Nepokoje! Město tento tah nic nevyrobí.")}</b><br>` : ""}
               <span>${t("Spokojení {n}", { n: h.content })}</span> · <span class="${h.unhappy ? "neg" : ""}">${t("nespokojení {n}", { n: h.unhappy })}</span>${h.entertainers ? t(" · baviči {entertainers}", { entertainers: h.entertainers }) : ""}
-              <div class="small">${t("Bez pomoci je spokojených {n} obyvatel.", { n: RULES.contentBase })}${r.pollution.unhappy ? tn(" Znečištěný vzduch rozladí jednoho dalšího.| Znečištěný vzduch rozladí {n} další.| Znečištěný vzduch rozladí {n} dalších.", r.pollution.unhappy) : ""}${unhappyBase ? t(" Z {unhappyBase} nespokojených uklidní budovy {calmedByBuildings} a vojáci ve městě {calmedBySoldiers}.", { unhappyBase, calmedByBuildings, calmedBySoldiers }) : ""}</div>
+              <div class="small">${t("Bez pomoci je spokojených {n} obyvatel.", { n: RULES.contentBase })}${r.pollution.unhappy ? tn(" Znečištěný vzduch rozladí jednoho dalšího.| Znečištěný vzduch rozladí {n} další.| Znečištěný vzduch rozladí {n} dalších.", r.pollution.unhappy) : ""}${unhappyBase ? t(" Z {unhappyBase} nespokojených uklidní budovy {calmedByBuildings} a vojáci ve městě {calmedBySoldiers}.", { unhappyBase, calmedByBuildings, calmedBySoldiers }) : ""}${calmedByLuxury ? t(" Zábava uklidní {n}.", { n: calmedByLuxury }) : ""}</div>
             </div>
           </div>
         </div>
@@ -728,7 +748,7 @@ export function createCityScreen(host: CityHost) {
                   ? c.queue
                       .map(
                         (q, n) =>
-                          `<span class="cs-chip">${n + 1}. ${escapeHtml(productionLabel(q))}${n > 0 ? `<button type="button" data-up="${n}" title="${t("Postavit dřív")}">‹</button>` : ""}<button type="button" data-unq="${n}" title="${t("Vyřadit z plánu")}">×</button></span>`,
+                          `<span class="cs-chip" draggable="true" data-q="${n}" title="${t("Přetáhni a změň pořadí")}">${n > 0 ? `<button type="button" data-move="${n}" data-to="${n - 1}" title="${t("Postavit dřív")}">‹</button>` : ""}<span class="cs-chip-name">${n + 1}. ${escapeHtml(productionLabel(q))}</span>${n < c.queue.length - 1 ? `<button type="button" data-move="${n}" data-to="${n + 1}" title="${t("Postavit později")}">›</button>` : ""}<button type="button" data-unq="${n}" title="${t("Vyřadit z plánu")}">×</button></span>`,
                       )
                       .join("")
                   : `<span class="muted small">${t("nic dalšího. Tlačítkem + u stavby ji přidáš do plánu.")}</span>`
@@ -745,7 +765,7 @@ export function createCityScreen(host: CityHost) {
             <div class="cs-trade">
               <div>${yieldIcon("trade")} ${t("obchod <b>{n}</b>", { n: r.production.trade })}${r.routes ? ` <span class="muted">${t("(z toho obchodní cesty {n})", { n: r.routes })}</span>` : ""}</div>
               ${r.corruption ? `<div>${t("korupce")} <b class="neg">−${r.corruption}</b> <span class="muted">(${corruptionPct(s, c, effects)} % ${effects.corruptionCutPct ? t("i se soudním dvorem") : t("kvůli vzdálenosti od paláce")})</span></div>` : effects.capital ? `<div class="muted small">${t("Tady sídlí vláda, korupce tu není.")}</div>` : ""}
-              <div>${t("věda <b>{n}</b>", { n: r.science })}${effects.sciencePct ? ` <span class="muted">${t("(+{pct} % z budov)", { pct: effects.sciencePct })}</span>` : ""} · ${t("zlato <b>{n}</b>", { n: r.gold })}${effects.goldPct ? ` <span class="muted">(+${effects.goldPct} %)</span>` : ""}</div>
+              <div>${t("věda <b>{n}</b>", { n: r.science })}${effects.sciencePct ? ` <span class="muted">${t("(+{pct} % z budov)", { pct: effects.sciencePct })}</span>` : ""} · ${t("zlato <b>{n}</b>", { n: r.gold + r.wealthGold })}${effects.goldPct ? ` <span class="muted">(+${effects.goldPct} %)</span>` : ""}${r.luxury ? ` · ${t("zábava <b>{n}</b>", { n: r.luxury })} <span class="muted">${t("(uklidní {calm})", { calm: Math.floor(r.luxury / RULES.luxuryPerContent) })}</span>` : ""}</div>
             </div>
             ${r.pollution.industry + r.pollution.population > 0 ? `<p class="small">${t("Znečištění {n}, bez potíží město snese {free}", { n: r.pollution.industry + r.pollution.population, free: RULES.pollutionFree })} <span class="muted">${t("(z výroby {industry}, od obyvatel {people})", { industry: r.pollution.industry, people: r.pollution.population })}</span></p>` : ""}
             ${c.tradeRoutes.length ? `<p class="small">${t("Obchodní cesty do: {list}", { list: c.tradeRoutes.map((id) => escapeHtml(cityLabel(s.cities.find((x) => x.id === id)?.name ?? "?"))).join(", ") })}</p>` : ""}
@@ -839,14 +859,34 @@ export function createCityScreen(host: CityHost) {
     dialog.querySelectorAll<HTMLButtonElement>("[data-unq]").forEach((b) =>
       b.addEventListener("click", () => act({ type: "setQueue", cityId: c.id, queue: c.queue.filter((_, k) => k !== Number(b.dataset.unq)) })),
     );
-    dialog.querySelectorAll<HTMLButtonElement>("[data-up]").forEach((b) =>
-      b.addEventListener("click", () => {
-        const k = Number(b.dataset.up);
-        const q = [...c.queue];
-        [q[k - 1], q[k]] = [q[k]!, q[k - 1]!];
-        act({ type: "setQueue", cityId: c.id, queue: q });
-      }),
+    // The plan can be reordered with the arrows or by dragging a chip onto another.
+    const move = (from: number, to: number) => {
+      if (from === to || from < 0 || to < 0 || from >= c.queue.length || to >= c.queue.length) return;
+      const q = [...c.queue];
+      const [item] = q.splice(from, 1);
+      q.splice(to, 0, item!);
+      act({ type: "setQueue", cityId: c.id, queue: q });
+    };
+    dialog.querySelectorAll<HTMLButtonElement>("[data-move]").forEach((b) =>
+      b.addEventListener("click", () => move(Number(b.dataset.move), Number(b.dataset.to))),
     );
+    dialog.querySelectorAll<HTMLElement>(".cs-chip[data-q]").forEach((chip) => {
+      chip.addEventListener("dragstart", (e) => {
+        e.dataTransfer?.setData("text/plain", chip.dataset.q!);
+        chip.classList.add("dragging");
+      });
+      chip.addEventListener("dragend", () => chip.classList.remove("dragging"));
+      chip.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        chip.classList.add("drop");
+      });
+      chip.addEventListener("dragleave", () => chip.classList.remove("drop"));
+      chip.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const from = Number(e.dataTransfer?.getData("text/plain"));
+        if (Number.isInteger(from)) move(from, Number(chip.dataset.q));
+      });
+    });
     setUpSplit();
     dialog.querySelectorAll<HTMLButtonElement>(".cs-building").forEach((d) => {
       const id = d.dataset.b as BuildingId;

@@ -14,7 +14,7 @@ import {
   canResearch,
   capitalOf,
   cityEffects,
-  clampRate,
+  ratesAllowed,
   fallbackProduction,
   knowsTech,
   learnTechDraft,
@@ -70,6 +70,8 @@ export type Command =
   | { type: "setWorkedTiles"; cityId: CityId; tiles: number[] }
   | { type: "autoAssignWorkers"; cityId: CityId }
   | { type: "setScienceRate"; rate: number }
+  /** Shares of trade for science and luxuries; taxes get the rest. */
+  | { type: "setRates"; science: number; luxury: number }
   | { type: "board"; unitId: UnitId }
   | { type: "revolution"; government: GovernmentId }
   | { type: "launchSpaceship" }
@@ -321,8 +323,8 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       for (const item of command.queue) {
         // Earning gold never ends, so nothing could come after it.
         if (item.kind === "wealth" || !canBuild(state, city, item)) return { ok: false, error: "invalidProduction" };
-        // A building can only stand once, so it can only be planned once.
-        if (item.kind === "building" && seen.some((x) => sameItem(x, item))) return { ok: false, error: "invalidProduction" };
+        // A building can only stand once, so it can only be planned once. Spaceship parts are built again and again.
+        if (item.kind === "building" && !BUILDINGS[item.id].spaceship && seen.some((x) => sameItem(x, item))) return { ok: false, error: "invalidProduction" };
         seen.push(item);
       }
       const draft = cloneState(state);
@@ -430,9 +432,20 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
         return { ok: false, error: "invalidRate" };
       }
       const player = getPlayer(state, state.currentPlayer);
-      if (clampRate(rate, player.government) !== rate) return { ok: false, error: "invalidRate" };
+      if (!ratesAllowed(rate, player.luxuryRate, player.government)) return { ok: false, error: "invalidRate" };
       const draft = cloneState(state);
       getPlayer(draft, state.currentPlayer).scienceRate = rate;
+      return { ok: true, state: draft, events };
+    }
+
+    case "setRates": {
+      const player = getPlayer(state, state.currentPlayer);
+      if (GOVERNMENTS[player.government].maxRate === 0) return { ok: false, error: "invalidRate" };
+      if (!ratesAllowed(command.science, command.luxury, player.government)) return { ok: false, error: "invalidRate" };
+      const draft = cloneState(state);
+      const p = getPlayer(draft, state.currentPlayer);
+      p.scienceRate = command.science;
+      p.luxuryRate = command.luxury;
       return { ok: true, state: draft, events };
     }
 

@@ -24,6 +24,8 @@ import { buildingPortraitCanvas } from "./buildingArt";
 import { CODEX_PAGES, type CodexPage } from "./codexPages";
 import { wikiUrl } from "./encyclopedia";
 import { language, t, tn } from "./i18n";
+import { GUIDE_KEYS, GUIDE_PAGES, guideNumbers, type GuideKey, type GuidePage } from "./guidePages";
+import { factBox, moreParagraph, wireFacts } from "./pageExtras";
 import {
   buildingName,
   cityLabel,
@@ -41,7 +43,7 @@ import { unitPortraitCanvas } from "./render";
 import { techIconSvg } from "./techIcons";
 import { describeBuilding, describeGovernment, describeUnit, escapeHtml } from "./texts";
 
-export type EntryKind = "civ" | "lead" | "unit" | "bld" | "wdr" | "gov" | "ter" | "imp";
+export type EntryKind = "how" | "civ" | "lead" | "unit" | "bld" | "wdr" | "gov" | "ter" | "imp";
 
 interface Entry {
   key: string;
@@ -74,7 +76,17 @@ export function entryKey(kind: "civ" | "unit" | "building" | "government" | "ter
   return BUILDINGS[id as keyof typeof BUILDINGS]?.wonder ? `wdr-${id}` : `bld-${id}`;
 }
 
+/** A page of the "How to play" chapter in the current language. */
+export function guidePage(key: GuideKey): GuidePage {
+  return language().guide?.[key] ?? GUIDE_PAGES[key];
+}
+
 const CATEGORIES: { kind: EntryKind; title: string; entries: Entry[] }[] = [
+  {
+    kind: "how",
+    title: t("Jak hrát"),
+    entries: GUIDE_KEYS.map((id) => ({ key: id, kind: "how" as const, id, name: guidePage(id).title })),
+  },
   {
     kind: "unit",
     title: t("Jednotky"),
@@ -119,8 +131,9 @@ const CATEGORIES: { kind: EntryKind; title: string; entries: Entry[] }[] = [
 
 const ALL: Entry[] = CATEGORIES.flatMap((c) => c.entries);
 
+/** Number of entries with an encyclopedia page; the "How to play" chapter has its own texts. */
 export function codexEntryCount(): number {
-  return ALL.length;
+  return ALL.filter((e) => e.kind !== "how").length;
 }
 
 /** The page of an entry in the current language, falling back to Czech, with the link to its article. */
@@ -138,7 +151,7 @@ export function codexKeys(): string[] {
 
 /** Every entry that has no page text yet; the tests keep this list empty. */
 export function codexMissingPages(): string[] {
-  return ALL.filter((e) => !CODEX_PAGES[e.key]).map((e) => e.key);
+  return ALL.filter((e) => e.kind !== "how" && !CODEX_PAGES[e.key]).map((e) => e.key);
 }
 
 export interface CodexHost {
@@ -146,7 +159,7 @@ export interface CodexHost {
 }
 
 export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
-  let current = ALL[0]!.key;
+  let current = "unit-settlers";
   let category: EntryKind = "unit";
 
   function techLink(tech: TechId | null | undefined): string {
@@ -255,8 +268,29 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
     return div;
   }
 
+  function renderGuide(e: Entry): void {
+    const page = guidePage(e.id as GuideKey);
+    const numbers = guideNumbers();
+    const paragraphs = page.text
+      .split(/\n\s*\n/)
+      .map((p) => `<p class="tp-text">${escapeHtml(p.trim()).replace(/\{(\w+)\}/g, (m, k: string) => (k in numbers ? String(numbers[k]) : m))}</p>`)
+      .join("");
+    const host_ = dialog.querySelector<HTMLDivElement>(".cx-page")!;
+    host_.innerHTML = `
+      <div class="tp">
+        <div class="tp-picture cx-guide"><div class="cx-guide-icon">${page.icon}</div><div class="tp-era">${escapeHtml(t("Jak hrát"))}</div></div>
+        <div class="tp-main">
+          <div class="tp-head"><h2>${escapeHtml(page.title)}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button></div>
+          ${paragraphs}
+        </div>
+      </div>`;
+    host_.querySelector('[data-act="close"]')?.addEventListener("click", () => dialog.close());
+    host_.scrollTop = 0;
+  }
+
   function renderPage(): void {
     const e = ALL.find((x) => x.key === current) ?? ALL[0]!;
+    if (e.kind === "how") return renderGuide(e);
     const found = codexPage(e.key);
     const page = found?.page;
     const pic = pictureOf(e.key);
@@ -270,13 +304,14 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
         </div>
         <div class="tp-main">
           <div class="tp-head"><h2>${escapeHtml(e.name)}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button></div>
-          ${page ? `<p class="tp-text">${escapeHtml(page.text)}</p><div class="tp-fact"><b>${t("Věděl jsi?")}</b> ${escapeHtml(page.fact)}</div>` : ""}
+          ${page ? `<p class="tp-text">${escapeHtml(page.text)}</p>${moreParagraph(e.key)}${factBox(e.key, page.fact)}` : ""}
           <h3>${t("Ve hře")}</h3>
           <div class="cx-rules">${rules(e)}</div>
           ${found ? `<div class="tp-foot"><a href="${found.url}" target="_blank" rel="noopener">${t("Přečti si víc na Wikipedii: {title}", { title: escapeHtml(found.page.wiki) })} ↗</a></div>` : ""}
         </div>
       </div>`;
     if (!pic) host_.querySelector(".cx-fallback")!.append(fallbackPicture(e));
+    wireFacts(host_);
     host_.querySelector('[data-act="close"]')?.addEventListener("click", () => dialog.close());
     host_.querySelectorAll<HTMLButtonElement>("[data-tech]").forEach((b) => b.addEventListener("click", () => host.openTech(b.dataset.tech as TechId)));
     host_.querySelectorAll<HTMLButtonElement>("[data-entry]").forEach((b) => b.addEventListener("click", () => show(b.dataset.entry!)));

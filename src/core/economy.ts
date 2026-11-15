@@ -28,6 +28,7 @@ export function startingEconomy(): Pick<
   | "research"
   | "gold"
   | "scienceRate"
+  | "luxuryRate"
   | "government"
   | "revolution"
   | "spaceship"
@@ -40,6 +41,7 @@ export function startingEconomy(): Pick<
     research: 0,
     gold: RULES.startingGold,
     scienceRate: RULES.startingScienceRate,
+    luxuryRate: 0,
     government: "despotism",
     revolution: null,
     spaceship: emptySpaceship(),
@@ -123,6 +125,46 @@ export function clampRate(rate: number, government: GovernmentId): number {
   const max = GOVERNMENTS[government].maxRate;
   if (max === 0) return rate;
   return Math.min(max, Math.max(100 - max, rate));
+}
+
+/**
+ * True when science, luxuries and the taxes left over are each a multiple of
+ * the rate step and none of them is above what the government allows.
+ */
+export function ratesAllowed(science: number, luxury: number, government: GovernmentId): boolean {
+  const step = RULES.rateStep;
+  const ok = (x: number) => Number.isInteger(x) && x >= 0 && x <= 100 && x % step === 0;
+  if (!ok(science) || !ok(luxury) || science + luxury > 100) return false;
+  const max = GOVERNMENTS[government].maxRate;
+  if (max === 0) return true;
+  return science <= max && luxury <= max && 100 - science - luxury <= max;
+}
+
+/**
+ * The closest allowed split to the wanted one. The share named in `keep`
+ * stays as wanted when it can; the other one gives way. Used by the screen
+ * sliders and after a change of government.
+ */
+export function fitRates(science: number, luxury: number, government: GovernmentId, keep: "science" | "luxury" = "science"): { science: number; luxury: number } {
+  const step = RULES.rateStep;
+  const max = GOVERNMENTS[government].maxRate || 100;
+  const round = (x: number) => Math.min(max, Math.max(0, Math.round(x / step) * step));
+  let s = round(science);
+  let l = round(luxury);
+  for (let guard = 0; guard < 40 && !ratesAllowed(s, l, government); guard++) {
+    const tax = 100 - s - l;
+    const other = keep === "science" ? "luxury" : "science";
+    if (tax < 0) {
+      // Too much: the other share gives way first, then the kept one.
+      if (other === "luxury" ? l > 0 : s > 0) other === "luxury" ? (l -= step) : (s -= step);
+      else keep === "science" ? (s -= step) : (l -= step);
+    } else if (tax > max) {
+      // Taxes above the limit: the other share takes the rest, then the kept one.
+      if (other === "luxury" ? l < max : s < max) other === "luxury" ? (l += step) : (s += step);
+      else keep === "science" ? (s += step) : (l += step);
+    } else break;
+  }
+  return { science: s, luxury: l };
 }
 
 export function canChooseGovernment(player: Player, government: GovernmentId): boolean {

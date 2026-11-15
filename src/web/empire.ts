@@ -13,6 +13,8 @@ import {
   type GameState,
 } from "../core";
 import { buildingPortraitCanvas } from "./buildingArt";
+import { playerColor } from "./render";
+import { spaceshipCanvas, type SpaceshipPicture } from "./spaceshipArt";
 import { describeGovernment, escapeHtml, realmName } from "./texts";
 import { t, tn } from "./i18n";
 import { governmentName, inSentence } from "./i18n/names";
@@ -75,6 +77,19 @@ export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost)
     );
   }
 
+  /** What the player's ship looks like now: on the pad, on its way, or landed. */
+  function shipPicture(player: number): SpaceshipPicture {
+    const s = host.state();
+    const ship = s.players[player]!.spaceship;
+    const base = { structural: ship.structural, component: ship.component, module: ship.module, color: playerColor(player) };
+    if (s.victory?.player === player) return { ...base, scene: "landed" };
+    if (ship.launchedTurn !== null && ship.arrivalTurn !== null) {
+      const progress = (s.turn - ship.launchedTurn) / Math.max(1, ship.arrivalTurn - ship.launchedTurn);
+      return { ...base, scene: "flight", progress };
+    }
+    return { ...base, scene: "pad" };
+  }
+
   function openSpaceship(): void {
     const s = host.state();
     const p = s.players[host.player()]!;
@@ -95,10 +110,12 @@ export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost)
     frame(
       t("Vesmírná loď"),
       `<p class="small">${t("Kdo první přistane u cizí hvězdy, vyhraje. Díly se staví ve městech jako budovy. Nosné konstrukce nesou motory a moduly, každý motor zkrátí let o {turns} tahy a každý modul zvýší šanci na přistání o {pct} %.", { turns: r.turnsPerComponent, pct: r.successPerModule })}</p>
+      <div class="ss-picture"></div>
       <div class="ss-parts">${part("ssStructural", ship.structural, r.maxStructural, t("nosné konstrukce"))}${part("ssComponent", ship.component, r.maxComponent, t("motory"))}${part("ssModule", ship.module, r.maxModule, t("moduly"))}</div>
       ${status}${rivals}
       ${ship.launchedTurn === null ? `<button type="button" class="primary" data-launch ${problem ? "disabled" : ""}>${t("Odstartovat")}</button>` : ""}`,
     );
+    dialog.querySelector(".ss-picture")?.append(spaceshipCanvas(shipPicture(p.id), 592, 444));
     dialog.querySelectorAll<HTMLDivElement>(".ss-part").forEach((d) => d.querySelector(".pic")!.append(buildingPortraitCanvas(d.dataset.b as never, 70, 56)));
     dialog.querySelector("[data-launch]")?.addEventListener("click", () => {
       if (host.run({ type: "launchSpaceship" })) {
@@ -117,9 +134,10 @@ export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost)
     frame(
       mine ? t("Vyhrál jsi!") : t("Konec závodu"),
       mine
-        ? `<p>${t("Tvoje vesmírná loď přistála u cizí hvězdy v tahu {turn}. Lidé z tvé říše založili první osadu mimo Zemi.", { turn: v.turn })}</p><p class="small">${t("Můžeš hrát dál, výsledek už zůstane.")}</p>`
-        : `<p>${t("{realm} přistála u cizí hvězdy v tahu {turn} a vyhrála.", { realm: escapeHtml(realmName(host.state(), v.player)), turn: v.turn })}</p>`,
+        ? `<div class="ss-picture"></div><p>${t("Tvoje vesmírná loď přistála u cizí hvězdy v tahu {turn}. Lidé z tvé říše založili první osadu mimo Zemi.", { turn: v.turn })}</p><p class="small">${t("Můžeš hrát dál, výsledek už zůstane.")}</p>`
+        : `<div class="ss-picture"></div><p>${t("{realm} přistála u cizí hvězdy v tahu {turn} a vyhrála.", { realm: escapeHtml(realmName(host.state(), v.player)), turn: v.turn })}</p>`,
     );
+    dialog.querySelector(".ss-picture")?.append(spaceshipCanvas(shipPicture(v.player), 592, 444));
   }
 
   return { openGovernment, openSpaceship, checkVictory, isOpen: () => dialog.open, resetVictory: () => (shownVictory = false) };

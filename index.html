@@ -14,7 +14,9 @@
       <div class="economy">
         <button id="research" type="button" class="research" title="Strom technologií (klávesa T)"></button>
         <span id="gold" class="gold"></span>
-        <label class="rate" title="Kolik obchodu jde do výzkumu, zbytek je zlato"><span data-i18n>Věda</span> <input id="rate" type="range" min="0" max="100" step="10" /> <span id="rate-label"></span></label>
+        <label class="rate" title="Kolik obchodu jde do výzkumu"><span data-i18n>Věda</span> <input id="rate" type="range" min="0" max="100" step="10" /> <span id="rate-label"></span></label>
+        <label class="rate" title="Kolik obchodu jde na zábavu. Každé dva body zábavy ve městě udělají z nespokojeného obyvatele spokojeného."><span data-i18n>Zábava</span> <input id="lux" type="range" min="0" max="100" step="10" /> <span id="lux-label"></span></label>
+        <span id="tax-label" class="rate tax" title="Daně dostanou, co zbude po vědě a zábavě"></span>
         <button id="government" type="button" class="government" title="Vláda a revoluce"></button>
         <button id="spaceship" type="button" class="spaceship" title="Vesmírná loď" hidden></button>
         <button id="codex" type="button" class="codex-button" title="Encyklopedie všeho, co ve hře je (klávesa E)" data-i18n>Encyklopedie</button>
@@ -95,6 +97,7 @@
     </dialog>
     <dialog id="empire-dialog" class="empire-dialog"></dialog>
     <dialog id="cities-dialog" class="co-dialog"></dialog>
+    <dialog id="celebration-dialog" class="cel-dialog"></dialog>
     <dialog id="codex-dialog" class="cx-dialog"></dialog>
     <dialog id="new-game-dialog" class="ng-dialog"></dialog>
     <dialog id="tech-dialog" class="tt-dialog">

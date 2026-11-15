@@ -8,7 +8,7 @@ import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
 import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, type CivId, type TechId } from "./rules";
 import { chooseStartPositions } from "./start";
-import { canResearch, clampRate, fallbackProduction, startingEconomy } from "./economy";
+import { canResearch, clampRate, fallbackProduction, fitRates, startingEconomy } from "./economy";
 import { emptySpaceship, STATE_VERSION, type GameState, type Player } from "./state";
 import { makeUnit, reveal } from "./world";
 
@@ -179,6 +179,16 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
   if (version <= 8) {
     // Version 9 adds special resources and more terrains; old maps have no specials.
     state.map.special ??= new Array<number>(state.map.width * state.map.height).fill(0);
+  }
+  if (version <= 9) {
+    // Version 10 splits trade three ways; old games spent nothing on luxuries.
+    for (const p of state.players) {
+      p.luxuryRate ??= 0;
+      // Taxes now have the same limit as science, so an old low science rate moves up.
+      const fitted = fitRates(p.scienceRate, p.luxuryRate, p.government, "luxury");
+      p.scienceRate = fitted.science;
+      p.luxuryRate = fitted.luxury;
+    }
   }
   state.version = STATE_VERSION;
   return state;

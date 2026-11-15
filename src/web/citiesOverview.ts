@@ -93,7 +93,7 @@ export function createCitiesOverview(dialog: HTMLDialogElement, host: CitiesHost
       <td class="num">${signed(r.shieldSurplus)}</td>
       <td class="num">${r.production.trade}</td>
       <td class="num">${r.science}</td>
-      <td class="num">${r.gold}</td>
+      <td class="num">${r.gold + r.wealthGold}</td>
       <td>${h.disorder ? `<b class="neg">${t("nepokoje")}</b>` : `${h.content} / <span class="${h.unhappy ? "neg" : ""}">${h.unhappy}</span>`}</td>
       <td class="co-make"><select data-city="${c.id}" aria-label="${t("Co stavět")}">${options}</select><div class="muted small">${progress} ${queue}</div></td>
       <td>${buy}</td>
@@ -113,7 +113,7 @@ export function createCitiesOverview(dialog: HTMLDialogElement, host: CitiesHost
       const r = cityReport(s, c);
       trade += r.production.trade;
       science += r.science;
-      gold += r.gold;
+      gold += r.gold + r.wealthGold;
       upkeep += c.buildings.reduce((n, b) => n + BUILDINGS[b].upkeep, 0);
     }
     const body = cities.length

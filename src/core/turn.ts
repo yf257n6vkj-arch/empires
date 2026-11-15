@@ -5,7 +5,7 @@
 import { processCityDraft, removeUnitDraft } from "./city";
 import {
   buildingUpkeep,
-  clampRate,
+  fitRates,
   learnTechDraft,
   nextStepToGoal,
   researchCost,
@@ -137,7 +137,10 @@ function startTurnDraft(draft: GameState, player: PlayerId, events: GameEvent[])
     if (p.revolution.turnsLeft <= 0) {
       p.government = p.revolution.target;
       p.revolution = null;
-      p.scienceRate = clampRate(p.scienceRate, p.government);
+      // Luxuries stay as the player set them; science takes up what taxes may no longer carry.
+      const fitted = fitRates(p.scienceRate, p.luxuryRate, p.government, "luxury");
+      p.scienceRate = fitted.science;
+      p.luxuryRate = fitted.luxury;
       events.push({ type: "governmentChanged", player, government: p.government });
     }
   }

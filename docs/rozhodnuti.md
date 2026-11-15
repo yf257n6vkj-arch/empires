@@ -2,6 +2,18 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Obchod se dělí na vědu, zábavu a daně a encyklopedie učí hrát
+
+Michal chtěl rozdělovat peníze na vědu, daně a zábavu. Nahoře přibyl druhý posuvník Zábava a daně dostanou, co zbude. Jako v Civilizaci 1 platí limit vlády pro každou ze tří částí, za despocie tedy nejde dát víc než 60 % ani na vědu, ani na zábavu, ani na daně. Každé 2 body zábavy ve městě udělají z jednoho nespokojeného obyvatele spokojeného a tržiště zábavu zvětší. Za anarchie jde celý obchod na zábavu. Po revoluci zůstane zábava, jak ji hráč nastavil, a když by daně přetekly přes limit nové vlády, přidá se věda. Staré uložené hry si posuvníky upraví stejně.
+
+Díly vesmírné lodi jde dát do plánu města opakovaně. Pořadí staveb v plánu se mění šipkami u každé stavby nebo přetažením myší. Seznam staveb ve městě po přidání do plánu zůstane tam, kde hráč byl. Zlato, které města vydělávají místo stavby, se teď počítá do příjmu nahoře i v přehledu měst.
+
+Když hráč dostaví div světa, hra spustí ohňostroj a ukáže obrázek divu, co je zač a co hráči přinese. Odtud vede tlačítko do encyklopedie. Vesmírnou loď kreslí kód. Na rampě postupně roste podle postavených dílů, po startu letí mezi Zemí a cílovou hvězdou a po přistání stojí na cizí planetě s vlajkou hráče. Hradba ve městě obíhá obdélník kolem celé zástavby, takže zeď nedělá zbytečné zuby.
+
+Encyklopedie má novou kapitolu Jak hrát s dvanácti stránkami o růstu, spokojenosti, výrobě, obchodu, výzkumu, vládách, divech, korupci a vítězství. Čísla v ní bere z pravidel, takže po změně pravidel nelžou. Každá stránka encyklopedie i technologie má druhý odstavec a tři zajímavosti, mezi kterými hráč přepíná tlačítkem Další zajímavost. První zajímavost se vybírá náhodně.
+
+Prošli jsme češtinu a přejmenovali pár věcí. Masonry je Stavitelství, construction je Beton, šermíř je Legionář, obrněná loď je Pancéřová loď, Štěpení atomu je Štěpení jádra a technologie Jaderná elektrárna se jmenuje Jaderná energie, aby se nepletla s budovou. Opravili jsme i skloňování ve zprávách o městech.
+
 ## 15. 11. 2026: Hra mluví česky i anglicky a má přehled měst
 
 Michal chtěl dvojjazyčnou hru, do které půjdou přidat další jazyky. Texty dál píšeme česky přímo v kódu a česká věta slouží jako klíč k překladu. Angličtina má vlastní soubor s překlady vět, jmen jednotek, budov, technologií, národů i měst a celou encyklopedii. Další jazyk vznikne zkopírováním anglických souborů a přeložením hodnot, test hlídá, aby žádný text rozhraní nechyběl. Encyklopedie se v jazyce bez překladu ukáže česky.

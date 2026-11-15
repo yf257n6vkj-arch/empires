@@ -6,7 +6,7 @@ import type { Point } from "./geometry";
 import type { BuildingId, CivId, GovernmentId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 9;
+export const STATE_VERSION = 10;
 
 export interface GameMap {
   width: number;
@@ -55,6 +55,8 @@ export interface Player {
   gold: number;
   /** Share of trade that goes to science, in percent; the rest is gold. */
   scienceRate: number;
+  /** Share of trade spent on luxuries in percent; the rest of trade after science and luxuries is taxes. */
+  luxuryRate: number;
   government: GovernmentId;
   /** A revolution in progress: anarchy until turnsLeft reaches 0, then `target`. */
   revolution: { target: GovernmentId; turnsLeft: number } | null;

@@ -136,7 +136,7 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
     panel.hidden = false;
     panel.innerHTML =
       `<div class="adv-head"><span class="adv-owl" aria-hidden="true">🦉</span><b>Rádce</b><span class="spacer"></span>` +
-      `<button type="button" class="adv-close" data-close title="Schovat do příštího tahu" aria-label="Schovat">×</button></div>` +
+      `<button type="button" class="adv-close" data-close title="Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu." aria-label="Schovat">×</button></div>` +
       `<ol class="adv-tips">${tips
         .map((t, n) => `<li><p>${t.text}</p>${t.button ? `<button type="button" data-tip="${n}">${t.button}</button>` : ""}</li>`)
         .join("")}</ol>`;
@@ -147,5 +147,30 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
     panel.querySelectorAll<HTMLButtonElement>("[data-tip]").forEach((b) => b.addEventListener("click", () => tips[Number(b.dataset.tip)]?.act?.()));
   }
 
-  return { render };
+  /** Shows the panel again, also when the player switched the advisor off or closed it this turn. */
+  function show(): void {
+    if (!enabled) {
+      enabled = true;
+      toggle.checked = true;
+      try {
+        localStorage.setItem(STORAGE_KEY, "on");
+      } catch {
+        // The choice holds until the page reloads.
+      }
+    }
+    hiddenInTurn = -1;
+    render();
+    panel.scrollIntoView({ block: "nearest" });
+  }
+
+  /** Hides the panel when it is shown, shows it otherwise. */
+  function toggleShown(): void {
+    if (panel.hidden) show();
+    else {
+      hiddenInTurn = host.state().turn;
+      render();
+    }
+  }
+
+  return { render, show, toggleShown };
 }

@@ -607,6 +607,8 @@ const advisor = createAdvisor($<HTMLElement>("#advisor"), $<HTMLInputElement>("#
   },
 });
 
+$<HTMLButtonElement>("#advisor-button").addEventListener("click", () => advisor.toggleShown());
+
 function cityScreenOpen(): boolean {
   return cityScreen.isOpen();
 }
@@ -860,6 +862,7 @@ function renderCity(city: City): void {
   const options = productionOptions(state, city)
     .map((o) => {
       const selected = sameItem(o, city.production) ? "selected" : "";
+      if (o.kind === "wealth") return `<option value="wealth:" ${selected}>${productionName(o)} (+${r.shieldSurplus * RULES.wealthGoldPerShield} zlata za tah)</option>`;
       const turns = r.shieldSurplus > 0 ? `, ${turnsText(Math.max(1, Math.ceil((productionCost(o) - city.shields) / r.shieldSurplus)))}` : "";
       const tag = o.kind === "building" && BUILDINGS[o.id].wonder ? "Div: " : "";
       return `<option value="${o.kind}:${o.id}" ${selected}>${tag}${productionName(o)} (${productionCost(o)} štítů${turns})</option>`;
@@ -915,7 +918,8 @@ function renderCity(city: City): void {
   });
   selectionPanel.querySelector<HTMLSelectElement>("#production")!.addEventListener("change", (e) => {
     const [kind, id] = (e.target as HTMLSelectElement).value.split(":");
-    run({ type: "setProduction", cityId: city.id, item: { kind, id } as ProductionItem });
+    const item = (kind === "wealth" ? { kind } : { kind, id }) as ProductionItem;
+    run({ type: "setProduction", cityId: city.id, item });
     refresh();
   });
   selectionPanel.querySelectorAll<HTMLButtonElement>("button[data-unit]").forEach((b) =>
@@ -1272,6 +1276,7 @@ const menus = createMenus($<HTMLElement>("#start-screen"), $<HTMLDialogElement>(
     say(`Hra je nahraná: ${CIVS[state.players[HUMAN]!.civ].name}, tah ${state.turn}.`);
   },
   openCodex: () => codex.open(),
+  openAdvisor: () => advisor.show(),
   player: HUMAN,
 });
 $<HTMLButtonElement>("#menu-button").addEventListener("click", () => menus.openMenu());

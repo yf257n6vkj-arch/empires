@@ -26,7 +26,7 @@ import {
   upgradeTarget,
   wonderFlag,
 } from "./economy";
-import { cityReport } from "./city";
+import { cityReport, productionCost } from "./city";
 import { Rng } from "./rng";
 import type { GameEvent } from "./events";
 import { distance, neighbors4, type Point } from "./geometry";
@@ -317,7 +317,8 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       if (command.queue.length > RULES.queueLength) return { ok: false, error: "queueFull" };
       const seen: ProductionItem[] = [city.production];
       for (const item of command.queue) {
-        if (!canBuild(state, city, item)) return { ok: false, error: "invalidProduction" };
+        // Earning gold never ends, so nothing could come after it.
+        if (item.kind === "wealth" || !canBuild(state, city, item)) return { ok: false, error: "invalidProduction" };
         // A building can only stand once, so it can only be planned once.
         if (item.kind === "building" && seen.some((x) => sameItem(x, item))) return { ok: false, error: "invalidProduction" };
         seen.push(item);
@@ -368,7 +369,7 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       const draft = cloneState(state);
       const c = draft.cities.find((x) => x.id === city.id)!;
       getPlayer(draft, c.owner).gold -= price;
-      c.shields = c.production.kind === "unit" ? UNIT_TYPES[c.production.id].cost : BUILDINGS[c.production.id].cost;
+      c.shields = productionCost(c.production);
       return { ok: true, state: draft, events };
     }
 

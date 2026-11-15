@@ -31,7 +31,7 @@ import {
 import { BUILDING_WIDTH, buildingPortraitCanvas, drawBuilding, drawHouse, tone } from "./buildingArt";
 import { drawTerrainPatch, drawUnitPortrait, playerColor, unitPortraitCanvas, type DrawInput } from "./render";
 import { describeBuilding, describeUnit, escapeHtml } from "./texts";
-import { buildingArtCanvas, drawCityView, hasCityArt, loadCityArt } from "./cityView";
+import { buildingArtCanvas, drawCityView, hasCityArt, hitAt, loadCityArt } from "./cityView";
 
 export interface CityHost {
   state(): GameState;
@@ -518,6 +518,32 @@ function yieldIcon(kind: "food" | "shields" | "trade", size = 14): string {
 
 // ---------- the screen ----------
 
+/** A small pile of gold coins: the picture for earning gold instead of building. */
+function coinsCanvas(w: number, h: number): HTMLCanvasElement {
+  const [canvas, ctx, dpr] = hiDpiCanvas(w, h);
+  ctx.scale(dpr, dpr);
+  const r = Math.min(w, h) * 0.2;
+  const coin = (x: number, y: number) => {
+    ctx.fillStyle = "#a8771c";
+    ctx.beginPath();
+    ctx.ellipse(x, y + r * 0.18, r, r * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f2c94c";
+    ctx.strokeStyle = "#7a5512";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  };
+  const cx = w / 2;
+  const base = h * 0.72;
+  for (let k = 0; k < 4; k++) coin(cx - r * 0.7, base - k * r * 0.28);
+  for (let k = 0; k < 6; k++) coin(cx + r * 0.6, base - k * r * 0.28);
+  coin(cx - r * 0.05, base + r * 0.35);
+  return canvas;
+}
+
 export function createCityScreen(host: CityHost) {
   const dialog = document.querySelector<HTMLDialogElement>("#city-dialog")!;
   let cityId: number | null = null;
@@ -625,14 +651,22 @@ export function createCityScreen(host: CityHost) {
     const supported = s.units.filter((u) => u.homeCity === c.id);
     const options = productionOptions(s, c);
 
+    const goldPerTurn = r.shieldSurplus * RULES.wealthGoldPerShield;
+    const benefit = (o: ProductionItem) =>
+      o.kind === "wealth"
+        ? `město nic nestaví, každý štít se změní na zlato: +${goldPerTurn} zlata za tah`
+        : o.kind === "building"
+          ? describeBuilding(BUILDINGS[o.id], false)
+          : describeUnit(UNIT_TYPES[o.id], false);
     const optionRow = (o: ProductionItem, n: number) => {
       const t = r.shieldSurplus > 0 ? Math.max(1, Math.ceil((productionCost(o) - c.shields) / r.shieldSurplus)) : null;
       const wonder = o.kind === "building" && BUILDINGS[o.id].wonder;
       const planned = o.kind === "building" && [c.production, ...c.queue].some((x) => sameItem(x, o));
       const full = c.queue.length >= RULES.queueLength;
-      return `<div class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}"><button type="button" class="cs-opt-main" data-opt="${n}" title="${escapeHtml(
-        o.kind === "building" ? describeBuilding(BUILDINGS[o.id]) : describeUnit(UNIT_TYPES[o.id]),
-      )}"><span class="cs-opt-pic"></span><span class="cs-opt-name">${escapeHtml(productionName(o))}</span><span class="cs-opt-cost">${productionCost(o)} ${yieldIcon("shields", 11)}</span><span class="cs-opt-turns">${t ? turns(t) : "—"}</span></button><button type="button" class="cs-opt-add" data-add="${n}" ${planned || full ? "disabled" : ""} title="${planned ? "Už je v plánu." : full ? "Plán je plný." : "Přidat do plánu, město to postaví potom"}">+</button></div>`;
+      const cost = o.kind === "wealth" ? `+${goldPerTurn} zl.` : `${productionCost(o)} ${yieldIcon("shields", 11)}`;
+      const time = o.kind === "wealth" ? "každý tah" : t ? turns(t) : "—";
+      const entry = o.kind === "wealth" ? "" : o.kind === "unit" ? `unit-${o.id}` : `${wonder ? "wdr" : "bld"}-${o.id}`;
+      return `<div class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}"><button type="button" class="cs-opt-main" data-opt="${n}"><span class="cs-opt-pic"></span><span class="cs-opt-text"><span class="cs-opt-name">${escapeHtml(productionName(o))}</span><span class="cs-opt-desc">${escapeHtml(benefit(o))}</span></span><span class="cs-opt-cost">${cost}</span><span class="cs-opt-turns">${time}</span></button>${entry ? `<button type="button" class="cs-opt-info" data-entry="${entry}" title="Otevřít v encyklopedii">?</button>` : ""}${o.kind === "wealth" ? "" : `<button type="button" class="cs-opt-add" data-add="${n}" ${planned || full ? "disabled" : ""} title="${planned ? "Už je v plánu." : full ? "Plán je plný." : "Přidat do plánu, město to postaví potom"}">+</button>`}</div>`;
     };
     const group = (title: string, pick: (o: ProductionItem) => boolean) => {
       const rows = options.map((o, n) => (pick(o) ? optionRow(o, n) : "")).join("");
@@ -641,7 +675,8 @@ export function createCityScreen(host: CityHost) {
     const optionList =
       group("Jednotky", (o) => o.kind === "unit") +
       group("Budovy", (o) => o.kind === "building" && !BUILDINGS[o.id].wonder) +
-      group("Divy světa", (o) => o.kind === "building" && BUILDINGS[o.id].wonder);
+      group("Divy světa", (o) => o.kind === "building" && BUILDINGS[o.id].wonder) +
+      group("Bez stavby", (o) => o.kind === "wealth");
     const foodPct = Math.min(100, (c.food / r.growthThreshold) * 100);
 
     dialog.innerHTML = `
@@ -680,8 +715,12 @@ export function createCityScreen(host: CityHost) {
               <div class="cs-prod-text">
                 <h3>Teď vyrábí</h3>
                 <b class="cs-prod-name">${escapeHtml(productionName(c.production))}</b>
-                <div class="cs-bar"><div style="width:${Math.min(100, (c.shields / cost) * 100)}%"></div></div>
-                <div class="small">${Math.min(c.shields, cost)} z ${cost} ${yieldIcon("shields", 12)} · ${signed(r.shieldSurplus)} za tah · ${done}</div>
+                ${
+                  c.production.kind === "wealth"
+                    ? `<div class="small">Město nic nestaví. ${r.shieldSurplus} ${yieldIcon("shields", 12)} za tah se mění na ${r.shieldSurplus * RULES.wealthGoldPerShield} zlata${c.shields ? `, uložených ${c.shields} štítů počká na další stavbu` : ""}.</div>`
+                    : `<div class="cs-bar"><div style="width:${Math.min(100, (c.shields / cost) * 100)}%"></div></div>
+                <div class="small">${Math.min(c.shields, cost)} z ${cost} ${yieldIcon("shields", 12)} · ${signed(r.shieldSurplus)} za tah · ${done}</div>`
+                }
                 ${r.unitUpkeep ? `<div class="muted small">Údržba jednotek z města stojí ${r.unitUpkeep} ${yieldIcon("shields", 11)} za tah.</div>` : ""}
               </div>
               ${price > 0 ? `<button type="button" class="cs-buy" data-buy ${gold < price ? `disabled title="Máš jen ${gold} zlata."` : ""}>Koupit za ${price} zlata</button>` : ""}
@@ -731,7 +770,7 @@ export function createCityScreen(host: CityHost) {
                 ? unitsHere
                     .map(
                       (u) =>
-                        `<button type="button" class="cs-unit" data-unit="${u.id}" title="Vybrat jednotku"><span class="pic" data-type="${u.type}"></span>${escapeHtml(UNIT_TYPES[u.type].name)}${u.fortified ? " (opevněná)" : ""}</button>`,
+                        `<span class="cs-unit-wrap"><button type="button" class="cs-unit" data-unit="${u.id}" title="Vybrat jednotku a zavřít město"><span class="pic" data-type="${u.type}"></span>${escapeHtml(UNIT_TYPES[u.type].name)}${u.fortified ? " (opevněná)" : ""}</button><button type="button" class="cs-unit-info" data-entry="unit-${u.type}" title="Otevřít v encyklopedii">?</button></span>`,
                     )
                     .join("")
                 : `<span class="muted small">Město nikdo nebrání.</span>`
@@ -748,12 +787,26 @@ export function createCityScreen(host: CityHost) {
     const [pc, pctx, dpr] = hiDpiCanvas(vw, vh);
     pctx.scale(dpr, dpr);
     if (hasCityArt()) {
-      drawCityView(pctx, vw, vh, {
+      const hits = drawCityView(pctx, vw, vh, {
         cityId: c.id,
         size: c.size,
         buildings: c.buildings,
         era: currentEra(s.players[c.owner]!),
         coastal: isCoastal(s, c),
+      });
+      // Buildings in the picture open their encyclopedia page.
+      const at = (e: MouseEvent) => {
+        const box = pc.getBoundingClientRect();
+        return hitAt(hits, ((e.clientX - box.left) / box.width) * vw, ((e.clientY - box.top) / box.height) * vh);
+      };
+      pc.addEventListener("mousemove", (e) => {
+        const hit = at(e);
+        pc.style.cursor = hit ? "pointer" : "";
+        pc.title = hit ? `${hit.name} · klikni a přečti si o ní v encyklopedii` : "";
+      });
+      pc.addEventListener("click", (e) => {
+        const hit = at(e);
+        if (hit) host.openEntry(hit.entry);
       });
     } else {
       drawPanorama(pctx, vw, vh, s, c);
@@ -812,6 +865,7 @@ export function createCityScreen(host: CityHost) {
         host.selectUnit(Number(b.dataset.unit));
       });
     });
+    dialog.querySelectorAll<HTMLButtonElement>("[data-entry]").forEach((b) => b.addEventListener("click", () => host.openEntry(b.dataset.entry!)));
     dialog.querySelector("[data-close]")?.addEventListener("click", close);
     dialog.querySelector("[data-buy]")?.addEventListener("click", () => act({ type: "buy", cityId: c.id }));
     dialog.querySelector("[data-auto]")?.addEventListener("click", () => act({ type: "autoAssignWorkers", cityId: c.id }));
@@ -866,6 +920,7 @@ export function createCityScreen(host: CityHost) {
   }
 
   function pictureOf(item: ProductionItem, w: number, h: number, owner: number): HTMLCanvasElement {
+    if (item.kind === "wealth") return coinsCanvas(w, h);
     if (item.kind === "unit") return unitPortraitCanvas(item.id, owner, w, h);
     return buildingArtCanvas(item.id, w, h) ?? buildingPortraitCanvas(item.id, w, h);
   }

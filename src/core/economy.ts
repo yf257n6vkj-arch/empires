@@ -240,6 +240,7 @@ export function canBuildBuilding(state: GameState, city: City, rule: BuildingRul
 export function canBuild(state: GameState, city: City, item: ProductionItem): boolean {
   const player = state.players[city.owner];
   if (!player) return false;
+  if (item.kind === "wealth") return true;
   return item.kind === "unit" ? canBuildUnit(state, city, item.id) : canBuildBuilding(state, city, BUILDINGS[item.id]);
 }
 
@@ -253,7 +254,7 @@ export function productionOptions(state: GameState, city: City): ProductionItem[
   const buildings: ProductionItem[] = Object.values(BUILDINGS)
     .filter((b) => canBuildBuilding(state, city, b))
     .map((b) => ({ kind: "building", id: b.id }));
-  return [...units, ...buildings];
+  return [...units, ...buildings, { kind: "wealth" }];
 }
 
 /**
@@ -420,6 +421,7 @@ export function spaceshipLaunchProblem(state: GameState, player: PlayerId): "lau
 /** Gold needed to finish the city's current production this turn, 0 when it is already paid. */
 export function buyCost(city: City): number {
   const item = city.production;
+  if (item.kind === "wealth") return 0;
   const cost = item.kind === "unit" ? UNIT_TYPES[item.id].cost : BUILDINGS[item.id].cost;
   const missing = cost - city.shields;
   if (missing <= 0) return 0;

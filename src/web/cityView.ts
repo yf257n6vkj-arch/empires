@@ -14,6 +14,8 @@ import { BUILDINGS, type BuildingId } from "../core";
 
 interface Art {
   img: HTMLImageElement;
+  /** Opaque pixels at half resolution, for clicks on the picture. */
+  mask: Uint8Array;
   /** The plinth in picture pixels: horizontal extent and the lowest row. */
   left: number;
   right: number;
@@ -42,15 +44,18 @@ function measure(img: HTMLImageElement): Art {
     }
     return l < 0 ? null : [l, r];
   };
+  const mw = Math.ceil(c.width / 2);
+  const mask = new Uint8Array(mw * Math.ceil(c.height / 2));
+  for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 2) mask[(y / 2) * mw + x / 2] = data[(y * c.width + x) * 4 + 3]! > 100 ? 1 : 0;
   let bottom = c.height - 1;
   while (bottom > 0 && !span(bottom)) bottom--;
   const widths: [number, number][] = [];
   for (let k = 0; k < Math.min(c.height, bottom); k++) widths.push(span(bottom - k) ?? [0, 0]);
   const w = (k: number) => (widths[k] ? widths[k]![1] - widths[k]![0] : 0);
   for (let k = 4; k + 6 < widths.length; k++) {
-    if (w(k + 6) - w(k) < 3 && w(k) > c.width * 0.3) return { img, left: widths[k]![0], right: widths[k]![1], bottom };
+    if (w(k + 6) - w(k) < 3 && w(k) > c.width * 0.3) return { img, mask, left: widths[k]![0], right: widths[k]![1], bottom };
   }
-  return { img, left: 0, right: c.width - 1, bottom };
+  return { img, mask, left: 0, right: c.width - 1, bottom };
 }
 
 /** Loads the pictures once; resolves when they are ready (or there are none). */
@@ -204,7 +209,7 @@ function paintTile(ctx: CanvasRenderingContext2D, b: Board, i: number, j: number
  * Stands a picture on the tile whose top corner is (i, j); `cells` tiles wide
  * (1 for a plot, 2 for a block). The plinth is scaled to the tiles' width.
  */
-function stand(ctx: CanvasRenderingContext2D, b: Board, a: Art, i: number, j: number, cells: number, scale = 1): void {
+function stand(ctx: CanvasRenderingContext2D, b: Board, a: Art, i: number, j: number, cells: number, scale = 1): Hit["rect"] {
   const [x, y] = corner(b, i, j);
   const plinth = a.right - a.left + 1;
   const k = ((b.tw * cells) / plinth) * scale;
@@ -214,9 +219,36 @@ function stand(ctx: CanvasRenderingContext2D, b: Board, a: Art, i: number, j: nu
   const dx = x - centreX * k;
   const dy = bottomY - a.bottom * k - (b.th * cells * (1 - scale)) / 2;
   ctx.drawImage(a.img, dx, dy, a.img.width * k, a.img.height * k);
+  return { x: dx, y: dy, w: a.img.width * k, h: a.img.height * k };
+}
+
+/** Something drawn in the view that the player can click. */
+export interface Hit {
+  /** Encyclopedia entry, e.g. "bld-temple". */
+  entry: string;
+  /** Name shown when the mouse is over it. */
+  name: string;
+  rect: { x: number; y: number; w: number; h: number };
+  art: Art;
+}
+
+/** The topmost picture under a point of the view, if any. */
+export function hitAt(hits: Hit[], x: number, y: number): Hit | null {
+  for (let k = hits.length - 1; k >= 0; k--) {
+    const h = hits[k]!;
+    const { rect, art } = h;
+    if (x < rect.x || y < rect.y || x >= rect.x + rect.w || y >= rect.y + rect.h) continue;
+    const px = Math.floor((((x - rect.x) / rect.w) * art.img.width) / 2);
+    const py = Math.floor((((y - rect.y) / rect.h) * art.img.height) / 2);
+    if (art.mask[py * Math.ceil(art.img.width / 2) + px]) return h;
+  }
+  return null;
 }
 
 interface Lot {
+  /** Encyclopedia entry and name; houses have none. */
+  entry?: string;
+  name?: string;
   i: number;
   j: number;
   /** 1 for a plot, 2 for a whole block. */
@@ -225,7 +257,9 @@ interface Lot {
   scale: number;
 }
 
-export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number, input: CityViewInput): void {
+export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number, input: CityViewInput): Hit[] {
+  const hits: Hit[] = [];
+  const entryOf = (b: BuildingId) => ({ entry: `${BUILDINGS[b].wonder ? "wdr" : "bld"}-${b}`, name: BUILDINGS[b].name });
   const rand = seeded(input.cityId * 7919 + 13);
   const own = input.buildings.filter((b) => !b.startsWith("ss") && b !== "walls");
   const shore = input.coastal ? own.filter((b) => AT_SEA.includes(b)) : [];
@@ -288,7 +322,7 @@ export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number
     const blk = used[next];
     if (!a || !blk) continue;
     next++;
-    lots.push({ i: blk.a * BLOCK + 1, j: blk.b * BLOCK + 1, cells: 2, art: a, scale: 0.96 });
+    lots.push({ ...entryOf(b), i: blk.a * BLOCK + 1, j: blk.b * BLOCK + 1, cells: 2, art: a, scale: 0.96 });
   }
   for (const blk of used.slice(next)) {
     for (const [di, dj] of [
@@ -310,7 +344,7 @@ export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number
     if (!input.buildings.includes(b)) continue;
     const a = art.get(`bld-${b}`);
     const spot = take();
-    if (a && spot) lots.push({ i: spot.i, j: spot.j, cells: 1, art: a, scale: 0.94 });
+    if (a && spot) lots.push({ ...entryOf(b), i: spot.i, j: spot.j, cells: 1, art: a, scale: 0.94 });
   }
   const era = ERAS[Math.min(input.era, ERAS.length - 1)]!;
   const homes = [1, 2, 3].map((n) => art.get(`house-${era}-${n}`)).filter((x): x is Art => !!x);
@@ -360,26 +394,31 @@ export function drawCityView(ctx: CanvasRenderingContext2D, w: number, h: number
     const a = art.get(`bld-${b}`);
     // Spread them out along the shore.
     const spot = shoreSpots[n * 3];
-    if (a && spot) lots.push({ i: spot.i, j: spot.j, cells: 1, art: a, scale: BUILDINGS[b].wonder ? 1.35 : 1.15 });
+    if (a && spot) lots.push({ ...entryOf(b), i: spot.i, j: spot.j, cells: 1, art: a, scale: BUILDINGS[b].wonder ? 1.35 : 1.15 });
   });
 
   const tower = input.buildings.includes("walls") ? art.get("bld-walls") : undefined;
   const walls = tower ? townWalls(used) : null;
   if (walls) for (const seg of walls.back) drawWall(ctx, board, seg);
-  if (tower && walls) for (const [i, j] of walls.towers) lots.push({ i: i - 0.5, j: j - 0.5, cells: 1, art: tower, scale: TOWER });
+  if (tower && walls) for (const [i, j] of walls.towers) lots.push({ ...entryOf("walls"), i: i - 0.5, j: j - 0.5, cells: 1, art: tower, scale: TOWER });
 
   // Pictures from the back to the front: by the row of their lowest corner.
   lots.sort((p, q) => p.i + p.j + p.cells * 2 - (q.i + q.j + q.cells * 2) || p.i - q.i);
   for (const lot of lots) {
     if (lot.art !== tower) shadow(ctx, board, lot);
-    stand(ctx, board, lot.art, lot.i, lot.j, lot.cells, lot.scale);
+    const rect = stand(ctx, board, lot.art, lot.i, lot.j, lot.cells, lot.scale);
+    if (lot.entry) hits.push({ entry: lot.entry, name: lot.name ?? "", rect, art: lot.art });
   }
 
   if (tower && walls) {
     for (const seg of walls.front) drawWall(ctx, board, seg);
     // Towers on the front walls stand over them.
-    for (const [i, j] of walls.frontTowers) stand(ctx, board, tower, i - 0.5, j - 0.5, 1, TOWER);
+    for (const [i, j] of walls.frontTowers) {
+      const rect = stand(ctx, board, tower, i - 0.5, j - 0.5, 1, TOWER);
+      hits.push({ ...entryOf("walls"), rect, art: tower });
+    }
   }
+  return hits;
 }
 
 type Segment = [number, number, number, number];

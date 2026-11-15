@@ -377,6 +377,10 @@ export interface GameConstants {
   minCityDistance: number;
   /** Items a city can plan after its current production. */
   queueLength: number;
+  /** Gold per shield when a city builds nothing and earns gold instead. */
+  wealthGoldPerShield: number;
+  /** Name of that choice in the production list. */
+  wealthName: string;
   /** How far (in tiles) an automatic settler looks for work around its owner's cities. */
   autoWorkRange: number;
   foodPerCitizen: number;

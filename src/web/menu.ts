@@ -27,6 +27,8 @@ export interface MenuHost {
   currentPayload(): SavePayload;
   loadPayload(payload: SavePayload): void;
   openCodex(): void;
+  /** Shows the advisor's tips again. */
+  openAdvisor(): void;
   /** Player whose game is saved, for slot names. */
   player: number;
 }
@@ -120,6 +122,10 @@ export function createMenus(
       host.openCodex();
     });
     act("help", () => helpDialog.showModal());
+    act("advisor", () => {
+      menuDialog.close();
+      host.openAdvisor();
+    });
     act("main", showStart);
   }
   wireMenu();

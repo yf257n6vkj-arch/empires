@@ -116,7 +116,9 @@ export interface Unit {
 
 export type ProductionItem =
   | { kind: "unit"; id: UnitTypeId }
-  | { kind: "building"; id: BuildingId };
+  | { kind: "building"; id: BuildingId }
+  /** Build nothing: the city's shields turn into gold every turn. */
+  | { kind: "wealth" };
 
 export interface City {
   id: CityId;

@@ -156,7 +156,7 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
       c.tradeRoutes ??= [];
       c.stolenBy ??= [];
       c.buildings = c.buildings.filter((b) => (BUILDING_IDS as readonly string[]).includes(b));
-      if (!(BUILDING_IDS as readonly string[]).includes(c.production.id) && c.production.kind === "building") {
+      if (c.production.kind === "building" && !(BUILDING_IDS as readonly string[]).includes(c.production.id)) {
         c.production = fallbackProduction(state, c.owner);
       }
     }

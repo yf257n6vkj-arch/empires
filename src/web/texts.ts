@@ -183,8 +183,11 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
 }
 
 /** One line about a unit for panels and the encyclopedia. */
-export function describeUnit(u: UnitRule): string {
+export function describeUnit(u: UnitRule, withCost = true): string {
   const parts = [`útok ${u.attack}, obrana ${u.defense}, pohyb ${u.moves}`];
+  if (u.foundsCity) parts.push("založí nové město");
+  if (u.buildsImprovements) parts.push("staví cesty, zavlažování a doly");
+  if (u.populationCost) parts.push(`ubere městu ${u.populationCost === 1 ? "jednoho obyvatele" : `${u.populationCost} obyvatele`}`);
   if (u.domain === "sea") parts.push(u.capacity ? `loď, uveze ${u.capacity} ${u.carries === "air" ? "letadel" : "jednotek"}` : "loď");
   if (u.domain === "air") parts.push(`letadlo, ve vzduchu vydrží ${u.fuel === 1 ? "jeden tah" : `${u.fuel} tahy`}`);
   if (u.coastal) parts.push("na volném moři se může potopit");
@@ -192,7 +195,8 @@ export function describeUnit(u: UnitRule): string {
   if (u.special === "caravan") parts.push("pomáhá stavět divy a otevírá obchodní cesty");
   if (u.special === "nuclear") parts.push("zničí jednotky a zmenší města kolem cíle");
   if (u.requiresWonder) parts.push(`jde stavět, až někde stojí ${BUILDINGS[u.requiresWonder].name}`);
-  return `${parts.join(", ")} · ${u.cost} štítů`;
+  // In short lists the unit's job matters more than its numbers.
+  return withCost ? `${parts.join(", ")} · ${u.cost} štítů` : [...parts.slice(1), parts[0]].join(", ");
 }
 
 /** One line about a government. */
@@ -219,7 +223,7 @@ export function escapeHtml(s: string): string {
 }
 
 /** One line saying what a building does, for panels and the encyclopedia. */
-export function describeBuilding(b: BuildingRule): string {
+export function describeBuilding(b: BuildingRule, withCost = true): string {
   const e = b.effects;
   const parts: string[] = [];
   const where = b.wonder && b.scope === "all" ? " ve všech tvých městech" : "";
@@ -259,6 +263,7 @@ export function describeBuilding(b: BuildingRule): string {
   if (b.group) parts.push("město má jen jednu elektrárnu, nová nahradí starou");
   if (b.requiresWonder && !b.spaceship) parts.push(`jde stavět, až stojí ${BUILDINGS[b.requiresWonder].name}`);
   if (!parts.length) parts.push("začne chránit město, až do hry přibude boj");
+  if (!withCost) return `${parts.join(", ")}${b.upkeep ? ` · údržba ${b.upkeep} zlata za tah` : ""}`;
   const cost = `${b.cost} štítů${b.upkeep ? `, údržba ${b.upkeep} zlata za tah` : ""}`;
   return `${parts.join(", ")} · ${cost}`;
 }

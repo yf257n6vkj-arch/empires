@@ -26,15 +26,19 @@ export function growthThreshold(size: number): number {
   return RULES.growthFoodBase * (size + 1);
 }
 
+/** Shields the item costs; 0 when the city earns gold and builds nothing. */
 export function productionCost(item: ProductionItem): number {
+  if (item.kind === "wealth") return 0;
   return item.kind === "unit" ? UNIT_TYPES[item.id].cost : BUILDINGS[item.id].cost;
 }
 
 export function productionName(item: ProductionItem): string {
+  if (item.kind === "wealth") return RULES.wealthName;
   return item.kind === "unit" ? UNIT_TYPES[item.id].name : BUILDINGS[item.id].name;
 }
 
 export function sameItem(a: ProductionItem, b: ProductionItem): boolean {
+  if (a.kind === "wealth" || b.kind === "wealth") return a.kind === b.kind;
   return a.kind === b.kind && a.id === b.id;
 }
 
@@ -282,7 +286,13 @@ export function cityReport(state: GameState, city: City): CityReport {
     maxSize: effects.maxSize,
     turnsToGrow: canGrow ? Math.max(1, Math.ceil((threshold - city.food) / foodSurplus)) : null,
     turnsToComplete:
-      city.shields >= cost ? 1 : shieldSurplus > 0 ? Math.max(1, Math.ceil((cost - city.shields) / shieldSurplus)) : null,
+      city.production.kind === "wealth"
+        ? null
+        : city.shields >= cost
+          ? 1
+          : shieldSurplus > 0
+            ? Math.max(1, Math.ceil((cost - city.shields) / shieldSurplus))
+            : null,
     waitingForSize: popCost > 0 && city.size <= popCost,
   };
 }
@@ -338,6 +348,12 @@ export function processCityDraft(draft: GameState, city: City, events: GameEvent
   if (!canBuild(draft, city, city.production)) nextProductionDraft(draft, city, events);
   city.shields += report.shieldSurplus;
   const item = city.production;
+  if (item.kind === "wealth") {
+    // Nothing is built: this turn's shields become gold, stored shields wait.
+    city.shields -= report.shieldSurplus;
+    assignWorkersDraft(draft, city);
+    return { science: report.science, gold: report.gold + report.shieldSurplus * RULES.wealthGoldPerShield };
+  }
   const cost = productionCost(item);
   if (city.shields >= cost) completeProductionDraft(draft, city, cost, events);
   assignWorkersDraft(draft, city);
@@ -346,6 +362,7 @@ export function processCityDraft(draft: GameState, city: City, events: GameEvent
 
 function completeProductionDraft(draft: GameState, city: City, cost: number, events: GameEvent[]): void {
   const item = city.production;
+  if (item.kind === "wealth") return;
   if (item.kind === "unit") {
     const rule = UNIT_TYPES[item.id];
     if (city.size <= rule.populationCost) {

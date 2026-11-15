@@ -8,6 +8,7 @@
  */
 import {
   applyCommand,
+  productionName,
   canBuildImprovement,
   cityRadiusTiles,
   findPath,
@@ -318,7 +319,7 @@ function playOne(seed: string): Result {
       const mine = state.cities.filter((c) => c.owner === ME);
       const rs = mine.map((c) => cityReport(state, c));
       console.log(`t${state.turn} cities ${mine.length} pop ${mine.reduce((n, c) => n + c.size, 0)} trade ${rs.reduce((n, r) => n + r.production.trade, 0)} sci ${rs.reduce((n, r) => n + r.science, 0)} gold ${me.gold} rate ${me.scienceRate} research ${me.research}/${me.researching} techs ${me.techs.length} units ${state.units.length}`);
-      if (process.env.PACE_SEED) for (const c of mine) console.log(" ", c.x, c.y, state.map.terrain[c.y * state.map.width + c.x], JSON.stringify(cityReport(state, c).production), c.worked.length, c.food, c.shields, c.production.id, state.players[ME]!.explored.reduce((a, b) => a + b, 0));
+      if (process.env.PACE_SEED) for (const c of mine) console.log(" ", c.x, c.y, state.map.terrain[c.y * state.map.width + c.x], JSON.stringify(cityReport(state, c).production), c.worked.length, c.food, c.shields, productionName(c.production), state.players[ME]!.explored.reduce((a, b) => a + b, 0));
 
     }
   }

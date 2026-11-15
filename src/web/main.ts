@@ -1155,18 +1155,25 @@ newGameButton.addEventListener("click", () => newGameDialog.open());
 
 // ---------- start ----------
 
-// Graphics trial: with ?sprity in the address, painted sprites replace the drawn figures.
-if (new URLSearchParams(location.search).has("sprity")) {
+// Graphics trial: painted sprites from Gemini replace the drawn figures of a few units and the cities.
+const SPRITES_KEY = "empires.sprites";
+const spritesBox = $<HTMLInputElement>("#sprites");
+function applySprites(on: boolean): void {
+  if (!on) {
+    setSprites(new Map());
+    refresh();
+    return;
+  }
   const files = import.meta.glob<string>("./sprites/*.webp", { eager: true, query: "?url", import: "default" });
   const loaded = new Map<string, HTMLImageElement>();
   let pending = Object.keys(files).length;
+  const done = () => {
+    if (--pending > 0) return;
+    setSprites(loaded);
+    refresh();
+  };
   for (const [path, url] of Object.entries(files)) {
     const img = new Image();
-    const done = () => {
-      if (--pending > 0) return;
-      setSprites(loaded);
-      refresh();
-    };
     img.onload = () => {
       loaded.set(path.split("/").pop()!.replace(/\.webp$/, ""), img);
       done();
@@ -1175,6 +1182,19 @@ if (new URLSearchParams(location.search).has("sprity")) {
     img.src = url;
   }
 }
+try {
+  spritesBox.checked = localStorage.getItem(SPRITES_KEY) === "1" || new URLSearchParams(location.search).has("sprity");
+} catch {
+  spritesBox.checked = false;
+}
+spritesBox.addEventListener("change", () => {
+  try {
+    localStorage.setItem(SPRITES_KEY, spritesBox.checked ? "1" : "0");
+  } catch {
+    // Storage may be unavailable; the switch still works for this visit.
+  }
+  applySprites(spritesBox.checked);
+});
 
 updateZoomButtons();
 if (load()) {
@@ -1185,3 +1205,4 @@ if (load()) {
   startNewGame(randomSeed());
   newGameDialog.open(true);
 }
+if (spritesBox.checked) applySprites(true);

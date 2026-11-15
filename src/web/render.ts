@@ -1295,6 +1295,12 @@ function drawCity(ctx: CanvasRenderingContext2D, c: DrawCity, selected: boolean)
 
   const citySprite = sprites.get(`city-${c.size >= 8 ? "modern" : c.size >= 4 ? "medieval" : "ancient"}`);
   if (citySprite) {
+    // The owner's colour as a ring around the city, since the painting has none.
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(0, cy + 1, rx + 1.5, ry + 2.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
     drawSprite(ctx, citySprite, 0, cy + ry + 2, TILE * 1.15);
     ctx.restore();
     return;

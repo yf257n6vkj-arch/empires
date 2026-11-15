@@ -621,7 +621,7 @@ export const CODEX_PAGES: Record<string, CodexPage> = {
   "civ-russians": {
     when: "od 9. století",
     text: "Rusové žijí v největší zemi světa, která se táhne od Evropy až k Tichému oceánu. Ruská říše vyrostla z malého Moskevského knížectví. Car Petr I. Veliký chtěl zemi zmodernizovat podle západní Evropy. Postavil loďstvo a nové hlavní město Petrohrad.",
-    fact: "Petr Veliký cestoval po Evropě pod cizím jménem. V Holandsku pracoval jako tesař v loděnici, aby se naučil stavět lodě.",
+    fact: "Petr Veliký cestoval po Evropě pod cizím jménem. V Nizozemí pracoval jako tesař v loděnici, aby se naučil stavět lodě.",
     wiki: "Ruské impérium",
   },
   "civ-zulus": {

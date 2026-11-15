@@ -6,6 +6,10 @@
  *   GEMINI_API_KEY=... npm run images -- --only wheel,iron   just these, even if they exist
  *   npm run images -- --dry-run                       show what would be generated
  *
+ * In a Claude cloud session the key can be stored as a network secret for
+ * generativelanguage.googleapis.com (header x-goog-api-key); the agent proxy
+ * then adds it to every request and GEMINI_API_KEY is not needed.
+ *
  * Options: --model <id> (default gemini-nano-banana-2.1), --size 1K|2K,
  * --parallel <n> (default 2). Pictures that already exist are skipped, so a
  * run that stops halfway can simply be started again.
@@ -45,7 +49,7 @@ if (dryRun || todo.length === 0) {
   console.log(todo.length ? `Vygeneroval bych ${todo.length} obrázků: ${todo.join(", ")}` : "Všechny obrázky už existují.");
   process.exit(0);
 }
-if (!key) {
+if (!key && !process.env.HTTPS_PROXY) {
   console.error("Chybí GEMINI_API_KEY. Klíč vytvoříš v Google AI Studiu a spustíš: GEMINI_API_KEY=... npm run images");
   process.exit(1);
 }
@@ -84,7 +88,8 @@ async function generate(id: string): Promise<void> {
   for (let attempt = 1; attempt <= 4; attempt++) {
     const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
       method: "POST",
-      headers: { "x-goog-api-key": key!, "Content-Type": "application/json" },
+      // Without a key here the cloud proxy adds it from the environment's network secret.
+      headers: { ...(key ? { "x-goog-api-key": key } : {}), "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
     const text = await res.text();

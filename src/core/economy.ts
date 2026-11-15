@@ -13,6 +13,7 @@ import {
   type BuildingRule,
   type TechId,
 } from "./rules";
+import { distance, neighbors8 } from "./geometry";
 import type { City, GameState, Player, PlayerId, ProductionItem } from "./state";
 
 /** Economy fields of a player at the start of a game. */
@@ -92,11 +93,17 @@ export function canBuildUnitType(player: Player, id: keyof typeof UNIT_TYPES): b
   return next === null || !knowsTech(player, UNIT_TYPES[next].requires);
 }
 
+/** True when the city stands next to the ocean. */
+export function isCoastal(state: GameState, city: City): boolean {
+  return neighbors8(state.map, city.y * state.map.width + city.x).some((i) => state.map.terrain[i] === "ocean");
+}
+
 export function canBuildBuilding(state: GameState, city: City, rule: BuildingRule): boolean {
   const player = state.players[city.owner];
   if (!player || !knowsTech(player, rule.requires)) return false;
   if (city.buildings.includes(rule.id)) return false;
   if (rule.requiresBuilding !== null && !city.buildings.includes(rule.requiresBuilding)) return false;
+  if (rule.coastal && !isCoastal(state, city)) return false;
   if (rule.wonder && builtWonders(state).includes(rule.id)) return false;
   return true;
 }
@@ -141,11 +148,25 @@ export interface CityEffects {
   shieldsPct: number;
   keepFoodOnGrowth: number;
   maxSize: number;
+  capital: boolean;
+  corruptionCutPct: number;
+  oceanFood: number;
+  /** Multiplier for pollution from shields, in percent. */
+  industryPollutionPct: number;
+  noPopulationPollution: boolean;
 }
 
-/** Combined effect of the city's buildings and of its owner's wonders that work everywhere. */
+/**
+ * Combined effect of the city's buildings and of its owner's wonders that work everywhere.
+ * A building that needs another one (a power plant needs a factory) does nothing without it.
+ */
 export function cityEffects(state: GameState, city: City): CityEffects {
-  const sources: BuildingEffects[] = city.buildings.map((b) => BUILDINGS[b].effects);
+  const sources: BuildingEffects[] = city.buildings
+    .filter((b) => {
+      const needs = BUILDINGS[b].requiresBuilding;
+      return needs === null || city.buildings.includes(needs);
+    })
+    .map((b) => BUILDINGS[b].effects);
   for (const other of state.cities) {
     if (other.owner !== city.owner || other.id === city.id) continue;
     for (const b of other.buildings) if (BUILDINGS[b].wonder && BUILDINGS[b].scope === "all") sources.push(BUILDINGS[b].effects);
@@ -157,6 +178,11 @@ export function cityEffects(state: GameState, city: City): CityEffects {
     shieldsPct: 0,
     keepFoodOnGrowth: 0,
     maxSize: RULES.maxCitySize,
+    capital: false,
+    corruptionCutPct: 0,
+    oceanFood: 0,
+    industryPollutionPct: 100,
+    noPopulationPollution: false,
   };
   for (const e of sources) {
     result.content += e.content ?? 0;
@@ -165,8 +191,29 @@ export function cityEffects(state: GameState, city: City): CityEffects {
     result.shieldsPct += e.shieldsPct ?? 0;
     result.keepFoodOnGrowth = Math.max(result.keepFoodOnGrowth, e.keepFoodOnGrowth ?? 0);
     result.maxSize = Math.max(result.maxSize, e.maxSize ?? 0);
+    result.capital ||= e.capital ?? false;
+    result.corruptionCutPct = Math.min(100, result.corruptionCutPct + (e.corruptionCutPct ?? 0));
+    result.oceanFood += e.oceanFood ?? 0;
+    result.industryPollutionPct = Math.round((result.industryPollutionPct * (e.industryPollutionPct ?? 100)) / 100);
+    result.noPopulationPollution ||= e.noPopulationPollution ?? false;
   }
   return result;
+}
+
+/** The player's city with the palace, if any. */
+export function capitalOf(state: GameState, player: PlayerId): City | undefined {
+  return state.cities.find((c) => c.owner === player && c.buildings.includes("palace"));
+}
+
+/**
+ * Percent of the city's trade lost to corruption: it grows with the distance
+ * from the capital, the capital itself has none, a courthouse cuts it.
+ */
+export function corruptionPct(state: GameState, city: City, effects = cityEffects(state, city)): number {
+  if (effects.capital) return 0;
+  const capital = capitalOf(state, city.owner);
+  const raw = capital ? Math.min(RULES.corruptionMaxPct, distance(city, capital) * RULES.corruptionPerTile) : RULES.corruptionMaxPct;
+  return Math.round((raw * (100 - effects.corruptionCutPct)) / 100);
 }
 
 // ---------- gold ----------

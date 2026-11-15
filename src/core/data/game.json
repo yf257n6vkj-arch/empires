@@ -1,5 +1,5 @@
 {
-  "_comment": "Obecné konstanty pravidel. movesFraction: pohyb se počítá v třetinách, cesta stojí jednu třetinu. contentBase: kolik obyvatel je spokojených bez pomoci. maxCitySize: největší město bez akvaduktu. Růst a ceny jsou zrychlené proti Civilizaci 1, aby se partie vešla do 120 tahů (ověřeno nástrojem npm run pace). Cena výzkumu = researchCostBase + researchCostPerTech × počet známých technologií, zaokrouhleno. Strom má 68 technologií, takže jednotlivý objev je levný. Nákup zbytku výroby stojí buyPerShield × r + r² / buyQuadratic zlata (r = chybějící štíty), dvojnásobek, když město ještě nic nevyrobilo, a dvojnásobek u divů.",
+  "_comment": "Obecné konstanty pravidel. movesFraction: pohyb se počítá v třetinách, cesta stojí jednu třetinu. contentBase: kolik obyvatel je spokojených bez pomoci. maxCitySize: největší město bez akvaduktu. Růst a ceny jsou zrychlené proti Civilizaci 1, aby se partie vešla do 120 tahů (ověřeno nástrojem npm run pace). Cena výzkumu = researchCostBase + researchCostPerTech × počet známých technologií, zaokrouhleno. Strom má 68 technologií, takže jednotlivý objev je levný. Nákup zbytku výroby stojí buyPerShield × r + r² / buyQuadratic zlata (r = chybějící štíty), dvojnásobek, když město ještě nic nevyrobilo, a dvojnásobek u divů. Korupce: město ztratí corruptionPerTile procent obchodu za každé políčko vzdálenosti od paláce, nejvýš corruptionMaxPct procent, a tolik ztratí i všechna města hráče bez paláce. Znečištění = štíty po bonusech (zmenšené elektrárnou a recyklací) + čtvrtina obyvatel za každou známou technologii z pollutionTechs. Nad pollutionFree rozladí každých započatých pollutionPerUnhappy bodů jednoho obyvatele.",
   "maxTurns": 120,
   "movesFraction": 3,
   "roadMoveCost": 1,
@@ -14,12 +14,17 @@
   "martialLawMax": 3,
   "maxCitySize": 8,
   "researchCostBase": 6,
-  "researchCostPerTech": 0.55,
+  "researchCostPerTech": 0.45,
   "startingGold": 30,
   "startingScienceRate": 50,
   "rateStep": 10,
   "buyPerShield": 2,
   "buyQuadratic": 20,
   "buyEmptyMultiplier": 2,
-  "buyWonderMultiplier": 2
+  "buyWonderMultiplier": 2,
+  "corruptionPerTile": 3,
+  "corruptionMaxPct": 50,
+  "pollutionFree": 20,
+  "pollutionPerUnhappy": 10,
+  "pollutionTechs": ["industrialization", "automobile", "massProduction", "plastics"]
 }

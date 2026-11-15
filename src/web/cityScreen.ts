@@ -15,7 +15,8 @@ import {
   RULES,
   sameItem,
   TERRAINS,
-  tileYield,
+  cityTileYield,
+  corruptionPct,
   UNIT_TYPES,
   workableTiles,
   type BuildingId,
@@ -73,8 +74,11 @@ function seeded(seed: number): () => number {
 
 // ---------- panorama ----------
 
+/** Industry stands on the edge of town, further away. */
+const FAR_ROW: BuildingId[] = ["hydroPlant", "nuclearPlant", "powerPlant"];
 const BACK_ROW: BuildingId[] = [
   "greatWork",
+  "palace",
   "cathedral",
   "university",
   "hallOfScholars",
@@ -84,8 +88,10 @@ const BACK_ROW: BuildingId[] = [
   "library",
   "grandBazaar",
   "stoneCircle",
+  "courthouse",
+  "bank",
 ];
-const FRONT_ROW: BuildingId[] = ["marketplace", "granary", "barracks", "amphitheater"];
+const FRONT_ROW: BuildingId[] = ["marketplace", "granary", "barracks", "amphitheater", "manufacturingPlant", "recyclingCenter", "massTransit"];
 
 function drawPanorama(ctx: CanvasRenderingContext2D, w: number, h: number, state: GameState, city: City): void {
   const tiles = cityRadiusTiles(state.map, city);
@@ -239,7 +245,36 @@ function drawPanorama(ctx: CanvasRenderingContext2D, w: number, h: number, state
       },
     });
   }
+  // A power plant stands off to the side, where the tall buildings in the middle do not hide it.
+  FAR_ROW.filter(has).forEach((id) => {
+    const px = w * 0.29;
+    items.push({
+      y: horizon + 14,
+      draw: () => {
+        ctx.save();
+        ctx.translate(px, horizon + 14);
+        ctx.scale(scale * 0.7, scale * 0.7);
+        drawBuilding(ctx, id, color);
+        ctx.restore();
+      },
+    });
+  });
   placeRow(BACK_ROW.filter(has), horizon + 34, scale);
+  if (has("harbour")) {
+    // The harbour sits by the sea, or in front when the panorama shows no sea.
+    const hx = seaSide > 0 ? w * 0.86 : seaSide < 0 ? w * 0.13 : w * 0.5;
+    const hy = seaSide !== 0 ? horizon + 58 : h - 30;
+    items.push({
+      y: hy,
+      draw: () => {
+        ctx.save();
+        ctx.translate(hx, hy);
+        ctx.scale(scale * 0.8, scale * 0.8);
+        drawBuilding(ctx, "harbour", color);
+        ctx.restore();
+      },
+    });
+  }
   placeRow(FRONT_ROW.filter(has), h - 26, scale * 0.95);
   // Houses grow with the city.
   const hr = seeded(city.id * 101 + 13);
@@ -507,7 +542,7 @@ export function createCityScreen(host: CityHost) {
     if (tiles.length > c.size) {
       // Move the citizen from the weakest field to the new one.
       const value = (t: number) => {
-        const y = tileYield(s.map, t, false);
+        const y = cityTileYield(s, c, t);
         return y.food * 3 + y.shields * 2 + y.trade;
       };
       const weakest = [...c.worked].sort((a, b) => value(a) - value(b))[0]!;
@@ -547,7 +582,8 @@ export function createCityScreen(host: CityHost) {
         : r.turnsToComplete
           ? `hotovo za ${turns(r.turnsToComplete)}`
           : "nevyrábí";
-    const unhappyBase = Math.max(0, c.size - RULES.contentBase);
+    const crowd = Math.max(0, c.size - RULES.contentBase);
+    const unhappyBase = Math.min(c.size, crowd + r.pollution.unhappy);
     const calmedByBuildings = Math.min(unhappyBase, effects.content);
     const calmedBySoldiers = Math.min(unhappyBase - calmedByBuildings, martialLaw(s, c));
     const unitsHere = s.units.filter((u) => u.x === c.x && u.y === c.y && u.owner === c.owner);
@@ -580,7 +616,7 @@ export function createCityScreen(host: CityHost) {
           <div class="cs-mood">
             ${h.disorder ? `<b class="neg">Nepokoje! Město tento tah nic nevyrobí.</b><br>` : ""}
             <span>Spokojení ${h.content}</span> · <span class="${h.unhappy ? "neg" : ""}">nespokojení ${h.unhappy}</span>${h.entertainers ? ` · baviči ${h.entertainers}` : ""}
-            <div class="muted small">Bez pomoci je spokojených ${RULES.contentBase} obyvatel.${unhappyBase ? ` Z ${unhappyBase} dalších uklidní budovy ${calmedByBuildings} a vojáci ve městě ${calmedBySoldiers}.` : ""}</div>
+            <div class="muted small">Bez pomoci je spokojených ${RULES.contentBase} obyvatel.${r.pollution.unhappy ? ` Znečištěný vzduch rozladí ${r.pollution.unhappy} ${r.pollution.unhappy === 1 ? "dalšího" : "další"}.` : ""}${unhappyBase ? ` Z ${unhappyBase} nespokojených uklidní budovy ${calmedByBuildings} a vojáci ve městě ${calmedBySoldiers}.` : ""}</div>
           </div>
         </div>
         <div class="cs-grid">
@@ -612,9 +648,11 @@ export function createCityScreen(host: CityHost) {
             <h3>Obchod</h3>
             <div class="cs-trade">
               <div>${yieldIcon("trade")} obchod <b>${r.production.trade}</b></div>
+              ${r.corruption ? `<div>korupce <b class="neg">−${r.corruption}</b> <span class="muted">(${corruptionPct(s, c, effects)} % ${effects.corruptionCutPct ? "i se soudním dvorem" : "kvůli vzdálenosti od paláce"})</span></div>` : effects.capital ? `<div class="muted small">Tady sídlí vláda, korupce tu není.</div>` : ""}
               <div>věda <b>${r.science}</b>${effects.sciencePct ? ` <span class="muted">(+${effects.sciencePct} % z budov)</span>` : ""}</div>
               <div>zlato <b>${r.gold}</b>${effects.goldPct ? ` <span class="muted">(+${effects.goldPct} % z budov)</span>` : ""}</div>
             </div>
+            ${r.pollution.industry + r.pollution.population > 0 ? `<p class="small">Znečištění ${r.pollution.industry + r.pollution.population}, bez potíží město snese ${RULES.pollutionFree} <span class="muted">(z výroby ${r.pollution.industry}, od obyvatel ${r.pollution.population})</span></p>` : ""}
             <h3>Budovy</h3>
             <div class="cs-buildings">${
               c.buildings.length
@@ -733,7 +771,7 @@ export function createCityScreen(host: CityHost) {
           ctx.fillRect(px, py, TILE_PX, TILE_PX);
         }
         if (worked || free.has(i)) {
-          const y = tileYield(s.map, i, i === center);
+          const y = cityTileYield(s, c, i);
           const icons: ("food" | "shields" | "trade")[] = [
             ...Array<"food">(y.food).fill("food"),
             ...Array<"shields">(y.shields).fill("shields"),

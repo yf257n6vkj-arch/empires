@@ -11,6 +11,7 @@ import {
   canFoundCity,
   cityRadiusTiles,
   cityReport,
+  cityTileYield,
   distance,
   findPath,
   IMPROVEMENTS,
@@ -662,10 +663,12 @@ function renderCity(city: City): void {
     <p class="facts" style="margin-top:8px">${
       h.disorder ? `<span class="neg">Nepokoje! Město nic nevyrábí.</span><br>` : ""
     }Spokojení ${h.content} · nespokojení ${h.unhappy}${h.entertainers ? ` · baviči ${h.entertainers}` : ""}<br>
-    Obchod ${r.production.trade}: věda ${r.science}, zlato ${r.gold}<br>
+    Obchod ${r.production.trade}${r.corruption ? `, korupce −${r.corruption}` : ""}: věda ${r.science}, zlato ${r.gold}<br>${
+      r.pollution.unhappy ? `<span class="neg">Znečištěný vzduch rozladí ${r.pollution.unhappy} obyvatel.</span><br>` : ""
+    }
     <span class="muted">Budovy: ${buildings}</span><br>
     <span class="muted">Obyvatelé obdělávají políčka orámovaná na mapě.${
-      h.entertainers ? " Baviči nepracují na poli, ale udržují ve městě klid." : ""
+      h.entertainers ? " Baviči nepracují na poli a udržují ve městě klid." : ""
     }</span></p>
     ${
       unitsHere.length
@@ -864,7 +867,8 @@ canvas.addEventListener("mousemove", (e) => {
     tooltip.textContent = `[${p.x}, ${p.y}] neprozkoumáno`;
   } else {
     const city = state.cities.find((c) => c.x === p.x && c.y === p.y);
-    const y = tileYield(state.map, i, city !== undefined);
+    const owner = state.cities.find((c) => c.owner === HUMAN && (c.x === p.x && c.y === p.y || c.worked.includes(i)));
+    const y = owner ? cityTileYield(state, owner, i) : tileYield(state.map, i, city !== undefined);
     const extras = [
       state.map.road[i] ? "cesta" : "",
       state.map.irrigation[i] ? "zavlažování" : "",

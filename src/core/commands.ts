@@ -155,7 +155,8 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
         food: 0,
         shields: 0,
         production: fallbackProduction(draft, unit.owner),
-        buildings: [],
+        // The first city of a player is the capital.
+        buildings: player.citiesFounded === 0 ? ["palace" as const] : [],
         worked: [],
         manualTiles: false,
         foundedTurn: draft.turn,

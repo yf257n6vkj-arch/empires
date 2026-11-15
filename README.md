@@ -2,7 +2,7 @@
 
 Tahová strategie do prohlížeče ve stylu Civilizace 1. Jedna partie má trvat 45 až 60 minut proti třem počítačovým soupeřům, kteří hrají rozumně a nepodvádějí. Celé zadání je v projektu Empires v Claudovi.
 
-Hotová je fáze 1 a probíhá fáze 2. Hráč zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají vlastní obrazovku s pohledem na město, spokojenost, 11 budov a 5 divů světa a jde vyrábět 12 typů jednotek. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče.
+Hotová je fáze 1 a probíhá fáze 2. Hráč zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi výzkum a zlato. Za zlato platí údržbu budov a může dokoupit výrobu. Města mají vlastní obrazovku s pohledem na město, spokojenost, korupci a znečištění, 21 budov a 5 divů světa a jde vyrábět 12 typů jednotek. Soupeři a boj přijdou ve fázi 3. Hra se sama ukládá do prohlížeče.
 
 ## Jak se hra ovládá
 

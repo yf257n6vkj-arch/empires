@@ -103,6 +103,15 @@ export function describeBuilding(b: BuildingRule): string {
   if (e.shieldsPct) parts.push(`+${e.shieldsPct} % výroby${where}`);
   if (e.keepFoodOnGrowth) parts.push(`po růstu města zůstane ${Math.round(e.keepFoodOnGrowth * 100)} % jídla`);
   if (e.maxSize) parts.push(`město může vyrůst až na ${e.maxSize}`);
+  if (e.capital) parts.push("sídlo vlády, v tomto městě není korupce a ostatní města ztrácí obchod podle vzdálenosti od něj");
+  if (e.corruptionCutPct) parts.push(`ubere ${e.corruptionCutPct} % korupce`);
+  if (e.oceanFood) parts.push(`+${e.oceanFood} jídla na každém obdělávaném políčku oceánu`);
+  if (e.industryPollutionPct) parts.push(`znečištění z výroby klesne na ${e.industryPollutionPct} %`);
+  if (e.noPopulationPollution) parts.push("obyvatelé přestanou znečišťovat vzduch");
+  if (b.requiresBuilding) parts.push(`potřebuje ve městě ${BUILDINGS[b.requiresBuilding].name.toLowerCase()}`);
+  if (b.coastal) parts.push("jde postavit jen u moře");
+  if (b.onePerPlayer) parts.push("máš jen jeden, nový přestěhuje sídlo vlády");
+  if (b.group) parts.push("město má jen jednu elektrárnu, nová nahradí starou");
   if (b.victory) parts.push("kdo ho postaví první, vyhraje hru");
   if (!parts.length) parts.push("začne chránit město, až do hry přibude boj");
   const cost = `${b.cost} štítů${b.upkeep ? `, údržba ${b.upkeep} zlata za tah` : ""}`;

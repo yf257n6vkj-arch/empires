@@ -6,7 +6,7 @@ import type { Point } from "./geometry";
 import type { BuildingId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 export interface GameMap {
   width: number;

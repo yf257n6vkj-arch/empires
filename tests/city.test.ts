@@ -119,7 +119,7 @@ describe("city economy", () => {
     s = apply(s, { type: "setProduction", cityId: id, item: { kind: "building", id: "granary" } });
     s.cities[0]!.shields = BUILDINGS.granary.cost;
     s = apply(s, { type: "endTurn" });
-    expect(s.cities[0]!.buildings).toEqual(["granary"]);
+    expect(s.cities[0]!.buildings).toEqual(["palace", "granary"]);
     expect(s.cities[0]!.production).toEqual({ kind: "unit", id: "warriors" });
     expect(applyCommand(s, { type: "setProduction", cityId: id, item: { kind: "building", id: "granary" } })).toEqual({
       ok: false,

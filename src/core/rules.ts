@@ -38,17 +38,27 @@ export const UNIT_TYPE_IDS = [
 export type UnitTypeId = (typeof UNIT_TYPE_IDS)[number];
 
 export const BUILDING_IDS = [
+  "palace",
   "granary",
   "temple",
   "walls",
   "barracks",
   "library",
   "marketplace",
+  "courthouse",
+  "harbour",
   "amphitheater",
   "aqueduct",
   "cathedral",
   "university",
+  "bank",
   "factory",
+  "powerPlant",
+  "hydroPlant",
+  "nuclearPlant",
+  "manufacturingPlant",
+  "massTransit",
+  "recyclingCenter",
   "stoneCircle",
   "hallOfScholars",
   "greatObservatory",
@@ -177,6 +187,16 @@ export interface BuildingEffects {
   keepFoodOnGrowth?: number;
   /** Largest size the city can reach with this building. */
   maxSize?: number;
+  /** The seat of government: no corruption here, other cities lose trade by distance. */
+  capital?: boolean;
+  /** Percent of the city's corruption that disappears. */
+  corruptionCutPct?: number;
+  /** Extra food on every worked ocean tile. */
+  oceanFood?: number;
+  /** Pollution from shields is multiplied by this percentage. */
+  industryPollutionPct?: number;
+  /** Citizens no longer pollute the air. */
+  noPopulationPollution?: boolean;
 }
 
 export interface BuildingRule {
@@ -190,6 +210,12 @@ export interface BuildingRule {
   requiresBuilding: BuildingId | null;
   /** A wonder can exist only once in the whole game. */
   wonder: boolean;
+  /** Only a city next to the ocean can build it. */
+  coastal?: boolean;
+  /** A player has only one; building it in another city moves it there. */
+  onePerPlayer?: boolean;
+  /** A city has only one building of the group; a new one replaces the old one. */
+  group?: string;
   /** For wonders: "all" = the effect applies in every city of the owner. */
   scope?: "city" | "all";
   /** The last wonder; building it wins the game (victory rules come in phase 3). */
@@ -244,6 +270,16 @@ export interface GameConstants {
   buyEmptyMultiplier: number;
   /** Price multiplier for wonders. */
   buyWonderMultiplier: number;
+  /** Percent of trade lost per tile of distance from the capital. */
+  corruptionPerTile: number;
+  /** Corruption never exceeds this percent; a player without a capital loses this much everywhere. */
+  corruptionMaxPct: number;
+  /** Pollution a city produces before its air bothers anyone. */
+  pollutionFree: number;
+  /** Every started step of this size above pollutionFree makes one citizen unhappy. */
+  pollutionPerUnhappy: number;
+  /** Each known technology here makes every fourth citizen add one point of pollution. */
+  pollutionTechs: TechId[];
 }
 
 function indexById<Id extends string, T extends { id: string }>(
@@ -317,5 +353,6 @@ function checkReferences(): void {
       throw new Error(`buildings.json ${b.id}: unknown requiresBuilding "${b.requiresBuilding}"`);
     }
   }
+  for (const t of RULES.pollutionTechs) tech("game.json pollutionTechs", t);
 }
 checkReferences();

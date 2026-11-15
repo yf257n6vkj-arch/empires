@@ -2,7 +2,7 @@
  * City economy: which tiles citizens work, what the city yields, happiness,
  * growth, starvation and production. Functions named *Draft mutate a cloned state.
  */
-import { canBuild, cityEffects, fallbackProduction, type CityEffects } from "./economy";
+import { canBuild, cityEffects, corruptionPct, fallbackProduction, type CityEffects } from "./economy";
 import type { GameEvent } from "./events";
 import { BUILDINGS, RULES, UNIT_TYPES, type Yield } from "./rules";
 import type { City, GameState, ProductionItem } from "./state";
@@ -23,6 +23,50 @@ export function productionName(item: ProductionItem): string {
 
 export function sameItem(a: ProductionItem, b: ProductionItem): boolean {
   return a.kind === b.kind && a.id === b.id;
+}
+
+/** Yield of a tile for this city: the tile itself plus what the city's buildings add (a harbour on the ocean). */
+export function cityTileYield(state: GameState, city: City, index: number, effects = cityEffects(state, city)): Yield {
+  const y = tileYield(state.map, index, index === idx(state.map, city));
+  if (state.map.terrain[index] === "ocean") y.food += effects.oceanFood;
+  return y;
+}
+
+/** Centre plus worked tiles. */
+function grossYield(state: GameState, city: City, effects: CityEffects): Yield {
+  const total = cityTileYield(state, city, idx(state.map, city), effects);
+  for (const i of city.worked) {
+    const y = cityTileYield(state, city, i, effects);
+    total.food += y.food;
+    total.shields += y.shields;
+    total.trade += y.trade;
+  }
+  return total;
+}
+
+export interface Pollution {
+  /** From shields after factory and plant bonuses, reduced by clean plants and recycling. */
+  industry: number;
+  /** From citizens, growing with industrial technologies. */
+  population: number;
+  /** Citizens the dirty air makes unhappy. */
+  unhappy: number;
+}
+
+/**
+ * Pollution in a simple form: instead of dirty tiles as in Civilization 1,
+ * a city with too much industry and too many people gets unhappy citizens.
+ * It counts what the city could produce, so disorder does not clean the air.
+ */
+export function cityPollution(state: GameState, city: City, effects = cityEffects(state, city)): Pollution {
+  const shields = Math.floor((grossYield(state, city, effects).shields * (100 + effects.shieldsPct)) / 100);
+  const industry = Math.floor((shields * effects.industryPollutionPct) / 100);
+  const player = state.players[city.owner];
+  const known = player ? RULES.pollutionTechs.filter((t) => player.techs.includes(t)).length : 0;
+  const population = effects.noPopulationPollution ? 0 : Math.floor((city.size * known) / 4);
+  const over = industry + population - RULES.pollutionFree;
+  const unhappy = over > 0 ? Math.min(city.size, Math.ceil(over / RULES.pollutionPerUnhappy)) : 0;
+  return { industry, population, unhappy };
 }
 
 /** Food surplus the automatic assignment tries to reach before it goes for shields. */
@@ -47,7 +91,8 @@ export interface Happiness {
 
 /** Unhappy citizens left after buildings and soldiers have calmed whom they can, before entertainers. */
 function unhappyAfterHelp(state: GameState, city: City, effects: CityEffects): number {
-  const unhappy = Math.max(0, city.size - RULES.contentBase);
+  const crowd = Math.max(0, city.size - RULES.contentBase);
+  const unhappy = Math.min(city.size, crowd + cityPollution(state, city, effects).unhappy);
   return Math.max(0, unhappy - effects.content - martialLaw(state, city));
 }
 
@@ -72,16 +117,17 @@ export function assignWorkersDraft(draft: GameState, city: City): void {
     if (city.worked.length <= city.size && city.worked.every((i) => allowed.has(i))) return;
     city.manualTiles = false;
   }
-  const unhappy = unhappyAfterHelp(draft, city, cityEffects(draft, city));
+  const effects = cityEffects(draft, city);
+  const unhappy = unhappyAfterHelp(draft, city, effects);
   // Smallest number of entertainers e with unhappy - e <= size - e - (unhappy - e).
   const entertainers = Math.min(unhappy, Math.max(0, 2 * unhappy - city.size));
   const workers = city.size - entertainers;
 
-  const candidates = workableTiles(draft, city).map((i) => ({ i, y: tileYield(draft.map, i, false) }));
+  const candidates = workableTiles(draft, city).map((i) => ({ i, y: cityTileYield(draft, city, i, effects) }));
   const settlerUpkeep = draft.units
     .filter((u) => u.homeCity === city.id)
     .reduce((sum, u) => sum + UNIT_TYPES[u.type].foodUpkeep, 0);
-  let food = tileYield(draft.map, idx(draft.map, city), true).food - city.size * RULES.foodPerCitizen - settlerUpkeep;
+  let food = cityTileYield(draft, city, idx(draft.map, city), effects).food - city.size * RULES.foodPerCitizen - settlerUpkeep;
   const worked: number[] = [];
   for (let n = 0; n < workers && candidates.length > 0; n++) {
     const hungry = food < TARGET_FOOD_SURPLUS;
@@ -102,10 +148,13 @@ export interface CityReport {
   foodSurplus: number;
   /** Shields added to production this turn, after buildings and disorder. */
   shieldSurplus: number;
-  /** Trade split by the owner's slider, after buildings and disorder. */
+  /** Trade lost on the way to the capital. */
+  corruption: number;
+  /** Trade split by the owner's slider, after corruption, buildings and disorder. */
   science: number;
   gold: number;
   happiness: Happiness;
+  pollution: Pollution;
   growthThreshold: number;
   /** Largest size the city can reach with its buildings. */
   maxSize: number;
@@ -119,13 +168,7 @@ export interface CityReport {
 
 export function cityReport(state: GameState, city: City): CityReport {
   const effects = cityEffects(state, city);
-  const production: Yield = tileYield(state.map, idx(state.map, city), true);
-  for (const i of city.worked) {
-    const y = tileYield(state.map, i, false);
-    production.food += y.food;
-    production.shields += y.shields;
-    production.trade += y.trade;
-  }
+  const production = grossYield(state, city, effects);
   const settlerUpkeep = state.units
     .filter((u) => u.homeCity === city.id)
     .reduce((sum, u) => sum + UNIT_TYPES[u.type].foodUpkeep, 0);
@@ -134,8 +177,10 @@ export function cityReport(state: GameState, city: City): CityReport {
   const happiness = cityHappiness(state, city, effects);
 
   const rate = state.players[city.owner]?.scienceRate ?? 0;
-  const baseScience = Math.round((production.trade * rate) / 100);
-  const baseGold = production.trade - baseScience;
+  const corruption = Math.round((production.trade * corruptionPct(state, city, effects)) / 100);
+  const trade = production.trade - corruption;
+  const baseScience = Math.round((trade * rate) / 100);
+  const baseGold = trade - baseScience;
   const calm = !happiness.disorder;
   const shieldSurplus = calm ? Math.floor((production.shields * (100 + effects.shieldsPct)) / 100) : 0;
   const science = calm ? Math.floor((baseScience * (100 + effects.sciencePct)) / 100) : 0;
@@ -150,9 +195,11 @@ export function cityReport(state: GameState, city: City): CityReport {
     foodUpkeep,
     foodSurplus,
     shieldSurplus,
+    corruption,
     science,
     gold,
     happiness,
+    pollution: cityPollution(state, city, effects),
     growthThreshold: threshold,
     maxSize: effects.maxSize,
     turnsToGrow: canGrow ? Math.max(1, Math.ceil((threshold - city.food) / foodSurplus)) : null,
@@ -243,8 +290,15 @@ function completeProductionDraft(draft: GameState, city: City, cost: number, eve
     return;
   }
   city.shields -= cost;
-  city.buildings.push(item.id);
   const rule = BUILDINGS[item.id];
+  // A new palace moves the capital; a new power plant replaces the old one.
+  if (rule.onePerPlayer) {
+    for (const other of draft.cities) {
+      if (other.owner === city.owner) other.buildings = other.buildings.filter((b) => b !== item.id);
+    }
+  }
+  if (rule.group) city.buildings = city.buildings.filter((b) => BUILDINGS[b].group !== rule.group);
+  city.buildings.push(item.id);
   events.push(
     rule.wonder
       ? { type: "wonderBuilt", cityId: city.id, owner: city.owner, building: item.id }

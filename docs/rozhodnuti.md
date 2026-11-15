@@ -2,6 +2,18 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 15. 11. 2026: Hra má všechny budovy z Civilizace 1, které dávají smysl bez lodí a jaderných zbraní
+
+Michal chtěl doplnit aspoň všechny budovy z Civilizace 1. Přibylo jich deset: palác, soudní dvůr, přístav, banka, tepelná, vodní a jaderná elektrárna, robotizovaná továrna, městská hromadná doprava a recyklační centrum. Ceny jsou jako u ostatních budov zhruba poloviční proti originálu, údržba zůstala skoro stejná. Hra teď má 21 budov a 5 divů.
+
+Aby palác a soudní dvůr k něčemu byly, přidali jsme korupci. Každé město ztratí 3 % obchodu za každé políčko vzdálenosti od paláce, nejvýš polovinu. Palác dostane hráč zdarma v prvním městě a postavit ho jinde znamená přestěhovat sídlo vlády. Soudní dvůr ubere polovinu korupce. Na měřidle tempa korupce sebrala v tahu 120 zhruba 15 % obchodu a výzkum se zpomalil, tak jsme zlevnili technologie na 6 + 0,45 × počet známých. Antika pak přichází kolem 43. tahu, moderní doba kolem 87. a celý strom má automatický hráč v mediánu ve 106. tahu, ve 43 % partií ho nedokončí.
+
+Hromadná doprava, recyklace a rozdíl mezi elektrárnami stojí v originálu na znečištění. Zadání znečištění v první verzi vynechává, protože s ním AI musí posílat osadníky čistit políčka. Zavedli jsme proto jednoduchou podobu bez špinavých políček. Výroba města a obyvatelé s průmyslovými technologiemi dělají body znečištění. Nad 20 body rozladí každých započatých 10 bodů jednoho obyvatele. Vodní a jaderná elektrárna znečišťují o polovinu méně než tepelná, recyklace ubere dvě třetiny znečištění z výroby a hromadná doprava vypne znečištění od obyvatel. AI to zvládne bez nového druhu rozhodování, vidí jen čísla ve městě. Měřidlo tempa našlo znečištění až v pozdní hře a málokdy.
+
+Elektrárny potřebují továrnu a město má jen jednu, nová nahradí starou. Jaderná elektrárna v originálu mohla vybuchnout, to jsme vynechali. Přístav jde postavit jen u moře a přidá jídlo na oceánu. Odemyká ho kartografie, protože přístav k hrnčířství, kam ho dala Civilizace 1, historicky nepatří a kartografie jinak nic neodemykala. Budova, které chybí potřebná budova, třeba elektrárna po prodané továrně, nepůsobí.
+
+Vynechali jsme tři věci. Pobřežní pevnost chrání před loděmi a protiraketový štít před jadernými zbraněmi, ani jedno ve hře není. Díly vesmírné lodi nahrazuje poslední div Velké dílo. Kdyby lodě nebo jaderné zbraně někdy přibyly, přidáme je s nimi.
+
 ## 15. 11. 2026: Texty technologií jsme porovnali s českou Wikipedií
 
 Michal stáhl na Macu skriptem `tools/mac/wiki.sh` všech 68 článků, na které odkazují stránky technologií, a texty jsme s nimi porovnali. Opravili jsme, co nesedělo: nejstarší keramika je stará přes 17 000 let, lublaňské kolo přes 5 000 let, Präsident byl první auto vyrobené na území dnešního Česka a pověst o vejcích v maltě Karlova mostu vyvrátili v roce 2010 chemici z VŠCHT. K mapám jsme přidali mapu vyrytou do mamutího klu z Pavlova. Odkazy vedou rovnou na hlavní články bez přesměrování a stavitelství odkazuje na článek Beton, protože článek o římském betonu neexistuje.

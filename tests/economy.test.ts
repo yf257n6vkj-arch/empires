@@ -151,7 +151,7 @@ describe("trade, science and gold", () => {
     const result = applyCommand(s, { type: "endTurn" });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.state.cities[0]!.buildings).toEqual(["temple"]);
+    expect(result.state.cities[0]!.buildings).toEqual(["palace", "temple"]);
     expect(result.events.some((e) => e.type === "buildingSold" && e.building === "amphitheater")).toBe(true);
     expect(result.state.players[0]!.gold).toBeGreaterThanOrEqual(0);
   });

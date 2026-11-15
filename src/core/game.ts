@@ -98,8 +98,20 @@ export function passComputerTurns(state: GameState): { state: GameState; events:
  */
 export function migrateState(saved: { version?: number } & Record<string, unknown>): GameState | null {
   if (saved.version === STATE_VERSION) return saved as unknown as GameState;
-  if (saved.version !== 2 && saved.version !== 3) return null;
+  if (saved.version !== 2 && saved.version !== 3 && saved.version !== 4) return null;
   const state = JSON.parse(JSON.stringify(saved)) as GameState;
+  // Version 5 adds the palace: the oldest city of every player becomes the capital.
+  for (const p of state.players) {
+    const own = state.cities.filter((c) => c.owner === p.id);
+    if (own.length > 0 && !own.some((c) => c.buildings.includes("palace"))) {
+      const oldest = own.reduce((a, b) => (b.foundedTurn < a.foundedTurn || (b.foundedTurn === a.foundedTurn && b.id < a.id) ? b : a));
+      oldest.buildings.unshift("palace");
+    }
+  }
+  if (saved.version === 4) {
+    state.version = STATE_VERSION;
+    return state;
+  }
   if (saved.version === 2) state.players = state.players.map((p) => ({ ...startingEconomy(), ...p }));
   // Version 4 has the full tree of phase 2b. Renamed technologies keep their
   // place, ones that no longer exist are dropped, research in progress stays.

@@ -491,6 +491,384 @@ function factory(ctx: Ctx): void {
   }
 }
 
+function palace(ctx: Ctx, color: string): void {
+  const wall = "#efe4cc";
+  block(ctx, -28, 0, 56, 3, 16, STONE);
+  // Wings.
+  for (const x of [-28, 12]) {
+    block(ctx, x, -3, 16, 15, 14, wall);
+    windows(ctx, x, -3, 16, [-3, -9], 2.2, 3.6, 3, true);
+    gableRoof(ctx, x, -18, 16, 14, 5, ROOF_COPPER, wall);
+  }
+  // Central part with a pediment and a dome.
+  block(ctx, -12, -3, 24, 20, 15, tone(wall, 1.04));
+  windows(ctx, -12, -3, 24, [-11], 2.4, 4.2, 4, true);
+  columns(ctx, -10, -3, 20, 8, 5, LIMESTONE);
+  block(ctx, -13, -23, 26, 2, 15, LIMESTONE);
+  frontGable(ctx, -13, -25, 26, 15, 6, ROOF_COPPER, LIMESTONE);
+  dome(ctx, 4.5, -29, 7, ROOF_COPPER);
+  ctx.fillStyle = GOLD;
+  ctx.beginPath();
+  ctx.arc(4.5, -39, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#4a3020";
+  ctx.beginPath();
+  ctx.moveTo(-2.5, -3);
+  ctx.lineTo(-2.5, -7);
+  ctx.arc(0, -7, 2.5, Math.PI, 0);
+  ctx.lineTo(2.5, -3);
+  ctx.fill();
+  flag(ctx, 4.5, -40, 9, color);
+}
+
+function courthouse(ctx: Ctx): void {
+  block(ctx, -17, 0, 34, 2, 14, LIMESTONE);
+  block(ctx, -16, -2, 32, 1.6, 13, LIMESTONE);
+  block(ctx, -14, -3.6, 28, 15, 12, tone(LIMESTONE, 0.86));
+  columns(ctx, -13, -3.6, 26, 15, 6, LIMESTONE);
+  block(ctx, -15, -18.6, 30, 2.2, 13, LIMESTONE);
+  frontGable(ctx, -15, -20.8, 30, 13, 7, LIMESTONE, LIMESTONE);
+  // Scales of justice in the pediment.
+  ctx.strokeStyle = "#8a6a2a";
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(0, -26.5);
+  ctx.lineTo(0, -22.5);
+  ctx.moveTo(-3.5, -25.5);
+  ctx.lineTo(3.5, -25.5);
+  ctx.stroke();
+  ctx.fillStyle = GOLD;
+  for (const sx of [-3.5, 3.5]) {
+    ctx.beginPath();
+    ctx.ellipse(sx, -23.6, 1.6, 0.7, 0, 0, Math.PI);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#3a2a1e";
+  ctx.fillRect(-2, -10, 4, 6.4);
+}
+
+function harbour(ctx: Ctx): void {
+  // Water in front.
+  const sea = ctx.createLinearGradient(0, -6, 0, 6);
+  sea.addColorStop(0, "#5f95bf");
+  sea.addColorStop(1, "#3c6f9c");
+  ctx.fillStyle = sea;
+  ctx.beginPath();
+  ctx.ellipse(4, 1, 30, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.5)";
+  ctx.lineWidth = 0.5;
+  for (const [wx, wy] of [[-14, 2], [6, 4], [18, 0]] as const) {
+    ctx.beginPath();
+    ctx.moveTo(wx, wy);
+    ctx.quadraticCurveTo(wx + 2, wy - 1, wx + 4, wy);
+    ctx.stroke();
+  }
+  // Warehouse on the quay.
+  block(ctx, -26, -2, 20, 11, 12, "#b07a4c");
+  gableRoof(ctx, -26, -13, 20, 12, 5, ROOF_RED, "#b07a4c");
+  ctx.fillStyle = "#4a3020";
+  ctx.fillRect(-19, -9, 6, 7);
+  // Wooden pier with posts.
+  poly(ctx, [-6, -2, 22, -2, 22 + 5 * DX, -2 + 5 * DY, -6 + 5 * DX, -2 + 5 * DY], "#a07a4e");
+  ctx.strokeStyle = "#5a3b25";
+  ctx.lineWidth = 0.8;
+  for (let x = -4; x <= 22; x += 6) {
+    ctx.beginPath();
+    ctx.moveTo(x, -2);
+    ctx.lineTo(x, 2);
+    ctx.stroke();
+  }
+  // Crane.
+  ctx.strokeStyle = "#3a3a3a";
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(14, -3);
+  ctx.lineTo(14, -24);
+  ctx.lineTo(26, -20);
+  ctx.moveTo(14, -18);
+  ctx.lineTo(20, -22);
+  ctx.stroke();
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  ctx.moveTo(25, -20.3);
+  ctx.lineTo(25, -10);
+  ctx.stroke();
+  block(ctx, 23.5, -7, 3, 3, 2, "#c9a24e");
+  // A small sailing boat.
+  poly(ctx, [-2, 3, 10, 3, 8, 6, 0, 6], "#7a4a2a");
+  poly(ctx, [4, 2.6, 4, -10, 10, 2], "#f4efe2");
+}
+
+function bank(ctx: Ctx): void {
+  block(ctx, -17, 0, 34, 3, 14, "#bfb6a4");
+  block(ctx, -15, -3, 30, 18, 12, "#d8d0bf");
+  ctx.strokeStyle = "rgba(90, 80, 60, 0.35)";
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  for (let y = -6; y > -21; y -= 3) {
+    ctx.moveTo(-15, y);
+    ctx.lineTo(15, y);
+  }
+  ctx.stroke();
+  columns(ctx, -12, -3, 24, 14, 4, "#ece6d6");
+  block(ctx, -16, -21, 32, 3, 13, "#ece6d6");
+  // Gold coin above the door.
+  const g = ctx.createRadialGradient(-1, -25.5, 0.5, 0, -25, 3.4);
+  g.addColorStop(0, "#fff0b0");
+  g.addColorStop(1, "#c79a2c");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, -25, 3.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#8a6a1c";
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.fillStyle = "#3a3a3a";
+  ctx.fillRect(-2.6, -10, 5.2, 7);
+  ctx.strokeStyle = GOLD;
+  ctx.strokeRect(-2.6, -10, 5.2, 7);
+}
+
+function chimney(ctx: Ctx, cx: number, h: number, w: number, color: string, puff: number, dark: boolean): void {
+  const g = ctx.createLinearGradient(cx - w / 2, 0, cx + w / 2, 0);
+  g.addColorStop(0, tone(color, 1.15));
+  g.addColorStop(1, tone(color, 0.6));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(cx - w / 2, 0);
+  ctx.lineTo(cx - w / 2.6, -h);
+  ctx.lineTo(cx + w / 2.6, -h);
+  ctx.lineTo(cx + w / 2, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  for (let i = 0; i < 4; i++) {
+    ctx.fillStyle = dark ? `rgba(70, 68, 66, ${0.75 - i * 0.15})` : `rgba(240, 242, 245, ${0.85 - i * 0.17})`;
+    ctx.beginPath();
+    ctx.arc(cx + i * 3 * puff, -h - 3 - i * 4.5 * puff, (2.2 + i * 1.5) * puff, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function powerPlant(ctx: Ctx): void {
+  block(ctx, -26, 0, 34, 16, 14, BRICK);
+  gableRoof(ctx, -26, -16, 34, 14, 4, ROOF_SLATE, BRICK);
+  windows(ctx, -26, 0, 34, [-4], 3, 7, 5, true, true);
+  chimney(ctx, 18, 46, 6, "#8c4f3a", 1.5, true);
+  // Coal heap.
+  ctx.fillStyle = "#2b2b2e";
+  ctx.beginPath();
+  ctx.moveTo(4, 0);
+  ctx.quadraticCurveTo(10, -9, 16, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.15)";
+  ctx.beginPath();
+  ctx.arc(8, -4, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function hydroPlant(ctx: Ctx): void {
+  // Lake behind the dam.
+  ctx.fillStyle = "#4f86b4";
+  poly(ctx, [-30, -22, 30, -22, 30 + 10 * DX, -22 + 10 * DY, -30 + 10 * DX, -22 + 10 * DY], "#4f86b4", false);
+  // Dam wall.
+  const g = ctx.createLinearGradient(0, -24, 0, 0);
+  g.addColorStop(0, "#d8d6d0");
+  g.addColorStop(1, "#9c9a94");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-30, -22);
+  ctx.quadraticCurveTo(0, -26, 30, -22);
+  ctx.lineTo(24, 0);
+  ctx.quadraticCurveTo(0, -3, -24, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  // Water rushing out of three gates.
+  for (const x of [-10, 0, 10]) {
+    ctx.fillStyle = "#2f4f6a";
+    ctx.fillRect(x - 2, -12, 4, 3);
+    const w = ctx.createLinearGradient(0, -9, 0, 2);
+    w.addColorStop(0, "#e8f4fb");
+    w.addColorStop(1, "#7fb3d6");
+    ctx.fillStyle = w;
+    ctx.beginPath();
+    ctx.moveTo(x - 2, -9);
+    ctx.lineTo(x + 2, -9);
+    ctx.lineTo(x + 3, 2);
+    ctx.lineTo(x - 3, 2);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Turbine hall at the foot.
+  block(ctx, 14, 0, 14, 7, 8, "#c9c3b5");
+  windows(ctx, 14, 0, 14, [-2], 1.8, 3, 3, false, true);
+  ctx.fillStyle = "rgba(140, 190, 225, 0.7)";
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 20, 2.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function coolingTower(ctx: Ctx, cx: number, h: number, r: number): void {
+  const g = ctx.createLinearGradient(cx - r, 0, cx + r, 0);
+  g.addColorStop(0, "#eef0f0");
+  g.addColorStop(0.55, "#c9cccd");
+  g.addColorStop(1, "#8f9395");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(cx - r, 0);
+  ctx.quadraticCurveTo(cx - r * 0.55, -h * 0.65, cx - r * 0.7, -h);
+  ctx.lineTo(cx + r * 0.7, -h);
+  ctx.quadraticCurveTo(cx + r * 0.55, -h * 0.65, cx + r, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.fillStyle = "#6f7477";
+  ctx.beginPath();
+  ctx.ellipse(cx, -h, r * 0.7, r * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+  for (let i = 0; i < 4; i++) {
+    ctx.fillStyle = `rgba(250, 252, 255, ${0.85 - i * 0.18})`;
+    ctx.beginPath();
+    ctx.arc(cx + i * 2.5, -h - 4 - i * 4, 4 + i * 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function nuclearPlant(ctx: Ctx): void {
+  coolingTower(ctx, -16, 34, 11);
+  coolingTower(ctx, 4, 30, 10);
+  block(ctx, 14, 0, 14, 10, 10, "#c8ccd0");
+  // Reactor dome.
+  dome(ctx, 21 + 5 * DX, -10 + 5 * DY, 6, "#e4e7ea");
+  ctx.fillStyle = "#e0b43a";
+  ctx.beginPath();
+  ctx.arc(21, -5, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#2b2b2b";
+  for (let k = 0; k < 3; k++) {
+    ctx.beginPath();
+    ctx.moveTo(21, -5);
+    ctx.arc(21, -5, 1.7, (k * 2 * Math.PI) / 3 - 0.5, (k * 2 * Math.PI) / 3 + 0.5);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function manufacturingPlant(ctx: Ctx): void {
+  block(ctx, -26, 0, 52, 14, 16, "#d4d9de");
+  block(ctx, -26, -14, 52, 2, 16, "#8a96a2");
+  // Big glass front with a robot arm inside.
+  ctx.fillStyle = "#9fc3da";
+  ctx.fillRect(-22, -12, 30, 9);
+  ctx.strokeStyle = "#e2a02c";
+  ctx.lineWidth = 1.4;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-14, -3.5);
+  ctx.lineTo(-11, -9.5);
+  ctx.lineTo(-5, -8);
+  ctx.lineTo(-3.5, -5);
+  ctx.stroke();
+  ctx.lineCap = "butt";
+  ctx.fillStyle = "#4b5560";
+  ctx.fillRect(-16, -4, 5, 1);
+  ctx.fillStyle = "#c2412f";
+  ctx.fillRect(-4.5, -4.6, 3, 1.4);
+  ctx.fillStyle = "#2f6fb2";
+  ctx.fillRect(1, -4.6, 3, 1.4);
+  ctx.strokeStyle = "#5b6670";
+  ctx.lineWidth = 0.5;
+  ctx.strokeRect(-22, -12, 30, 9);
+  // Loading gate and a blue stripe.
+  ctx.fillStyle = "#6c7680";
+  ctx.fillRect(12, -9, 10, 9);
+  ctx.fillStyle = "#2f6fb2";
+  ctx.fillRect(-26, -2, 52, 1.2);
+  // Solar panels on the roof.
+  for (let k = 0; k < 4; k++) poly(ctx, [-20 + k * 11, -16, -12 + k * 11, -16, -12 + k * 11 + 6 * DX, -16 + 6 * DY, -20 + k * 11 + 6 * DX, -16 + 6 * DY], "#34507a");
+}
+
+function massTransit(ctx: Ctx): void {
+  // Rails.
+  ctx.strokeStyle = "#6b6b6b";
+  ctx.lineWidth = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(-28, 0);
+  ctx.lineTo(28, 0);
+  ctx.moveTo(-28 + 4 * DX, 4 * DY);
+  ctx.lineTo(28 + 4 * DX, 4 * DY);
+  ctx.stroke();
+  // Overhead wire on poles.
+  ctx.strokeStyle = "#3a3a3a";
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  for (const x of [-26, 24]) {
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, -22);
+  }
+  ctx.moveTo(-26, -20);
+  ctx.lineTo(24, -20);
+  ctx.stroke();
+  // The tram.
+  block(ctx, -20, -1, 34, 11, 7, "#c8352c");
+  block(ctx, -20, -8, 34, 3, 7, "#f2e6c8");
+  windows(ctx, -20, -1, 34, [-5], 3.4, 3.2, 7);
+  ctx.strokeStyle = "#3a3a3a";
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(-3, -12);
+  ctx.lineTo(2, -20);
+  ctx.stroke();
+  ctx.fillStyle = "#2b2b2b";
+  for (const wx of [-15, -9, 6, 12]) {
+    ctx.beginPath();
+    ctx.arc(wx, 0, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // A stop with a roof.
+  block(ctx, 18, 0, 8, 1, 5, "#9a9a9a");
+  ctx.fillStyle = "#4a5d6e";
+  ctx.fillRect(18.5, -9, 0.8, 9);
+  poly(ctx, [17, -9, 27, -9, 27 + 5 * DX, -9 + 5 * DY, 17 + 5 * DX, -9 + 5 * DY], "#4a8a5a");
+}
+
+function recyclingCenter(ctx: Ctx): void {
+  block(ctx, -24, 0, 30, 14, 14, "#7fae6a");
+  gableRoof(ctx, -24, -14, 30, 14, 4, "#5d7d4c", "#7fae6a");
+  ctx.fillStyle = "#3e5a32";
+  ctx.fillRect(-13, -10, 8, 10);
+  // Three-arrow sign.
+  ctx.strokeStyle = "#f5f2e6";
+  ctx.lineWidth = 1.1;
+  for (let k = 0; k < 3; k++) {
+    const a = (k * 2 * Math.PI) / 3 - Math.PI / 2;
+    ctx.beginPath();
+    ctx.arc(-18, -8, 3, a, a + 1.6);
+    ctx.stroke();
+    const ex = -18 + Math.cos(a + 1.6) * 3;
+    const ey = -8 + Math.sin(a + 1.6) * 3;
+    ctx.fillStyle = "#f5f2e6";
+    ctx.beginPath();
+    ctx.arc(ex, ey, 0.9, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Coloured containers.
+  const bins: [number, string][] = [[8, "#2f6fb2"], [14, "#e2b62c"], [20, "#3f8f4a"]];
+  for (const [x, c] of bins) {
+    block(ctx, x, 0, 5, 7, 5, c);
+    block(ctx, x - 0.3, -7, 5.6, 1, 5, tone(c, 0.7));
+  }
+}
+
 // ---------- wonders ----------
 
 function stoneCircle(ctx: Ctx): void {
@@ -611,6 +989,16 @@ function greatWork(ctx: Ctx): void {
 
 /** Width of each building's footprint in design units, for placing them in a row. */
 export const BUILDING_WIDTH: Record<BuildingId, number> = {
+  palace: 62,
+  courthouse: 40,
+  harbour: 60,
+  bank: 40,
+  powerPlant: 54,
+  hydroPlant: 62,
+  nuclearPlant: 56,
+  manufacturingPlant: 62,
+  massTransit: 62,
+  recyclingCenter: 52,
   granary: 34,
   temple: 36,
   walls: 50,
@@ -631,6 +1019,16 @@ export const BUILDING_WIDTH: Record<BuildingId, number> = {
 
 /** Height above the ground in design units, so a portrait can fit the picture. */
 export const BUILDING_HEIGHT: Record<BuildingId, number> = {
+  palace: 50,
+  courthouse: 30,
+  harbour: 28,
+  bank: 30,
+  powerPlant: 74,
+  hydroPlant: 28,
+  nuclearPlant: 62,
+  manufacturingPlant: 24,
+  massTransit: 24,
+  recyclingCenter: 24,
   granary: 28,
   temple: 30,
   walls: 20,
@@ -651,6 +1049,26 @@ export const BUILDING_HEIGHT: Record<BuildingId, number> = {
 
 export function drawBuilding(ctx: Ctx, id: BuildingId, color: string): void {
   switch (id) {
+    case "palace":
+      return palace(ctx, color);
+    case "courthouse":
+      return courthouse(ctx);
+    case "harbour":
+      return harbour(ctx);
+    case "bank":
+      return bank(ctx);
+    case "powerPlant":
+      return powerPlant(ctx);
+    case "hydroPlant":
+      return hydroPlant(ctx);
+    case "nuclearPlant":
+      return nuclearPlant(ctx);
+    case "manufacturingPlant":
+      return manufacturingPlant(ctx);
+    case "massTransit":
+      return massTransit(ctx);
+    case "recyclingCenter":
+      return recyclingCenter(ctx);
     case "granary":
       return granary(ctx);
     case "temple":

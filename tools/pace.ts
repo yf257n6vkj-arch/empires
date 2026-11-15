@@ -62,7 +62,10 @@ const BUILD_ORDER: BuildingId[] = [
   "university",
   "stoneCircle",
   "grandBazaar",
+  "bank",
   "factory",
+  "powerPlant",
+  "manufacturingPlant",
   "greatWork",
 ];
 
@@ -204,6 +207,16 @@ function wants(state: GameState, city: City): ProductionItem {
     for (const id of ["temple", "amphitheater"] as BuildingId[]) if (can(building(id))) return building(id);
   }
   if (city.size >= report.maxSize && can(building("aqueduct"))) return building("aqueduct");
+  if (report.corruption >= 3 && can(building("courthouse"))) return building("courthouse");
+  const oceanWorked = city.worked.filter((i) => state.map.terrain[i] === "ocean").length;
+  if (oceanWorked >= 2 && can(building("harbour"))) return building("harbour");
+  if (report.pollution.unhappy > 0) {
+    const cleaner: BuildingId[] =
+      report.pollution.population > report.pollution.industry / 2
+        ? ["massTransit", "recyclingCenter", "nuclearPlant", "hydroPlant"]
+        : ["recyclingCenter", "nuclearPlant", "hydroPlant", "massTransit"];
+    for (const id of cleaner) if (can(building(id))) return building(id);
+  }
   const strongest = [...mine].sort((a, b) => cityReport(state, b).shieldSurplus - cityReport(state, a).shieldSurplus)[0];
   for (const id of BUILD_ORDER) {
     if (BUILDINGS[id].wonder && strongest?.id !== city.id) continue;
@@ -254,6 +267,11 @@ interface Result {
   allTechsTurn: number | null;
   cities: number;
   population: number;
+  largest: number;
+  /** Share of all trade lost to corruption at turn 120, in percent. */
+  corruption: number;
+  /** Citizens unhappy from pollution at turn 120. */
+  smog: number;
   wonders: number;
 }
 
@@ -293,6 +311,13 @@ function playOne(seed: string): Result {
     allTechsTurn,
     cities: mine.length,
     population: mine.reduce((n, c) => n + c.size, 0),
+    largest: mine.reduce((n, c) => Math.max(n, c.size), 0),
+    corruption: (() => {
+      const rs = mine.map((c) => cityReport(state, c));
+      const trade = rs.reduce((n, r) => n + r.production.trade, 0);
+      return trade ? Math.round((100 * rs.reduce((n, r) => n + r.corruption, 0)) / trade) : 0;
+    })(),
+    smog: mine.reduce((n, c) => n + cityReport(state, c).pollution.unhappy, 0),
     wonders: mine.reduce((n, c) => n + c.buildings.filter((b) => BUILDINGS[b].wonder).length, 0),
   };
 }
@@ -321,5 +346,8 @@ for (const t of [40, 60, 80, 100, 120]) console.log(`technologie v tahu ${t}: ${
 console.log(`celý strom v tahu: ${quantiles(results.map((r) => r.allTechsTurn))}`);
 console.log(`města v tahu 120: ${quantiles(results.map((r) => r.cities))}`);
 console.log(`obyvatel v tahu 120: ${quantiles(results.map((r) => r.population))}`);
+console.log(`největší město v tahu 120: ${quantiles(results.map((r) => r.largest))}`);
+console.log(`korupce v tahu 120 (% obchodu): ${quantiles(results.map((r) => r.corruption))}`);
+console.log(`nespokojení ze smogu v tahu 120: ${quantiles(results.map((r) => r.smog))}`);
 console.log(`divy: ${quantiles(results.map((r) => r.wonders))}`);
 if (stuck.length) console.log(`zaseknuté partie (méně než 3 města): ${stuck.join(", ")}`);

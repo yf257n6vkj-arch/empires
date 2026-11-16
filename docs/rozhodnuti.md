@@ -2,6 +2,16 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Fáze 3, krok 2: soupeři zakládají města, stavějí a bádají
+
+AI je ve složce src/ai a vidí jen PlayerView, stejně jako člověk na jejím místě. Hraje stejnými příkazy jako člověk. Každý tah projde ve třech kolech, aby další krok viděl výsledek předchozího, třeba nové město hned dostane výrobu.
+
+Místo pro město AI vybírá podle poznámek z Unciv a Freeciv. Sečte hodnotu 21 políček, která by město obdělávalo, s váhou podle vzdálenosti od středu. Přidá body za řeku, kopec a pobřeží a neprozkoumaná políčka počítá jako průměr těch, která zná. Nejraději staví čtyři až pět políček od vlastních měst, cizím městům se vyhýbá. Místa, ke kterým už jde jiný osadník, jsou zabraná, a každé políčko cesty sníží hodnotu, aby osadníci nebloudili daleko. Když na vlastní pevnině dojde místo, postaví AI triéru, která podél pobřeží hledá ostrovy a vozí na ně osadníky. Triéra pluje jen po vodě u pobřeží, aby se nepotopila. Osadníci, pro které už není místo, zvelebují krajinu stejnou automatikou, jakou má hráč.
+
+Ve městech má přednost obrana: jeden voják, v hlavním městě, velkých městech a městech s nepřítelem nablízku víc. Hlavní město pošle na začátku jednoho válečníka na průzkum. Osadníky staví města od velikosti 2, najednou nejvýš dva, rozpínavý národ tři, dokud je kam stavět. Na každá dvě města připadá jeden osadník na práci v krajině. Budovy AI vybírá podle hodnoty a ceny, vědec dává přednost knihovnám a univerzitám, válečník hradbám a kasárnám. Div staví jen největší město říše, která má aspoň čtyři města. Výzkum jde podle pořadí cílů pro každou povahu a monarchii AI zavede, jakmile ji zná. Poměr vědy a daní nechává na výchozí hodnotě, protože pokus o víc vědy skončil v automatických partiích hůř.
+
+Nový nástroj npm run ai-games odehraje partie, ve kterých hrají jen počítačoví hráči. Na 40 partiích standardního světa má soupeř ve 40. tahu medián 4 města, v 80. tahu 8 a ve 120. tahu 10 měst a 55 technologií. Na světě s ostrovy založili soupeři na 8 partiích 42 měst na ostrovech. Zhruba jeden hráč ze 160 zůstane po 60. tahu s jedním městem, protože ho sousedé obklopí. Válčit soupeři zatím neumějí.
+
 ## 16. 11. 2026: Fáze 3, krok 1: boj, dobývání měst a soupeři, kteří se brání
 
 Boj běží podle Civilizace 2. Jednotky mají životy a palebnou sílu z Civilizace 2, uložené v datech jednotek. Obraně pomáhá terén podle Civilizace 2 (kopce +100 %, hory +200 %, les, džungle, bažina a řeka +25 %), opevnění a pobyt ve městě +50 %, pevnost +100 %, hradby +200 % proti pozemním jednotkám a pobřežní pevnost +100 % proti lodím. Veterán je o 50 % silnější, vítěz se veteránem stane se šancí 50 % a kasárna cvičí veterány rovnou. Jednotka s méně než celým pohybem útočí slaběji. Pozemní jednotka útočí jen na souši a ne z lodi, loď na moři a na pobřeží, letadlo ve vzduchu dostihne jen jiné letadlo.

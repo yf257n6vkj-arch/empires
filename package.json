@@ -15,7 +15,8 @@
     "check-maps": "tsx tools/check-maps.ts",
     "pace": "tsx tools/pace.ts",
     "images": "tsx tools/generate-images.ts",
-    "i18n": "tsx tools/i18n.ts"
+    "i18n": "tsx tools/i18n.ts",
+    "ai-games": "tsx tools/ai-games.ts"
   },
   "repository": {
     "type": "git",

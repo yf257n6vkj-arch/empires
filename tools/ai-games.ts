@@ -1,0 +1,72 @@
+/**
+ * Headless games of computer players only, to judge the AI on many maps
+ * instead of single screenshots (CLAUDE.md).
+ *
+ *   npm run ai-games -- 50            50 games of 120 turns on the standard world
+ *   npm run ai-games -- 20 13111211   the same in a world from eight map-code digits
+ *
+ * Prints how many cities and technologies the players have over time, how
+ * often someone gets stuck with one city, and how many cities stand on islands.
+ */
+import { mainContinent, newGame, parseGameCode, type GameState } from "../src/core";
+import { playTurn } from "../src/ai";
+
+const games = Number(process.argv[2] ?? 20);
+const digits = process.argv[3];
+const CHECKS = [20, 40, 60, 80, 100, 120];
+
+type Row = { cities: number[]; techs: number[]; units: number[] };
+const rows = new Map<number, Row>(CHECKS.map((t) => [t, { cities: [], techs: [], units: [] }]));
+let stuck = 0;
+let islandCities = 0;
+let failures = 0;
+let defeated = 0;
+const started = performance.now();
+
+for (let g = 0; g < games; g++) {
+  const seed = digits ? `ai-${g}/${digits}` : `ai-${g}`;
+  try {
+    const world = parseGameCode(seed).world;
+    let s: GameState = newGame({ seed, playerCount: (world?.opponents ?? 3) + 1, opponentUnits: true });
+    s.players[0]!.isHuman = false;
+    for (const p of s.players) {
+      for (const u of s.units) if (u.owner === p.id) u.movesLeft = u.movesLeft;
+    }
+    // The human seat has no starting units until now; give it the same as the others.
+    while (s.turn <= 120 && !s.victory) {
+      s = playTurn(s).state;
+      if (s.currentPlayer === 0 && rows.has(s.turn - 1)) {
+        const row = rows.get(s.turn - 1)!;
+        for (const p of s.players) {
+          if (p.defeated) continue;
+          row.cities.push(s.cities.filter((c) => c.owner === p.id).length);
+          row.techs.push(p.techs.length);
+          row.units.push(s.units.filter((u) => u.owner === p.id).length);
+        }
+      }
+    }
+    const main = mainContinent(s.map);
+    islandCities += s.cities.filter((c) => !main.has(c.y * s.map.width + c.x)).length;
+    for (const p of s.players) {
+      if (p.defeated) defeated++;
+      else if (s.turn >= 60 && s.cities.filter((c) => c.owner === p.id).length <= 1) stuck++;
+    }
+  } catch (e) {
+    failures++;
+    console.error(`${seed}:`, (e as Error).stack);
+  }
+}
+
+const med = (xs: number[]) => {
+  const s = [...xs].sort((a, b) => a - b);
+  return s.length ? s[Math.floor(s.length / 2)] : 0;
+};
+const pct = (xs: number[], p: number) => {
+  const s = [...xs].sort((a, b) => a - b);
+  return s.length ? s[Math.min(s.length - 1, Math.floor(s.length * p))] : 0;
+};
+console.log(`${games} partií, ${((performance.now() - started) / 1000 / Math.max(1, games)).toFixed(1)} s na partii, chyby: ${failures}`);
+for (const [turn, r] of rows) {
+  console.log(`tah ${String(turn).padStart(3)}: města medián ${med(r.cities)} (10 % ${pct(r.cities, 0.1)}, 90 % ${pct(r.cities, 0.9)}) · technologie medián ${med(r.techs)} · jednotky medián ${med(r.units)}`);
+}
+console.log(`hráčů s jedním městem po 60. tahu: ${stuck} · poražených: ${defeated} · měst na ostrovech: ${islandCities}`);

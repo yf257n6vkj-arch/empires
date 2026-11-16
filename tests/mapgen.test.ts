@@ -112,6 +112,35 @@ describe("generateMap", () => {
     });
   });
 
+  it("lines mountains up in ranges instead of scattering them", () => {
+    let pairs = 0;
+    let mountains = 0;
+    for (const seed of SEEDS) {
+      const map = generateMap(Rng.fromSeed(seed));
+      map.terrain.forEach((t, i) => {
+        if (t !== "mountains") return;
+        mountains++;
+        pairs += neighbors8(map, i).filter((n) => map.terrain[n] === "mountains").length;
+      });
+    }
+    // A tile in a range has mountains on both sides and more; scattered peaks have one or none.
+    expect(pairs / mountains).toBeGreaterThan(3);
+  });
+
+  it("puts hills next to the mountains", () => {
+    let near = 0;
+    let hills = 0;
+    for (const seed of SEEDS) {
+      const map = generateMap(Rng.fromSeed(seed));
+      map.terrain.forEach((t, i) => {
+        if (t !== "hills") return;
+        hills++;
+        if (neighbors8(map, i).some((n) => map.terrain[n] === "mountains" || map.terrain[n] === "hills")) near++;
+      });
+    }
+    expect(near / hills).toBeGreaterThan(0.8);
+  });
+
   it("keeps tundra away from the equator", () => {
     for (const seed of SEEDS.slice(0, 10)) {
       const map = generateMap(Rng.fromSeed(seed));

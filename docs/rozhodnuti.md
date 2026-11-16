@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Mapa vzniká podle přírody a kreslí se jako fyzická mapa
+
+Michal schválil návrh realističtější mapy a chtěl hezčí řeky. Pravidla se nemění. Políčka zůstávají políčky Civilizace 1 a každý terén má zhruba stejný podíl země jako dřív, což hlídá kontrola na 500 mapách.
+
+Generátor nejdřív udělá výšky. K šumu přidá dvě pohoří, která vedou po mírně zahnutých čarách přes různé části kontinentu. Hory leží na hřebenech a kopce v podhůří. Potom spočítá podnebí. Déšť přichází od západu a padá tam, kde země stoupá, takže za horami je sucho. Mezi tropy a chladným severem a jihem leží suchý pás. Podle toho vzniknou pouště, džungle v teplých vlhkých nížinách, bažiny ve vlhkých nížinách u moře a lesy tam, kde prší. Řeky tečou z podhůří dolů po svahu k moři a přítoky se spojují s hlavní řekou. Partie podle automatického hráče běží stejně rychle jako dřív.
+
+Mapa se kreslí jako fyzická mapa. Terény do sebe plynule přecházejí a země má reliéf stínovaný od severozápadu. Hory a kopce už nemají nakreslené kopečky a štíty, poznají se podle reliéfu a nejvyšší hřebeny mají sníh. Řeka teče plynulou křivkou, od pramene k ústí se rozšiřuje a velká řeka má u moře malou deltu. Při přiblížení nad 160 % se ukáže jemná mřížka políček.
+
 ## 15. 11. 2026: Doplnili jsme ekonomiku podle Civilizace 1
 
 Prošli jsme pravidla Civilizace 1 a doplnili, co z ekonomiky jedné říše chybělo. Boj, skóre a soupeři zůstávají na fázi 3.

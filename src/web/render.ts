@@ -265,6 +265,24 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   ctx.restore();
   applyScale(ctx);
 
+  // A faint grid when zoomed in, so the squares of the rules stay readable on the painted land.
+  if (camera.zoom >= 1.6) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(20, 16, 10, 0.12)";
+    ctx.lineWidth = 0.6 / camera.zoom + 0.25;
+    ctx.beginPath();
+    for (let x = Math.floor(camera.x); x <= Math.ceil(camera.x + viewW); x++) {
+      ctx.moveTo(x * TILE, camera.y * TILE);
+      ctx.lineTo(x * TILE, (camera.y + viewH) * TILE);
+    }
+    for (let y = Math.floor(camera.y); y <= Math.ceil(camera.y + viewH); y++) {
+      ctx.moveTo(camera.x * TILE, y * TILE);
+      ctx.lineTo((camera.x + viewW) * TILE, y * TILE);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
   for (const i of input.highlight ?? []) {
     const x = (i % width) * TILE;
     const y = Math.floor(i / width) * TILE;
@@ -557,18 +575,7 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
   }
 
   switch (t) {
-    case "hills": {
-      drawHill(ctx, px + 7, py + 19, 7.5, 7, r(1));
-      drawHill(ctx, px + 16.5, py + 14, 8, 8, r(2));
-      if (r(3) > 0.5) drawHill(ctx, px + 18, py + 22, 5, 4, r(4));
-      break;
-    }
-    case "mountains": {
-      drawPeak(ctx, px + 7, py + 15, 6, 9, r(1));
-      drawPeak(ctx, px + 15.5, py + 21, 9, 17, r(2));
-      drawPeak(ctx, px + 6.5, py + 23, 6.5, 10, r(3));
-      break;
-    }
+    // Hills and mountains need no pictures: the relief of the ground shows them.
     case "desert": {
       drawDune(ctx, px + 2 + r(1) * 3, py + 9 + r(2) * 2, 13);
       drawDune(ctx, px + 8 + r(3) * 3, py + 18 + r(4) * 2, 14);
@@ -732,113 +739,7 @@ function drawLeafTree(ctx: CanvasRenderingContext2D, x: number, y: number, s: nu
   ctx.fill();
 }
 
-/** A rounded, grassy hill lit from the top left. */
-function drawHill(ctx: CanvasRenderingContext2D, cx: number, by: number, rx: number, h: number, v: number): void {
-  ctx.fillStyle = "rgba(40, 35, 10, 0.22)";
-  ctx.beginPath();
-  ctx.ellipse(cx + 1.2, by + 0.6, rx * 1.02, 1.4, 0, 0, Math.PI * 2);
-  ctx.fill();
-  const g = ctx.createLinearGradient(cx - rx * 0.6, by - h, cx + rx * 0.7, by);
-  g.addColorStop(0, "#b9bd72");
-  g.addColorStop(0.45, "#929a50");
-  g.addColorStop(1, "#5d6430");
-  ctx.fillStyle = g;
-  const peak = cx - rx * (0.1 + v * 0.15);
-  ctx.beginPath();
-  ctx.moveTo(cx - rx, by);
-  ctx.bezierCurveTo(cx - rx * 0.75, by - h * 0.7, peak - rx * 0.35, by - h, peak, by - h);
-  ctx.bezierCurveTo(peak + rx * 0.45, by - h, cx + rx * 0.75, by - h * 0.6, cx + rx, by);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "rgba(55, 60, 25, 0.55)";
-  ctx.lineWidth = 0.5;
-  ctx.stroke();
-  // Contour line and grass on the lit side.
-  ctx.strokeStyle = "rgba(220, 225, 160, 0.45)";
-  ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.moveTo(peak - rx * 0.55, by - h * 0.62);
-  ctx.quadraticCurveTo(peak - rx * 0.2, by - h * 0.92, peak + rx * 0.15, by - h * 0.93);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(60, 70, 25, 0.5)";
-  ctx.lineWidth = 0.45;
-  ctx.beginPath();
-  ctx.moveTo(peak + rx * 0.35, by - h * 0.55);
-  ctx.quadraticCurveTo(peak + rx * 0.55, by - h * 0.3, peak + rx * 0.5, by - 0.5);
-  ctx.stroke();
-}
 
-/** A rocky peak with a lit and a shaded face and a snow cap. */
-function drawPeak(ctx: CanvasRenderingContext2D, cx: number, by: number, half: number, h: number, v: number): void {
-  const top = by - h;
-  const tx = cx + (v - 0.5) * half * 0.3;
-  ctx.fillStyle = "rgba(30, 25, 20, 0.25)";
-  ctx.beginPath();
-  ctx.ellipse(cx + 1.5, by + 0.4, half * 1.05, 1.3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Lit face.
-  const lit = ctx.createLinearGradient(cx - half, top, cx, by);
-  lit.addColorStop(0, "#d3ccc0");
-  lit.addColorStop(1, "#9a9286");
-  ctx.fillStyle = lit;
-  ctx.beginPath();
-  ctx.moveTo(cx - half, by);
-  ctx.lineTo(cx - half * 0.45, top + h * 0.45);
-  ctx.lineTo(tx, top);
-  ctx.lineTo(tx + 0.4, by);
-  ctx.closePath();
-  ctx.fill();
-  // Shaded face.
-  ctx.fillStyle = "#635c53";
-  ctx.beginPath();
-  ctx.moveTo(tx, top);
-  ctx.lineTo(cx + half * 0.5, top + h * 0.5);
-  ctx.lineTo(cx + half, by);
-  ctx.lineTo(tx + 0.4, by);
-  ctx.closePath();
-  ctx.fill();
-  // Rock cracks.
-  ctx.strokeStyle = "rgba(70, 64, 56, 0.6)";
-  ctx.lineWidth = 0.4;
-  ctx.beginPath();
-  ctx.moveTo(tx - half * 0.2, top + h * 0.45);
-  ctx.lineTo(tx - half * 0.35, top + h * 0.7);
-  ctx.lineTo(tx - half * 0.25, by - 0.5);
-  ctx.moveTo(tx + half * 0.25, top + h * 0.55);
-  ctx.lineTo(tx + half * 0.4, by - 1);
-  ctx.stroke();
-  // Snow cap on taller peaks.
-  if (h >= 9) {
-    const sh = h * 0.3;
-    ctx.fillStyle = "#f7f8f6";
-    ctx.beginPath();
-    ctx.moveTo(tx, top);
-    ctx.lineTo(tx - half * 0.34, top + sh);
-    ctx.lineTo(tx - half * 0.15, top + sh * 0.8);
-    ctx.lineTo(tx, top + sh * 1.05);
-    ctx.lineTo(tx + 0.4, top + sh * 0.85);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#c9d3dc";
-    ctx.beginPath();
-    ctx.moveTo(tx, top);
-    ctx.lineTo(tx + 0.4, top + sh * 0.85);
-    ctx.lineTo(tx + half * 0.18, top + sh * 0.75);
-    ctx.lineTo(tx + half * 0.3, top + sh * 0.95);
-    ctx.lineTo(tx + half * 0.33, top + sh * 0.6);
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.strokeStyle = "rgba(50, 45, 40, 0.55)";
-  ctx.lineWidth = 0.45;
-  ctx.beginPath();
-  ctx.moveTo(cx - half, by);
-  ctx.lineTo(cx - half * 0.45, top + h * 0.45);
-  ctx.lineTo(tx, top);
-  ctx.lineTo(cx + half * 0.5, top + h * 0.5);
-  ctx.lineTo(cx + half, by);
-  ctx.stroke();
-}
 
 /** A sand dune: a lit windward slope, a sharp crest and a shaded lee side. */
 function drawDune(ctx: CanvasRenderingContext2D, x: number, y: number, w: number): void {
@@ -897,55 +798,201 @@ function drawCactus(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   ctx.stroke();
 }
 
-/** Sandy beaches and a line of surf where land meets the sea. */
 /**
- * A river runs through the middle of each river tile and on to the
- * neighbouring river tiles and to the sea, with a lighter line in the middle.
+ * Rivers drawn as real rivers: each river tile knows which way the water
+ * flows (towards the tile where the river meets the sea), the course runs
+ * as a smooth curve through slightly shifted tile centres, tributaries join
+ * the main stream, and the river grows wider downstream and opens into a
+ * small delta at the coast.
  */
 function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height, terrain } = input;
-  const at = (x: number, y: number) => (x < 0 || y < 0 || x >= width || y >= height ? null : (terrain[y * width + x] ?? null));
-  const paths = new Path2D();
-  for (let y = view.y0; y <= view.y1; y++) {
-    for (let x = view.x0; x <= view.x1; x++) {
-      if (at(x, y) !== "river") continue;
-      const cx = x * TILE + TILE / 2 + (hash(x, y, 70) - 0.5) * 4;
-      const cy = y * TILE + TILE / 2 + (hash(x, y, 71) - 0.5) * 4;
-      let links = 0;
-      for (const [dx, dy] of [
-        [1, 0],
-        [-1, 0],
-        [0, 1],
-        [0, -1],
-      ] as const) {
-        const n = at(x + dx, y + dy);
-        if (n !== "river" && n !== "ocean") continue;
-        links++;
-        // Meet the neighbour on the shared edge, or run a little into the sea.
-        const ex = x * TILE + TILE / 2 + dx * (n === "ocean" ? TILE * 0.75 : TILE / 2);
-        const ey = y * TILE + TILE / 2 + dy * (n === "ocean" ? TILE * 0.75 : TILE / 2);
-        const bend = (hash(x + dx * 0.5, y + dy * 0.5, 72) - 0.5) * 5;
-        paths.moveTo(cx, cy);
-        paths.quadraticCurveTo((cx + ex) / 2 + bend * dy, (cy + ey) / 2 + bend * dx, ex, ey);
-      }
-      if (links === 0) {
-        paths.moveTo(cx - 5, cy);
-        paths.lineTo(cx + 5, cy);
-      }
+  const n = width * height;
+  const isRiver = (i: number) => terrain[i] === "river";
+  const near4 = (i: number): number[] => {
+    const x = i % width;
+    const y = Math.floor(i / width);
+    const out: number[] = [];
+    if (y > 0) out.push(i - width);
+    if (x < width - 1) out.push(i + 1);
+    if (y < height - 1) out.push(i + width);
+    if (x > 0) out.push(i - 1);
+    return out;
+  };
+  // Where the water of each river tile goes: the next river tile, or the sea at the mouth.
+  const down = new Int32Array(n).fill(-1);
+  const order: number[] = [];
+  const seen = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    if (!isRiver(i)) continue;
+    const sea = near4(i).find((j) => terrain[j] === "ocean");
+    if (sea === undefined) continue;
+    down[i] = sea;
+    seen[i] = 1;
+    order.push(i);
+  }
+  for (let q = 0; q < order.length; q++) {
+    for (const j of near4(order[q]!)) {
+      if (seen[j] || !isRiver(j)) continue;
+      seen[j] = 1;
+      down[j] = order[q]!;
+      order.push(j);
     }
   }
+  // Water collected from upstream, for the width.
+  const flow = new Float32Array(n);
+  for (let q = order.length - 1; q >= 0; q--) {
+    const i = order[q]!;
+    flow[i] = flow[i]! + 1;
+    const d = down[i]!;
+    if (d >= 0 && isRiver(d)) flow[d] = flow[d]! + flow[i]!;
+  }
+  const upstream = new Uint8Array(n);
+  for (const i of order) if (isRiver(down[i]!)) upstream[down[i]!] = 1;
+
+  // A point near the centre of each tile, moved a little so the river meanders.
+  const point = (i: number): [number, number] => {
+    const x = i % width;
+    const y = Math.floor(i / width);
+    return [(x + 0.5 + (hash(x, y, 70) - 0.5) * 0.5) * TILE, (y + 0.5 + (hash(x, y, 71) - 0.5) * 0.5) * TILE];
+  };
+  const widthAt = (f: number) => Math.min(5.2, 1.1 + Math.sqrt(f) * 0.95);
+  // Corner cutting rounds off the square steps between tiles; the ends stay put.
+  const chaikin = (pts: [number, number][], ws: number[]) => {
+    let p = pts;
+    let v = ws;
+    for (let round = 0; round < 2; round++) {
+      const np: [number, number][] = [p[0]!];
+      const nv: number[] = [v[0]!];
+      for (let k = 0; k < p.length - 1; k++) {
+        const a = p[k]!;
+        const b = p[k + 1]!;
+        np.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25], [a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]);
+        nv.push(v[k]! * 0.75 + v[k + 1]! * 0.25, v[k]! * 0.25 + v[k + 1]! * 0.75);
+      }
+      np.push(p[p.length - 1]!);
+      nv.push(v[v.length - 1]!);
+      p = np;
+      v = nv;
+    }
+    return { pts: p, widths: v };
+  };
+
+  // Courses from each source down to the sea or to the river it joins.
+  const courses: { pts: [number, number][]; widths: number[]; mouth: boolean }[] = [];
+  const drawn = new Uint8Array(n);
+  for (const source of order) {
+    if (upstream[source]) continue;
+    const pts: [number, number][] = [];
+    const widths: number[] = [];
+    let i = source;
+    let mouth = false;
+    for (let guard = 0; guard < 200; guard++) {
+      pts.push(point(i));
+      widths.push(widthAt(flow[i]!));
+      const d = down[i]!;
+      if (drawn[i] && pts.length > 1) break;
+      drawn[i] = 1;
+      if (d < 0) break;
+      if (!isRiver(d)) {
+        // The mouth: run on past the coast into the sea.
+        const [ax, ay] = point(i);
+        const sx = ((d % width) + 0.5) * TILE;
+        const sy = (Math.floor(d / width) + 0.5) * TILE;
+        pts.push([ax + (sx - ax) * 0.9, ay + (sy - ay) * 0.9]);
+        widths.push(widthAt(flow[i]!) * 1.5);
+        mouth = true;
+        break;
+      }
+      i = d;
+    }
+    if (pts.length < 2) continue;
+    // Average each point with its neighbours so long straight runs turn into gentle bends.
+    const soft = pts.map((p0, k): [number, number] => {
+      if (k === 0 || k === pts.length - 1) return p0;
+      let sx = 0;
+      let sy = 0;
+      let sw = 0;
+      for (let j = Math.max(0, k - 2); j <= Math.min(pts.length - 1, k + 2); j++) {
+        const wgt = j === k ? 2 : Math.abs(j - k) === 1 ? 1.5 : 0.7;
+        sx += pts[j]![0] * wgt;
+        sy += pts[j]![1] * wgt;
+        sw += wgt;
+      }
+      return [sx / sw, sy / sw];
+    });
+    courses.push({ ...chaikin(soft, widths), mouth });
+  }
+
+  // Catmull-Rom through the points, cut into short pieces so the width can change along the way.
+  const pieces = (c: { pts: [number, number][]; widths: number[] }) => {
+    const out: { x0: number; y0: number; c1x: number; c1y: number; c2x: number; c2y: number; x1: number; y1: number; w: number }[] = [];
+    const p = c.pts;
+    for (let k = 0; k < p.length - 1; k++) {
+      const a = p[Math.max(0, k - 1)]!;
+      const b = p[k]!;
+      const e = p[k + 1]!;
+      const f = p[Math.min(p.length - 1, k + 2)]!;
+      out.push({
+        x0: b[0],
+        y0: b[1],
+        c1x: b[0] + (e[0] - a[0]) / 6,
+        c1y: b[1] + (e[1] - a[1]) / 6,
+        c2x: e[0] - (f[0] - b[0]) / 6,
+        c2y: e[1] - (f[1] - b[1]) / 6,
+        x1: e[0],
+        y1: e[1],
+        w: (c.widths[k]! + c.widths[k + 1]!) / 2,
+      });
+    }
+    return out;
+  };
+  const all = courses.flatMap((c) => pieces(c));
+
   ctx.save();
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.strokeStyle = "#2f6f9c";
-  ctx.lineWidth = 4.2;
-  ctx.stroke(paths);
-  ctx.strokeStyle = "#4f97c6";
-  ctx.lineWidth = 3;
-  ctx.stroke(paths);
-  ctx.strokeStyle = "rgba(200, 232, 245, 0.55)";
-  ctx.lineWidth = 0.8;
-  ctx.stroke(paths);
+  const stroke = (color: string, grow: number, scale: number) => {
+    ctx.strokeStyle = color;
+    for (const s of all) {
+      ctx.lineWidth = s.w * scale + grow;
+      ctx.beginPath();
+      ctx.moveTo(s.x0, s.y0);
+      ctx.bezierCurveTo(s.c1x, s.c1y, s.c2x, s.c2y, s.x1, s.y1);
+      ctx.stroke();
+    }
+  };
+  // Green banks, a dark edge, the water and a light sheen in the middle.
+  stroke("rgba(52, 96, 40, 0.35)", 3.2, 1);
+  stroke("#2a5f86", 1.3, 1);
+  stroke("#4b93c3", 0, 1);
+  stroke("rgba(196, 230, 246, 0.55)", 0, 0.28);
+  // A small delta of sand and channels where a big river meets the sea.
+  for (const c of courses) {
+    if (!c.mouth || c.widths[c.widths.length - 1]! < 4) continue;
+    const [mx, my] = c.pts[c.pts.length - 1]!;
+    const [px, py] = c.pts[c.pts.length - 2]!;
+    const dx = mx - px;
+    const dy = my - py;
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len;
+    const uy = dy / len;
+    ctx.fillStyle = "rgba(232, 214, 160, 0.75)";
+    ctx.beginPath();
+    ctx.moveTo(px + ux * len * 0.45, py + uy * len * 0.45);
+    ctx.lineTo(mx - uy * 4.5 + ux * 2, my + ux * 4.5 + uy * 2);
+    ctx.lineTo(mx + uy * 4.5 + ux * 2, my - ux * 4.5 + uy * 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#4b93c3";
+    ctx.lineWidth = 1.2;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(px + ux * len * 0.45, py + uy * len * 0.45);
+      ctx.quadraticCurveTo(mx - uy * side * 1.5, my + ux * side * 1.5, mx - uy * side * 4 + ux * 3, my + ux * side * 4 + uy * 3);
+      ctx.stroke();
+    }
+  }
   ctx.restore();
 }
 

@@ -13,6 +13,7 @@ import { chooseProduction } from "./build";
 import { bribeSavings, caravanCommands, diplomatCommands, isCaravan, isDiplomat } from "./agents";
 import { peaceCommands, underTreaty } from "./diplomacy";
 import { launchCommands, partUrgency, spaceBuilders } from "./space";
+import { invasionShipCommands, isTransport, isWarship, seaInvasion, warshipCommands, warshipsWanted } from "./navy";
 import { upkeepCommands } from "./upkeep";
 import { at, isMilitary, isSettler, landmasses } from "./knowledge";
 import { governmentCommands, rateCommands, researchCommands } from "./research";
@@ -108,7 +109,10 @@ export function decide(view: PlayerView): Command[] {
   const targets = nearBarbarians ? [...enemies, barbarians.id] : enemies;
   // A barbarian city right next to own land comes first: it is weakly held and often was ours.
   const liberate = barbarians ? barbarianCityNearby(view, land, barbarians.id) : null;
-  const target = liberate ?? (targets.length > 0 ? targetCity(view, land, targets) : null);
+  const footTarget = liberate ?? (targets.length > 0 ? targetCity(view, land, targets) : null);
+  // No enemy city within marching reach: the army sails to one on the coast.
+  const invasion = !footTarget && enemies.length > 0 ? seaInvasion(view, land, enemies) : null;
+  const target = footTarget ?? invasion?.target ?? null;
   const n = CIVS[view.civ].personality;
   const peaceArmy = n === "war" ? Math.max(2, Math.ceil(view.cities.length / 2)) : n === "expansion" && room === 0 ? 2 : 0;
   const ctx = makeContext(view, land, {
@@ -118,6 +122,8 @@ export function decide(view: PlayerView): Command[] {
     threats,
     spaceBuilders: spaceBuilders(view),
     land,
+    invasion,
+    warshipsWanted: warshipsWanted(view, enemies),
     // A barbarian camp needs a small force; a real war a large one.
     armyWanted: Math.round(((target ? (enemies.length === 0 ? Math.max(3, peaceArmy) : Math.max(4, view.cities.length + 2)) : peaceArmy) * skill(view).armyPct) / 100),
   });
@@ -128,7 +134,11 @@ export function decide(view: PlayerView): Command[] {
     if (isSettler(u)) commands.push(...(u.carriedBy !== null ? passengerCommands(ctx, u) : settlerCommands(ctx, u)));
     else if (isCaravan(u)) commands.push(...caravanCommands(view, u, land));
     else if (isDiplomat(u)) commands.push(...diplomatCommands(view, u, land));
-    else if (UNIT_TYPES[u.type].domain === "sea") commands.push(...shipCommands(ctx, u));
+    else if (isWarship(u)) commands.push(...warshipCommands(view, u, enemies, target));
+    else if (UNIT_TYPES[u.type].domain === "sea") {
+      const landing = invasion && isTransport(u) ? invasionShipCommands(view, u, invasion) : null;
+      commands.push(...(landing ?? shipCommands(ctx, u)));
+    }
   }
   commands.push(...soldierCommands(ctx, view.units.filter(isMilitary), target));
 

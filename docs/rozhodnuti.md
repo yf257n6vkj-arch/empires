@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Soupeři mají válečné lodě a umějí se vylodit
+
+Claude navrhl válečné lodě bez výsadků, Michal chtěl i výsadky. Za války si soupeř staví v přímořských městech pár válečných lodí, nejvýš tři. Válečná loď je loď s útokem, která neveze vojáky, tedy od pancéřové lodi dál. Útočí na nepřátelské lodě a jednotky u pobřeží, když má šanci na výhru aspoň 60 %. Pluje k pobřežnímu městu, o které se válčí, nebo k nejbližší nepřátelské lodi a město ostřeluje, když má šanci aspoň 50 %. Zraněná loď se vrací do přístavu a v míru tam čeká.
+
+Když soupeř nemá žádné nepřátelské město, ke kterému by armáda došla pěšky, vybere pobřežní město za mořem. Armáda se shromáždí ve vlastním přístavu, odkud je to lodí nejblíž, a ten přístav postaví loď pro vojáky. Jakmile je vojáků dost nebo jsou jasně silnější než obrana města, nalodí se, loď je doveze k volnému políčku vedle cílového města a vojáci vystoupí. Odtud útočí, a když je město prázdné, vejdou do něj. Válku přes moře soupeř zvažuje i sám, jen s menší chutí než válku po souši.
+
+Test s dvěma ostrovy ukazuje, že soupeř nepřátelské město za mořem během tří tahů dobude. V automatických partiích se zatím skoro neprojeví. Na standardním světě s jedním kontinentem výsadek potřeba není a na světě s ostrovy soupeři většinou nepřátelská města za mořem neznají, takže je nemají kam poslat. Válečných lodí postavili na 20 partiích jen 3 až 5, protože přímořská města soupeřů jsou malá a staví hlavně obránce.
+
 ## 16. 11. 2026: Diplomat AI podplácí a sabotuje
 
 Michal schválil, aby diplomat AI uměl totéž co hráčův. Soupeř teď podplácí malá města do velikosti 4 u nepřítele, se kterým válčí, a u barbarů. Město musí ležet nejvýš osm políček od jeho vlastního města a hlavní město podplatit nejde. Cenu odhaduje stejným vzorcem jako hra, z toho, co ví: zlato majitele zná jen s velvyslanectvím, vzdálenost k hlavnímu městu jen když ho viděl, a obránce jen když na město dohlédne. Přesnou cenu uvidí, až diplomat stojí vedle města, stejně jako hráč na tlačítku diplomata. Na úplatek do 300 zlatých si soupeř šetří a nekupuje za ně budovy. Když je cena nakonec moc vysoká, diplomat ve městě ukradne objev nebo ho sabotuje. Sabotovat chodí ve válce města, která staví div nebo vesmírnou loď. To ale ví jen s velvyslanectvím, protože výrobu cizích měst bez něj nevidí ani hráč.

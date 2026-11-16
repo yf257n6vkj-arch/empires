@@ -13,6 +13,9 @@
  */
 import { isBarbarian, mainContinent, scoreOf, newGame, parseGameCode, type BarbarianLevel, type Difficulty, type GameState } from "../src/core";
 import { playTurn } from "../src/ai";
+import { isWarship } from "../src/ai/navy";
+import { landmasses } from "../src/ai/knowledge";
+import { playerView, UNIT_TYPES } from "../src/core";
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const level = (process.argv.find((a) => a.startsWith("--barbarians="))?.split("=")[1] ?? "few") as BarbarianLevel;
@@ -44,6 +47,9 @@ let routes = 0;
 let helped = 0;
 let embassies = 0;
 let stolen = 0;
+let warshipsBuilt = 0;
+let seaAttacks = 0;
+let overseas = 0;
 let incited = 0;
 let incitedBarbarian = 0;
 let sabotaged = 0;
@@ -95,7 +101,14 @@ for (let g = 0; g < games; g++) {
         if (e.type === "warDeclared") {
           wars++;
           warTurn ??= s.turn;
-        } else if (e.type === "cityCaptured") {
+        } else if (e.type === "unitBuilt" && isWarship({ type: e.unitType })) warshipsBuilt++;
+        else if (e.type === "cityCaptured") {
+          // A city taken on other land than the captor's capital was taken by a landing.
+          const v = playerView(played.state, e.to);
+          const land = landmasses(v);
+          const capital = v.cities.find((c) => c.buildings.includes("palace"));
+          const city = played.state.cities.find((c) => c.id === e.cityId);
+          if (capital && city && !isBarbarian(s.players[e.to]) && land[capital.y * v.width + capital.x] !== land[city.y * v.width + city.x]) overseas++;
           captured++;
           if (isBarbarian(s.players[e.to])) takenByBarbarians++;
           if (isBarbarian(s.players[e.from])) retaken++;
@@ -107,6 +120,7 @@ for (let g = 0; g < games; g++) {
         else if (e.type === "cityDestroyed") destroyed++;
         else if (e.type === "combat") {
           battles++;
+          if (UNIT_TYPES[e.attacker.unitType].domain === "sea") seaAttacks++;
           if (e.attackerWon) attackerWins++;
         }
       }
@@ -170,4 +184,5 @@ if (difficultyArg) {
   console.log(`obtížnost ${difficulty}: hráč na místě člověka vyhrál ${seatWins.reference}×, soupeři ${seatWins.others}× · města na konci: hráč medián ${med(seatCities.reference)}, soupeři medián ${med(seatCities.others)} · skóre hráče v % nejlepšího soupeře: medián ${med(scoreShare)}`);
 }
 console.log(`mír: nabídek ${offers}, odmítnutých ${rejected}, uzavřených mírů ${peaces} · válka do míru trvala medián ${med(warLengths)} tahů · porušených smluv ${broken}`);
+console.log(`moře: postavených válečných lodí ${warshipsBuilt}, útoků lodí ${seaAttacks}, měst dobytých za mořem ${overseas}`);
 console.log(`karavany: obchodních cest ${routes}, pomoc s divy ${helped}× · diplomati: velvyslanectví ${embassies}, ukradených objevů ${stolen}, podplacených měst ${incited} (barbarských ${incitedBarbarian}), sabotáží ${sabotaged} · vypuštěných lodí ${launches}`);

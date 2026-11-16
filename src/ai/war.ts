@@ -29,6 +29,7 @@ import {
   type Unit,
   type UnitTypeId,
 } from "../core";
+import { isTransport, seaInvasion, type Invasion } from "./navy";
 import { bestDefender } from "./build";
 import { at, isLand, isMilitary, pointOf } from "./knowledge";
 
@@ -86,11 +87,15 @@ export function warMotivation(view: PlayerView, rival: RivalView, land: Int32Arr
   const nature = CIVS[view.civ].personality;
   add("nature", nature === "war" ? 10 : nature === "expansion" ? -10 : -25);
   if (view.turn < 30) add("early game", -100);
-  const target = targetCity(view, land, [rival.id]);
+  const footTarget = targetCity(view, land, [rival.id]);
+  // A city across the sea can be fought for too, with a landing, but that is harder.
+  const sea = footTarget ? null : seaInvasion(view, land, [rival.id]);
+  const target = footTarget ?? sea?.target ?? null;
   if (!target) {
     add("no city in reach", -100);
     return reasons;
   }
+  if (sea) add("across the sea", -15);
   const army = view.units.filter(isAttacker);
   const power = army.reduce((n, u) => n + punch(u), 0);
   const ratio = power / Math.max(1, cityDefense(view, target));
@@ -155,8 +160,15 @@ export function attackNow(view: PlayerView, u: Unit, min = boldness(view)): Comm
 const same = (a: Point | null | undefined, b: Point) => !!a && a.x === b.x && a.y === b.y;
 
 /** Orders for the army marching on a target city. */
-export function armyCommands(view: PlayerView, army: Unit[], target: City): Command[] {
+export function armyCommands(view: PlayerView, army: Unit[], target: City, invasion: Invasion | null = null, land: Int32Array | null = null): Command[] {
   const commands: Command[] = [];
+  // Across the sea the army gathers in the port and sails; soldiers already ashore fight on.
+  if (invasion && land && invasion.target.id === target.id) {
+    const ashore = army.filter((u) => land[at(view, u)] === land[at(view, target)]);
+    commands.push(...landedCommands(view, ashore, target));
+    commands.push(...boardingCommands(view, army.filter((u) => !ashore.includes(u)), target, invasion));
+    return commands;
+  }
   // Wait in the own city nearest the target; it may be the target's neighbour if one exists.
   const staging = [...view.cities].sort((a, b) => distance(a, target) - distance(b, target))[0];
   const defenders = view.foreignUnits.filter((u) => u.x === target.x && u.y === target.y).length;
@@ -198,6 +210,57 @@ export function armyCommands(view: PlayerView, army: Unit[], target: City): Comm
       continue;
     }
     if (staging && !(staging.x === u.x && staging.y === u.y) && !same(u.goto, staging)) commands.push({ type: "goto", unitId: u.id, to: { x: staging.x, y: staging.y } });
+  }
+  return commands;
+}
+
+/** Soldiers who landed next to the enemy city: strike when the odds allow, walk into an empty city, otherwise hold the shore. */
+function landedCommands(view: PlayerView, ashore: Unit[], target: City): Command[] {
+  const commands: Command[] = [];
+  const empty = !view.foreignUnits.some((f) => f.x === target.x && f.y === target.y);
+  for (const u of ashore) {
+    if (u.movesLeft <= 0) continue;
+    const strike = attackNow(view, u, Math.min(boldness(view), 0.45));
+    if (strike) {
+      commands.push(strike);
+      continue;
+    }
+    if (distance(u, target) === 1 && empty) {
+      commands.push({ type: "move", unitId: u.id, to: { x: target.x, y: target.y } });
+      continue;
+    }
+    if (distance(u, target) > 1) commands.push({ type: "goto", unitId: u.id, to: { x: target.x, y: target.y } });
+    else if (!u.fortified) commands.push({ type: "fortify", unitId: u.id });
+  }
+  return commands;
+}
+
+/**
+ * Soldiers on the home coast: they gather in the port, and once there are
+ * enough of them, or they are clearly stronger than the city's defence, and a
+ * ship with room waits there, they go aboard.
+ */
+function boardingCommands(view: PlayerView, army: Unit[], target: City, invasion: Invasion): Command[] {
+  const commands: Command[] = [];
+  const port = invasion.port;
+  const inPort = army.filter((u) => u.x === port.x && u.y === port.y);
+  const defenders = view.foreignUnits.filter((u) => u.x === target.x && u.y === target.y).length;
+  const needed = Math.max(3, defenders * 2 + 1);
+  const strong = inPort.reduce((n, u) => n + punch(u), 0) >= 2 * cityDefense(view, target);
+  const ship = view.units.find((s) => s.x === port.x && s.y === port.y && isTransport(s));
+  const room = ship ? (UNIT_TYPES[ship.type].capacity ?? 0) - view.units.filter((c) => c.carriedBy === ship.id).length : 0;
+  const ready = ship && room > 0 && (inPort.length >= Math.min(needed, room) || strong);
+  let boarded = 0;
+  for (const u of army) {
+    if (u.movesLeft <= 0 || u.hp < UNIT_TYPES[u.type].hp * 0.6) continue;
+    if (u.x === port.x && u.y === port.y) {
+      if (ready && boarded < room) {
+        commands.push({ type: "board", unitId: u.id });
+        boarded++;
+      } else if (!u.fortified) commands.push({ type: "fortify", unitId: u.id });
+      continue;
+    }
+    if (!same(u.goto, port)) commands.push({ type: "goto", unitId: u.id, to: { x: port.x, y: port.y } });
   }
   return commands;
 }

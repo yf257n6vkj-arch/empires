@@ -5,6 +5,7 @@
  */
 import { distance, neighbors8, RULES, UNIT_TYPES, type City, type Command, type PlayerView, type Point, type Unit } from "../core";
 import { armyCommands, attackNow, isAttacker, skill } from "./war";
+import { landingCommands } from "./navy";
 import { garrison, garrisonNeed, type Plan } from "./build";
 import { at, coastal, frontier, isLand, isMilitary, isSea, isSettler, pointOf, seaPath, seaReach } from "./knowledge";
 import { averageKnownValue, bestSite, islandSites, MIN_SITE_SCORE, siteValue, type Site } from "./settle";
@@ -163,7 +164,10 @@ export function soldierCommands(ctx: Context, soldiers: Unit[], target: City | n
   // With a target, siege units that can hardly defend never stay behind as a garrison.
   const striker = (u: Unit) => UNIT_TYPES[u.type].defense < UNIT_TYPES[u.type].attack * 0.75;
   const siege = (u: Unit) => UNIT_TYPES[u.type].defense * 2 <= UNIT_TYPES[u.type].attack;
-  const ordered = [...soldiers].sort((a, b) => Number(striker(a)) - Number(striker(b)));
+  // Soldiers on a ship wait for the landing and step ashore there.
+  const invasion = ctx.plan.invasion ?? null;
+  for (const u of soldiers.filter((x) => x.carriedBy !== null)) if (invasion) commands.push(...landingCommands(view, u, invasion));
+  const ordered = [...soldiers].filter((x) => x.carriedBy === null).sort((a, b) => Number(striker(a)) - Number(striker(b)));
   for (const u of ordered) {
     const city = view.cities.find((c) => c.x === u.x && c.y === u.y);
     if (city && !(target && siege(u)) && (stays.get(city.id) ?? 0) < (need.get(city.id) ?? 1)) {
@@ -180,7 +184,7 @@ export function soldierCommands(ctx: Context, soldiers: Unit[], target: City | n
   // At war the free attackers march on the target together.
   if (target) {
     const army = free.filter((u) => isAttacker(u));
-    commands.push(...armyCommands(view, army, target));
+    commands.push(...armyCommands(view, army, target, invasion, ctx.land));
     free.splice(0, free.length, ...free.filter((u) => !army.includes(u)));
   }
 

@@ -9,6 +9,7 @@ import { coastal, isMilitary, isSettler } from "./knowledge";
 import { nature } from "./research";
 import { bestAttacker, isAttacker, skill } from "./war";
 import { spacePart, type SpaceClaims } from "./space";
+import { invasionShipType, isTransport, isWarship, warshipType, type Invasion } from "./navy";
 import { agentProduction } from "./agents";
 
 export interface Plan {
@@ -30,13 +31,17 @@ export interface Plan {
   spaceClaims?: SpaceClaims;
   /** Landmass of every tile, to keep caravans on reachable roads. */
   land: Int32Array;
+  /** A landing on an enemy coast the army is preparing, or null. */
+  invasion?: Invasion | null;
+  /** Warships the AI wants for the war at sea. */
+  warshipsWanted?: number;
 }
 
 function knows(view: PlayerView, tech: string | null): boolean {
   return tech === null || view.economy.techs.includes(tech as never);
 }
 
-function unitAvailable(view: PlayerView, id: UnitTypeId): boolean {
+export function unitAvailable(view: PlayerView, id: UnitTypeId): boolean {
   const rule = UNIT_TYPES[id];
   if (!knows(view, rule.requires)) return false;
   if (rule.requiresWonder && !view.builtWonders.includes(rule.requiresWonder)) return false;
@@ -201,6 +206,16 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
   if (apollo && !nearEnemy) {
     const agent = agentProduction(view, city, plan.land);
     if (agent) return agent;
+  }
+
+  // The war at sea: a few warships from the coastal cities, and a ship for the landing from its port.
+  if (city.size >= 3 && coastal(view, city)) {
+    const building = (test: (u: { type: UnitTypeId }) => boolean) =>
+      view.units.filter(test).length + view.cities.filter((c) => c.id !== city.id && c.production.kind === "unit" && test({ type: c.production.id })).length;
+    const warship = warshipType(view);
+    if (warship && building(isWarship) < (plan.warshipsWanted ?? 0)) return { kind: "unit", id: warship };
+    const ship = invasionShipType(view);
+    if (plan.invasion && ship && plan.invasion.port.id === city.id && building(isTransport) === 0) return { kind: "unit", id: ship };
   }
 
   // An army for the war, from cities big enough to spare the shields.

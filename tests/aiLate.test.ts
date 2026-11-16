@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { apply, cityReport, inciteCost, playerView, type GameState } from "../src/core";
+import { apply, cityReport, inciteCost, playerView, UNIT_TYPES, type GameState } from "../src/core";
 import { bribeSavings, guessBribe } from "../src/ai/agents";
 import { landmasses } from "../src/ai/knowledge";
-import { decide } from "../src/ai";
+import { decide, playTurn } from "../src/ai";
+import { seaInvasion } from "../src/ai/navy";
 import { barbarianCityNearby } from "../src/ai";
 import { cityDefense } from "../src/ai/war";
 import { spacePart } from "../src/ai/space";
@@ -142,5 +143,42 @@ describe("the computer diplomat", () => {
     city.shields = 5;
     const view = playerView(s, 0);
     expect(bribeSavings(view, landmasses(view))).toBeGreaterThan(0);
+  });
+});
+
+describe("a landing across the sea", () => {
+  it("brings the army over on a ship and takes the enemy city", () => {
+    let s = stateFromAscii([
+      "~~~~~~~~~~~~~",
+      "~....~~~~...~",
+      "~....~~~~...~",
+      "~~~~~~~~~~~~~",
+    ], 2);
+    s = found(s, 3, 1);
+    s = found(s, 10, 1, 1);
+    s.players[0]!.isHuman = false;
+    s.players[1]!.isHuman = true;
+    s.players[0]!.techs.push("bronze", "horseback", "alphabet", "mapMaking", "navigation", "astronomy");
+    s.players[0]!.contacts = [1];
+    s.players[1]!.contacts = [0];
+    s.players[0]!.atWar = [1];
+    s.players[1]!.atWar = [0];
+    s.players[0]!.warSince = { "1": 1 };
+    s.players[1]!.warSince = { "0": 1 };
+    s.players[0]!.explored = s.players[0]!.explored.map(() => 1);
+    for (let i = 0; i < 4; i++) addUnit(s, "horsemen", 3, 1, 0);
+    addUnit(s, "spearmen", 3, 1, 0);
+    addUnit(s, "sail", 3, 1, 0);
+    addUnit(s, "warriors", 10, 1, 1);
+    const view = playerView(s, 0);
+    expect(seaInvasion(view, landmasses(view), [1])?.target.owner).toBe(1);
+    const theirs = s.cities.find((c) => c.owner === 1)!.id;
+    s.cities.find((c) => c.id === theirs)!.size = 3;
+    for (let turn = 0; turn < 12 && s.cities.find((c) => c.id === theirs)!.owner === 1; turn++) {
+      s = playTurn(s).state;
+      s = apply(s, { type: "endTurn" });
+    }
+    expect(s.cities.find((c) => c.id === theirs)!.owner).toBe(0);
+    expect(s.units.some((u) => u.owner === 0 && u.x >= 9 && UNIT_TYPES[u.type].domain === "land")).toBe(true);
   });
 });

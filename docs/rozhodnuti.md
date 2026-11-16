@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Neprozkoumaný svět je stará mapa a hory nakreslí Gemini
+
+Michal vybral dva nápady z toho, jak grafiku řeší Civilizace 6 a Freeciv. Neprozkoumaný svět už není černý. Vypadá jako starý pergamen se skvrnami, čárkovanými poledníky a rovnoběžkami, silnějším rovníkem a větrnou růžicí v rohu. K okrajům je papír tmavší. Prozkoumaná krajina na kraji přechází do papíru a za ní má papír hnědý okraj, jako by ji někdo vmaloval do staré mapy. Platí to v šikmém pohledu i v pohledu shora, v okně města i na malé mapě.
+
+Hory a kopce na šikmé mapě namaluje Gemini, šest obrázků hor a čtyři kopců na purpurovém pozadí, stejně jako jednotky a města. Zadání je v souboru hory.tsv a Michal ho spustí skriptem hory.sh. Pozadí vyřízne skript tools/cut-sprites.py, který zároveň spodek obrázku nechá vyblednout do země. Každé políčko si podle své polohy vybere jeden obrázek, takže se při každém překreslení nemění. Dokud obrázky nejsou, kreslí hra hory a kopce kódem jako dosud.
+
 ## 16. 11. 2026: Mapa se dívá šikmo a hory, stromy, města i jednotky na ní stojí
 
 Michal chtěl hru víc do 3D. Vybrali jsme šikmý pohled místo plného 3D přes WebGL, protože se dál kreslí do Canvasu a nic ze stávající hry se nerozbije. Plné 3D by znamenalo přepsat kreslení i klikání a v Safari na starším Macu by mohlo zpomalit. Krok šest z fáze 4, grafiku mapy, jsme tím vzali dřív, než bylo v plánu.

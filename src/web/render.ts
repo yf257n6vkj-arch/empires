@@ -45,6 +45,8 @@ const sprites = new Map<string, HTMLImageElement>();
 export function setSprites(next: Map<string, HTMLImageElement>): void {
   sprites.clear();
   for (const [k, v] of next) sprites.set(k, v);
+  // Painted mountains and hills are part of the cached terrain, so it is drawn again.
+  backgroundKey = "";
 }
 
 /** Draws a sprite standing with its bottom centre at (x, y), `h` tall. */
@@ -58,7 +60,9 @@ export function setPlayerColors(next: string[]): void {
   colors = next.length > 0 ? next : DEFAULT_COLORS;
 }
 
-const UNKNOWN = "#101215";
+/** Colour of the blank old map paper where nobody has been yet. */
+export const PARCHMENT = "#e4d1a6";
+const SEPIA = "120, 84, 44";
 const INK = "#1c1a17";
 
 export interface DrawUnit {
@@ -377,10 +381,148 @@ export function drawTerrainPatch(
 
 // ---------- background ----------
 
+let paperTexture: HTMLCanvasElement | null = null;
+
+/** A small tile of old paper: warm base, soft stains and fibres; repeated over the unexplored world. */
+function paper(): HTMLCanvasElement {
+  if (paperTexture) return paperTexture;
+  const size = 512;
+  const c = document.createElement("canvas");
+  c.width = size;
+  c.height = size;
+  const g = c.getContext("2d")!;
+  g.fillStyle = PARCHMENT;
+  g.fillRect(0, 0, size, size);
+  // Stains wrap around the edges so the tile repeats without seams.
+  for (let k = 0; k < 70; k++) {
+    const x = hash(k, 1, 901) * size;
+    const y = hash(k, 2, 902) * size;
+    const r = 10 + hash(k, 3, 903) * 60;
+    const dark = hash(k, 4, 904) > 0.45;
+    for (const dx of [-size, 0, size]) {
+      for (const dy of [-size, 0, size]) {
+        const st = g.createRadialGradient(x + dx, y + dy, 1, x + dx, y + dy, r);
+        st.addColorStop(0, dark ? "rgba(150, 112, 62, 0.06)" : "rgba(250, 240, 214, 0.14)");
+        st.addColorStop(1, "rgba(150, 112, 62, 0)");
+        g.fillStyle = st;
+        g.fillRect(x + dx - r, y + dy - r, r * 2, r * 2);
+      }
+    }
+  }
+  // Fibres and specks of the paper.
+  for (let k = 0; k < 1500; k++) {
+    const x = hash(k, 5, 905) * size;
+    const y = hash(k, 6, 906) * size;
+    const a = hash(k, 7, 907) * Math.PI;
+    const l = 1 + hash(k, 8, 908) * 5;
+    g.strokeStyle = `rgba(${SEPIA}, ${0.05 + hash(k, 9, 909) * 0.08})`;
+    g.lineWidth = 0.6;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l);
+    g.stroke();
+  }
+  paperTexture = c;
+  return c;
+}
+
+/**
+ * The world nobody has explored yet is a blank old map: parchment with faint lines of
+ * longitude and latitude, darker towards the edges, and a compass rose in one corner.
+ * The painted land is drawn over it as the players explore.
+ */
+function drawParchment(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+  const w = width * TILE;
+  const h = height * TILE;
+  const pattern = ctx.createPattern(paper(), "repeat");
+  if (pattern) {
+    pattern.setTransform(new DOMMatrix().scale(0.45));
+    ctx.fillStyle = pattern;
+  } else ctx.fillStyle = PARCHMENT;
+  ctx.fillRect(0, 0, w, h);
+  // Lines of the old map every five tiles, slightly curved like a projection.
+  ctx.save();
+  ctx.strokeStyle = `rgba(${SEPIA}, 0.26)`;
+  ctx.lineWidth = 0.6;
+  ctx.setLineDash([3, 2]);
+  ctx.beginPath();
+  for (let x = 5; x < width; x += 5) {
+    const bend = (x / width - 0.5) * TILE * 1.4;
+    ctx.moveTo(x * TILE, 0);
+    ctx.quadraticCurveTo(x * TILE + bend, h / 2, x * TILE, h);
+  }
+  for (let y = 4; y < height; y += 5) {
+    ctx.moveTo(0, y * TILE);
+    ctx.lineTo(w, y * TILE);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // The equator a little stronger.
+  ctx.strokeStyle = `rgba(${SEPIA}, 0.32)`;
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(0, (height / 2) * TILE);
+  ctx.lineTo(w, (height / 2) * TILE);
+  ctx.stroke();
+  ctx.restore();
+  // A few large old stains that belong to this map only, so the paper does not look tiled.
+  for (let k = 0; k < Math.round((width * height) / 60); k++) {
+    const sx = hash(k, width, 911) * w;
+    const sy = hash(k, height, 912) * h;
+    const r = TILE * (1.5 + hash(k, 3, 913) * 3.5);
+    const st = ctx.createRadialGradient(sx, sy, r * 0.2, sx, sy, r);
+    st.addColorStop(0, `rgba(${SEPIA}, ${0.04 + hash(k, 4, 914) * 0.06})`);
+    st.addColorStop(0.85, `rgba(${SEPIA}, ${0.02 + hash(k, 5, 915) * 0.04})`);
+    st.addColorStop(1, `rgba(${SEPIA}, 0)`);
+    ctx.fillStyle = st;
+    ctx.fillRect(sx - r, sy - r, r * 2, r * 2);
+  }
+  drawCompassRose(ctx, TILE * 3.2, h - TILE * 3.4, TILE * 2.1);
+  // Darker, older paper towards the edges of the world.
+  const edge = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.62);
+  edge.addColorStop(0, `rgba(${SEPIA}, 0)`);
+  edge.addColorStop(1, `rgba(${SEPIA}, 0.32)`);
+  ctx.fillStyle = edge;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawCompassRose(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = `rgba(${SEPIA}, 0.55)`;
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.82, 0, Math.PI * 2);
+  ctx.moveTo(r * 0.72, 0);
+  ctx.arc(0, 0, r * 0.72, 0, Math.PI * 2);
+  ctx.stroke();
+  for (let k = 0; k < 8; k++) {
+    const a = (k * Math.PI) / 4 - Math.PI / 2;
+    const long = k % 2 === 0;
+    const len = long ? r : r * 0.6;
+    const side = long ? r * 0.16 : r * 0.11;
+    for (const half of [-1, 1]) {
+      ctx.fillStyle = half < 0 ? `rgba(${SEPIA}, 0.6)` : "rgba(246, 236, 210, 0.85)";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len);
+      ctx.lineTo(Math.cos(a + (half * Math.PI) / 2) * side, Math.sin(a + (half * Math.PI) / 2) * side);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+  // A small fleur on the north point, the way old maps mark it.
+  ctx.fillStyle = `rgba(${SEPIA}, 0.7)`;
+  ctx.beginPath();
+  ctx.arc(0, -r * 1.08, r * 0.08, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawBackground(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height, terrain } = input;
-  ctx.fillStyle = UNKNOWN;
-  ctx.fillRect(0, 0, width * TILE, height * TILE);
+  drawParchment(ctx, width, height);
 
   const depth = seaDepth(input);
   const field = terrainField(width, height, terrain, TERRAIN_COLORS, depth, seaRgb);
@@ -630,14 +772,20 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
   switch (t) {
     // Seen from above the relief of the ground shows hills and mountains; on the tilted map they rise.
     case "mountains":
-      if (activeTilt < 1) {
+      if (activeTilt < 1 && terrainPictures("hora").length) {
+        const pics = terrainPictures("hora");
+        drawTerrainSprite(ctx, pics[Math.floor(r(13) * pics.length)]!, px + 12 + (r(5) - 0.5) * 4, py + 21 + r(6) * 2, TILE * (1.25 + r(7) * 0.15));
+      } else if (activeTilt < 1) {
         drawMassif(ctx, px + 12 + (r(5) - 0.5) * 5, py + 18 + r(6) * 2, 14 + r(7) * 3, 14 + r(8) * 5, (k) => r(40 + k));
         // Now and then a lower spur in front, so a range does not look like a row of the same mountain.
         if (r(9) > 0.6) drawMassif(ctx, px + 5 + r(10) * 14, py + 24, 9 + r(11) * 2, 7 + r(12) * 3, (k) => r(80 + k));
       }
       break;
     case "hills":
-      if (activeTilt < 1) drawHills(ctx, px, py, (k) => r(40 + k));
+      if (activeTilt < 1 && terrainPictures("kopec").length) {
+        const pics = terrainPictures("kopec");
+        drawTerrainSprite(ctx, pics[Math.floor(r(13) * pics.length)]!, px + 12 + (r(5) - 0.5) * 4, py + 21 + r(6) * 1.5, TILE * (1.1 + r(7) * 0.15));
+      } else if (activeTilt < 1) drawHills(ctx, px, py, (k) => r(40 + k));
       break;
     case "desert": {
       drawDune(ctx, px + 2 + r(1) * 3, py + 9 + r(2) * 2, 13);
@@ -647,6 +795,27 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
     default:
       break;
   }
+}
+
+/** Painted pictures of a terrain (hora-1, hora-2 ...), in a fixed order so every tile keeps its picture. */
+function terrainPictures(prefix: string): HTMLImageElement[] {
+  return [...sprites.entries()]
+    .filter(([k]) => k.startsWith(`${prefix}-`))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, v]) => v);
+}
+
+/** A painted mountain or hill standing on the tilted map with its foot centre at (x, y), `w` wide. */
+function drawTerrainSprite(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number): void {
+  const h = (img.naturalHeight / img.naturalWidth) * w;
+  const shade = ctx.createRadialGradient(x + w * 0.12, y, 1, x + w * 0.12, y, w * 0.6);
+  shade.addColorStop(0, "rgba(40, 34, 24, 0.28)");
+  shade.addColorStop(1, "rgba(40, 34, 24, 0)");
+  ctx.fillStyle = shade;
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.12, y, w * 0.6, w * 0.26, 0, 0, Math.PI * 2);
+  ctx.fill();
+  upright(ctx, x, y, () => ctx.drawImage(img, x - w / 2, y - h, w, h));
 }
 
 /**
@@ -2392,11 +2561,25 @@ function drawFogEdge(ctx: CanvasRenderingContext2D, input: DrawInput): void {
       const py = y * TILE;
       const fade = (x0: number, y0: number, x1: number, y1: number, rx: number, ry: number, rw: number, rh: number) => {
         const g = ctx.createLinearGradient(x0, y0, x1, y1);
-        g.addColorStop(0, "rgba(16, 18, 21, 0.92)");
-        g.addColorStop(1, "rgba(16, 18, 21, 0)");
+        g.addColorStop(0, "rgba(222, 204, 162, 0.97)");
+        g.addColorStop(0.35, "rgba(222, 204, 162, 0.6)");
+        g.addColorStop(1, "rgba(222, 204, 162, 0)");
         ctx.fillStyle = g;
         ctx.fillRect(rx, ry, rw, rh);
       };
+      // A brown rim on the paper side, as if the known land had been inked onto the old map.
+      const rim = (x0: number, y0: number, x1: number, y1: number, rx: number, ry: number, rw: number, rh: number) => {
+        const g = ctx.createLinearGradient(x0, y0, x1, y1);
+        g.addColorStop(0, `rgba(${SEPIA}, 0.4)`);
+        g.addColorStop(1, `rgba(${SEPIA}, 0)`);
+        ctx.fillStyle = g;
+        ctx.fillRect(rx, ry, rw, rh);
+      };
+      const r = 4;
+      if (!known(x, y - 1)) rim(px, py, px, py - r, px, py - r, TILE, r);
+      if (!known(x, y + 1)) rim(px, py + TILE, px, py + TILE + r, px, py + TILE, TILE, r);
+      if (!known(x - 1, y)) rim(px, py, px - r, py, px - r, py, r, TILE);
+      if (!known(x + 1, y)) rim(px + TILE, py, px + TILE + r, py, px + TILE, py, r, TILE);
       if (!known(x, y - 1)) fade(px, py, px, py + depth, px, py, TILE, depth);
       if (!known(x, y + 1)) fade(px, py + TILE, px, py + TILE - depth, px, py + TILE - depth, TILE, depth);
       if (!known(x - 1, y)) fade(px, py, px + depth, py, px, py, depth, TILE);

@@ -79,7 +79,7 @@ import {
   ZOOM_STEP,
   type Camera,
 } from "./camera";
-import { draw, mapTilt, setPlayerColors, setSprites, setTilt, setupCanvas, tileSize, type DrawInput } from "./render";
+import { PARCHMENT, draw, mapTilt, setPlayerColors, setSprites, setTilt, setupCanvas, tileSize, type DrawInput } from "./render";
 import { ERROR_TEXT, escapeHtml, eventConcerns, eventText, moodLine } from "./texts";
 import { attackHint, createAttackDialog } from "./attack";
 import { playComputerTurns } from "../ai";
@@ -1678,7 +1678,7 @@ function drawMinimap(): void {
   }
   const g = minimap.getContext("2d")!;
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  g.fillStyle = "#0e1013";
+  g.fillStyle = PARCHMENT;
   g.fillRect(0, 0, w * scale, h * scale);
   const explored = state.players[HUMAN]!.explored;
   const all = showAllBox.checked;

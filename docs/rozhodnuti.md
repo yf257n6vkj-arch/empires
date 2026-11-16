@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Soupeři zakládají města u jídla a dělníci zavlažují hladová města
+
+Soupeř teď při výběru místa pro město počítá, kolik políček v okolí může dát dvě jídla, když je zavlaží. Za každé, které chybí do šesti, dá místu tři body dolů. Zkusili jsme taky přecenit jídlo u každého políčka, ale soupeři pak přestali osidlovat ostrovy, protože jim na pevnině vycházelo víc slabých míst. Tuhle cestu jsme proto zahodili.
+
+Automatický osadník teď u města, které přestalo růst, cení jídlo dvaapůlkrát víc než jinde. Takové město proto dostane zavlažování dřív než důl. Platí to i pro hráčovy osadníky na automatické práci. Tempo podle měřicího skriptu se nezhoršilo, hráč měl ve 120. tahu 61 obyvatel místo 59.
+
+Na 50 automatických partiích měl soupeř ve 120. tahu v mediánu 7 měst a 68 objevů. Jeho města měla průměrně 4,9 obyvatele místo 3,8 před fází 4. Obyvatel má soupeř zhruba stejně jako dřív, jen v menším počtu větších měst, a bádá rychleji. S jedním městem uvízli 3 hráči z 200. Vesmírnou lodí vyhrál soupeř v 10 partiích z 50.
+
 ## 16. 11. 2026: Fáze 4, první kroky: rychlost, Safari a soupeři, kteří rostou
 
 Rychlost je v pořádku. Ve 100. tahu trvají tahy tří soupeřů v Node 60 až 90 milisekund. V prohlížeči trvá konec tahu i s překreslením 100 až 190 milisekund a posun mapy běží 60 snímků za sekundu. Cíl dvě sekundy hra splňuje s velkou rezervou, a to jsme měřili na pomalejším stroji, než je Mac M1.

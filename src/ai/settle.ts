@@ -6,8 +6,11 @@
  * heading for are taken (Freeciv), and every tile of travel lowers the value
  * by (23/24)^3 (Freeciv), so settlers do not wander off on death marches.
  */
-import { distance, RULES, type Point, type PlayerView, type Unit } from "../core";
+import { distance, IMPROVEMENTS, RULES, TERRAINS, type Point, type PlayerView, type Unit } from "../core";
 import { at, centerFood, isLand, isSea, knownCities, pointOf, radius, tileValue } from "./knowledge";
+
+/** Land tiles that can give two food a good site has around it. */
+const FEEDING_TILES = 6;
 
 /** Below this a site is not worth a settler. */
 export const MIN_SITE_SCORE = 18;
@@ -53,6 +56,13 @@ export function siteValue(view: PlayerView, i: number, reserved: Point[], averag
     const weight = d === 0 ? 2 : d === 1 ? 1.5 : 1;
     score += (view.terrain[j] === null ? average * 0.8 : tileValue(view, j)) * weight;
   }
+  // Few tiles that feed a citizen, even after irrigation, keep the city small for good (Freeciv weighs food the same way).
+  const feeding = radius(view, p).filter((j) => {
+    const t = view.terrain[j];
+    if (!t || !TERRAINS[t].land) return false;
+    return TERRAINS[t].food + (IMPROVEMENTS.irrigation.bonus[t]?.food ?? 0) + (view.special[j] && TERRAINS[t].special ? (TERRAINS[t].special!.food ?? 0) : 0) >= 2;
+  }).length;
+  if (feeding < FEEDING_TILES) score -= (FEEDING_TILES - feeding) * 3;
   if (terrain === "river") score += 4;
   if (terrain === "hills") score += 2;
   if (radius(view, p).some((j) => isSea(view, j))) score += 2;

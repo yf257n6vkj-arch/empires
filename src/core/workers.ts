@@ -14,6 +14,7 @@ import { findPath } from "./path";
 import type { GameMap, GameState, Unit, WorkKind } from "./state";
 import { canMove, moveDraft } from "./units";
 import { getPlayer, idx, tileYield } from "./world";
+import { cityReport } from "./city";
 import { improvementProblemAt } from "./commands";
 
 /** Improvements an automatic settler considers, in the order it prefers them on a tie. */
@@ -54,15 +55,16 @@ function improvedYield(map: GameMap, i: number, work: WorkKind) {
   return tileYield(stub, i, false);
 }
 
-/** How much a tile's yield is worth to a city: food first, then shields, then trade. */
-function worth(y: { food: number; shields: number; trade: number }): number {
-  return y.food * 4 + y.shields * 3 + y.trade * 2;
+/** How much a tile's yield is worth to a city: food first, then shields, then trade. A city that has stopped growing wants food two and a half times as much. */
+function worth(y: { food: number; shields: number; trade: number }, hungry = false): number {
+  return y.food * (hungry ? 10 : 4) + y.shields * 3 + y.trade * 2;
 }
 
 /**
  * The most useful piece of work for an automatic settler: the improvement
  * that raises a city tile's yield the most, weighed against the time to walk
- * there and build it. Tiles the city works count double. Tiles another of the
+ * there and build it. Tiles the city works count double, and food counts
+ * more around a city that has stopped growing. Tiles another of the
  * owner's settlers works on or heads for are left to that settler.
  */
 export function bestWorkerTask(state: GameState, unit: Unit): WorkerTask | null {
@@ -79,6 +81,8 @@ export function bestWorkerTask(state: GameState, unit: Unit): WorkerTask | null 
   for (const city of state.cities) {
     if (city.owner !== unit.owner) continue;
     const worked = new Set(city.worked);
+    const report = cityReport(state, city);
+    const hungry = report.foodSurplus <= 0 && city.size < report.maxSize;
     for (const i of cityRadiusTiles(map, city)) {
       if (seen.has(i) || taken.has(i) || explored[i] !== 1) continue;
       seen.add(i);
@@ -88,13 +92,13 @@ export function bestWorkerTask(state: GameState, unit: Unit): WorkerTask | null 
       const dist = distance(unit, at);
       if (dist > RULES.autoWorkRange) continue;
       const nowYield = tileYield(map, i, false);
-      const now = worth(nowYield);
+      const now = worth(nowYield, hungry);
       const consider = (work: WorkKind, turns: number) => {
         const after = improvedYield(map, i, work);
         // Land is never changed into land that feeds fewer people.
         if (work !== "clean" && IMPROVEMENTS[work].transform?.[terrain] && after.food <= nowYield.food) return;
         // Pollution hurts the whole world through warming, so cleaning counts double.
-        const gain = (worth(after) - now) * (worked.has(i) ? 2 : 1) * (work === "clean" ? 2 : 1);
+        const gain = (worth(after, hungry) - now) * (worked.has(i) ? 2 : 1) * (work === "clean" ? 2 : 1);
         if (gain <= 0) return;
         const score = gain / (turns + dist + 1);
         if (!best || score > best.score) best = { at, improvement: work, score };

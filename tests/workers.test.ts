@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apply, applyCommand, bestWorkerTask, migrateState, STATE_VERSION, type GameState } from "../src/core";
+import { apply, applyCommand, bestWorkerTask, cityReport, migrateState, STATE_VERSION, type GameState } from "../src/core";
 import { addUnit, stateFromAscii, unit } from "./helpers";
 
 function endTurns(s: GameState, n: number): GameState {
@@ -174,5 +174,22 @@ describe("saves from version 7", () => {
     expect(loaded.version).toBe(STATE_VERSION);
     expect(loaded.units.every((u) => u.orders === null)).toBe(true);
     expect(loaded.cities.every((c) => Array.isArray(c.queue) && c.queue.length === 0)).toBe(true);
+  });
+});
+
+describe("automatic workers and hungry cities", () => {
+  it("irrigate first around a city that has stopped growing", () => {
+    let s = stateFromAscii(["~~~~~~~", "~,,h,,~", "~,,,,h~", "~,h,h,~", "~~~~~~~"]);
+    const settler = addUnit(s, "settlers", 3, 2, 0);
+    s = apply(s, { type: "foundCity", unitId: settler.id });
+    s.players[0]!.researching = "alphabet";
+    const city = s.cities[0]!;
+    const task = (size: number) => {
+      const t = apply({ ...s, cities: [{ ...city, size }] }, { type: "autoAssignWorkers", cityId: city.id });
+      return { food: cityReport(t, t.cities[0]!).foodSurplus, work: bestWorkerTask(t, addUnit(t, "settlers", 3, 2, 0))?.improvement };
+    };
+    expect(task(1)).toEqual({ food: 1, work: "mine" });
+    expect(task(3).food).toBeLessThanOrEqual(0);
+    expect(task(3).work).toBe("irrigation");
   });
 });

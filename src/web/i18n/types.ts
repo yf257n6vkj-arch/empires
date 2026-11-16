@@ -7,6 +7,7 @@ import type {
   TerrainId,
   UnitTypeId,
 } from "../../core";
+import type { CityPage } from "../cityPages";
 import type { CodexPage } from "../codexPages";
 import type { TechPage } from "../encyclopedia";
 import type { GuideKey, GuidePage } from "../guidePages";
@@ -54,6 +55,8 @@ export interface Language {
   guide: Record<GuideKey, GuidePage> | null;
   /** Second paragraphs and further facts of encyclopedia pages; null means Czech. */
   more: Record<string, PageMore> | null;
+  /** Histories of the nations' cities; null means the Czech texts. */
+  cities: Record<string, CityPage> | null;
   /** Wikipedia the encyclopedia links to, e.g. "en" for en.wikipedia.org. */
   wikipedia?: string;
 }

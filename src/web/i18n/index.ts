@@ -31,6 +31,7 @@ const CS: Language = {
   techPages: null,
   guide: null,
   more: null,
+  cities: null,
 };
 
 /** Every language the game offers, in the order the picker shows them. */

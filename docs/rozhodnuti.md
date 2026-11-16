@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Při výběru národa jde číst o národu i vládci a města mají svou historii
+
+Okno nové hry ukazuje vedle národů text z encyklopedie o vybraném národu i o jeho vládci s obrázky. Odkazy pod texty otevřou celé stránky v encyklopedii.
+
+Všech 240 měst národů dostalo krátkou historii skutečného města podle Wikipedie, česky i anglicky. Ve městě ji ukáže tlačítko Historie města vedle jména a pod textem je odkaz na článek na Wikipedii. Odkaz vede přes vyhledávání, aby článek našel, i když se jeho název trochu liší. Dvě města se stejným jménem, egyptské a řecké Théby nebo aztécká a ruská Tula, mají každé svůj text a hra vybere ten podle národa, kterému město patří. Vymyšlená jména měst historii nemají a tlačítko se u nich neukáže.
+
 ## 16. 11. 2026: Soupeře hráč pozná až při průzkumu a delta má bažinatý vějíř
 
 Úvodní hláška už nevyjmenuje národy, které na kontinentu žijí. Hráč je pozná, až na ně narazí. Michal chce, aby na to hráč přišel sám při hře.

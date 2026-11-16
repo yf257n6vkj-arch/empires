@@ -9,6 +9,7 @@ import { codexKeys, codexPage } from "../src/web/codex";
 import { techPage } from "../src/web/encyclopedia";
 import { GUIDE_KEYS } from "../src/web/guidePages";
 import { PAGE_MORE } from "../src/web/pageMore";
+import { CITY_PAGES, cityPage } from "../src/web/cityPages";
 
 const keys = collectKeys();
 const unique = new Map(keys.map((k) => [k.text, k]));
@@ -62,6 +63,22 @@ describe("translations", () => {
     for (const [k, m] of Object.entries(PAGE_MORE)) expect(m.facts.length, k).toBe(2);
   });
 
+  it("tells the history of every city of every nation in every language", () => {
+    const wanted = CIV_IDS.flatMap((civ) => CIVS[civ].cities.map((_, i) => `${civ}-${i}`));
+    expect(wanted.filter((k) => !CITY_PAGES[k])).toEqual([]);
+    expect(Object.keys(CITY_PAGES).filter((k) => !wanted.includes(k))).toEqual([]);
+    for (const lang of others) expect(wanted.filter((k) => !lang.cities?.[k]), lang.id).toEqual([]);
+  });
+
+  it("finds the history of a city by its name, preferring the owner's nation", () => {
+    expect(cityPage("Praha", "czechs")?.page.wiki).toBe("Praha");
+    expect(cityPage("Théby", "greeks")?.page.wiki).toBe("Théby (Řecko)");
+    expect(cityPage("Théby", "czechs")?.page.wiki).toBe("Théby (Egypt)");
+    expect(cityPage("Lipník", "czechs")).toBeNull();
+    useLanguageForTest("en");
+    expect(cityPage("Théby", "greeks")?.page.wiki).toBe("Thebes, Greece");
+  });
+
   it("uses plain ASCII placeholder names", () => {
     for (const text of unique.keys()) expect(text, text).not.toMatch(/\{[^}]*[^\w}][^}]*\}/);
   });
@@ -72,7 +89,7 @@ describe("translations", () => {
 
   it("leaves no Czech text in the web code outside t()", () => {
     const czech = /[ěščřžýáíéůúňťďĚŠČŘŽÝÁÍÉŮÚŇŤĎ]/;
-    const skip = ["codexPages.ts", "encyclopedia.ts", "guidePages.ts", "pageMore.ts", join("web", "i18n")];
+    const skip = ["cityPages.ts", "codexPages.ts", "encyclopedia.ts", "guidePages.ts", "pageMore.ts", join("web", "i18n")];
     const files = (dir: string): string[] =>
       readdirSync(dir).flatMap((n) => {
         const p = join(dir, n);

@@ -39,6 +39,7 @@ import { describeBuilding, describeUnit, escapeHtml, moodLine } from "./texts";
 import { buildingArtCanvas, cityArtSettled, drawCityView, hasCityArt, hitAt, loadCityArt } from "./cityView";
 import { t, tn } from "./i18n";
 import { buildingName, cityLabel, productionLabel, terrainName, unitName } from "./i18n/names";
+import { cityPage } from "./cityPages";
 
 export interface CityHost {
   state(): GameState;
@@ -603,6 +604,8 @@ export function createCityScreen(host: CityHost) {
   const PANEL_KEY = "empires.cityPanel";
   /** Height of the panels below the picture chosen by dragging, null for the default. */
   let panelHeight: number | null = null;
+  /** Whether the history of the city is shown over the picture; stays open while flipping through cities. */
+  let aboutOpen = false;
   /** "cityId:building" waiting for a second click to be sold. */
   let sellConfirm: string | null = null;
   try {
@@ -764,6 +767,15 @@ export function createCityScreen(host: CityHost) {
       group(t("Bez stavby"), (o) => o.kind === "wealth");
     const foodPct = Math.min(100, (c.food / r.growthThreshold) * 100);
 
+    const history = cityPage(c.name, s.players[c.owner]!.civ);
+    const aboutBox =
+      history && aboutOpen
+        ? `<div class="cs-about">
+            <div class="cs-about-head"><b>${escapeHtml(cityLabel(c.name))}</b><span class="muted small">${escapeHtml(history.page.when)}</span><button type="button" class="tp-close" data-about aria-label="${t("Zavřít")}">×</button></div>
+            <p>${escapeHtml(history.page.text)}</p>
+            <a href="${history.url}" target="_blank" rel="noopener">${t("Přečti si víc na Wikipedii: {title}", { title: escapeHtml(history.page.wiki) })} ↗</a>
+          </div>`
+        : "";
     dialog.innerHTML = `
       <div class="cs">
         <div class="cs-head">
@@ -771,11 +783,13 @@ export function createCityScreen(host: CityHost) {
           <h2>${escapeHtml(cityLabel(c.name))}</h2>
           <button type="button" class="cs-nav" data-nav="1" ${cities.length < 2 ? "disabled" : ""} title="${t("Další město")}">›</button>
           <span class="cs-sub">${t("velikost {size} · založeno v tahu {turn} · {n}. město z {all}", { size: c.size, turn: c.foundedTurn, n: index + 1, all: cities.length })}</span>
+          ${history ? `<button type="button" class="cs-about-btn ${aboutOpen ? "on" : ""}" data-about title="${t("Co víme o skutečném městě tohoto jména")}">${t("Historie města")}</button>` : ""}
           <span class="spacer"></span>
           <button type="button" class="cs-close" data-close>${t("Zavřít")} <kbd>Esc</kbd></button>
         </div>
         <div class="cs-top">
           <div class="cs-view"></div>
+          ${aboutBox}
           <div class="cs-citizens">
             <div class="cs-people"></div>
             <div class="cs-mood">
@@ -1035,6 +1049,12 @@ export function createCityScreen(host: CityHost) {
     });
     dialog.querySelectorAll<HTMLButtonElement>("[data-entry]").forEach((b) => b.addEventListener("click", () => host.openEntry(b.dataset.entry!)));
     dialog.querySelector("[data-close]")?.addEventListener("click", close);
+    dialog.querySelectorAll("[data-about]").forEach((b) =>
+      b.addEventListener("click", () => {
+        aboutOpen = !aboutOpen;
+        render();
+      }),
+    );
     dialog.querySelector("[data-buy]")?.addEventListener("click", () => act({ type: "buy", cityId: c.id }));
     dialog.querySelector("[data-auto]")?.addEventListener("click", () => act({ type: "autoAssignWorkers", cityId: c.id }));
     dialog.querySelectorAll<HTMLButtonElement>("[data-nav]").forEach((b) =>

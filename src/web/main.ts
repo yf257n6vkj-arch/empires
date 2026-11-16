@@ -587,7 +587,7 @@ const newGameDialog = createNewGameDialog($<HTMLDialogElement>("#new-game-dialog
     startNewGame(seed, civ, world);
   },
   randomSeed,
-  showNation: (civ) => codex.show(entryKey("civ", civ)),
+  showEntry: (key) => codex.show(key),
 });
 spaceshipButton.addEventListener("click", () => empire.openSpaceship());
 

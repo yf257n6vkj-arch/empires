@@ -13,7 +13,7 @@ import {
   type CivId,
   type WorldChoice,
 } from "../core";
-import { pictureOf } from "./codex";
+import { codexPage, pictureOf } from "./codex";
 import { escapeHtml } from "./texts";
 import { t, tn } from "./i18n";
 import { cityLabel, civName, leaderName, techName } from "./i18n/names";
@@ -21,8 +21,8 @@ import { cityLabel, civName, leaderName, techName } from "./i18n/names";
 export interface NewGameHost {
   start(seed: string, civ: CivId | undefined, world: WorldChoice): void;
   randomSeed(): string;
-  /** Opens the encyclopedia page of a nation. */
-  showNation(civ: CivId): void;
+  /** Opens an encyclopedia page, e.g. "civ-czechs" or "lead-czechs". */
+  showEntry(key: string): void;
 }
 
 type SettingKey = keyof typeof WORLD_OPTIONS;
@@ -222,15 +222,31 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
         <b>${escapeHtml(civName(id))}</b><span class="muted small">${escapeHtml(leaderName(id))}</span></button>`;
     };
     const c = chosen === "random" ? null : chosen;
+    // What the encyclopedia says about the nation and its leader, right next to the choice.
+    const about = (key: string, title: string, subtitle: string, more: string) => {
+      const page = codexPage(key)?.page;
+      const pic = pictureOf(key);
+      return `<div class="ng-about">
+        <div class="ng-about-head">${pic ? `<img src="${pic}" alt="">` : ""}<div><b>${escapeHtml(title)}</b><span class="muted small">${escapeHtml(subtitle)}${page?.when ? ` · ${escapeHtml(page.when)}` : ""}</span></div></div>
+        ${page ? `<p>${escapeHtml(page.text)}</p>` : ""}
+        <button type="button" class="linklike" data-read="${key}">${more}</button>
+      </div>`;
+    };
+    const info = c
+      ? about(`civ-${c}`, civName(c), t("národ"), t("Celá stránka o národu")) + about(`lead-${c}`, leaderName(c), t("vládce"), t("Celá stránka o vládci"))
+      : `<div class="ng-about"><p class="muted">${t("Národ vybere hra náhodně, až začneš. Kdo to bude, zjistíš na první mapě.")}</p></div>`;
     dialog.innerHTML = `
       <div class="ng">
         <div class="dialog-head"><h2>${firstGame ? t("Vyber si národ") : t("Nová hra")}</h2>${firstGame ? "" : `<button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button>`}</div>
         <p class="muted">${t("Národy se liší jménem, vládcem, barvou a jmény měst. Žádný nemá zvláštní výhody, stejně jako v Civilizaci 1. Soupeři dostanou národy v jiných barvách.")}</p>
-        <div class="ng-grid">${[...CIV_IDS, "random" as const].map(card).join("")}</div>
+        <div class="ng-body">
+          <div class="ng-grid">${[...CIV_IDS, "random" as const].map(card).join("")}</div>
+          <aside class="ng-info">${info}</aside>
+        </div>
         <div class="ng-foot">
           <div class="ng-chosen">${
             c
-              ? `${t("Hraješ za národ <b>{civ}</b> a vládne {leader}, první město bude {capital}.", { civ: escapeHtml(civName(c)), leader: escapeHtml(leaderName(c)), capital: escapeHtml(cityLabel(CIVS[c].cities[0]!)) })} <button type="button" class="linklike" data-act="read">${t("Přečíst o národu")}</button>`
+              ? `${t("Hraješ za národ <b>{civ}</b> a vládne {leader}, první město bude {capital}.", { civ: escapeHtml(civName(c)), leader: escapeHtml(leaderName(c)), capital: escapeHtml(cityLabel(CIVS[c].cities[0]!)) })}`
               : t("Národ hra vybere náhodně.")
           }</div>
           <div class="ng-world">${shapePicture(world.shape === "random" ? "continent" : world.shape)}<span>${t("Svět")}: <b>${escapeHtml(worldSummary(world))}</b></span> <button type="button" data-act="world">${t("Nastavit svět")}</button></div>
@@ -250,9 +266,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
       view = "world";
       render(firstGame);
     });
-    dialog.querySelector('[data-act="read"]')?.addEventListener("click", () => {
-      if (chosen !== "random") host.showNation(chosen);
-    });
+    dialog.querySelectorAll<HTMLButtonElement>("[data-read]").forEach((b) => b.addEventListener("click", () => host.showEntry(b.dataset.read!)));
     dialog.querySelector('[data-act="start"]')!.addEventListener("click", () => {
       const typed = dialog.querySelector<HTMLInputElement>("[data-seed]")!.value.trim();
       const seed = typed && parseGameCode(typed).seed ? typed : host.randomSeed();

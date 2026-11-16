@@ -693,8 +693,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Nations differ in name, leader, colour and city names. None has special advantages, just like in the classic game this one follows. Rivals get nations in other colours.",
   "Hraješ za národ <b>{civ}</b> a vládne {leader}, první město bude {capital}.":
     "You play the <b>{civ}</b>, led by {leader}, and your first city will be {capital}.",
-  "Přečíst o národu":
-    "Read about the nation",
   "Národ hra vybere náhodně.":
     "The game picks a nation at random.",
   "Kód mapy":
@@ -1487,4 +1485,18 @@ export const EN_STRINGS: Record<string, string> = {
     "Loading the city picture…",
   "Jsi {leader} a vedeš {realm}. Na kontinentu žijí i jiné národy a poznáš je, až na ně narazíš. Najdi osadníkem dobré místo a založ hlavní město (klávesa B). Bude se jmenovat {capital}.":
     "You are {leader} and you lead the {realm}. Other nations live on the continent too, and you will meet them when you come across them. Find a good spot with your settler and found your capital (key B). It will be called {capital}.",
+  "Co víme o skutečném městě tohoto jména":
+    "What we know about the real city of this name",
+  "Historie města":
+    "City history",
+  "národ":
+    "nation",
+  "Celá stránka o národu":
+    "Full page about the nation",
+  "vládce":
+    "leader",
+  "Celá stránka o vládci":
+    "Full page about the leader",
+  "Národ vybere hra náhodně, až začneš. Kdo to bude, zjistíš na první mapě.":
+    "The game picks a nation at random when you start. You will find out which one on the first map.",
 };

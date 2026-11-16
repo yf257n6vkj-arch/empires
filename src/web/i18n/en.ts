@@ -1,3 +1,4 @@
+import { EN_CITY_PAGES } from "./en-cities";
 import { EN_CODEX } from "./en-codex";
 import { EN_GUIDE } from "./en-guide";
 import { EN_MORE } from "./en-more";
@@ -16,5 +17,6 @@ export const EN: Language = {
   techPages: EN_TECH_PAGES,
   guide: EN_GUIDE,
   more: EN_MORE,
+  cities: EN_CITY_PAGES,
   wikipedia: "en",
 };

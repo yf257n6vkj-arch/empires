@@ -105,7 +105,7 @@ export function saveSlot(name: string, payload: SavePayload, player: number): st
     name: clean,
     savedAt: Date.now(),
     turn: payload.state.turn,
-    civ: payload.state.players[player]!.civ,
+    civ: payload.state.players[player]!.civ as CivId,
     seed: payload.state.seed,
   };
   try {

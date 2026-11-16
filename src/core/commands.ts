@@ -35,6 +35,7 @@ import { findPath } from "./path";
 import { boardDraft, canMove, continueGotoDraft, enterTileDraft } from "./units";
 import { attackDraft, canAttack, defeatDraft } from "./combat";
 import { meetDraft } from "./diplomacy";
+import { GOVERNOR_GOALS, governorProduction, type GovernorGoal } from "./governor";
 import { workerStepDraft } from "./workers";
 
 export { canMove };
@@ -77,6 +78,8 @@ export type Command =
   | { type: "setResearchGoal"; tech: TechId }
   | { type: "setWorkedTiles"; cityId: CityId; tiles: number[] }
   | { type: "autoAssignWorkers"; cityId: CityId }
+  /** Hands the city to the governor with a goal, or takes it back with null. */
+  | { type: "setGovernor"; cityId: CityId; goal: GovernorGoal | null }
   | { type: "setScienceRate"; rate: number }
   /** Shares of trade for science and luxuries; taxes get the rest. */
   | { type: "setRates"; science: number; luxury: number }
@@ -105,6 +108,7 @@ export type CommandError =
   | "unknownUnit"
   | "notYourUnit"
   | "unknownCity"
+  | "invalidGovernor"
   | "notYourCity"
   | "noMovesLeft"
   | "notAdjacent"
@@ -354,6 +358,7 @@ function applyCommandInner(state: GameState, command: Command): CommandResult {
         scientists: 0,
         celebrating: false,
         disorderTurns: 0,
+        governor: null,
         soldTurn: null,
       };
       player.citiesFounded += 1;
@@ -581,6 +586,29 @@ function applyCommandInner(state: GameState, command: Command): CommandResult {
       const c = draft.cities.find((x) => x.id === city.id)!;
       c.manualTiles = false;
       assignWorkersDraft(draft, c);
+      return { ok: true, state: draft, events };
+    }
+
+    case "setGovernor": {
+      const city = state.cities.find((c) => c.id === command.cityId);
+      if (!city) return { ok: false, error: "unknownCity" };
+      if (city.owner !== state.currentPlayer) return { ok: false, error: "notYourCity" };
+      if (command.goal !== null && !GOVERNOR_GOALS.includes(command.goal)) return { ok: false, error: "invalidGovernor" };
+      const draft = cloneState(state);
+      const c = draft.cities.find((x) => x.id === city.id)!;
+      c.governor = command.goal;
+      if (command.goal) {
+        // The governor takes over the fields and, when nothing is planned, what the city builds.
+        c.manualTiles = false;
+        assignWorkersDraft(draft, c);
+        if (c.queue.length === 0) {
+          const item = governorProduction(draft, c, command.goal);
+          if (!sameItem(item, c.production)) {
+            c.production = item;
+            events.push({ type: "governorChose", cityId: c.id, item });
+          }
+        }
+      }
       return { ok: true, state: draft, events };
     }
 

@@ -5,38 +5,16 @@
 export const EN_STRINGS: Record<string, string> = {
   "město":
     "city",
-  "Nejdřív potřebuješ město. Vyber osadníka a stiskni <kbd>B</kbd>. Hodí se místo, kde je kolem hodně louky a k tomu trochu lesa nebo kopců.":
-    "First you need a city. Select a settler and press <kbd>B</kbd>. A good spot has plenty of grassland around and a bit of forest or hills.",
   "Ukaž osadníka":
     "Show the settler",
-  "Tví vědci nevědí, co mají zkoumat. Vyber jim další objev, jinak výzkum stojí.":
-    "Your scholars don't know what to research. Pick their next discovery, otherwise research stands still.",
   "Vybrat objev":
     "Choose a discovery",
-  "Ve městě {city} se lidé bouří a město nic nevyrábí. Postav tam chrám, pošli do města vojáka, udělej z jednoho obyvatele baviče nebo posuň nahoře posuvník Zábava doprava.":
-    "People in {city} are rioting and the city produces nothing. Build a temple there, send a soldier into the city, turn one citizen into an entertainer or move the Luxuries slider at the top to the right.",
   "Otevřít město":
     "Open city",
-  "{city} hladoví a brzy se zmenší. Přesuň obyvatele na políčka s jídlem, nebo tam pošli osadníka zavlažovat.":
-    "{city} is starving and will soon shrink. Move citizens to tiles with food, or send a settler there to irrigate.",
-  "Každý tah ti ubude {gold} zlata a za {n} tah dojde. Pak hra začne prodávat budovy. Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.|Každý tah ti ubude {gold} zlata a za {n} tahy dojde. Pak hra začne prodávat budovy. Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.|Každý tah ti ubude {gold} zlata a za {n} tahů dojde. Pak hra začne prodávat budovy. Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.":
-    "You lose {gold} gold every turn and in {n} turn it runs out. Then the game starts selling buildings. Move the Science slider at the top to the left so more trade goes to gold.|You lose {gold} gold every turn and in {n} turns it runs out. Then the game starts selling buildings. Move the Science slider at the top to the left so more trade goes to gold.",
   "{city} nikdo nebrání. Postav tam válečníka nebo jinou jednotku, která umí bránit.":
     "Nobody defends {city}. Build a warrior there or another unit that can defend.",
-  "Osadník nemá práci. Když mu zapneš automatickou práci, bude sám stavět cesty, zavlažování a doly kolem tvých měst.":
-    "A settler has nothing to do. Switch on automatic work and he will build roads, irrigation and mines around your cities by himself.",
   "Zapnout automatickou práci":
     "Switch on automatic work",
-  "Máš {n} město. Víc měst ti dá víc jídla, výroby i vědy. Postav ve městě {city} osadníka a založ s ním další město.|Máš {n} města. Víc měst ti dá víc jídla, výroby i vědy. Postav ve městě {city} osadníka a založ s ním další město.|Máš {n} měst. Víc měst ti dá víc jídla, výroby i vědy. Postav ve městě {city} osadníka a založ s ním další město.":
-    "You have {n} city. More cities give you more food, production and science. Build a settler in {city} and found another city with him.|You have {n} cities. More cities give you more food, production and science. Build a settler in {city} and found another city with him.",
-  "{city} už dál neroste. Aby mohlo být větší, potřebuje akvadukt.":
-    "{city} has stopped growing. To get bigger it needs an aqueduct.",
-  "Ve městě {city} by se hodila stavba {building}: {what}.":
-    "{city} could use a {building}: {what}.",
-  "Máš hodně zlata. Stavbu ve městě {city} můžeš rovnou koupit a nemusíš čekat.":
-    "You have plenty of gold. You can buy what {city} is building right away instead of waiting.",
-  "Na rozkaz čeká {n} jednotka. Stiskni <kbd>N</kbd> a projdi je jednu po druhé. Vojáky ve městě můžeš opevnit klávesou <kbd>F</kbd>.|Na rozkaz čekají {n} jednotky. Stiskni <kbd>N</kbd> a projdi je jednu po druhé. Vojáky ve městě můžeš opevnit klávesou <kbd>F</kbd>.|Na rozkaz čeká {n} jednotek. Stiskni <kbd>N</kbd> a projdi je jednu po druhé. Vojáky ve městě můžeš opevnit klávesou <kbd>F</kbd>.":
-    "{n} unit is waiting for orders. Press <kbd>N</kbd> and go through them one by one. Soldiers in a city can be fortified with <kbd>F</kbd>.|{n} units are waiting for orders. Press <kbd>N</kbd> and go through them one by one. Soldiers in a city can be fortified with <kbd>F</kbd>.",
   "Ukaž jednotku":
     "Show the unit",
   "Všechno má práci. Ukonči tah klávesou <kbd>Enter</kbd>.":
@@ -649,8 +627,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Encyclopedia",
   "Ovládání":
     "Controls",
-  "fáze 2 · hra se průběžně ukládá sama":
-    "phase 2 · the game saves itself as you play",
   "tah {turn}":
     "turn {turn}",
   "Nahrát":
@@ -1365,8 +1341,6 @@ export const EN_STRINGS: Record<string, string> = {
     " and ",
   "Kolik obchodu jde na zábavu. Každé dva body zábavy ve městě uklidní jednoho nespokojeného, a když nespokojení nejsou, udělají ze spokojeného šťastného.":
     "How much trade goes to luxuries. Every two luxury points in a city calm one unhappy citizen, and when nobody is unhappy they make a content citizen happy.",
-  "Kolem města {city} je znečištěné políčko a dává jen polovinu. Pošli tam osadníka a klávesou V ho vyčisti, nebo mu zapni automatickou práci. Znečištění navíc přibližuje globální oteplování.":
-    "There is a polluted tile around {city} and it gives only half. Send a settler there and clean it with V, or turn on automatic work. Pollution also brings global warming closer.",
   "(uklidní nebo rozveselí {calm})":
     "(calms or cheers up {calm})",
   "Malý":
@@ -1611,4 +1585,266 @@ export const EN_STRINGS: Record<string, string> = {
     "The {nation} have declared war on you!",
   "{a} vyhlásili válku. Proti nim teď stojí {b}.":
     "The {a} have declared war. Facing them now are the {b}.",
+  "vládu {government}":
+    "the {government} government",
+  "Vyber osadníka a stiskni <kbd>B</kbd>, založí první město.":
+    "Select the settler and press <kbd>B</kbd> to found your first city.",
+  "Bez města nemáš z čeho vyrábět ani bádat. Hodí se místo s loukami kolem a trochou lesa nebo kopců, nejlépe u řeky nebo u moře.":
+    "Without a city you have nothing to produce or research with. A good spot has meadows around it and a bit of forest or hills, best by a river or the sea.",
+  "Vyber vědcům další objev.":
+    "Choose the next discovery for your scientists.",
+  "Dokud nic nevybereš, výzkum stojí a body vědy přicházejí nazmar.":
+    "Until you choose something, research stands still and science points go to waste.",
+  "Vede k objevu {goal}, který odemkne {what}.":
+    "It leads to {goal}, which unlocks {what}.",
+  "další objevy":
+    "further discoveries",
+  "Odemkne {what}.":
+    "It unlocks {what}.",
+  "Otevře cestu k dalším objevům.":
+    "It opens the way to further discoveries.",
+  "Vědci čekají na úkol. Doporučuji zkoumat {tech}.":
+    "Your scientists are waiting for a task. I suggest researching {tech}.",
+  "Vybrat jiný":
+    "Choose another",
+  ", nejlépe jednotku {unit},":
+    ", ideally {unit},",
+  "U města {city} stojí nepřátelská jednotka. Postav nebo přesuň do města obránce{unit} a opevni ho klávesou <kbd>F</kbd>.|U města {city} stojí {n} nepřátelské jednotky. Postav nebo přesuň do města obránce{unit} a opevni ho klávesou <kbd>F</kbd>.|U města {city} stojí {n} nepřátelských jednotek. Postav nebo přesuň do města obránce{unit} a opevni ho klávesou <kbd>F</kbd>.":
+    "An enemy unit stands near {city}. Build or move a defender{unit} into the city and fortify it with <kbd>F</kbd>.|{n} enemy units stand near {city}. Build or move a defender{unit} into the city and fortify it with <kbd>F</kbd>.",
+  "Město teď nikdo nebrání. ":
+    "Nobody defends the city now. ",
+  "Ve městě je jen jeden obránce. |Ve městě jsou jen {n} obránci. |Ve městě je jen {n} obránců. ":
+    "The city has only one defender. |The city has only {n} defenders. ",
+  "Když město padne, nepřítel ho dobude a vezme ti část zlata a jeden objev. Hradby obranu proti pozemním jednotkám ztrojnásobí.":
+    "If the city falls, the enemy takes it along with part of your gold and one discovery. City walls triple the defence against land units.",
+  "Město {city} nikdo nebrání. Pošli do něj jednotku {unit} a dobuď ho.":
+    "Nobody defends {city}. Send {unit} into it and take it.",
+  "Dobyté město ti zůstane i s obyvateli a část budov přežije. Nepřítel přijde o výrobu a ty k tomu dostaneš zlato.":
+    "A captured city stays yours with its people, and some of its buildings survive. The enemy loses its production and you get gold on top.",
+  "Jednotka {unit} může zaútočit na sousední nepřátele se šancí {pct} %.":
+    "{unit} can attack the enemies next to it with a {pct} % chance to win.",
+  "Čím dřív nepřítele porazíš, tím méně škody udělá. Vítěz se navíc může stát veteránem a bude silnější. Před útokem ti hra šanci ukáže ještě jednou.":
+    "The sooner you beat an enemy, the less damage it does. The winner may also become a veteran and grow stronger. The game shows you the odds once more before the attack.",
+  "Jednotka {unit} je těžce zraněná. Vrať ji do vlastního města a nech ji tam tah stát.":
+    "{unit} is badly wounded. Bring it back to one of your cities and let it rest there for a turn.",
+  "Se zbytkem životů prohraje i se slabším soupeřem. V poli se léčí pomalu, ve městě rychle a ve městě s kasárnami se vyléčí celá za jeden tah.":
+    "With the hit points it has left it loses even to a weaker enemy. It heals slowly in the field, quickly in a city, and fully in one turn in a city with barracks.",
+  "Město {city} za jeden tah vyroste a pak by se lidé začali bouřit. Postav tam včas chrám, nebo posuň posuvník Zábava doprava.|Město {city} za {n} tahy vyroste a pak by se lidé začali bouřit. Postav tam včas chrám, nebo posuň posuvník Zábava doprava.|Město {city} za {n} tahů vyroste a pak by se lidé začali bouřit. Postav tam včas chrám, nebo posuň posuvník Zábava doprava.":
+    "{city} grows in one turn and then its people would riot. Build a temple there in time, or move the Luxury slider to the right.|{city} grows in {n} turns and then its people would riot. Build a temple there in time, or move the Luxury slider to the right.",
+  "Nový obyvatel bude nespokojený. Když je nespokojených víc než šťastných, město přestane vyrábět, dokud se lidé neuklidní.":
+    "The new citizen will be unhappy. When there are more unhappy citizens than happy ones, the city stops producing until they calm down.",
+  "Už znáš vládu {government}. Vyhlas revoluci a zaveď ji.":
+    "You already know {government}. Start a revolution and bring it in.",
+  "Despocie bere jedno jídlo, štít nebo obchod z každého bohatého políčka. Lepší vláda ti dá víc ze stejné země. Revoluce způsobí na pár tahů anarchii, proto je lepší ji udělat brzy.":
+    "Despotism takes one food, shield or trade from every rich tile. A better government gets you more from the same land. A revolution brings a few turns of anarchy, so it is better to do it early.",
+  "Ukázat vlády":
+    "Show governments",
+  "Pošli jednotku {unit} prozkoumat okolí. Vyber ji a klikej na neznámá místa na mapě.":
+    "Send {unit} to explore the surroundings. Select it and click on unknown places on the map.",
+  "Najdeš místa pro další města a třeba i ruiny s pokladem. Ve městě zůstane druhý obránce.":
+    "You find places for more cities and maybe ruins with treasure too. A second defender stays in the city.",
+  "Nedaleko je ruina starého města. Pošli k ní jednotku {unit}.":
+    "There are ruins of an old town nearby. Send {unit} to them.",
+  "V ruinách často leží zlato nebo staré svitky s objevem. Občas z nich ale vyrazí barbaři, proto tam neposílej osadníka.":
+    "Ruins often hold gold or old scrolls with a discovery. Now and then barbarians burst out of them, so don't send a settler there.",
+  "Ve městě {city} můžeš začít stavět div {building}.":
+    "{city} can start building the wonder {building}.",
+  "Každý div postaví jen jedna říše na světě a kdo bude první, má ho napořád. Tenhle dá: {what}.":
+    "Each wonder can be built by only one empire in the world, and whoever finishes first keeps it for good. This one gives: {what}.",
+  "Ve městě {city} se lidé bouří. Postav tam chrám, pošli do města vojáka, udělej z jednoho obyvatele baviče nebo posuň nahoře posuvník Zábava doprava.":
+    "The people of {city} are rioting. Build a temple there, send a soldier into the city, turn a citizen into an entertainer or move the Luxury slider at the top to the right.",
+  "Během nepokojů město nic nevyrábí a neplatí daně ani vědu. Každý tah nepokojů je ztracený.":
+    "During riots the city produces nothing and pays no taxes or science. Every turn of riots is lost.",
+  "{city} hladoví. Přesuň obyvatele na políčka s jídlem, nebo tam pošli osadníka zavlažovat.":
+    "{city} is starving. Move citizens onto tiles with food, or send a settler there to irrigate.",
+  "Až dojdou zásoby, jeden obyvatel umře a město se zmenší.":
+    "When the stores run out, a citizen dies and the city shrinks.",
+  "Kolem města {city} je znečištěné políčko. Pošli tam osadníka a klávesou V ho vyčisti, nebo mu zapni automatickou práci.":
+    "There is a polluted tile around {city}. Send a settler there and clean it with the V key, or switch on its automatic work.",
+  "Znečištěné políčko dává jen polovinu a každé další přibližuje globální oteplování, které promění louky v poušť.":
+    "A polluted tile gives only half its yield, and each one brings global warming closer, which turns meadows into desert.",
+  "Posuň posuvník Věda nahoře doleva, ať víc obchodu jde do zlata.":
+    "Move the Science slider at the top to the left, so more trade goes into gold.",
+  "Každý tah ti ubude {gold} zlata a za {n} tah dojde. Pak hra začne prodávat budovy.|Každý tah ti ubude {gold} zlata a za {n} tahy dojde. Pak hra začne prodávat budovy.|Každý tah ti ubude {gold} zlata a za {n} tahů dojde. Pak hra začne prodávat budovy.":
+    "You lose {gold} gold every turn and it runs out in {n} turn. Then the game starts selling buildings.|You lose {gold} gold every turn and it runs out in {n} turns. Then the game starts selling buildings.",
+  "Do prázdného města stačí vejít a je dobyté. Jeden voják navíc uklidní lidi, když vládneš despocií nebo monarchií.":
+    "Walking into an empty city is enough to take it. Under despotism or monarchy a soldier in the city also calms the people.",
+  "Osadník nemá práci. Zapni mu automatickou práci.":
+    "The settler has no work. Switch on its automatic work.",
+  "Sám bude zvelebovat krajinu kolem tvých měst, takže města dostanou víc jídla a štítů ze stejných políček.":
+    "It will improve the land around your cities by itself, so the cities get more food and shields from the same tiles.",
+  "Postav ve městě {city} osadníka a založ s ním další město.":
+    "Build a settler in {city} and found another city with it.",
+  "Máš {n} město. Každé nové město přidá jídlo a výrobu a zabere zemi dřív, než ji vezmou soupeři.|Máš {n} města. Každé nové město přidá jídlo a výrobu a zabere zemi dřív, než ji vezmou soupeři.|Máš {n} měst. Každé nové město přidá jídlo a výrobu a zabere zemi dřív, než ji vezmou soupeři.":
+    "You have {n} city. Every new city adds food and production and claims land before your rivals take it.|You have {n} cities. Every new city adds food and production and claims land before your rivals take it.",
+  "Postav ve městě {city} akvadukt.":
+    "Build an aqueduct in {city}.",
+  "Město má dost jídla, ale bez akvaduktu už nevyroste. Větší město obdělá víc políček.":
+    "The city has enough food, but without an aqueduct it won't grow any more. A bigger city works more tiles.",
+  "Ve městě {city} by se hodila stavba {building}.":
+    "{city} could use a {building}.",
+  "Dá městu tohle: {what}.":
+    "It gives the city this: {what}.",
+  "Kup stavbu ve městě {city}.":
+    "Buy the building in {city}.",
+  "Máš víc zlata, než potřebuješ na údržbu budov. Koupená stavba bude hotová hned příští tah.":
+    "You have more gold than you need for building upkeep. A bought building is ready next turn.",
+  "Na rozkaz čeká {n} jednotka. Stiskni <kbd>N</kbd> a projdi je jednu po druhé.|Na rozkaz čekají {n} jednotky. Stiskni <kbd>N</kbd> a projdi je jednu po druhé.|Na rozkaz čeká {n} jednotek. Stiskni <kbd>N</kbd> a projdi je jednu po druhé.":
+    "{n} unit is waiting for orders. Press <kbd>N</kbd> and go through them one by one.|{n} units are waiting for orders. Press <kbd>N</kbd> and go through them one by one.",
+  "Vojáky ve městě opevni klávesou <kbd>F</kbd>, opevněný voják se brání o polovinu líp a dál se na něj hra neptá.":
+    "Fortify soldiers in a city with <kbd>F</kbd>. A fortified soldier defends half as well again and the game stops asking about it.",
+  "Proč:":
+    "Why:",
+  "Další rada|Další {n} rady|Dalších {n} rad":
+    "One more tip|{n} more tips",
+  "Jen nejdůležitější":
+    "Only the most important",
+  "bez správce":
+    "no governor",
+  "rovnováha":
+    "balance",
+  "růst":
+    "growth",
+  "výroba":
+    "production",
+  "věda":
+    "science",
+  "zlato":
+    "gold",
+  " Novou stavbu vybere, až město dostaví tu současnou a v plánu nic nebude.":
+    " It picks a new building when the city finishes the current one and nothing is planned.",
+  "Město řídíš sám. Správce za tebe obsadí políčka a vybírá stavby podle cíle, který mu dáš.":
+    "You run the city yourself. The governor works the tiles and picks buildings for you by the goal you give it.",
+  "Dbá na všechno stejně a staví to, co městu nejvíc pomůže.":
+    "Cares for everything equally and builds what helps the city most.",
+  "Obsadí políčka s jídlem a staví budovy, se kterými město roste rychleji, třeba sýpku nebo přístav.":
+    "Works tiles with food and builds what makes the city grow faster, such as a granary or a harbour.",
+  "Obsadí lesy a kopce s doly a staví budovy, které přidají štíty.":
+    "Works forests and hills with mines and builds what adds shields.",
+  "Dává přednost políčkům s obchodem a staví knihovny a univerzity.":
+    "Prefers tiles with trade and builds libraries and universities.",
+  "Dává přednost políčkům s obchodem a staví tržiště a banky.":
+    "Prefers tiles with trade and builds marketplaces and banks.",
+  "Drží ve městě dva obránce a staví hradby a kasárna.":
+    "Keeps two defenders in the city and builds walls and barracks.",
+  "Podrobnosti":
+    "Details",
+  "Správce:":
+    "Governor:",
+  "fáze 3 · hra se průběžně ukládá sama":
+    "phase 3 · the game saves itself as you play",
+  "žádní":
+    "none",
+  "málo":
+    "few",
+  "hodně":
+    "many",
+  "Barbaři":
+    "Barbarians",
+  "Objevují se v divočině a u pobřeží a dobývají města. Pár jich vyleze i z ruin.":
+    "They appear in the wilds and on coasts and take cities. A few also come out of ruins.",
+  "Zakládá nová města a umí zvelebovat krajinu.":
+    "Founds new cities and can improve the land.",
+  "Staví cesty, zavlažování a doly. Bojovat neumí.":
+    "Builds roads, irrigation and mines. Cannot fight.",
+  "Nebojuje. Jezdí do cizích měst zakládat velvyslanectví a krást objevy.":
+    "Does not fight. Travels to foreign cities to set up embassies and steal discoveries.",
+  "Nebojuje. Odveze zboží do jiného města a otevře obchodní cestu, nebo pomůže stavět div.":
+    "Does not fight. Carries goods to another city to open a trade route, or helps build a wonder.",
+  "Zničí všechno kolem cíle. Použít ji jde jen jednou.":
+    "Destroys everything around its target. It can be used only once.",
+  "Vozí jednotky po moři.":
+    "Carries units across the sea.",
+  "Bojuje na moři a uveze i jiné jednotky.":
+    "Fights at sea and can carry other units too.",
+  "Bojuje na moři a ostřeluje pobřeží.":
+    "Fights at sea and bombards the coast.",
+  "Létá a útočí z výšky. Musí se včas vrátit do města.":
+    "Flies and attacks from above. It has to get back to a city in time.",
+  "Neumí útočit.":
+    "Cannot attack.",
+  " Je rychlá, hodí se i na průzkum.":
+    " It is fast and good for exploring too.",
+  "Dobře brání města. Na útok je slabá.":
+    "Defends cities well. Weak in attack.",
+  "Hodí se na útok. Ve městě se brání slabě, sama ho neubrání.":
+    "Good for attacking. Defends a city poorly and cannot hold it alone.",
+  "Umí útočit i bránit.":
+    "Can both attack and defend.",
+  "{n} jídla za tah":
+    "{n} food per turn",
+  "{n} štítů za tah":
+    "{n} shields per turn",
+  "{n} vědy za tah":
+    "{n} science per turn",
+  "{n} zlata za tah":
+    "{n} gold per turn",
+  "o jednoho nespokojeného méně|o {n} nespokojené méně|o {n} nespokojených méně":
+    "one unhappy citizen fewer|{n} unhappy citizens fewer",
+  "o jednoho šťastného víc|o {n} šťastné víc|o {n} šťastných víc":
+    "one happy citizen more|{n} happy citizens more",
+  "město poroste až na {n}":
+    "the city can grow to {n}",
+  "město teď nevyrábí":
+    "the city produces nothing now",
+  "Jednotka":
+    "Unit",
+  "Na co je":
+    "What for",
+  "Síla":
+    "Strength",
+  ", palebná síla {fp}":
+    ", firepower {fp}",
+  "Umí":
+    "Can",
+  "Zastará":
+    "Outdated",
+  "až budeš umět stavět jednotku {unit}":
+    "once you can build {unit}",
+  "Nahrazuje":
+    "Replaces",
+  "Div světa":
+    "Wonder of the world",
+  "Budova":
+    "Building",
+  "Tvým městům teď dá":
+    "Gives your cities now",
+  "Tady teď dá":
+    "Gives here now",
+  "Cena":
+    "Cost",
+  "{cost} štítů, hotovo za {time}":
+    "{cost} shields, ready in {time}",
+  "Město to právě staví":
+    "The city is building it now",
+  "Stavět teď":
+    "Build now",
+  "Už je v plánu":
+    "Already planned",
+  "Přidat do plánu":
+    "Add to plan",
+  "Celá stránka v encyklopedii":
+    "Full encyclopedia page",
+  "Takový cíl správce nezná.":
+    "The governor does not know such a goal.",
+  "Správce města {city} začal stavět: {production}.":
+    "The governor of {city} started building: {production}.",
+  "V ruinách starého města jsi našel poklad: {gold} zlata.":
+    "In the ruins of an old town you found treasure: {gold} gold.",
+  "V ruinách ležely staré svitky. Tví vědci z nich poznali objev {tech}.":
+    "Old scrolls lay in the ruins. Your scientists learned {tech} from them.",
+  "V ruinách se k tobě přidali žoldnéři: {unit}.":
+    "Mercenaries in the ruins joined you: {unit}.",
+  "V ruinách žili kočovníci a přidali se k tobě jako osadníci.":
+    "Nomads lived in the ruins and joined you as settlers.",
+  "Z ruin vyrazili barbaři! Stáhni jednotku do bezpečí, nebo se připrav k boji.":
+    "Barbarians burst out of the ruins! Pull your unit back to safety or get ready to fight.",
+  "Ruiny jsou prázdné. Někdo je vyraboval před tebou.":
+    "The ruins are empty. Someone looted them before you.",
+  "U pobřeží nedaleko města {city} se vylodil barbar.|U pobřeží nedaleko města {city} se vylodili {n} barbaři.|U pobřeží nedaleko města {city} se vylodilo {n} barbarů.":
+    "A barbarian landed on the coast near {city}.|{n} barbarians landed on the coast near {city}.",
+  "U pobřeží se vylodil barbar.|U pobřeží se vylodili {n} barbaři.|U pobřeží se vylodilo {n} barbarů.":
+    "A barbarian landed on the coast.|{n} barbarians landed on the coast.",
+  "V divočině se vzbouřil barbar.|V divočině se vzbouřili {n} barbaři.|V divočině se vzbouřilo {n} barbarů.":
+    "A barbarian rose up in the wilds.|{n} barbarians rose up in the wilds.",
 };

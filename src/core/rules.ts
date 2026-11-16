@@ -421,8 +421,72 @@ export interface CombatConstants {
   captureBuildingLossPct: number;
 }
 
+export type RuinOutcome = "gold" | "tech" | "mercenaries" | "settlers" | "barbarians" | "empty";
+
+export interface RuinConstants {
+  perLandTiles: number;
+  minStartDistance: number;
+  outcomes: Record<RuinOutcome, number>;
+  /** Gold amounts, one picked at random. */
+  gold: number[];
+  /** Unit types a ruin may give; the strongest one the finder could build itself wins, else the first. */
+  mercenaries: UnitTypeId[];
+  settlersBeforeTurn: number;
+  barbariansFromTurn: number;
+  /** Barbarians stay in a ruin this close to any city. */
+  barbarianCityDistance: number;
+}
+
+export type BarbarianLevel = "none" | "few" | "many";
+
+export interface BarbarianLevelConstants {
+  startTurn: number;
+  uprisingPct: number;
+  landingPct: number;
+  maxUnits: number;
+  groupMin: number;
+  groupMax: number;
+}
+
+export interface BarbarianConstants {
+  levels: Record<Exclude<BarbarianLevel, "none">, BarbarianLevelConstants>;
+  uprisingCityDistance: number;
+  /** Nearest and farthest distance of a landing from the city it threatens. */
+  landingCityDistance: number[];
+  /** Unit types by the most advanced technology anyone knows; the last row whose tech is known applies. */
+  units: { tech: TechId | null; units: UnitTypeId[] }[];
+  attackChance: number;
+}
+
+export interface GovernorGoalConstants {
+  tile: Yield;
+  foodTarget: number;
+  food: number;
+  shields: number;
+  science: number;
+  gold: number;
+  content: number;
+  defenders: number;
+}
+
+export interface GovernorConstants {
+  balanced: GovernorGoalConstants;
+  growth: GovernorGoalConstants;
+  production: GovernorGoalConstants;
+  science: GovernorGoalConstants;
+  gold: GovernorGoalConstants;
+  defense: GovernorGoalConstants;
+  /** Below this much gold the governor builds nothing whose upkeep the treasury cannot pay. */
+  reserveGold: number;
+  /** Extra points for buildings that pay off only later, per goal or for "any" goal. */
+  later: Record<string, Record<string, number>>;
+}
+
 export interface GameConstants {
   combat: CombatConstants;
+  governor: GovernorConstants;
+  ruins: RuinConstants;
+  barbarians: BarbarianConstants;
   maxTurns: number;
   movesFraction: number;
   roadMoveCost: number;
@@ -605,11 +669,15 @@ export const CIV_IDS = [
 ] as const;
 export type CivId = (typeof CIV_IDS)[number];
 
+/** Every nation in the game: the playable ones and the barbarians. */
+export const NATION_IDS = [...CIV_IDS, "barbarians"] as const;
+export type NationId = (typeof NATION_IDS)[number];
+
 /** What the computer player is inclined to do; read by the AI. */
 export type Personality = "expansion" | "war" | "science";
 
 export interface CivRule {
-  id: CivId;
+  id: NationId;
   /** The people, in plural: "Češi". */
   name: string;
   /** Adjective for a feminine noun, as in "česká říše". */
@@ -623,7 +691,7 @@ export interface CivRule {
   cities: string[];
 }
 
-export const CIVS: Readonly<Record<CivId, CivRule>> = indexById("civs.json", CIV_IDS, civData.civs as CivRule[]);
+export const CIVS: Readonly<Record<NationId, CivRule>> = indexById("civs.json", NATION_IDS, civData.civs as CivRule[]);
 
 export function isLand(terrain: TerrainId): boolean {
   return TERRAINS[terrain].land;

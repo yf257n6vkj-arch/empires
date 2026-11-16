@@ -2,6 +2,7 @@
  * Ending a player's turn and starting the next one. Players move one after
  * another; when the last player ends, a new game turn begins.
  */
+import { barbarianTurnDraft } from "./barbarians";
 import { assignWorkersDraft, processCityDraft, removeUnitDraft } from "./city";
 import {
   buildingUpkeep,
@@ -19,7 +20,7 @@ import { healAmount } from "./combat";
 import type { GameEvent } from "./events";
 import { BUILDINGS, GOVERNMENTS, IMPROVEMENTS, RULES, TECH_IDS, UNIT_TYPES, type BuildingId, type ImprovementId, type TerrainId } from "./rules";
 import { Rng } from "./rng";
-import type { City, GameState, PlayerId, Unit, WorkKind } from "./state";
+import { isBarbarian, type City, type GameState, type PlayerId, type Unit, type WorkKind } from "./state";
 import { workerStepDraft } from "./workers";
 import { cityAt, idx, touchesLand } from "./world";
 
@@ -42,6 +43,7 @@ export function endTurnDraft(draft: GameState, events: GameEvent[]): void {
   perilsDraft(draft, player, events);
   collapseDraft(draft, player, events);
   disasterDraft(draft, player, events);
+  if (isBarbarian(draft.players[player])) barbarianTurnDraft(draft, events);
 
   const next = (player + 1) % draft.players.length;
   if (next === 0) {

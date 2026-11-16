@@ -4,7 +4,7 @@
  * with the same name (Thebes in Egypt and in Greece) keep their own story.
  * The texts follow Wikipedia; `wiki` is the article title to search for.
  */
-import { CIV_IDS, CIVS, type CivId } from "../core";
+import { CIV_IDS, CIVS, type CivId, type NationId } from "../core";
 import { language } from "./i18n";
 
 export interface CityPage {
@@ -262,8 +262,8 @@ export const CITY_PAGES: Record<string, CityPage> = {
  * The history of a city by its name, or null for a made-up name. The owner's
  * own list is searched first, so a Greek Thebes gets the Greek story.
  */
-export function cityPage(name: string, ownerCiv: CivId): { page: CityPage; url: string } | null {
-  const civs = [ownerCiv, ...CIV_IDS.filter((c) => c !== ownerCiv)];
+export function cityPage(name: string, ownerCiv: NationId): { page: CityPage; url: string } | null {
+  const civs: CivId[] = [...CIV_IDS.filter((c) => c === ownerCiv), ...CIV_IDS.filter((c) => c !== ownerCiv)];
   for (const civ of civs) {
     const index = CIVS[civ].cities.indexOf(name);
     if (index < 0) continue;

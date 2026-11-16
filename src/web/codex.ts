@@ -18,6 +18,7 @@ import {
   UNIT_TYPE_IDS,
   UNIT_TYPES,
   BUILDING_IDS,
+  type CivId,
   type TechId,
 } from "../core";
 import { buildingPortraitCanvas } from "./buildingArt";
@@ -196,7 +197,7 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
       );
     }
     if (e.kind === "civ") {
-      const c = CIVS[e.id as keyof typeof CIVS];
+      const c = CIVS[e.id as CivId];
       const nature = { expansion: t("rád zakládá nová města"), war: t("spoléhá na armádu"), science: t("sází na vědu a výzkum") }[c.personality];
       return (
         row(t("Vládce"), entryLink(`lead-${c.id}`, leaderName(c.id))) +
@@ -206,7 +207,7 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
       );
     }
     if (e.kind === "lead") {
-      const c = CIVS[e.id as keyof typeof CIVS];
+      const c = CIVS[e.id as CivId];
       return row(t("Vede národ"), entryLink(`civ-${c.id}`, civName(c.id))) + row(t("Hlavní město"), escapeHtml(cityLabel(c.cities[0]!)));
     }
     if (e.kind === "gov") {

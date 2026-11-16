@@ -26,6 +26,8 @@ import {
   isCoastal,
   UNIT_TYPES,
   workableTiles,
+  GOVERNOR_GOALS,
+  type GovernorGoal,
   type BuildingId,
   type City,
   type Command,
@@ -40,6 +42,7 @@ import { buildingArtCanvas, cityArtSettled, drawCityView, hasCityArt, hitAt, loa
 import { t, tn } from "./i18n";
 import { buildingName, cityLabel, productionLabel, terrainName, unitName } from "./i18n/names";
 import { cityPage } from "./cityPages";
+import { detailHtml, type DetailItem } from "./productionDetail";
 
 export interface CityHost {
   state(): GameState;
@@ -52,6 +55,47 @@ export interface CityHost {
   say(text: string): void;
   /** Opens the encyclopedia at an entry. */
   openEntry(key: string): void;
+}
+
+/** Name of a governor goal for the picker. */
+export function governorLabel(goal: GovernorGoal | null): string {
+  switch (goal) {
+    case null:
+      return t("bez správce");
+    case "balanced":
+      return t("rovnováha");
+    case "growth":
+      return t("růst");
+    case "production":
+      return t("výroba");
+    case "science":
+      return t("věda");
+    case "gold":
+      return t("zlato");
+    case "defense":
+      return t("obrana");
+  }
+}
+
+/** What the governor does with a goal. */
+function governorText(goal: GovernorGoal | null): string {
+  const note = t(" Novou stavbu vybere, až město dostaví tu současnou a v plánu nic nebude.");
+  switch (goal) {
+    case null:
+      return t("Město řídíš sám. Správce za tebe obsadí políčka a vybírá stavby podle cíle, který mu dáš.");
+    case "balanced":
+      return t("Dbá na všechno stejně a staví to, co městu nejvíc pomůže.") + note;
+    case "growth":
+      return t("Obsadí políčka s jídlem a staví budovy, se kterými město roste rychleji, třeba sýpku nebo přístav.") + note;
+    case "production":
+      return t("Obsadí lesy a kopce s doly a staví budovy, které přidají štíty.") + note;
+    case "science":
+      return t("Dává přednost políčkům s obchodem a staví knihovny a univerzity.") + note;
+    case "gold":
+      return t("Dává přednost políčkům s obchodem a staví tržiště a banky.") + note;
+    case "defense":
+      return t("Drží ve městě dva obránce a staví hradby a kasárna.") + note;
+  }
 }
 
 function turns(n: number): string {
@@ -606,6 +650,8 @@ export function createCityScreen(host: CityHost) {
   let panelHeight: number | null = null;
   /** Whether the history of the city is shown over the picture; stays open while flipping through cities. */
   let aboutOpen = false;
+  /** Production item whose detail card is shown over the picture. */
+  let detail: DetailItem | null = null;
   /** "cityId:building" waiting for a second click to be sold. */
   let sellConfirm: string | null = null;
   try {
@@ -625,6 +671,7 @@ export function createCityScreen(host: CityHost) {
   }
 
   function open(id: number): void {
+    if (cityId !== id) detail = null;
     cityId = id;
     if (!dialog.open) dialog.showModal();
     render();
@@ -754,7 +801,7 @@ export function createCityScreen(host: CityHost) {
       const cost = o.kind === "wealth" ? t("+{gold} zl.", { gold: goldPerTurn }) : `${productionCost(o)} ${yieldIcon("shields", 11)}`;
       const time = o.kind === "wealth" ? t("každý tah") : left ? turns(left) : "—";
       const entry = o.kind === "wealth" ? "" : o.kind === "unit" ? `unit-${o.id}` : `${wonder ? "wdr" : "bld"}-${o.id}`;
-      return `<div class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}"><button type="button" class="cs-opt-main" data-opt="${n}"><span class="cs-opt-pic"></span><span class="cs-opt-text"><span class="cs-opt-name">${escapeHtml(productionLabel(o))}</span><span class="cs-opt-desc">${escapeHtml(benefit(o))}</span></span><span class="cs-opt-cost">${cost}</span><span class="cs-opt-turns">${time}</span></button>${entry ? `<button type="button" class="cs-opt-info" data-entry="${entry}" title="${t("Otevřít v encyklopedii")}">?</button>` : ""}${o.kind === "wealth" ? "" : `<button type="button" class="cs-opt-add" data-add="${n}" ${planned || full ? "disabled" : ""} title="${planned ? t("Už je v plánu.") : full ? t("Plán je plný.") : t("Přidat do plánu, město to postaví potom")}">+</button>`}</div>`;
+      return `<div class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}"><button type="button" class="cs-opt-main" data-opt="${n}"><span class="cs-opt-pic"></span><span class="cs-opt-text"><span class="cs-opt-name">${escapeHtml(productionLabel(o))}</span><span class="cs-opt-desc">${escapeHtml(benefit(o))}</span></span><span class="cs-opt-cost">${cost}</span><span class="cs-opt-turns">${time}</span></button>${entry ? `<button type="button" class="cs-opt-info ${detail && sameItem(detail, o) ? "on" : ""}" data-detail="${n}" title="${t("Podrobnosti")}">?</button>` : ""}${o.kind === "wealth" ? "" : `<button type="button" class="cs-opt-add" data-add="${n}" ${planned || full ? "disabled" : ""} title="${planned ? t("Už je v plánu.") : full ? t("Plán je plný.") : t("Přidat do plánu, město to postaví potom")}">+</button>`}</div>`;
     };
     const group = (title: string, pick: (o: ProductionItem) => boolean) => {
       const rows = options.map((o, n) => (pick(o) ? optionRow(o, n) : "")).join("");
@@ -776,6 +823,16 @@ export function createCityScreen(host: CityHost) {
             <a href="${history.url}" target="_blank" rel="noopener">${t("Přečti si víc na Wikipedii: {title}", { title: escapeHtml(history.page.wiki) })} ↗</a>
           </div>`
         : "";
+    if (detail && !options.some((o) => sameItem(o, detail!))) detail = null;
+    const shown = detail;
+    const detailBox = shown
+      ? detailHtml(s, c, shown, {
+          turnsLeft: r.shieldSurplus > 0 ? Math.max(1, Math.ceil((productionCost(shown) - c.shields) / r.shieldSurplus)) : null,
+          planned: shown.kind === "building" && [c.production, ...c.queue].some((x) => sameItem(x, shown)),
+          full: c.queue.length >= RULES.queueLength,
+          current: sameItem(shown, c.production),
+        })
+      : "";
     dialog.innerHTML = `
       <div class="cs">
         <div class="cs-head">
@@ -789,7 +846,7 @@ export function createCityScreen(host: CityHost) {
         </div>
         <div class="cs-top">
           <div class="cs-view"></div>
-          ${aboutBox}
+          ${detailBox || aboutBox}
           <div class="cs-citizens">
             <div class="cs-people"></div>
             <div class="cs-mood">
@@ -838,6 +895,7 @@ export function createCityScreen(host: CityHost) {
                   : `<span class="muted small">${t("nic dalšího. Tlačítkem + u stavby ji přidáš do plánu.")}</span>`
               }
             </div>
+            ${governorRow(c)}
             <h3>${t("Co stavět dál")} <span class="muted">${t("· klik vybere, + naplánuje")}</span></h3>
             <div class="cs-opts">${optionList}</div>
           </section>
@@ -1048,6 +1106,25 @@ export function createCityScreen(host: CityHost) {
       });
     });
     dialog.querySelectorAll<HTMLButtonElement>("[data-entry]").forEach((b) => b.addEventListener("click", () => host.openEntry(b.dataset.entry!)));
+    dialog.querySelectorAll<HTMLButtonElement>("[data-detail]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const o = options[Number(b.dataset.detail)]!;
+        detail = o.kind === "wealth" || (detail && sameItem(detail, o)) ? null : o;
+        render();
+      }),
+    );
+    const card = dialog.querySelector<HTMLDivElement>(".cs-detail");
+    if (card && shown) {
+      card.querySelector("[data-pd-close]")?.addEventListener("click", () => {
+        detail = null;
+        render();
+      });
+      card.querySelector("[data-pd-build]")?.addEventListener("click", () => act({ type: "setProduction", cityId: c.id, item: shown }));
+      card.querySelector("[data-pd-add]")?.addEventListener("click", () => act({ type: "setQueue", cityId: c.id, queue: [...c.queue, shown] }));
+      card.querySelector<HTMLButtonElement>("[data-pd-entry]")?.addEventListener("click", (e) => host.openEntry((e.currentTarget as HTMLButtonElement).dataset.pdEntry!));
+      const pic = card.querySelector<HTMLDivElement>(".pd-pic")!;
+      if (!pic.querySelector("img")) pic.append(pictureOf(shown, 150, 112, c.owner));
+    }
     dialog.querySelector("[data-close]")?.addEventListener("click", close);
     dialog.querySelectorAll("[data-about]").forEach((b) =>
       b.addEventListener("click", () => {
@@ -1056,6 +1133,10 @@ export function createCityScreen(host: CityHost) {
       }),
     );
     dialog.querySelector("[data-buy]")?.addEventListener("click", () => act({ type: "buy", cityId: c.id }));
+    dialog.querySelector<HTMLSelectElement>("[data-governor]")?.addEventListener("change", (e) => {
+      const value = (e.currentTarget as HTMLSelectElement).value;
+      act({ type: "setGovernor", cityId: c.id, goal: value ? (value as GovernorGoal) : null });
+    });
     dialog.querySelector("[data-auto]")?.addEventListener("click", () => act({ type: "autoAssignWorkers", cityId: c.id }));
     dialog.querySelectorAll<HTMLButtonElement>("[data-nav]").forEach((b) =>
       b.addEventListener("click", () => {
@@ -1105,6 +1186,18 @@ export function createCityScreen(host: CityHost) {
       }
       render();
     });
+  }
+
+  /** The governor picker under the plan. */
+  function governorRow(c: City): string {
+    const goal = c.governor;
+    const options = [null, ...GOVERNOR_GOALS]
+      .map((g) => `<option value="${g ?? ""}" ${g === goal ? "selected" : ""}>${escapeHtml(governorLabel(g))}</option>`)
+      .join("");
+    return `<div class="cs-gov ${goal ? "on" : ""}">
+      <label><span class="cs-plan-label">${t("Správce:")}</span> <select data-governor>${options}</select></label>
+      <span class="small ${goal ? "" : "muted"}">${escapeHtml(governorText(goal))}</span>
+    </div>`;
   }
 
   function pictureOf(item: ProductionItem, w: number, h: number, owner: number): HTMLCanvasElement {

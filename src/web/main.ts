@@ -54,6 +54,7 @@ import {
   workTurns,
   type City,
   type CivId,
+  type BarbarianLevel,
   type Command,
   type GameEvent,
   type GameState,
@@ -193,12 +194,12 @@ function randomSeed(): string {
   return `${w}-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
-function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_WORLD_CHOICE, persist = true): void {
+function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_WORLD_CHOICE, persist = true, barbarians: BarbarianLevel = "few"): void {
   // A map code that carries settings wins over the choice in the dialog.
   const parsed = parseGameCode(input);
   const world = parsed.world ?? resolveWorld(choice, parsed.seed);
   const seed = formatGameCode(parsed.seed, world);
-  state = newGame({ seed, playerCount: world.opponents + 1, civ, world, opponentUnits: true });
+  state = newGame({ seed, playerCount: world.opponents + 1, civ, world, opponentUnits: true, barbarians });
   const civ0 = state.players[HUMAN]!.civ;
   // The rivals stay unnamed: the player meets them while exploring.
   log = [
@@ -413,6 +414,7 @@ function buildDrawInput(): DrawInput {
     fortress: showAll ? state.map.fortress : view.fortress,
     special: showAll ? state.map.special : view.special,
     pollution: showAll ? state.map.pollution : view.pollution,
+    ruins: showAll ? state.map.ruins : view.ruins,
     units: [...view.units, ...view.foreignUnits].map((u) => ({
       id: u.id,
       owner: u.owner,
@@ -627,9 +629,9 @@ const attackDialog = createAttackDialog($<HTMLDialogElement>("#attack-dialog"), 
   },
 });
 const newGameDialog = createNewGameDialog($<HTMLDialogElement>("#new-game-dialog"), {
-  start: (seed, civ, world) => {
+  start: (seed, civ, world, barbarians) => {
     menus.hideStart();
-    startNewGame(seed, civ, world);
+    startNewGame(seed, civ, world, true, barbarians);
   },
   randomSeed,
   showEntry: (key) => codex.show(key),
@@ -710,6 +712,12 @@ const advisor = createAdvisor($<HTMLElement>("#advisor"), $<HTMLInputElement>("#
   automate: (id) => {
     if (run({ type: "automate", unitId: id })) say(t("Osadník teď sám vylepšuje okolí tvých měst."));
     refresh();
+  },
+  openGovernment: () => empire.openGovernment(),
+  run: (command) => {
+    const ok = run(command);
+    refresh();
+    return ok;
   },
 });
 
@@ -1413,7 +1421,7 @@ showAllBox.addEventListener("change", refresh);
 const menus = createMenus($<HTMLElement>("#start-screen"), $<HTMLDialogElement>("#menu-dialog"), $<HTMLDialogElement>("#saves-dialog"), $<HTMLDialogElement>("#help-dialog"), {
   autosaveInfo: () => {
     const saved = readAutosave();
-    return saved ? { civ: saved.state.players[HUMAN]!.civ, turn: saved.state.turn } : null;
+    return saved ? { civ: saved.state.players[HUMAN]!.civ as CivId, turn: saved.state.turn } : null;
   },
   continueGame: () => {
     const saved = readAutosave();

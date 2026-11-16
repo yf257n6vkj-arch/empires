@@ -283,6 +283,12 @@ export const EN_NAMES: Names = {
       leader: "Genghis Khan",
       cities: ["Karakorum", "Avarga", "Khanbaliq", "Shangdu", "Sarai", "Tabriz", "Soltaniyeh", "Almaliq", "Ulaanbaatar", "Erdenet", "Darkhan", "Khovd", "Mörön", "Choibalsan", "Bayankhongor", "Uliastai"],
     },
+    barbarians: {
+      name: "Barbarians",
+      adjective: "Barbarian",
+      leader: "Chieftain",
+      cities: ["Camp"],
+    },
     czechs: {
       name: "Czechs",
       adjective: "Czech",

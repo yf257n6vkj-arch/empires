@@ -1,6 +1,7 @@
 /**
  * Unit movement: checks, single steps and multi-turn goto orders.
  */
+import { exploreRuinsDraft } from "./barbarians";
 import type { GameEvent } from "./events";
 import { distance, type Point } from "./geometry";
 import { findPath } from "./path";
@@ -63,6 +64,7 @@ export function canMove(state: GameState, unit: Unit, to: Point): CommandError |
 /** Moves a unit one tile and takes an empty enemy city it walks into (mutates the draft). */
 export function enterTileDraft(draft: GameState, unit: Unit, to: Point, events: GameEvent[]): void {
   moveDraft(draft, unit, to);
+  if (draft.map.ruins[idx(draft.map, to)]) exploreRuinsDraft(draft, unit, events);
   const city = cityAt(draft, to);
   if (city && city.owner !== unit.owner) {
     const rng = Rng.fromState(draft.rng);

@@ -1,6 +1,7 @@
 import type {
   BuildingId,
   CivId,
+  NationId,
   GovernmentId,
   ImprovementId,
   TechId,
@@ -24,7 +25,7 @@ export interface Names {
   governments: Record<GovernmentId, string>;
   improvements: Record<ImprovementId, string>;
   civs: Record<
-    CivId,
+    NationId,
     {
       /** The people, in plural. */
       name: string;

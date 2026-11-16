@@ -7,10 +7,11 @@ import type { GameEvent } from "./events";
 import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
 import { mapOptionsFor, parseGameCode, type WorldSettings } from "./setup";
-import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, UNIT_TYPES, type CivId, type TechId } from "./rules";
+import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, TERRAINS, UNIT_TYPES, type BarbarianLevel, type CivId, type TechId } from "./rules";
+import { distance, type Point } from "./geometry";
 import { chooseStartPositions } from "./start";
 import { canResearch, clampRate, fallbackProduction, fitRates, startingEconomy } from "./economy";
-import { emptySpaceship, STATE_VERSION, type GameState, type Player } from "./state";
+import { emptySpaceship, isBarbarian, STATE_VERSION, type GameState, type Player } from "./state";
 import { makeUnit, reveal } from "./world";
 
 export interface NewGameOptions {
@@ -27,6 +28,36 @@ export interface NewGameOptions {
   opponentUnits?: boolean;
   /** Nation of the human player; a random one when omitted. */
   civ?: CivId;
+  /** How many barbarians; none when omitted. */
+  barbarians?: BarbarianLevel;
+}
+
+/** Scatters ruins over land away from the starts (mutates the map). */
+function placeRuins(map: GameState["map"], starts: Point[], rng: Rng): void {
+  const land: number[] = [];
+  for (let i = 0; i < map.terrain.length; i++) {
+    if (!TERRAINS[map.terrain[i]!].land || map.terrain[i] === "arctic") continue;
+    const p = { x: i % map.width, y: Math.floor(i / map.width) };
+    if (starts.some((s) => distance(s, p) < RULES.ruins.minStartDistance)) continue;
+    land.push(i);
+  }
+  const count = Math.floor(map.terrain.filter((t) => TERRAINS[t].land).length / RULES.ruins.perLandTiles);
+  for (const i of rng.shuffle(land).slice(0, count)) map.ruins[i] = 1;
+}
+
+/** The barbarian player: it sits last, knows the land and is at war with everybody. */
+function barbarianPlayer(id: number, map: GameState["map"]): Player {
+  return {
+    id,
+    civ: "barbarians",
+    name: CIVS.barbarians.name,
+    isHuman: false,
+    start: { x: 0, y: 0 },
+    explored: new Array<number>(map.width * map.height).fill(1),
+    citiesFounded: 0,
+    ...startingEconomy(),
+    scienceRate: 0,
+  };
 }
 
 /**
@@ -76,9 +107,18 @@ export function newGame(options: NewGameOptions): GameState {
     cities: [],
     warming: 0,
     victory: null,
+    barbarians: options.barbarians ?? "none",
   };
+  placeRuins(map, starts, rng.fork("ruins"));
+  if (state.barbarians !== "none") {
+    const b = barbarianPlayer(players.length, map);
+    for (const p of players) p.atWar.push(b.id);
+    b.atWar = players.map((p) => p.id);
+    players.push(b);
+  }
 
   for (const player of players) {
+    if (isBarbarian(player)) continue;
     reveal(state, player.id, player.start, RULES.unitSight);
     if (!player.isHuman && !options.opponentUnits) continue;
     for (const type of RULES.startingUnits) state.units.push(makeUnit(state.nextId++, player.id, type, player.start, null));
@@ -221,6 +261,13 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
       p.contacts ??= [];
       p.atWar ??= [];
     }
+  }
+  if (version <= 13) {
+    // Version 14 adds the city governor.
+    for (const c of state.cities) c.governor ??= null;
+    // It also adds ruins and barbarians; older games have neither.
+    state.map.ruins ??= new Array<number>(state.map.width * state.map.height).fill(0);
+    state.barbarians ??= "none";
   }
   state.version = STATE_VERSION;
   return state;

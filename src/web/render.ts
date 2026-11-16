@@ -108,6 +108,8 @@ export interface DrawInput {
   special?: number[];
   /** Polluted tiles. */
   pollution?: number[];
+  /** Ruins nobody has entered yet. */
+  ruins?: number[];
   units: DrawUnit[];
   cities: DrawCity[];
   /** Start markers, only used by the map preview. */
@@ -211,7 +213,7 @@ function inputKey(input: DrawInput): string {
     h = Math.imul(h, 16777619);
   };
   for (const t of input.terrain) mix(t ? t.charCodeAt(0) * 31 + t.charCodeAt(1) : 0);
-  for (const arr of [input.road, input.irrigation, input.mine, input.railroad ?? [], input.fortress ?? [], input.special ?? [], input.pollution ?? []]) for (const v of arr) mix(v);
+  for (const arr of [input.road, input.irrigation, input.mine, input.railroad ?? [], input.fortress ?? [], input.special ?? [], input.pollution ?? [], input.ruins ?? []]) for (const v of arr) mix(v);
   for (const c of input.cities) mix(c.x * 1000 + c.y);
   for (const [owner, tiles] of input.territory ?? []) {
     mix(owner + 7);
@@ -371,6 +373,7 @@ function drawBackground(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   drawRivers(ctx, input);
   drawImprovements(ctx, input);
   drawSpecials(ctx, input);
+  drawRuins(ctx, input);
   if (input.territory) drawTerritory(ctx, input);
   drawFogEdge(ctx, input);
 }
@@ -1260,6 +1263,84 @@ function drawSpecials(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     }
   }
   ctx.restore();
+}
+
+/**
+ * Ruins of an old town: broken columns, a fallen lintel and scattered stones
+ * on a patch of trodden ground, so they read as a place to visit.
+ */
+function drawRuins(ctx: CanvasRenderingContext2D, input: DrawInput): void {
+  const ruins = input.ruins;
+  if (!ruins) return;
+  const { width, terrain } = input;
+  ctx.save();
+  for (let y = view.y0; y <= view.y1; y++) {
+    for (let x = view.x0; x <= view.x1; x++) {
+      const i = y * width + x;
+      if (!terrain[i] || !ruins[i]) continue;
+      drawRuin(ctx, x * TILE, y * TILE, x, y);
+    }
+  }
+  ctx.restore();
+}
+
+export function drawRuin(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx: number, ty: number): void {
+  const r = (k: number) => hash(tx, ty, 700 + k);
+  const cx = ox + TILE * (0.48 + (r(0) - 0.5) * 0.1);
+  const base = oy + TILE * 0.72;
+  // Trodden ground.
+  const ground = ctx.createRadialGradient(cx, base, 1, cx, base, TILE * 0.42);
+  ground.addColorStop(0, "rgba(196, 170, 120, 0.75)");
+  ground.addColorStop(1, "rgba(196, 170, 120, 0)");
+  ctx.fillStyle = ground;
+  ctx.beginPath();
+  ctx.ellipse(cx, base, TILE * 0.42, TILE * 0.17, 0, 0, Math.PI * 2);
+  ctx.fill();
+  const stone = "#d9cfb8";
+  const shade = "#8f846c";
+  ctx.lineWidth = 0.7;
+  ctx.strokeStyle = "rgba(50, 40, 28, 0.85)";
+  // Columns of different heights, the last one broken off.
+  const cols = [
+    { x: cx - TILE * 0.22, h: TILE * 0.42 },
+    { x: cx - TILE * 0.04, h: TILE * 0.3 },
+    { x: cx + TILE * 0.15, h: TILE * (0.14 + r(1) * 0.08) },
+  ];
+  const w = TILE * 0.1;
+  for (const c of cols) {
+    ctx.fillStyle = stone;
+    ctx.beginPath();
+    ctx.moveTo(c.x - w / 2, base);
+    ctx.lineTo(c.x - w / 2, base - c.h);
+    ctx.lineTo(c.x - w / 6, base - c.h - w * 0.35);
+    ctx.lineTo(c.x + w / 2, base - c.h + w * 0.15);
+    ctx.lineTo(c.x + w / 2, base);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = shade;
+    ctx.fillRect(c.x + w * 0.12, base - c.h + w * 0.2, w * 0.38, c.h - w * 0.2);
+  }
+  // The lintel still lies on the two tall columns, tilted.
+  ctx.fillStyle = stone;
+  ctx.beginPath();
+  ctx.moveTo(cols[0]!.x - w * 0.8, base - cols[0]!.h - w * 0.1);
+  ctx.lineTo(cols[1]!.x + w * 0.8, base - cols[1]!.h - w * 0.2);
+  ctx.lineTo(cols[1]!.x + w * 0.8, base - cols[1]!.h - w * 0.85);
+  ctx.lineTo(cols[0]!.x - w * 0.8, base - cols[0]!.h - w * 0.75);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Fallen stones.
+  for (let k = 0; k < 3; k++) {
+    const sx = cx + TILE * (0.18 + r(10 + k) * 0.18) * (k === 1 ? -1.6 : 1);
+    const sy = base + TILE * (0.02 + r(20 + k) * 0.06);
+    ctx.fillStyle = k === 2 ? shade : stone;
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, TILE * 0.05, TILE * 0.03, r(30 + k), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
 }
 
 function drawSpecial(ctx: CanvasRenderingContext2D, id: string, ox: number, oy: number, tx: number, ty: number): void {

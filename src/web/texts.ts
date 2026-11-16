@@ -2,6 +2,7 @@
 import {
   RULES,
   UNIT_TYPES,
+  visibleTiles,
   type BuildingRule,
   type CommandError,
   type DisasterId,
@@ -88,6 +89,7 @@ export const ERROR_TEXT: Record<CommandError, string> = {
   notAtWar: t("S tímhle národem jsi v míru. Zaútočit můžeš, až mu vyhlásíš válku."),
   noContact: t("S tímhle národem ses ještě nepotkal."),
   alreadyAtWar: t("S tímhle národem už válčíš."),
+  invalidGovernor: t("Takový cíl správce nezná."),
 };
 
 /** "před požárem": what a building or technology keeps away, in the instrumental. */
@@ -204,6 +206,11 @@ export function eventConcerns(state: GameState, e: GameEvent, viewer: number): b
       return e.from === viewer || e.to === viewer;
     case "contactMade":
       return e.a === viewer || e.b === viewer;
+    case "ruinsExplored":
+      return e.owner === viewer;
+    case "barbariansAppeared":
+      // The player hears of barbarians they can see or that landed near their cities.
+      return visibleTiles(state, viewer)[e.at.y * state.map.width + e.at.x] === 1 || nearestOwnCity(state, e.at, viewer, 4) !== null;
     case "warDeclared": {
       // Wars between others are news once the viewer knows both sides.
       const knows = (p: number) => state.players[viewer]?.contacts.includes(p) ?? false;
@@ -242,6 +249,21 @@ export function eventConcerns(state: GameState, e: GameEvent, viewer: number): b
   }
 }
 
+/** The player's city nearest to a point, within `range` when given. */
+function nearestOwnCity(state: GameState, at: { x: number; y: number }, viewer: number, range = Infinity) {
+  let best: GameState["cities"][number] | null = null;
+  let bestD = range;
+  for (const c of state.cities) {
+    if (c.owner !== viewer) continue;
+    const d = Math.max(Math.abs(c.x - at.x), Math.abs(c.y - at.y));
+    if (d <= bestD) {
+      best = c;
+      bestD = d;
+    }
+  }
+  return best;
+}
+
 export function cityName(state: GameState, id: number): string {
   const name = state.cities.find((c) => c.id === id)?.name;
   return name ? cityLabel(name) : t("Zaniklé město");
@@ -262,6 +284,10 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
       return t("{city} postavilo jednotku {unit}.", { city: cityName(state, e.cityId), unit: unitName(e.unitType) });
     case "buildingBuilt":
       return t("{city} postavilo budovu {building}.", { city: cityName(state, e.cityId), building: buildingName(e.building) });
+    case "governorChose": {
+      const city = state.cities.find((c) => c.id === e.cityId);
+      return city ? t("Správce města {city} začal stavět: {production}.", { city: cityLabel(city.name), production: productionLabel(e.item) }) : null;
+    }
     case "productionNeeded": {
       const city = state.cities.find((c) => c.id === e.cityId);
       return city ? t("{city} potřebuje novou výrobu, zatím staví: {production}.", { city: cityLabel(city.name), production: productionLabel(city.production) }) : null;
@@ -391,6 +417,32 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
     }
     case "palaceMoved":
       return e.player === viewer ? t("Hlavní město padlo a vláda se přestěhovala do města {city}.", { city: cityName(state, e.cityId) }) : null;
+    case "ruinsExplored":
+      switch (e.outcome) {
+        case "gold":
+          return t("V ruinách starého města jsi našel poklad: {gold} zlata.", { gold: e.gold ?? 0 });
+        case "tech":
+          return t("V ruinách ležely staré svitky. Tví vědci z nich poznali objev {tech}.", { tech: techName(e.tech!) });
+        case "mercenaries":
+          return t("V ruinách se k tobě přidali žoldnéři: {unit}.", { unit: unitName(e.unitType!) });
+        case "settlers":
+          return t("V ruinách žili kočovníci a přidali se k tobě jako osadníci.");
+        case "barbarians":
+          return t("Z ruin vyrazili barbaři! Stáhni jednotku do bezpečí, nebo se připrav k boji.");
+        case "empty":
+          return t("Ruiny jsou prázdné. Někdo je vyraboval před tebou.");
+      }
+      return null;
+    case "barbariansAppeared": {
+      if (e.reason === "ruins") return null;
+      const near = nearestOwnCity(state, e.at, viewer);
+      if (e.reason === "landing") {
+        return near
+          ? tn("U pobřeží nedaleko města {city} se vylodil barbar.|U pobřeží nedaleko města {city} se vylodili {n} barbaři.|U pobřeží nedaleko města {city} se vylodilo {n} barbarů.", e.count, { city: cityLabel(near.name) })
+          : tn("U pobřeží se vylodil barbar.|U pobřeží se vylodili {n} barbaři.|U pobřeží se vylodilo {n} barbarů.", e.count);
+      }
+      return tn("V divočině se vzbouřil barbar.|V divočině se vzbouřili {n} barbaři.|V divočině se vzbouřilo {n} barbarů.", e.count);
+    }
     case "contactMade": {
       const other = e.a === viewer ? e.b : e.b === viewer ? e.a : null;
       return other === null ? null : t("Potkal jsi nový národ: {nation}. Zatím spolu žijete v míru.", { nation: nationOf(state, other) });

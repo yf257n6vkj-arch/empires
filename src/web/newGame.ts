@@ -4,6 +4,7 @@
  */
 import {
   CIV_IDS,
+  type BarbarianLevel,
   CIVS,
   DEFAULT_WORLD_CHOICE,
   maxOpponents,
@@ -19,7 +20,7 @@ import { t, tn } from "./i18n";
 import { cityLabel, civName, leaderName, techName } from "./i18n/names";
 
 export interface NewGameHost {
-  start(seed: string, civ: CivId | undefined, world: WorldChoice): void;
+  start(seed: string, civ: CivId | undefined, world: WorldChoice, barbarians: BarbarianLevel): void;
   randomSeed(): string;
   /** Opens an encyclopedia page, e.g. "civ-czechs" or "lead-czechs". */
   showEntry(key: string): void;
@@ -95,6 +96,21 @@ function worldSummary(choice: WorldChoice): string {
 }
 
 const WORLD_KEY = "empires.world";
+const BARBARIANS_KEY = "empires.barbarians";
+const BARBARIAN_LEVELS: BarbarianLevel[] = ["none", "few", "many"];
+
+function loadBarbarians(): BarbarianLevel {
+  try {
+    const v = localStorage.getItem(BARBARIANS_KEY) as BarbarianLevel | null;
+    return v && BARBARIAN_LEVELS.includes(v) ? v : "few";
+  } catch {
+    return "few";
+  }
+}
+
+function barbarianLabel(level: BarbarianLevel): string {
+  return level === "none" ? t("žádní") : level === "few" ? t("málo") : t("hodně");
+}
 
 function loadChoice(): WorldChoice {
   try {
@@ -124,6 +140,7 @@ function saveChoice(choice: WorldChoice): void {
 export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost) {
   let chosen: CivId | "random" = "czechs";
   let world: WorldChoice = loadChoice();
+  let barbarians: BarbarianLevel = loadBarbarians();
   let view: "nations" | "world" = "nations";
 
   function setWorld(next: WorldChoice, firstGame: boolean): void {
@@ -168,6 +185,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
         <div class="ng-row"><div class="ng-label">${t("Počet soupeřů")}<span class="muted small">${t("Na malý svět se vejdou nejvýš 3, na střední 4 a na velký 5.")}</span></div><div class="ng-opts">${opponentButtons}</div></div>
         ${row("shape")}
         ${islandsNote}
+        <div class="ng-row"><div class="ng-label">${t("Barbaři")}<span class="muted small">${t("Objevují se v divočině a u pobřeží a dobývají města. Pár jich vyleze i z ruin.")}</span></div><div class="ng-opts">${BARBARIAN_LEVELS.map((l) => `<button type="button" class="ng-opt ${barbarians === l ? "on" : ""}" data-barbarians="${l}"><span>${barbarianLabel(l)}</span></button>`).join("")}</div></div>
         <details class="ng-more" ${advancedChanged ? "open" : ""}>
           <summary>${t("Další nastavení")}</summary>
           ${row("land")}${row("temperature")}${row("rainfall")}${row("age")}${row("resources")}
@@ -197,7 +215,21 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
     dialog.querySelector('[data-act="surprise"]')!.addEventListener("click", () => {
       setWorld({ size: "random", opponents: "random", shape: "random", land: "random", temperature: "random", rainfall: "random", age: "random", resources: "random" }, firstGame);
     });
-    dialog.querySelector('[data-act="default"]')!.addEventListener("click", () => setWorld({ ...DEFAULT_WORLD_CHOICE }, firstGame));
+    dialog.querySelector('[data-act="default"]')!.addEventListener("click", () => {
+      barbarians = "few";
+      setWorld({ ...DEFAULT_WORLD_CHOICE }, firstGame);
+    });
+    dialog.querySelectorAll<HTMLButtonElement>("[data-barbarians]").forEach((b) =>
+      b.addEventListener("click", () => {
+        barbarians = b.dataset.barbarians as BarbarianLevel;
+        try {
+          localStorage.setItem(BARBARIANS_KEY, barbarians);
+        } catch {
+          // Not remembered without storage.
+        }
+        render(firstGame);
+      }),
+    );
     dialog.querySelector('[data-act="done"]')!.addEventListener("click", () => {
       view = "nations";
       render(firstGame);
@@ -271,7 +303,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
       const typed = dialog.querySelector<HTMLInputElement>("[data-seed]")!.value.trim();
       const seed = typed && parseGameCode(typed).seed ? typed : host.randomSeed();
       dialog.close();
-      host.start(seed, chosen === "random" ? undefined : chosen, world);
+      host.start(seed, chosen === "random" ? undefined : chosen, world, barbarians);
     });
   }
 

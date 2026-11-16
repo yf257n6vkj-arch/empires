@@ -93,7 +93,8 @@ export function warMotivation(view: PlayerView, rival: RivalView, land: Int32Arr
   const ratio = power / Math.max(1, cityDefense(view, target));
   add("strength", ratio >= 3 ? 25 : ratio >= 2 ? 15 : ratio >= 1.2 ? 5 : ratio < 0.8 ? -30 : -10);
   if (army.length < 3) add("small army", -40);
-  const wars = view.rivals.filter((r) => r.atWar).length;
+  // Barbarians are always at war and do not count as a war of choice.
+  const wars = view.rivals.filter((r) => r.atWar && !r.barbarian).length;
   if (wars > 0) add("already at war", -20 * wars);
   const capital = view.cities.find((c) => c.buildings.includes("palace")) ?? view.cities[0]!;
   const d = distance(capital, target);

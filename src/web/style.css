@@ -576,3 +576,32 @@ label.rate input#lux { width: 60px; } .rate.tax { color: var(--muted); white-spa
 .at-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
 .at-dialog .primary.danger { background: #a8402c; border-color: #d0603f; color: #fff; }
 .at p { font-size: 14px; line-height: 1.5; }
+
+/* Detail card of a production item, over the city picture. */
+.cs-detail { position: absolute; left: 10px; bottom: 10px; top: 10px; width: min(500px, calc(100% - 20px)); overflow-y: auto; background: rgba(24, 20, 16, 0.94); backdrop-filter: blur(4px); border: 1px solid rgba(240, 210, 150, 0.35); border-radius: 10px; padding: 10px 14px; font-size: 13px; line-height: 1.45; color: #efe6d4; z-index: 3; display: flex; flex-direction: column; gap: 8px; }
+.cs-detail .pd-body { display: flex; gap: 12px; align-items: flex-start; }
+.pd-pic { flex: 0 0 150px; line-height: 0; }
+.pd-pic img, .pd-pic canvas { width: 150px; height: 112px; object-fit: cover; border-radius: 6px; }
+.pd-text p { margin: 0; }
+.pd-rows { display: flex; flex-direction: column; gap: 4px; }
+.pd-row { display: grid; grid-template-columns: 96px 1fr; gap: 8px; }
+.pd-label { color: var(--muted); }
+.pd-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+.cs-opt-info.on { background: #4a3c22; color: #f2cf6b; }
+
+/* Language buttons with flags. */
+.lang-btn { display: inline-flex; align-items: center; gap: 6px; }
+.lang-btn .flag { border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35); flex: 0 0 auto; }
+.lang-btn:not(.on) .flag { opacity: 0.75; }
+.lang-flags { display: inline-flex; gap: 6px; margin-left: 6px; }
+.lang-flags button { padding: 3px 8px; font-size: 12.5px; }
+.lang-flags button.on { border-color: #e0b75a; color: #f3e2b8; }
+.st-langs button { display: inline-flex; align-items: center; gap: 6px; }
+.adv-tips p.adv-why { font-size: 12.5px; color: #cfc3a8; }
+.adv-tips p.adv-why b { color: #e3c27a; font-weight: 600; }
+.adv-tips button.quiet { background: transparent; border-color: rgba(240, 210, 150, 0.25); color: var(--muted); }
+.adv-all { margin-top: 8px; font-size: 12px; padding: 2px 10px; background: transparent; border-color: rgba(240, 210, 150, 0.25); color: #cdbb94; }
+.cs-gov { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 6px 0 2px; }
+.cs-gov select { font-size: 12.5px; padding: 1px 4px; }
+.cs-gov.on select { border-color: #e0b75a; color: #f3e2b8; }
+.cs-gov .small { line-height: 1.35; }

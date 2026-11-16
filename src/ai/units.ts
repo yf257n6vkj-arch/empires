@@ -142,6 +142,9 @@ export function shipCommands(ctx: Context, s: Unit): Command[] {
 // ---------- soldiers ----------
 
 /** Soldiers: wounded go home, cities keep their garrison, one explores, the rest reinforce. */
+/** An explorer turns aside to ruins this close. */
+const RUIN_RANGE = 10;
+
 export function soldierCommands(ctx: Context, soldiers: Unit[], target: City | null = null): Command[] {
   const { view } = ctx;
   const commands: Command[] = [];
@@ -169,15 +172,23 @@ export function soldierCommands(ctx: Context, soldiers: Unit[], target: City | n
     free.splice(0, free.length, ...free.filter((u) => !army.includes(u)));
   }
 
-  // One free soldier explores while there is land left to see.
-  const edge = frontier(view, true).filter((i) => ctx.land[i] === ctx.land[at(view, view.cities[0] ?? view.start)]);
-  let explorer = free.find((u) => u.goto && edge.some((i) => same(u.goto, pointOf(view, i))));
-  if (!explorer && edge.length > 0 && view.cities.length > 0) explorer = free.find((u) => u.hp === UNIT_TYPES[u.type].hp);
+  // One free soldier explores while there is land left to see, and visits ruins it knows of on the way.
+  const homeLand = ctx.land[at(view, view.cities[0] ?? view.start)];
+  const edge = frontier(view, true).filter((i) => ctx.land[i] === homeLand);
+  const ruins = view.ruins.flatMap((v, i) => (v && ctx.land[i] === homeLand ? [pointOf(view, i)] : []));
+  const heading = (u: Unit) => u.goto !== null && (edge.some((i) => same(u.goto, pointOf(view, i))) || ruins.some((p) => same(u.goto, p)));
+  let explorer = free.find(heading);
+  if (!explorer && (edge.length > 0 || ruins.length > 0) && view.cities.length > 0) explorer = free.find((u) => u.hp === UNIT_TYPES[u.type].hp);
   for (const u of free) {
     if (u.movesLeft <= 0) continue;
     const hurt = u.hp < UNIT_TYPES[u.type].hp * 0.5;
     if (u === explorer && !hurt) {
-      if (u.goto && edge.some((i) => same(u.goto, pointOf(view, i)))) continue;
+      const ruin = nearest(u, ruins.filter((p) => distance(u, p) <= RUIN_RANGE));
+      if (ruin && !same(u.goto, ruin)) {
+        commands.push(...goto(u, ruin));
+        continue;
+      }
+      if (heading(u)) continue;
       const target = nearest(u, edge.map((i) => pointOf(view, i)).filter((p) => !(p.x === u.x && p.y === u.y)));
       if (target) {
         commands.push(...goto(u, target));

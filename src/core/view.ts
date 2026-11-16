@@ -9,14 +9,16 @@
  */
 import { tilesInRadius, type Point } from "./geometry";
 import { builtWonders, researchCost, wonderFlag } from "./economy";
-import { RULES, UNIT_TYPES, type BuildingId, type CivId, type GovernmentId, type TechId, type TerrainId } from "./rules";
-import type { City, GameState, PlayerId, Spaceship, Unit } from "./state";
+import { RULES, UNIT_TYPES, type BuildingId, type GovernmentId, type NationId, type TechId, type TerrainId } from "./rules";
+import { isBarbarian, type City, type GameState, type PlayerId, type Spaceship, type Unit } from "./state";
 
 /** What a player knows about another empire. */
 export interface RivalView {
   id: PlayerId;
   /** Nation, so the AI and the screen know the leader, colour and nature. */
-  civ: CivId;
+  civ: NationId;
+  /** The barbarians: always at war, no treaties, not a rival for victory. */
+  barbarian: boolean;
   name: string;
   /** The two empires have met. */
   contact: boolean;
@@ -29,7 +31,7 @@ export interface RivalView {
 
 export interface PlayerView {
   playerId: PlayerId;
-  civ: CivId;
+  civ: NationId;
   turn: number;
   isMyTurn: boolean;
   width: number;
@@ -50,6 +52,8 @@ export interface PlayerView {
   special: number[];
   /** Polluted explored tiles. */
   pollution: number[];
+  /** Ruins on explored tiles that nobody has entered yet. */
+  ruins: number[];
   /** How close global warming is, 0 to 100 percent; the whole world sees it. */
   warmingPct: number;
   start: Point;
@@ -116,6 +120,7 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     fortress: known(state.map.fortress),
     special: known(state.map.special),
     pollution: known(state.map.pollution),
+    ruins: known(state.map.ruins),
     warmingPct: Math.min(100, Math.round((100 * state.warming) / RULES.warmingLimit)),
     start: { ...player.start },
     playerNames: state.players.map((p) => p.name),
@@ -128,12 +133,13 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     cities: state.cities.filter((c) => c.owner === playerId).map((c) => ({ ...c })),
     foreignCities: state.cities
       .filter((c) => c.owner !== playerId && (seesAll || player.explored[c.y * state.map.width + c.x]))
-      .map((c) => ({ ...c, worked: [], food: 0, shields: 0, queue: [], tradeRoutes: [], stolenBy: [], taxmen: 0, scientists: 0, disorderTurns: 0, soldTurn: null })),
+      .map((c) => ({ ...c, worked: [], food: 0, shields: 0, queue: [], tradeRoutes: [], stolenBy: [], taxmen: 0, scientists: 0, disorderTurns: 0, soldTurn: null, governor: null })),
     rivals: state.players
       .filter((p) => p.id !== playerId)
       .map((p) => ({
         id: p.id,
         civ: p.civ,
+        barbarian: isBarbarian(p),
         name: p.name,
         contact: player.contacts.includes(p.id),
         atWar: player.atWar.includes(p.id),

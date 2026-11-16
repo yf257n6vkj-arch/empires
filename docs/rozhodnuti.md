@@ -2,6 +2,22 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Ruiny a barbaři podle Civilizace 2
+
+Michal vybral barbary podle Civilizace 2. V okně nové hry si hráč nastaví žádné, málo, nebo hodně barbarů, výchozí je málo. Barbaři hrají jako zvláštní hráč na konci pořadí a válčí se všemi od začátku hry. Nepotkávají se s ostatními a mír s nimi uzavřít nepůjde. Při nastavení málo se začnou objevovat od 45. tahu, při nastavení hodně od 25. tahu. Každý svůj tah mají šanci, že se vzbouří v divočině nejméně šest políček od měst, nebo se vylodí na pobřeží dvě až tři políčka od pobřežního města. Skupina má dvě až čtyři jednotky podle nastavení a jednotky odpovídají nejpokročilejšímu národu, od válečníků a jezdců po tanky. Barbarů je najednou nejvýš 6, nebo 18 při nastavení hodně. Barbaři táhnou na nejbližší město, na které dojdou pěšky, a útočí už se šancí 35 %. Dobyté město si nechají, jedna jednotka v něm zůstane a město staví útočníky. Soupeři vyrazí dobýt barbarské město zpátky, když leží do deseti políček od jejich měst, a pošlou na to menší armádu než do války.
+
+Na mapě leží ruiny, jedna na 28 políček pevniny, nejméně tři políčka od startů a nikdy na polárním ledu. První pozemní jednotka, která do ruin vstoupí, najde zlato (25 až 100), objev, žoldnéře, kočovníky, kteří se přidají jako osadníci, barbary, nebo nic. Barbaři z ruin vylezou až od 15. tahu, jen ve hře s barbary a nikdy blíž než tři políčka od města. Kočovníci se objevují jen do 60. tahu. Soupeři posílají svého průzkumníka k ruinám, o kterých vědí, a rádce na blízké ruiny upozorní hráče.
+
+Na 40 automatických partiích s barbary nastavenými na málo dobyli barbaři 60 měst a soupeři z nich 17 vzali zpátky, na konci partie drželi barbaři zhruba jedno město na partii. Soupeř měl ve 120. tahu medián 9 měst a 55 objevů, bez barbarů 10 měst a 57 objevů. Uložené hry z dřívějška žádné barbary ani ruiny nemají.
+
+## 16. 11. 2026: Správce města, rádce, který vysvětluje, a detail stavby
+
+Ve městě jde zapnout správce s cílem rovnováha, růst, výroba, věda, zlato nebo obrana. Správce obsadí políčka podle cíle. Když město dostaví stavbu a v plánu nic nemá, vybere další. Nejdřív zajistí obránce, při nepokojích chrám a pak spočítá, co která budova městu přidá, a vybere tu, která na jeden štít přinese nejvíc. Nestaví budovy, jejichž údržbu by pokladna neutáhla, a divy nechává na hráči. Když nic stavět nestojí za to, postaví druhého obránce a potom vydělává zlato. Plán města i políčka vybraná ručně mají přednost. Soupeři správce nepotřebují, svá města řídí sami stejnými příkazy. Váhy cílů jsou v datech pravidel.
+
+Rádce teď u každé rady píše, co udělat a proč. Nově radí, který objev zkoumat a co odemkne, varuje před nepřáteli u města, ukáže snadný útok a nehájené nepřátelské město, pošle zraněnou jednotku léčit, upozorní na město, které po růstu začne bouřit, doporučí monarchii, průzkum, blízké ruiny a div pro největší město. Ukazuje tři nejdůležitější rady a tlačítkem jde zobrazit všechny.
+
+Otazník u jednotky nebo budovy ve výběru výroby otevře přímo ve městě kartu s obrázkem, začátkem příběhu z encyklopedie a čísly. U jednotky říká, na co se hodí, u budovy spočítá, co by tomuhle městu přidala hned teď. Z karty jde stavbu rovnou zadat, přidat do plánu nebo otevřít celou stránku encyklopedie. Výběr jazyka v menu i na úvodní obrazovce mají vlajky kreslené kódem.
+
 ## 16. 11. 2026: Fáze 3, krok 3: soupeři vyhlašují válku a útočí ve skupině
 
 Národy se poznají, když jejich jednotky nebo města přijdou na dohled, a pak spolu žijí v míru. Útočit a dobývat města jde jen ve válce a válku může vyhlásit jen národ, který toho druhého zná. Když hráč pošle jednotku na národ, se kterým žije v míru, hra se zeptá, jestli mu chce vyhlásit válku. Hráč se dozví i o válkách mezi soupeři, pokud zná obě strany. Bublina nad cizí jednotkou ukazuje národ, jestli s ním hráč válčí, a životy jednotek na políčku. Uložené hry z dřívějška fungují, všechny národy v nich začínají v míru a bez kontaktu.

@@ -6,6 +6,7 @@ import {
   BUILDINGS,
   CIVS,
   CIV_IDS,
+  type NationId,
   GOVERNMENTS,
   IMPROVEMENTS,
   TECHS,
@@ -51,16 +52,17 @@ export function improvementName(id: ImprovementId): string {
 }
 
 /** The people, in plural: "Češi", "Czechs". */
-export function civName(id: CivId): string {
+export function civName(id: NationId): string {
   return language().names?.civs[id]?.name ?? CIVS[id].name;
 }
 
-export function leaderName(id: CivId): string {
+export function leaderName(id: NationId): string {
   return language().names?.civs[id]?.leader ?? CIVS[id].leader;
 }
 
 /** "Česká říše", "Czech Empire". */
-export function realmLabel(id: CivId): string {
+export function realmLabel(id: NationId): string {
+  if (id === "barbarians") return civName(id);
   const own = language().names?.civs[id];
   if (own) return t("{adjective} říše", { adjective: own.adjective });
   const adj = CIVS[id].adjective;
@@ -68,8 +70,8 @@ export function realmLabel(id: CivId): string {
 }
 
 /** The realm as the object of a sentence: Czech "vedeš českou říši", English "you lead the Czech Empire". */
-export function realmObject(id: CivId): string {
-  if (language().names) return realmLabel(id);
+export function realmObject(id: NationId): string {
+  if (language().names || id === "barbarians") return realmLabel(id);
   return `${CIVS[id].adjective.slice(0, -1)}ou říši`;
 }
 

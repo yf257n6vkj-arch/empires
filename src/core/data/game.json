@@ -125,5 +125,225 @@
     "turnsPerComponent": 2,
     "minTurns": 5,
     "successPerModule": 34
+  },
+  "governor": {
+    "_comment": "City governor. tile: weights of food, shields and trade once the city has foodTarget surplus. The other numbers weigh what a building adds per turn; later adds points for buildings that pay off only later (granary, walls). The governor skips buildings whose upkeep would leave the treasury losing gold while it holds less than reserveGold.",
+    "reserveGold": 60,
+    "balanced": {
+      "tile": {
+        "food": 4,
+        "shields": 4,
+        "trade": 2
+      },
+      "foodTarget": 1,
+      "food": 2,
+      "shields": 2,
+      "science": 2,
+      "gold": 2,
+      "content": 3,
+      "defenders": 1
+    },
+    "growth": {
+      "tile": {
+        "food": 6,
+        "shields": 2,
+        "trade": 2
+      },
+      "foodTarget": 3,
+      "food": 4,
+      "shields": 1,
+      "science": 1,
+      "gold": 1,
+      "content": 3,
+      "defenders": 1
+    },
+    "production": {
+      "tile": {
+        "food": 2,
+        "shields": 6,
+        "trade": 1
+      },
+      "foodTarget": 1,
+      "food": 1.5,
+      "shields": 4,
+      "science": 1,
+      "gold": 1,
+      "content": 2,
+      "defenders": 1
+    },
+    "science": {
+      "tile": {
+        "food": 3,
+        "shields": 2,
+        "trade": 5
+      },
+      "foodTarget": 1,
+      "food": 1,
+      "shields": 1.5,
+      "science": 4,
+      "gold": 1,
+      "content": 2,
+      "defenders": 1
+    },
+    "gold": {
+      "tile": {
+        "food": 3,
+        "shields": 2,
+        "trade": 5
+      },
+      "foodTarget": 1,
+      "food": 1,
+      "shields": 1.5,
+      "science": 1,
+      "gold": 4,
+      "content": 2,
+      "defenders": 1
+    },
+    "defense": {
+      "tile": {
+        "food": 3,
+        "shields": 5,
+        "trade": 1
+      },
+      "foodTarget": 1,
+      "food": 1.5,
+      "shields": 3,
+      "science": 1,
+      "gold": 1.5,
+      "content": 2,
+      "defenders": 2
+    },
+    "later": {
+      "granary": {
+        "growth": 8,
+        "balanced": 3
+      },
+      "aqueduct": {
+        "growth": 4
+      },
+      "harbour": {
+        "growth": 2
+      },
+      "walls": {
+        "defense": 12,
+        "any": 1
+      },
+      "barracks": {
+        "defense": 6
+      },
+      "coastalFortress": {
+        "defense": 4
+      },
+      "temple": {
+        "any": 2
+      },
+      "courthouse": {
+        "any": 1
+      }
+    }
+  },
+  "ruins": {
+    "_comment": "Ruins of old towns on the map. One ruin per perLandTiles land tiles, none closer than minStartDistance to a start. A land unit that enters a ruin finds one of the outcomes, chosen by weight. Barbarians come out only when the game has them, not before barbariansFromTurn and not near a city; otherwise the ruin is empty. Settlers come out only before settlersBeforeTurn.",
+    "perLandTiles": 28,
+    "minStartDistance": 3,
+    "outcomes": {
+      "gold": 30,
+      "tech": 20,
+      "mercenaries": 15,
+      "settlers": 5,
+      "barbarians": 15,
+      "empty": 15
+    },
+    "gold": [
+      25,
+      50,
+      50,
+      100
+    ],
+    "mercenaries": [
+      "horsemen",
+      "archers",
+      "swordsmen"
+    ],
+    "settlersBeforeTurn": 60,
+    "barbariansFromTurn": 15,
+    "barbarianCityDistance": 3
+  },
+  "barbarians": {
+    "_comment": "Barbarians by level. From startTurn on, every barbarian turn they may rise up on land far from cities (uprisingPct) or land on a coast near a coastal city (landingPct), while they have fewer than maxUnits. Groups have groupMin to groupMax units of the era of the most advanced player. They attack with a win chance of at least attackChance.",
+    "levels": {
+      "few": {
+        "startTurn": 45,
+        "uprisingPct": 6,
+        "landingPct": 4,
+        "maxUnits": 6,
+        "groupMin": 2,
+        "groupMax": 2
+      },
+      "many": {
+        "startTurn": 25,
+        "uprisingPct": 16,
+        "landingPct": 12,
+        "maxUnits": 18,
+        "groupMin": 3,
+        "groupMax": 4
+      }
+    },
+    "uprisingCityDistance": 6,
+    "landingCityDistance": [
+      2,
+      3
+    ],
+    "units": [
+      {
+        "tech": null,
+        "units": [
+          "warriors",
+          "horsemen",
+          "archers"
+        ]
+      },
+      {
+        "tech": "iron",
+        "units": [
+          "horsemen",
+          "archers",
+          "swordsmen"
+        ]
+      },
+      {
+        "tech": "feudalism",
+        "units": [
+          "swordsmen",
+          "knights",
+          "catapult"
+        ]
+      },
+      {
+        "tech": "gunpowder",
+        "units": [
+          "knights",
+          "musketeers",
+          "cannon"
+        ]
+      },
+      {
+        "tech": "conscription",
+        "units": [
+          "riflemen",
+          "cannon",
+          "artillery"
+        ]
+      },
+      {
+        "tech": "automobile",
+        "units": [
+          "riflemen",
+          "artillery",
+          "tank"
+        ]
+      }
+    ],
+    "attackChance": 0.35
   }
 }

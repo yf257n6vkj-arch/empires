@@ -94,6 +94,7 @@ export function generateMap(rng: Rng, options: MapOptions = DEFAULT_MAP_OPTIONS)
         height: size.height,
         terrain,
         special: placeSpecials(rng, size, terrain, options.specialChance),
+        ruins: empty(),
         road: empty(),
         irrigation: empty(),
         mine: empty(),

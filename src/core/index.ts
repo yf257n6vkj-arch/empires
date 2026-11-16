@@ -23,3 +23,5 @@ export * from "./view";
 export * from "./world";
 export * from "./workers";
 export * from "./advisor";
+export * from "./governor";
+export * from "./barbarians";

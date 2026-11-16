@@ -2,6 +2,7 @@
  * City economy: which tiles citizens work, what the city yields, happiness,
  * growth, starvation and production. Functions named *Draft mutate a cloned state.
  */
+import { governorFoodTarget, governorProduction, governorTileScore } from "./governor";
 import {
   canBuild,
   cityEffects,
@@ -284,9 +285,12 @@ export function assignWorkersDraft(draft: GameState, city: City): void {
   const settlerUpkeep = settlerFood(draft, city);
   let food = cityTileYield(draft, city, idx(draft.map, city), effects).food - city.size * RULES.foodPerCitizen - settlerUpkeep;
   const worked: number[] = [];
+  const goal = city.governor;
+  const target = goal ? governorFoodTarget(goal) : TARGET_FOOD_SURPLUS;
   for (let n = 0; n < workers && candidates.length > 0; n++) {
-    const hungry = food < TARGET_FOOD_SURPLUS;
-    const score = (y: Yield) => (hungry ? y.food * 10 + y.shields * 3 + y.trade * 2 : y.food * 4 + y.shields * 4 + y.trade * 2);
+    const hungry = food < target;
+    const score = (y: Yield) =>
+      goal ? governorTileScore(goal, y, hungry) : hungry ? y.food * 10 + y.shields * 3 + y.trade * 2 : y.food * 4 + y.shields * 4 + y.trade * 2;
     candidates.sort((a, b) => score(b.y) - score(a.y) || a.i - b.i);
     const pick = candidates.shift()!;
     worked.push(pick.i);
@@ -398,6 +402,7 @@ export interface CityOutput {
 /** End-of-turn processing for one city (mutates the draft). */
 export function processCityDraft(draft: GameState, city: City, events: GameEvent[]): CityOutput {
   assignWorkersDraft(draft, city);
+  governorTurnDraft(draft, city, events);
   const report = cityReport(draft, city);
   const effects = cityEffects(draft, city);
   const gov = governmentOf(draft, city);
@@ -533,8 +538,8 @@ function completeProductionDraft(draft: GameState, city: City, cost: number, eve
     if (rule.domain === "land" && rule.attack > 0 && cityEffects(draft, city).veteranUnits) built.veteran = true;
     draft.units.push(built);
     events.push({ type: "unitBuilt", cityId: city.id, unitId, unitType: item.id });
-    // Without plans the city keeps making the same unit.
-    if (city.queue.length > 0) nextProductionDraft(draft, city, events);
+    // Without plans the city keeps making the same unit, unless a governor picks again.
+    if (city.queue.length > 0 || city.governor) nextProductionDraft(draft, city, events);
     return;
   }
   city.shields -= cost;
@@ -583,8 +588,25 @@ function nextProductionDraft(draft: GameState, city: City, events: GameEvent[]):
       return;
     }
   }
+  if (city.governor) {
+    city.production = governorProduction(draft, city, city.governor);
+    events.push({ type: "governorChose", cityId: city.id, item: city.production });
+    return;
+  }
   city.production = fallbackProduction(draft, city.owner);
   events.push({ type: "productionNeeded", cityId: city.id });
+}
+
+/**
+ * The governor's own turn for a city: it looks again at a city that only
+ * earns gold, in case something worth building has become possible (mutates the draft).
+ */
+export function governorTurnDraft(draft: GameState, city: City, events: GameEvent[]): void {
+  if (!city.governor || city.queue.length > 0 || city.production.kind !== "wealth") return;
+  const next = governorProduction(draft, city, city.governor);
+  if (next.kind === "wealth") return;
+  city.production = next;
+  events.push({ type: "governorChose", cityId: city.id, item: next });
 }
 
 /** Removes a unit together with everything it carries (mutates the draft). */

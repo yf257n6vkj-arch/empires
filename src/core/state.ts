@@ -3,10 +3,11 @@
  * A turn is a function from the old state and commands to a new state.
  */
 import type { Point } from "./geometry";
-import type { BuildingId, CivId, GovernmentId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
+import type { GovernorGoal } from "./governor";
+import type { BarbarianLevel, BuildingId, CivId, GovernmentId, ImprovementId, NationId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 13;
+export const STATE_VERSION = 14;
 
 export interface GameMap {
   width: number;
@@ -27,6 +28,8 @@ export interface GameMap {
   special: number[];
   /** 1 = the tile is polluted and gives half its yield until a settler cleans it. */
   pollution: number[];
+  /** 1 = ruins of an old town lie here; the first land unit to enter finds what is left. */
+  ruins: number[];
 }
 
 export type PlayerId = number;
@@ -36,7 +39,8 @@ export type CityId = number;
 export interface Player {
   id: PlayerId;
   /** The nation the player leads; it gives the name, colour and city names. */
-  civ: CivId;
+  /** Nation; "barbarians" for the barbarian player, which plays no seat. */
+  civ: NationId;
   /** Name of the nation in plural, "Češi". */
   name: string;
   isHuman: boolean;
@@ -173,6 +177,8 @@ export interface City {
   celebrating: boolean;
   /** Turns in a row the city has ended in disorder. */
   disorderTurns: number;
+  /** Goal of the city governor, null when the owner runs the city alone. */
+  governor: GovernorGoal | null;
   /** Turn when the owner last sold a building here; one sale per turn. */
   soldTurn: number | null;
 }
@@ -194,4 +200,17 @@ export interface GameState {
   warming: number;
   /** Set when somebody has won; the game can go on, but the result stays. */
   victory: { player: PlayerId; kind: "space"; turn: number } | null;
+  /** How many barbarians the game has; with any, the last player is the barbarians. */
+  barbarians: BarbarianLevel;
+}
+
+/** True for the barbarian player. */
+export function isBarbarian(player: { civ: NationId } | undefined): boolean {
+  return player?.civ === "barbarians";
+}
+
+/** Id of the barbarian player, or null when the game has none. */
+export function barbarianId(state: Pick<GameState, "players">): PlayerId | null {
+  const p = state.players.find((x) => x.civ === "barbarians");
+  return p ? p.id : null;
 }

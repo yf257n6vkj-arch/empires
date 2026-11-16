@@ -18,7 +18,17 @@ import {
 } from "./saves";
 import { escapeHtml } from "./texts";
 import { language, LANGUAGES, switchLanguage, t } from "./i18n";
+import { flagSvg } from "./flags";
 import { civName } from "./i18n/names";
+
+
+/** Buttons with a flag and the name of each language; the current one is marked. */
+function languageButtons(): string {
+  return LANGUAGES.map(
+    (l) =>
+      `<button type="button" data-lang="${l.id}" class="lang-btn ${l.id === language().id ? "on" : ""}" lang="${l.id}" aria-pressed="${l.id === language().id}">${flagSvg(l.id, 22, 15)}<span>${escapeHtml(l.label)}</span></button>`,
+  ).join("");
+}
 
 export interface MenuHost {
   /** The nation and turn of the automatically saved game, or null when there is none. */
@@ -82,8 +92,8 @@ export function createMenus(
           <button type="button" data-act="codex">${t("Encyklopedie")}</button>
           <button type="button" data-act="help">${t("Ovládání")}</button>
         </nav>
-        <div class="st-langs">${LANGUAGES.map((l) => `<button type="button" data-lang="${l.id}" class="${l.id === language().id ? "on" : ""}" lang="${l.id}">${escapeHtml(l.label)}</button>`).join("")}</div>
-        <p class="st-foot">${t("fáze 2 · hra se průběžně ukládá sama")}</p>
+        <div class="st-langs">${languageButtons()}</div>
+        <p class="st-foot">${t("fáze 3 · hra se průběžně ukládá sama")}</p>
       </div>`;
     start.querySelectorAll<HTMLButtonElement>("[data-lang]").forEach((b) => b.addEventListener("click", () => switchLanguage(b.dataset.lang!)));
     start.querySelector('[data-act="continue"]')!.addEventListener("click", () => {
@@ -136,10 +146,10 @@ export function createMenus(
       host.openAdvisor();
     });
     act("main", showStart);
-    const picker = menuDialog.querySelector<HTMLSelectElement>("#language");
+    const picker = menuDialog.querySelector<HTMLElement>("#language");
     if (picker) {
-      picker.innerHTML = LANGUAGES.map((l) => `<option value="${l.id}" ${l.id === language().id ? "selected" : ""}>${escapeHtml(l.label)}</option>`).join("");
-      picker.addEventListener("change", () => switchLanguage(picker.value));
+      picker.innerHTML = languageButtons();
+      picker.querySelectorAll<HTMLButtonElement>("[data-lang]").forEach((b) => b.addEventListener("click", () => switchLanguage(b.dataset.lang!)));
     }
   }
   wireMenu();

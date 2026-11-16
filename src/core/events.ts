@@ -3,7 +3,7 @@
  * only; the screen turns them into Czech text, the AI can read them directly.
  */
 import type { Point } from "./geometry";
-import type { BuildingId, DisasterId, GovernmentId, ImprovementId, TechId, UnitTypeId } from "./rules";
+import type { BuildingId, DisasterId, GovernmentId, ImprovementId, RuinOutcome, TechId, UnitTypeId } from "./rules";
 import type { CityId, PlayerId, ProductionItem, UnitId } from "./state";
 
 export type GameEvent =
@@ -14,6 +14,21 @@ export type GameEvent =
   | { type: "unitBuilt"; cityId: CityId; unitId: UnitId; unitType: UnitTypeId }
   | { type: "buildingBuilt"; cityId: CityId; building: BuildingId }
   | { type: "productionNeeded"; cityId: CityId }
+  /** A land unit entered ruins; what it found depends on the outcome. */
+  | {
+      type: "ruinsExplored";
+      owner: PlayerId;
+      unitId: UnitId;
+      at: Point;
+      outcome: RuinOutcome;
+      gold?: number;
+      tech?: TechId;
+      unitType?: UnitTypeId;
+    }
+  /** Barbarians rose up in the wilds, landed on a coast or came out of ruins. */
+  | { type: "barbariansAppeared"; at: Point; count: number; reason: "uprising" | "landing" | "ruins" }
+  /** The city governor picked what the city builds next. */
+  | { type: "governorChose"; cityId: CityId; item: ProductionItem }
   | { type: "improvementDone"; unitId: UnitId; at: Point; improvement: ImprovementId }
   | { type: "gotoBlocked"; unitId: UnitId }
   /** A settler finished its road or railroad along the whole way. */

@@ -4,15 +4,18 @@
  *
  *   npm run ai-games -- 50            50 games of 120 turns on the standard world
  *   npm run ai-games -- 20 13111211   the same in a world from eight map-code digits
+ *   npm run ai-games -- 50 --barbarians=many   with many barbarians (none, few or many; few by default)
  *
  * Prints how many cities and technologies the players have over time, how
  * often someone gets stuck with one city, and how many cities stand on islands.
  */
-import { mainContinent, newGame, parseGameCode, type GameState } from "../src/core";
+import { isBarbarian, mainContinent, newGame, parseGameCode, type BarbarianLevel, type GameState } from "../src/core";
 import { playTurn } from "../src/ai";
 
-const games = Number(process.argv[2] ?? 20);
-const digits = process.argv[3];
+const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+const level = (process.argv.find((a) => a.startsWith("--barbarians="))?.split("=")[1] ?? "few") as BarbarianLevel;
+const games = Number(args[0] ?? 20);
+const digits = args[1];
 const CHECKS = [20, 40, 60, 80, 100, 120];
 
 type Row = { cities: number[]; techs: number[]; units: number[] };
@@ -27,13 +30,19 @@ let captured = 0;
 let destroyed = 0;
 let battles = 0;
 let attackerWins = 0;
+let ruins = 0;
+let barbarianGroups = 0;
+let barbarianUnits = 0;
+let takenByBarbarians = 0;
+let retaken = 0;
+let barbarianCities = 0;
 const started = performance.now();
 
 for (let g = 0; g < games; g++) {
   const seed = digits ? `ai-${g}/${digits}` : `ai-${g}`;
   try {
     const world = parseGameCode(seed).world;
-    let s: GameState = newGame({ seed, playerCount: (world?.opponents ?? 3) + 1, opponentUnits: true });
+    let s: GameState = newGame({ seed, playerCount: (world?.opponents ?? 3) + 1, opponentUnits: true, barbarians: level });
     s.players[0]!.isHuman = false;
     for (const p of s.players) {
       for (const u of s.units) if (u.owner === p.id) u.movesLeft = u.movesLeft;
@@ -46,7 +55,15 @@ for (let g = 0; g < games; g++) {
         if (e.type === "warDeclared") {
           wars++;
           warTurn ??= s.turn;
-        } else if (e.type === "cityCaptured") captured++;
+        } else if (e.type === "cityCaptured") {
+          captured++;
+          if (isBarbarian(s.players[e.to])) takenByBarbarians++;
+          if (isBarbarian(s.players[e.from])) retaken++;
+        } else if (e.type === "ruinsExplored") ruins++;
+        else if (e.type === "barbariansAppeared") {
+          barbarianGroups++;
+          barbarianUnits += e.count;
+        }
         else if (e.type === "cityDestroyed") destroyed++;
         else if (e.type === "combat") {
           battles++;
@@ -61,7 +78,7 @@ for (let g = 0; g < games; g++) {
       if (s.currentPlayer === 0 && rows.has(s.turn - 1)) {
         const row = rows.get(s.turn - 1)!;
         for (const p of s.players) {
-          if (p.defeated) continue;
+          if (p.defeated || isBarbarian(p)) continue;
           row.cities.push(s.cities.filter((c) => c.owner === p.id).length);
           row.techs.push(p.techs.length);
           row.units.push(s.units.filter((u) => u.owner === p.id).length);
@@ -70,7 +87,9 @@ for (let g = 0; g < games; g++) {
     }
     const main = mainContinent(s.map);
     islandCities += s.cities.filter((c) => !main.has(c.y * s.map.width + c.x)).length;
+    barbarianCities += s.cities.filter((c) => isBarbarian(s.players[c.owner])).length;
     for (const p of s.players) {
+      if (isBarbarian(p)) continue;
       if (p.defeated) defeated++;
       else if (s.turn >= 60 && s.cities.filter((c) => c.owner === p.id).length <= 1) stuck++;
     }
@@ -95,3 +114,4 @@ for (const [turn, r] of rows) {
 console.log(`hráčů s jedním městem po 60. tahu: ${stuck} · poražených: ${defeated} · měst na ostrovech: ${islandCities}`);
 const warTurns = firstWar.filter((t) => t >= 0);
 console.log(`válek: ${wars} · partií s válkou: ${warTurns.length} z ${games} · první válka medián v tahu ${med(warTurns)} · bitev: ${battles} (útočník vyhrál ${battles ? Math.round((100 * attackerWins) / battles) : 0} %) · dobytých měst: ${captured} · zničených měst: ${destroyed}`);
+console.log(`barbaři (${level}): skupin ${barbarianGroups}, jednotek ${barbarianUnits} · dobyli měst: ${takenByBarbarians}, vzato zpět: ${retaken} · drží na konci měst: ${barbarianCities} · prozkoumaných ruin: ${ruins}`);

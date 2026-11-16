@@ -5,15 +5,23 @@
  *   npm run ai-games -- 50            50 games of 120 turns on the standard world
  *   npm run ai-games -- 20 13111211   the same in a world from eight map-code digits
  *   npm run ai-games -- 50 --barbarians=many   with many barbarians (none, few or many; few by default)
+ *   npm run ai-games -- 50 --difficulty=hard   at a difficulty (veryEasy, easy, normal, hard, veryHard); seat 0
+ *                                              then plays as a person would be helped: normal skill, no bonus
  *
  * Prints how many cities and technologies the players have over time, how
  * often someone gets stuck with one city, and how many cities stand on islands.
  */
-import { isBarbarian, mainContinent, newGame, parseGameCode, type BarbarianLevel, type GameState } from "../src/core";
+import { isBarbarian, mainContinent, scoreOf, newGame, parseGameCode, type BarbarianLevel, type Difficulty, type GameState } from "../src/core";
 import { playTurn } from "../src/ai";
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const level = (process.argv.find((a) => a.startsWith("--barbarians="))?.split("=")[1] ?? "few") as BarbarianLevel;
+const difficultyArg = process.argv.find((a) => a.startsWith("--difficulty="))?.split("=")[1] as Difficulty | undefined;
+const difficulty: Difficulty = difficultyArg ?? "normal";
+const seatWins = { reference: 0, others: 0 };
+const seatCities = { reference: [] as number[], others: [] as number[] };
+/** Score of seat 0 in percent of the best rival's score at the end. */
+const scoreShare: number[] = [];
 const games = Number(args[0] ?? 20);
 const digits = args[1];
 const CHECKS = [20, 40, 60, 80, 100, 120];
@@ -43,8 +51,9 @@ for (let g = 0; g < games; g++) {
   const seed = digits ? `ai-${g}/${digits}` : `ai-${g}`;
   try {
     const world = parseGameCode(seed).world;
-    let s: GameState = newGame({ seed, playerCount: (world?.opponents ?? 3) + 1, opponentUnits: true, barbarians: level });
-    s.players[0]!.isHuman = false;
+    let s: GameState = newGame({ seed, playerCount: (world?.opponents ?? 3) + 1, opponentUnits: true, barbarians: level, difficulty });
+    // With a difficulty set, seat 0 stands in for the person: normal skill and no bonus.
+    s.players[0]!.isHuman = difficultyArg !== undefined;
     for (const p of s.players) {
       for (const u of s.units) if (u.owner === p.id) u.movesLeft = u.movesLeft;
     }
@@ -86,6 +95,14 @@ for (let g = 0; g < games; g++) {
         }
       }
     }
+    if (s.victory) {
+      if (s.victory.player === 0) seatWins.reference++;
+      else seatWins.others++;
+    }
+    seatCities.reference.push(s.cities.filter((c) => c.owner === 0).length);
+    const best = Math.max(1, ...s.players.slice(1).filter((p) => !isBarbarian(p)).map((p) => scoreOf(s, p.id).total));
+    scoreShare.push(Math.round((100 * scoreOf(s, 0).total) / best));
+    for (const p of s.players.slice(1)) if (!isBarbarian(p)) seatCities.others.push(s.cities.filter((c) => c.owner === p.id).length);
     const kind = s.victory?.kind ?? "none";
     wins[kind] = (wins[kind] ?? 0) + 1;
     const main = mainContinent(s.map);
@@ -119,3 +136,6 @@ const warTurns = firstWar.filter((t) => t >= 0);
 console.log(`válek: ${wars} · partií s válkou: ${warTurns.length} z ${games} · první válka medián v tahu ${med(warTurns)} · bitev: ${battles} (útočník vyhrál ${battles ? Math.round((100 * attackerWins) / battles) : 0} %) · dobytých měst: ${captured} · zničených měst: ${destroyed}`);
 console.log(`barbaři (${level}): skupin ${barbarianGroups}, jednotek ${barbarianUnits} · dobyli měst: ${takenByBarbarians}, vzato zpět: ${retaken} · drží na konci měst: ${barbarianCities} · prozkoumaných ruin: ${ruins}`);
 console.log(`výhry: ${Object.entries(wins).map(([k, n]) => `${k} ${n}`).join(" · ")}`);
+if (difficultyArg) {
+  console.log(`obtížnost ${difficulty}: hráč na místě člověka vyhrál ${seatWins.reference}×, soupeři ${seatWins.others}× · města na konci: hráč medián ${med(seatCities.reference)}, soupeři medián ${med(seatCities.others)} · skóre hráče v % nejlepšího soupeře: medián ${med(scoreShare)}`);
+}

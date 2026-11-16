@@ -10,7 +10,7 @@
 import { tilesInRadius, type Point } from "./geometry";
 import { scoreOf, type Score } from "./score";
 import { builtWonders, researchCost, wonderFlag } from "./economy";
-import { RULES, UNIT_TYPES, type BuildingId, type GovernmentId, type NationId, type TechId, type TerrainId } from "./rules";
+import { RULES, UNIT_TYPES, type BuildingId, type Difficulty, type GovernmentId, type NationId, type TechId, type TerrainId } from "./rules";
 import { isBarbarian, type City, type GameState, type PlayerId, type Spaceship, type Unit } from "./state";
 
 /** What a player knows about another empire. */
@@ -93,6 +93,10 @@ export interface PlayerView {
   victory: GameState["victory"];
   /** The player's own score with its parts. */
   score: Score;
+  /** Difficulty of the game; everybody knows it. */
+  difficulty: Difficulty;
+  /** A person plays this seat; the difficulty does not weaken them. */
+  isHuman: boolean;
   /** Wonders already standing somewhere; every player hears when one is finished. */
   builtWonders: BuildingId[];
 }
@@ -174,6 +178,8 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     },
     victory: state.victory ? { ...state.victory } : null,
     score: scoreOf(state, playerId),
+    difficulty: state.difficulty,
+    isHuman: player.isHuman,
     builtWonders: builtWonders(state),
   };
 }

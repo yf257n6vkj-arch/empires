@@ -18,6 +18,7 @@ import {
   combatOddsInView,
   distance,
   neighbors8,
+  RULES,
   TERRAINS,
   UNIT_TYPES,
   type City,
@@ -124,8 +125,13 @@ export function bestAttacker(view: PlayerView): UnitTypeId {
 }
 
 /** The lowest chance of winning the AI accepts for an attack. */
+/** How well this computer player decides, by the difficulty of the game. */
+export function skill(view: PlayerView) {
+  return RULES.difficulty.levels[view.isHuman ? "normal" : view.difficulty].ai;
+}
+
 function boldness(view: PlayerView): number {
-  return CIVS[view.civ].personality === "war" ? 0.5 : 0.6;
+  return (CIVS[view.civ].personality === "war" ? 0.5 : 0.6) + skill(view).attackOddsAdd;
 }
 
 /** Attacks on neighbouring enemies that are worth it, best chance first. */

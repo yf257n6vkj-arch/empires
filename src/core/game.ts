@@ -7,7 +7,7 @@ import type { GameEvent } from "./events";
 import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
 import { mapOptionsFor, parseGameCode, type WorldSettings } from "./setup";
-import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, TERRAINS, UNIT_TYPES, type BarbarianLevel, type CivId, type TechId } from "./rules";
+import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, TERRAINS, UNIT_TYPES, type BarbarianLevel, type CivId, type Difficulty, type TechId } from "./rules";
 import { distance, type Point } from "./geometry";
 import { chooseStartPositions } from "./start";
 import { canResearch, clampRate, fallbackProduction, fitRates, startingEconomy } from "./economy";
@@ -30,6 +30,8 @@ export interface NewGameOptions {
   civ?: CivId;
   /** How many barbarians; none when omitted. */
   barbarians?: BarbarianLevel;
+  /** How strong the computer players are; normal when omitted. */
+  difficulty?: Difficulty;
 }
 
 /** Scatters ruins over land away from the starts (mutates the map). */
@@ -110,6 +112,7 @@ export function newGame(options: NewGameOptions): GameState {
     warming: 0,
     victory: null,
     barbarians: options.barbarians ?? "none",
+    difficulty: options.difficulty ?? "normal",
   };
   placeRuins(map, starts, rng.fork("ruins"));
   if (state.barbarians !== "none") {
@@ -123,7 +126,8 @@ export function newGame(options: NewGameOptions): GameState {
     if (isBarbarian(player)) continue;
     reveal(state, player.id, player.start, RULES.unitSight);
     if (!player.isHuman && !options.opponentUnits) continue;
-    for (const type of RULES.startingUnits) state.units.push(makeUnit(state.nextId++, player.id, type, player.start, null));
+    const extra = player.isHuman ? [] : RULES.difficulty.levels[state.difficulty].extraUnits;
+    for (const type of [...RULES.startingUnits, ...extra]) state.units.push(makeUnit(state.nextId++, player.id, type, player.start, null));
   }
   return state;
 }
@@ -274,6 +278,10 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
   if (version <= 14) {
     // Version 15 counts conquered cities for the score and the guide; earlier conquests are not known.
     for (const p of state.players) p.captured ??= 0;
+  }
+  if (version <= 15) {
+    // Version 16 adds difficulty; older games were played on normal.
+    state.difficulty ??= "normal";
   }
   state.version = STATE_VERSION;
   return state;

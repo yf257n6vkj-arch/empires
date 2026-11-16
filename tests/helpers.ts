@@ -48,6 +48,7 @@ export function stateFromAscii(rows: string[], players = 1): GameState {
     warming: 0,
     victory: null,
     barbarians: "none",
+    difficulty: "normal",
   };
 }
 

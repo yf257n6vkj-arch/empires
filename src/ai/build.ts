@@ -7,7 +7,7 @@
 import { BUILDINGS, RULES, UNIT_TYPES, type BuildingId, type City, type PlayerView, type ProductionItem, type UnitTypeId } from "../core";
 import { coastal, isMilitary, isSettler } from "./knowledge";
 import { nature } from "./research";
-import { bestAttacker, isAttacker } from "./war";
+import { bestAttacker, isAttacker, skill } from "./war";
 
 export interface Plan {
   /** Good free sites on own land. */
@@ -156,7 +156,8 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
   const underway = settlersUnderway(view);
   const building = city.production.kind === "unit" && UNIT_TYPES[city.production.id].foundsCity;
   const wantsCities = plan.room + plan.islands > underway - (building ? 1 : 0);
-  if (city.size >= 2 && wantsCities && (building || underway < maxSettlers) && cityCount < 16) return { kind: "unit", id: "settlers" };
+  const limit = skill(view).cityLimit;
+  if (city.size >= 2 && wantsCities && (building || underway < maxSettlers) && cityCount + underway - (building ? 1 : 0) < limit) return { kind: "unit", id: "settlers" };
 
   // A ship once the own land is nearly full: it looks for islands and carries settlers there.
   const ship = transportShip(view);

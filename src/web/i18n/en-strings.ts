@@ -2093,4 +2093,28 @@ export const EN_STRINGS: Record<string, string> = {
     "It unlocks {what}. Your scientists will head for it on their own, even if it needs other discoveries first.",
   "Vědci k němu půjdou sami, i když bude potřebovat jiné objevy předem.":
     "Your scientists will head for it on their own, even if it needs other discoveries first.",
+  "velmi snadná":
+    "very easy",
+  "snadná":
+    "easy",
+  "normální":
+    "normal",
+  "těžká":
+    "hard",
+  "velmi těžká":
+    "very hard",
+  "Soupeři nikdy nezačnou válku, založí nejvýš {n} měst a útočí jen s velkou převahou. Na první hry.":
+    "Rivals never start a war, found at most {n} cities and attack only with a big advantage. For first games.",
+  "Soupeři válčí málokdy, založí nejvýš {n} měst a útočí opatrně.":
+    "Rivals rarely go to war, found at most {n} cities and attack carefully.",
+  "Soupeři hrají naplno a podle stejných pravidel jako ty. Nic nepodvádějí.":
+    "Rivals play their best by the same rules as you. They don't cheat.",
+  "Soupeři hrají naplno a jejich města mají o {food} % víc jídla a o {shields} % víc štítů.":
+    "Rivals play their best, and their cities get {food} % more food and {shields} % more shields.",
+  "Města soupeřů mají o {food} % víc jídla a o {shields} % víc štítů a každý soupeř začíná s osadníkem navíc.":
+    "Rivals' cities get {food} % more food and {shields} % more shields, and each rival starts with an extra settler.",
+  "Obtížnost":
+    "Difficulty",
+  "obtížnost":
+    "difficulty",
 };

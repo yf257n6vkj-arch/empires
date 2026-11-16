@@ -4,10 +4,10 @@
  */
 import type { Point } from "./geometry";
 import type { GovernorGoal } from "./governor";
-import type { BarbarianLevel, BuildingId, CivId, GovernmentId, ImprovementId, NationId, TechId, TerrainId, UnitTypeId } from "./rules";
+import type { BarbarianLevel, BuildingId, Difficulty, CivId, GovernmentId, ImprovementId, NationId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 15;
+export const STATE_VERSION = 16;
 
 export interface GameMap {
   width: number;
@@ -204,6 +204,8 @@ export interface GameState {
   victory: { player: PlayerId; kind: "space" | "conquest" | "score"; turn: number } | null;
   /** How many barbarians the game has; with any, the last player is the barbarians. */
   barbarians: BarbarianLevel;
+  /** How strong the computer players are. */
+  difficulty: Difficulty;
 }
 
 /** True for the barbarian player. */

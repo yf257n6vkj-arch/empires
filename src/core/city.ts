@@ -18,7 +18,7 @@ import type { GameEvent } from "./events";
 import { cityRadiusTiles, distance, fromIndex } from "./geometry";
 import { Rng } from "./rng";
 import { BUILDINGS, GOVERNMENTS, RULES, TERRAINS, UNIT_TYPES, type GovernmentRule, type Yield } from "./rules";
-import type { City, GameState, ProductionItem, Unit } from "./state";
+import { isBarbarian, type City, type GameState, type ProductionItem, type Unit } from "./state";
 import { cityAt, idx, makeUnit, tileYield, workableTiles } from "./world";
 
 function governmentOf(state: GameState, city: City): GovernmentRule {
@@ -333,9 +333,20 @@ export interface CityReport {
   waitingForSize: boolean;
 }
 
+/** Extra food and shields a city gets from the difficulty, in percent: only computer players on the hard levels. */
+export function difficultyBonus(state: GameState, owner: number): { foodPct: number; shieldsPct: number } {
+  const p = state.players[owner];
+  if (!p || p.isHuman || isBarbarian(p)) return { foodPct: 0, shieldsPct: 0 };
+  const level = RULES.difficulty.levels[state.difficulty ?? "normal"];
+  return { foodPct: level.foodPct, shieldsPct: level.shieldsPct };
+}
+
 export function cityReport(state: GameState, city: City): CityReport {
   const effects = cityEffects(state, city);
   const production = grossYield(state, city, effects);
+  const bonus = difficultyBonus(state, city.owner);
+  if (bonus.foodPct) production.food = Math.floor((production.food * (100 + bonus.foodPct)) / 100);
+  if (bonus.shieldsPct) production.shields = Math.floor((production.shields * (100 + bonus.shieldsPct)) / 100);
   const routes = routeTrade(state, city);
   production.trade += routes;
   const settlerUpkeep = settlerFood(state, city);

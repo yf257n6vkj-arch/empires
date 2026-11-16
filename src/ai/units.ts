@@ -4,7 +4,7 @@
  * islands. Unciv's order of checks: wounded units first go home to heal.
  */
 import { distance, neighbors8, RULES, UNIT_TYPES, type City, type Command, type PlayerView, type Point, type Unit } from "../core";
-import { armyCommands, attackNow, isAttacker } from "./war";
+import { armyCommands, attackNow, isAttacker, skill } from "./war";
 import { garrison, garrisonNeed, type Plan } from "./build";
 import { at, coastal, frontier, isLand, isMilitary, isSea, isSettler, pointOf, seaPath, seaReach } from "./knowledge";
 import { averageKnownValue, bestSite, islandSites, MIN_SITE_SCORE, siteValue, type Site } from "./settle";
@@ -45,6 +45,8 @@ export function settlerCommands(ctx: Context, u: Unit): Command[] {
   if (u.orders || u.work) return [];
   if (u.carriedBy !== null) return [];
   if (u.movesLeft <= 0) return [];
+  // On the easy levels the computer stops founding cities early; spare settlers improve the land.
+  if (view.cities.length > 0 && view.cities.length + ctx.claimed.length >= skill(view).cityLimit) return [{ type: "automate", unitId: u.id }];
   const here = siteValue(view, at(view, u), ctx.claimed, average);
   const best = bestSite(view, u, land, average, ctx.claimed);
   if (Number.isFinite(here) && here >= 0.6 * MIN_SITE_SCORE && (!best || here >= best.score * 0.9)) {

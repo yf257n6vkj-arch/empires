@@ -5,12 +5,15 @@
 import {
   CIV_IDS,
   type BarbarianLevel,
+  type Difficulty,
+  DIFFICULTIES,
   CIVS,
   DEFAULT_WORLD_CHOICE,
   maxOpponents,
   parseGameCode,
   WORLD_OPTIONS,
   WORLD_RULES,
+  RULES,
   type CivId,
   type WorldChoice,
 } from "../core";
@@ -20,7 +23,7 @@ import { t, tn } from "./i18n";
 import { cityLabel, civName, leaderName, techName } from "./i18n/names";
 
 export interface NewGameHost {
-  start(seed: string, civ: CivId | undefined, world: WorldChoice, barbarians: BarbarianLevel): void;
+  start(seed: string, civ: CivId | undefined, world: WorldChoice, barbarians: BarbarianLevel, difficulty: Difficulty): void;
   randomSeed(): string;
   /** Opens an encyclopedia page, e.g. "civ-czechs" or "lead-czechs". */
   showEntry(key: string): void;
@@ -108,6 +111,48 @@ function loadBarbarians(): BarbarianLevel {
   }
 }
 
+const DIFFICULTY_KEY = "empires.difficulty";
+
+function loadDifficulty(): Difficulty {
+  try {
+    const v = localStorage.getItem(DIFFICULTY_KEY) as Difficulty | null;
+    return v && DIFFICULTIES.includes(v) ? v : "normal";
+  } catch {
+    return "normal";
+  }
+}
+
+export function difficultyLabel(level: Difficulty): string {
+  switch (level) {
+    case "veryEasy":
+      return t("velmi snadná");
+    case "easy":
+      return t("snadná");
+    case "normal":
+      return t("normální");
+    case "hard":
+      return t("těžká");
+    case "veryHard":
+      return t("velmi těžká");
+  }
+}
+
+function difficultyHint(level: Difficulty): string {
+  const l = RULES.difficulty.levels[level];
+  switch (level) {
+    case "veryEasy":
+      return t("Soupeři nikdy nezačnou válku, založí nejvýš {n} měst a útočí jen s velkou převahou. Na první hry.", { n: l.ai.cityLimit });
+    case "easy":
+      return t("Soupeři válčí málokdy, založí nejvýš {n} měst a útočí opatrně.", { n: l.ai.cityLimit });
+    case "normal":
+      return t("Soupeři hrají naplno a podle stejných pravidel jako ty. Nic nepodvádějí.");
+    case "hard":
+      return t("Soupeři hrají naplno a jejich města mají o {food} % víc jídla a o {shields} % víc štítů.", { food: l.foodPct, shields: l.shieldsPct });
+    case "veryHard":
+      return t("Města soupeřů mají o {food} % víc jídla a o {shields} % víc štítů a každý soupeř začíná s osadníkem navíc.", { food: l.foodPct, shields: l.shieldsPct });
+  }
+}
+
 function barbarianLabel(level: BarbarianLevel): string {
   return level === "none" ? t("žádní") : level === "few" ? t("málo") : t("hodně");
 }
@@ -141,6 +186,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
   let chosen: CivId | "random" = "czechs";
   let world: WorldChoice = loadChoice();
   let barbarians: BarbarianLevel = loadBarbarians();
+  let difficulty: Difficulty = loadDifficulty();
   let view: "nations" | "world" = "nations";
 
   function setWorld(next: WorldChoice, firstGame: boolean): void {
@@ -185,6 +231,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
         <div class="ng-row"><div class="ng-label">${t("Počet soupeřů")}<span class="muted small">${t("Na malý svět se vejdou nejvýš 3, na střední 4 a na velký 5.")}</span></div><div class="ng-opts">${opponentButtons}</div></div>
         ${row("shape")}
         ${islandsNote}
+        <div class="ng-row"><div class="ng-label">${t("Obtížnost")}<span class="muted small">${escapeHtml(difficultyHint(difficulty))}</span></div><div class="ng-opts">${DIFFICULTIES.map((l) => `<button type="button" class="ng-opt ${difficulty === l ? "on" : ""}" data-difficulty="${l}"><span>${difficultyLabel(l)}</span></button>`).join("")}</div></div>
         <div class="ng-row"><div class="ng-label">${t("Barbaři")}<span class="muted small">${t("Objevují se v divočině a u pobřeží a dobývají města. Pár jich vyleze i z ruin.")}</span></div><div class="ng-opts">${BARBARIAN_LEVELS.map((l) => `<button type="button" class="ng-opt ${barbarians === l ? "on" : ""}" data-barbarians="${l}"><span>${barbarianLabel(l)}</span></button>`).join("")}</div></div>
         <details class="ng-more" ${advancedChanged ? "open" : ""}>
           <summary>${t("Další nastavení")}</summary>
@@ -217,8 +264,20 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
     });
     dialog.querySelector('[data-act="default"]')!.addEventListener("click", () => {
       barbarians = "few";
+      difficulty = "normal";
       setWorld({ ...DEFAULT_WORLD_CHOICE }, firstGame);
     });
+    dialog.querySelectorAll<HTMLButtonElement>("[data-difficulty]").forEach((b) =>
+      b.addEventListener("click", () => {
+        difficulty = b.dataset.difficulty as Difficulty;
+        try {
+          localStorage.setItem(DIFFICULTY_KEY, difficulty);
+        } catch {
+          // Not remembered without storage.
+        }
+        render(firstGame);
+      }),
+    );
     dialog.querySelectorAll<HTMLButtonElement>("[data-barbarians]").forEach((b) =>
       b.addEventListener("click", () => {
         barbarians = b.dataset.barbarians as BarbarianLevel;
@@ -281,7 +340,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
               ? `${t("Hraješ za národ <b>{civ}</b> a vládne {leader}, první město bude {capital}.", { civ: escapeHtml(civName(c)), leader: escapeHtml(leaderName(c)), capital: escapeHtml(cityLabel(CIVS[c].cities[0]!)) })}`
               : t("Národ hra vybere náhodně.")
           }</div>
-          <div class="ng-world">${shapePicture(world.shape === "random" ? "continent" : world.shape)}<span>${t("Svět")}: <b>${escapeHtml(worldSummary(world))}</b></span> <button type="button" data-act="world">${t("Nastavit svět")}</button></div>
+          <div class="ng-world">${shapePicture(world.shape === "random" ? "continent" : world.shape)}<span>${t("Svět")}: <b>${escapeHtml(worldSummary(world))}</b> · ${t("obtížnost")} <b>${escapeHtml(difficultyLabel(difficulty))}</b></span> <button type="button" data-act="world">${t("Nastavit svět")}</button></div>
           <label class="ng-seed" title="${t("Kód mapy s nastavením světa, třeba z jiné partie, má přednost před nastavením.")}">${t("Kód mapy")} <input type="text" spellcheck="false" placeholder="${t("náhodný")}" data-seed></label>
           <button type="button" class="primary" data-act="start">${t("Začít hru")}</button>
         </div>
@@ -303,7 +362,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
       const typed = dialog.querySelector<HTMLInputElement>("[data-seed]")!.value.trim();
       const seed = typed && parseGameCode(typed).seed ? typed : host.randomSeed();
       dialog.close();
-      host.start(seed, chosen === "random" ? undefined : chosen, world, barbarians);
+      host.start(seed, chosen === "random" ? undefined : chosen, world, barbarians, difficulty);
     });
   }
 

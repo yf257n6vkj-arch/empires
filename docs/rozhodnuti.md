@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Pět úrovní obtížnosti
+
+Michal chtěl aspoň tři úrovně. Claude navrhl čtyři, Michal vybral pět. Obtížnost se volí v okně nové hry vedle barbarů a výchozí je normální. Podle zadání určuje na lehčích úrovních obtížnost to, jak dobře soupeři rozhodují, a na těžších dostanou soupeři bonusy. Hráč ani barbaři bonusy nikdy nedostanou. Všechna čísla jsou v datech pravidel.
+
+Na velmi snadné úrovni soupeři nikdy sami nezačnou válku, založí nejvýš 4 města, útočí jen se šancí o 25 procentních bodů vyšší než obvykle a drží poloviční armádu. Na snadné válčí málokdy, založí nejvýš 6 měst, na útok chtějí o 15 bodů víc a armádu mají menší o 40 %. Normální úroveň je dnešní AI bez bonusů. Na těžké mají města soupeřů o 25 % víc jídla a štítů z políček. Na velmi těžké mají o 50 % víc a každý soupeř začíná s osadníkem navíc.
+
+Úrovně jsme změřili na automatických partiích, kde jedno místo hraje AI s normálním rozhodováním a bez bonusů, tedy jako člověk. Na 20 partiích pro každou úroveň mělo toto místo na konci v mediánu tolik procent skóre nejlepšího soupeře: velmi snadná 129, snadná 114, normální 93, těžká 57, velmi těžká 41. Vyhrálo 15, 12, 9, 1 a 0 partií z dvaceti.
+
 ## 16. 11. 2026: Průvodkyně Sova pro děti a výhra dobytím a skóre
 
 Michal chtěl dětského průvodce, který radí, vypráví o národu, objevech a jednotkách a hlavně pomáhá vyhrát. Rozhodli jsme tři věci. Průvodce je postava s kartami, kterou hráč zapne v menu místo rádce. Je to moudrá sova, jméno jí vybere syn a do té doby se jmenuje Sova. Plán na výhru potřeboval něco, co měří, a tak jsme z kroku 5 předběhli skóre a výhru dobytím.

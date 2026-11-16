@@ -353,5 +353,67 @@
     "tech": 2,
     "wonder": 20,
     "spaceship": 100
+  },
+  "difficulty": {
+    "_comment": "Levels of difficulty. On the easy levels the computer players decide worse: warShift moves their war motivation (a big negative number means they never start a war), attackOddsAdd raises the win chance they need before attacking, cityLimit caps how many cities they found and armyPct scales the army they keep. On the hard levels they play as on normal but their cities get shieldsPct more shields and foodPct more food, and each starts with extraUnits. The human and the barbarians never get bonuses.",
+    "levels": {
+      "veryEasy": {
+        "shieldsPct": 0,
+        "foodPct": 0,
+        "extraUnits": [],
+        "ai": {
+          "warShift": -1000,
+          "attackOddsAdd": 0.25,
+          "cityLimit": 4,
+          "armyPct": 50
+        }
+      },
+      "easy": {
+        "shieldsPct": 0,
+        "foodPct": 0,
+        "extraUnits": [],
+        "ai": {
+          "warShift": -40,
+          "attackOddsAdd": 0.15,
+          "cityLimit": 6,
+          "armyPct": 60
+        }
+      },
+      "normal": {
+        "shieldsPct": 0,
+        "foodPct": 0,
+        "extraUnits": [],
+        "ai": {
+          "warShift": 0,
+          "attackOddsAdd": 0,
+          "cityLimit": 16,
+          "armyPct": 100
+        }
+      },
+      "hard": {
+        "shieldsPct": 25,
+        "foodPct": 25,
+        "extraUnits": [],
+        "ai": {
+          "warShift": 0,
+          "attackOddsAdd": 0,
+          "cityLimit": 16,
+          "armyPct": 100
+        }
+      },
+      "veryHard": {
+        "shieldsPct": 50,
+        "foodPct": 50,
+        "extraUnits": [
+          "settlers"
+        ],
+        "ai": {
+          "warShift": 0,
+          "attackOddsAdd": 0,
+          "cityLimit": 16,
+          "armyPct": 100
+        }
+      }
+    }
   }
 }

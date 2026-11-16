@@ -13,7 +13,7 @@ import { chooseProduction } from "./build";
 import { isMilitary, isSettler, landmasses } from "./knowledge";
 import { governmentCommands, researchCommands } from "./research";
 import { averageKnownValue, roomToExpand } from "./settle";
-import { targetCity, total, warMotivation } from "./war";
+import { skill, targetCity, total, warMotivation } from "./war";
 import { exploring, makeContext, passengerCommands, settlerCommands, shipCommands, soldierCommands } from "./units";
 
 /** Plays every computer player in a row until a human is on turn (or the game ends). */
@@ -75,7 +75,7 @@ export function decide(view: PlayerView): Command[] {
   const enemies = view.rivals.filter((r) => r.atWar && !r.barbarian).map((r) => r.id);
   for (const rival of view.rivals) {
     if (rival.barbarian || !rival.contact || rival.atWar || enemies.length > 0) continue;
-    if (total(warMotivation(view, rival, land, room)) > 0) {
+    if (total(warMotivation(view, rival, land, room)) + skill(view).warShift > 0) {
       commands.push({ type: "declareWar", player: rival.id });
       enemies.push(rival.id);
     }
@@ -93,7 +93,7 @@ export function decide(view: PlayerView): Command[] {
     exploring: exploring(view, land),
     threats,
     // A barbarian camp needs a small force; a real war a large one.
-    armyWanted: target ? (enemies.length === 0 ? Math.max(3, peaceArmy) : Math.max(4, view.cities.length + 2)) : peaceArmy,
+    armyWanted: Math.round(((target ? (enemies.length === 0 ? Math.max(3, peaceArmy) : Math.max(4, view.cities.length + 2)) : peaceArmy) * skill(view).armyPct) / 100),
   });
 
   for (const u of view.units) {

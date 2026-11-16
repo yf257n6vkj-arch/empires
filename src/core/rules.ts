@@ -421,6 +421,19 @@ export interface CombatConstants {
   captureBuildingLossPct: number;
 }
 
+export const DIFFICULTIES = ["veryEasy", "easy", "normal", "hard", "veryHard"] as const;
+export type Difficulty = (typeof DIFFICULTIES)[number];
+
+export interface DifficultyLevel {
+  /** Extra shields and food in computer players' cities, in percent of what the tiles give. */
+  shieldsPct: number;
+  foodPct: number;
+  /** Units each computer player gets on top of the usual start. */
+  extraUnits: UnitTypeId[];
+  /** How well the computer players decide. */
+  ai: { warShift: number; attackOddsAdd: number; cityLimit: number; armyPct: number };
+}
+
 export type RuinOutcome = "gold" | "tech" | "mercenaries" | "settlers" | "barbarians" | "empty";
 
 export interface RuinConstants {
@@ -487,6 +500,7 @@ export interface GameConstants {
   governor: GovernorConstants;
   ruins: RuinConstants;
   score: { citizen: number; happy: number; tech: number; wonder: number; spaceship: number };
+  difficulty: { levels: Record<Difficulty, DifficultyLevel> };
   barbarians: BarbarianConstants;
   maxTurns: number;
   movesFraction: number;

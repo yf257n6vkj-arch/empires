@@ -55,6 +55,7 @@ import {
   type City,
   type CivId,
   type BarbarianLevel,
+  type Difficulty,
   type Command,
   type GameEvent,
   type GameState,
@@ -195,12 +196,12 @@ function randomSeed(): string {
   return `${w}-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
-function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_WORLD_CHOICE, persist = true, barbarians: BarbarianLevel = "few"): void {
+function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_WORLD_CHOICE, persist = true, barbarians: BarbarianLevel = "few", difficulty: Difficulty = "normal"): void {
   // A map code that carries settings wins over the choice in the dialog.
   const parsed = parseGameCode(input);
   const world = parsed.world ?? resolveWorld(choice, parsed.seed);
   const seed = formatGameCode(parsed.seed, world);
-  state = newGame({ seed, playerCount: world.opponents + 1, civ, world, opponentUnits: true, barbarians });
+  state = newGame({ seed, playerCount: world.opponents + 1, civ, world, opponentUnits: true, barbarians, difficulty });
   const civ0 = state.players[HUMAN]!.civ;
   // The rivals stay unnamed: the player meets them while exploring.
   log = [
@@ -632,9 +633,9 @@ const attackDialog = createAttackDialog($<HTMLDialogElement>("#attack-dialog"), 
   },
 });
 const newGameDialog = createNewGameDialog($<HTMLDialogElement>("#new-game-dialog"), {
-  start: (seed, civ, world, barbarians) => {
+  start: (seed, civ, world, barbarians, difficulty) => {
     menus.hideStart();
-    startNewGame(seed, civ, world, true, barbarians);
+    startNewGame(seed, civ, world, true, barbarians, difficulty);
   },
   randomSeed,
   showEntry: (key) => codex.show(key),

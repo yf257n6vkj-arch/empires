@@ -1667,7 +1667,9 @@ function drawSpecials(ctx: CanvasRenderingContext2D, input: DrawInput): void {
       const t = terrain[i];
       if (!t || !special[i]) continue;
       const id = TERRAINS[t].special?.id;
-      if (id) upright(ctx, x * TILE + TILE / 2, y * TILE + TILE * 0.75, () => drawSpecial(ctx, id, x * TILE, y * TILE, x, y));
+      const pic = id ? sprites.get(`surovina-${id}`) : undefined;
+      if (pic) drawTerrainSprite(ctx, pic, x * TILE + TILE * (0.5 + (hash(x, y, 741) - 0.5) * 0.15), y * TILE + TILE * 0.84, TILE * 0.66);
+      else if (id) upright(ctx, x * TILE + TILE / 2, y * TILE + TILE * 0.75, () => drawSpecial(ctx, id, x * TILE, y * TILE, x, y));
     }
   }
   ctx.restore();
@@ -2541,7 +2543,9 @@ function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void
         }
         ctx.stroke();
       }
-      if (input.mine[i]) {
+      const minePic = input.mine[i] ? sprites.get("dul") : undefined;
+      if (minePic) drawTerrainSprite(ctx, minePic, px + TILE * 0.62, py + TILE * 0.95, TILE * 0.62);
+      else if (input.mine[i]) {
         ctx.fillStyle = "#3b2f25";
         ctx.beginPath();
         ctx.moveTo(px + 7, py + 21);
@@ -2565,8 +2569,12 @@ function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void
         if (!onRail || dirs.length > 0) drawRoad(ctx, linkPaths(px, py, dirs, (k) => hash(x, y, 500 + k), 2.2));
       }
       if (input.railroad?.[i] && !cityTiles.has(i)) drawRailroad(ctx, linkPaths(px, py, links(x, y, railAt), (k) => hash(x, y, 520 + k), 0.6));
-      if (input.pollution?.[i]) drawPollution(ctx, px, py);
-      if (input.fortress?.[i]) {
+      const smog = input.pollution?.[i] ? sprites.get("znecisteni") : undefined;
+      if (smog) drawTerrainSprite(ctx, smog, px + TILE / 2, py + TILE * 0.9, TILE * 0.8);
+      else if (input.pollution?.[i]) drawPollution(ctx, px, py);
+      const fort = input.fortress?.[i] ? sprites.get("pevnost") : undefined;
+      if (fort) drawTerrainSprite(ctx, fort, px + TILE / 2, py + TILE * 0.97, TILE * 1.05);
+      else if (input.fortress?.[i]) {
         ctx.strokeStyle = "#8a7f6a";
         ctx.lineWidth = 2.2;
         ctx.strokeRect(px + 3, py + 3, TILE - 6, TILE - 6);

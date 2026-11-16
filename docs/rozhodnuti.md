@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Gemini maluje všechno, co stojí na jednom políčku
+
+Michal schválil, že Gemini namaluje i ruiny, všech jedenáct surovin, důl, pevnost a znečištění. Ruiny mají čtyři podoby: řecký chrám, zbořenou věž, zbytky městečka a zarostlou pyramidu. Zadání jsou v souborech ruiny.tsv a veci.tsv a Michal je spustí jedním skriptem veci.sh. Hra obrázky použije v obou pohledech, a dokud nejsou, kreslí tyhle věci kódem jako dosud.
+
+Podklad terénu, řeky, cesty, železnice, zavlažování, hranice států a mlha zůstávají kreslené kódem. Mění totiž tvar podle sousedních políček a z obrázků by vznikla šachovnice. Stromy v lesích a džunglích taky zůstávají kreslené, protože je jich na mapě tisíce a malované shluky by se opakovaly. Podle toho jsme upravili i pravidlo v CLAUDE.md, které dřív říkalo, že celý terén kreslí kód. Hory a kopce od Gemini ho přitom už porušovaly.
+
 ## 16. 11. 2026: Cesty a železnice vypadají jako skutečné
 
 Michal chtěl cesty a železnici realističtější. Dřív vedla z každého políčka k sousedům rovná čára a tři políčka do L udělala trojúhelník. Teď se cesta na políčku, kterým jen prochází, plynule ohne, rovný úsek se lehce vlní a šikmá spojka chybí tam, kde se dvě políčka potkají přes společného souseda. Cesta je udusaná písčitá polní cesta s tmavší krajnicí a dvěma vyjetými kolejemi od vozů. Železnice má štěrkové lože, dřevěné pražce v pravidelných rozestupech a dvě ocelové kolejnice s odleskem. Kde vede železnice, cesta se vedle ní nekreslí a odbočuje jen k políčkům, kde železnice není.

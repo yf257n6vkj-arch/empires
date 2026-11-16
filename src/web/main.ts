@@ -2,6 +2,7 @@
  * The playable page: draws the human player's view and turns clicks and keys
  * into the same commands the AI will use.
  */
+import "./polyfills";
 import {
   DEFAULT_WORLD_CHOICE,
   formatGameCode,

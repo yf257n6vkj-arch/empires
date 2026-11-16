@@ -4,7 +4,7 @@
  * of size 2 and more, a few at a time, while there is land to settle. The
  * rest is buildings, picked by value against cost.
  */
-import { BUILDINGS, RULES, UNIT_TYPES, type BuildingId, type City, type PlayerView, type ProductionItem, type UnitTypeId } from "../core";
+import { BUILDINGS, GOVERNMENTS, RULES, UNIT_TYPES, type BuildingId, type City, type PlayerView, type ProductionItem, type UnitTypeId } from "../core";
 import { coastal, isMilitary, isSettler } from "./knowledge";
 import { nature } from "./research";
 import { bestAttacker, isAttacker, skill } from "./war";
@@ -106,13 +106,24 @@ function buildingValue(view: PlayerView, city: City, b: BuildingId, plan: Plan):
   const threatened = plan.threats.some((t) => Math.max(Math.abs(t.x - city.x), Math.abs(t.y - city.y)) <= 4);
   const rule = BUILDINGS[b];
   if (rule.wonder) {
-    // Wonders only in the biggest city of an empire that has some cities to spare.
-    const biggest = view.cities.every((c) => c.size <= city.size);
-    if (!biggest || view.cities.length < 4) return 0;
+    // Wonders only in the most productive city of an empire that has some cities to spare, and not under threat.
+    const shields = (c: City) => view.cityShields[c.id] ?? 0;
+    const best = view.cities.every((c) => shields(c) < shields(city) || (shields(c) === shields(city) && c.size <= city.size));
+    if (!best || view.cities.length < 3 || threatened) return 0;
+    // A wonder that has already stopped working for its owner's science is not worth building.
+    if (rule.obsoleteBy && knows(view, rule.obsoleteBy)) return 0;
     // The Apollo Program opens the space race, which every nation wants to win.
     if (b === "apolloProgram") return n === "science" ? 45 : 32;
-    const fits = n === "science" ? (rule.effects.sciencePct ?? 0) > 0 || rule.effects.techsFromOthers : (rule.effects.content ?? 0) > 0;
-    return fits ? 30 : 12;
+    // The Manhattan Project opens nuclear war for everybody; only a warlike nation wants it.
+    if (b === "manhattanProject") return n === "war" ? 40 : 0;
+    const fits =
+      n === "science"
+        ? (rule.effects.sciencePct ?? 0) > 0 || !!rule.effects.techsFromOthers || !!rule.effects.freeTechs || (rule.effects.libraryBoostPct ?? 0) > 0
+        : n === "war"
+          ? !!rule.effects.militaryUnhappyCut || (rule.effects.defenseVsLandPct ?? 0) > 0 || !!rule.effects.peaceOffers
+          : (rule.effects.content ?? 0) > 0 || !!rule.effects.noUnhappy || (rule.effects.templePct ?? 0) > 0;
+    // Every wonder is worth score, so even one that does not fit the nature gets built in time.
+    return fits ? 60 : 40;
   }
   const big = city.size;
   switch (b) {
@@ -192,7 +203,13 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
   const building = city.production.kind === "unit" && UNIT_TYPES[city.production.id].foundsCity;
   const wantsCities = plan.room + plan.islands > underway - (building ? 1 : 0);
   const limit = skill(view).cityLimit;
-  if (city.size >= 2 && wantsCities && (building || underway < maxSettlers) && cityCount + underway - (building ? 1 : 0) < limit) return { kind: "unit", id: "settlers" };
+  // A settler eats from its home city every turn: only a city with food to spare raises one, or it stops growing.
+  // A founder leaves soon and starts its own city, so it may take the city's last spare food; a worker stays for good.
+  const spare = view.cityFood[city.id] ?? 0;
+  const settlerFood = GOVERNMENTS[view.economy.government].settlerFood;
+  const feedsFounder = building || spare >= settlerFood;
+  const feeds = building || spare >= settlerFood + 1;
+  if (city.size >= 2 && feedsFounder && wantsCities && (building || underway < maxSettlers) && cityCount + underway - (building ? 1 : 0) < limit) return { kind: "unit", id: "settlers" };
 
   // A ship once the own land is nearly full: it looks for islands and carries settlers there.
   const ship = transportShip(view);
@@ -202,7 +219,7 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
   }
 
   // Settlers who improve the land: about one for every two cities.
-  if (city.size >= 3 && workers + (building ? 1 : 0) < Math.ceil(cityCount / 2) && underway === 0) return { kind: "unit", id: "settlers" };
+  if (city.size >= 3 && feeds && workers + (building ? 1 : 0) < Math.ceil(cityCount / 2) && underway === 0) return { kind: "unit", id: "settlers" };
 
   // While the Apollo Program is being built, caravans for it come before a bigger army,
   // unless enemies stand near this city.

@@ -11,6 +11,7 @@ import {
   playerView,
   type GameState,
   type Point,
+  tileYield,
 } from "../src/core";
 
 describe("newGame", () => {
@@ -32,6 +33,8 @@ describe("newGame", () => {
         const terrain = game.map.terrain[p.start.y * game.map.width + p.start.x]!;
         expect(isLand(terrain)).toBe(true);
         expect(terrain).not.toBe("mountains");
+        // A capital founded on the start tile feeds itself.
+        expect(tileYield(game.map, p.start.y * game.map.width + p.start.x, true).food).toBeGreaterThanOrEqual(2);
       }
       expect(minPairDistance(game.players.map((p) => p.start))).toBeGreaterThanOrEqual(8);
     },

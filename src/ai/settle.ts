@@ -7,7 +7,7 @@
  * by (23/24)^3 (Freeciv), so settlers do not wander off on death marches.
  */
 import { distance, RULES, type Point, type PlayerView, type Unit } from "../core";
-import { at, isLand, isSea, knownCities, pointOf, radius, tileValue } from "./knowledge";
+import { at, centerFood, isLand, isSea, knownCities, pointOf, radius, tileValue } from "./knowledge";
 
 /** Below this a site is not worth a settler. */
 export const MIN_SITE_SCORE = 18;
@@ -37,6 +37,8 @@ export function siteValue(view: PlayerView, i: number, reserved: Point[], averag
   const p = pointOf(view, i);
   const terrain = view.terrain[i];
   if (terrain === "mountains") return -Infinity;
+  // A city has to feed itself: a centre on forest, jungle or swamp gives one food and the city hardly grows.
+  if (centerFood(view, i) < 2) return -Infinity;
   for (const c of knownCities(view)) {
     const d = distance(c, p);
     if (d < Math.max(3, RULES.minCityDistance)) return -Infinity;

@@ -2,6 +2,16 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Fáze 4, první kroky: rychlost, Safari a soupeři, kteří rostou
+
+Rychlost je v pořádku. Ve 100. tahu trvají tahy tří soupeřů v Node 60 až 90 milisekund. V prohlížeči trvá konec tahu i s překreslením 100 až 190 milisekund a posun mapy běží 60 snímků za sekundu. Cíl dvě sekundy hra splňuje s velkou rezervou, a to jsme měřili na pomalejším stroji, než je Mac M1.
+
+Safari tady spustit nejde a WebKit se do pracovního prostředí stáhnout nepodařilo. Prošel jsem proto kód a doplnil dvě věci, které starší Safari neumí: kreslení zaoblených obdélníků na plátno (Safari ho umí až od verze 16) a rozmazané pozadí oken, které Safari do verze 18 potřebuje pod předponou. Vyzkoušet hru v Safari musí Michal.
+
+Při hledání hráčů, kteří uvíznou s jedním městem, se ukázalo, že 35 % startů leželo na lese, bažině nebo džungli. Město na takovém políčku má ze středu jen jedno jídlo a skoro neroste. Starty teď leží jen tam, kde střed města uživí. Týká se to i hráče. Soupeři stejně tak nezakládají města na místech, kde by střed dával méně než dvě jídla. Osadníka staví jen město, které má jídlo navíc, protože osadník jí ze svého domovského města každý tah. Dělník potřebuje jídlo navíc i po svém narození, zakladatel smí vzít to poslední, protože brzy odejde. Soupeři navíc staví divy v nejproduktivnějším městě. Dřív kromě programu Apollo nepostavili žádný, teď zhruba jeden div na partii. Projekt Manhattan staví jen válečník.
+
+Na 50 automatických partiích měla města soupeřů ve 120. tahu průměrně 4,6 obyvatele místo 3,8. Soupeř měl v mediánu 8 měst místo 9 a 66 objevů místo 62. S jedním městem uvízlo 5 hráčů z 200, stejně jako dřív. Vesmírnou lodí vyhrál soupeř v 15 partiích z 50, dřív zhruba v osmi procentech partií. Jestli je to moc, ukáže Michalova partie.
+
 ## 16. 11. 2026: Fáze 4 dotáhne první verzi
 
 Michal schválil obsah fáze 4. Nepřidává nové funkce, má z hry udělat partii na jeden večer bez zádrhelů pro Michala i pro syna. Kroky jdou v tomhle pořadí:

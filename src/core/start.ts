@@ -1,7 +1,8 @@
 /**
  * Chooses start positions: good land for a first city, as far apart as possible.
  *
- * Every land tile gets a score from the 21 tiles a city there could work.
+ * Every land tile whose centre feeds a city gets a score from the 21 tiles a
+ * city there could work.
  * Then we greedily add the candidate that is farthest from the starts chosen
  * so far, with the score as a tie breaker, and try several first picks to keep
  * the layout with the largest minimum distance.
@@ -25,6 +26,8 @@ export function siteScore(map: GameMap, center: Point): number {
   const centerTerrain = map.terrain[center.y * map.width + center.x];
   if (!centerTerrain || !TERRAINS[centerTerrain].land) return -Infinity;
   if (centerTerrain === "mountains" || centerTerrain === "arctic") return -Infinity;
+  // The capital has to feed itself: a centre on forest, swamp or jungle gives one food and the city never grows.
+  if (tileYield(map, center.y * map.width + center.x, true).food < 2) return -Infinity;
   let score = 0;
   let landTiles = 0;
   for (const i of cityRadiusTiles(map, center)) {

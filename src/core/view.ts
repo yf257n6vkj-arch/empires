@@ -101,6 +101,8 @@ export interface PlayerView {
   bribePrices: Record<number, number>;
   /** Shields each own city adds to its production per turn, as its city screen shows; keyed by city id. */
   cityShields: Record<number, number>;
+  /** Food each own city has to spare per turn, as its city screen shows; keyed by city id. */
+  cityFood: Record<number, number>;
   /**
    * Other players' cities the player has seen on explored land, or all of them
    * with the space program. Without an embassy with the owner only buildings
@@ -153,6 +155,7 @@ export function visibleTiles(state: GameState, playerId: PlayerId): number[] {
 }
 
 export function playerView(state: GameState, playerId: PlayerId): PlayerView {
+  const ownReports = state.cities.filter((c) => c.owner === playerId).map((c) => [c.id, cityReport(state, c)] as const);
   const player = state.players[playerId];
   if (!player) throw new Error(`playerView: unknown player ${playerId}`);
   const visible = visibleTiles(state, playerId);
@@ -189,7 +192,8 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
         .filter((c) => c.owner !== playerId && state.units.some((u) => u.owner === playerId && UNIT_TYPES[u.type].special === "diplomat" && distance(u, c) <= 1))
         .map((c) => [c.id, inciteCost(state, c)]),
     ),
-    cityShields: Object.fromEntries(state.cities.filter((c) => c.owner === playerId).map((c) => [c.id, cityReport(state, c).shieldSurplus])),
+    cityShields: Object.fromEntries(ownReports.map(([id, r]) => [id, r.shieldSurplus])),
+    cityFood: Object.fromEntries(ownReports.map(([id, r]) => [id, r.foodSurplus])),
     foreignCities: state.cities
       .filter((c) => c.owner !== playerId && (seesAll || player.explored[c.y * state.map.width + c.x]))
       .map((c) => {

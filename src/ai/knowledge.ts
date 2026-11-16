@@ -3,7 +3,7 @@
  * hangs together, where the explored world ends. Everything here reads only
  * the view, so the AI knows no more than a human in its seat.
  */
-import { cityRadiusTiles, neighbors8, TERRAINS, toIndex, UNIT_TYPES, type City, type Point, type PlayerView, type TerrainId, type Unit } from "../core";
+import { cityRadiusTiles, neighbors8, TERRAINS, tileYield, toIndex, UNIT_TYPES, type City, type Point, type PlayerView, type TerrainId, type Unit } from "../core";
 
 export function at(view: PlayerView, p: Point): number {
   return toIndex(view, p.x, p.y);
@@ -149,4 +149,10 @@ export function seaReach(view: PlayerView, from: Point, hugCoast: boolean): Map<
     }
   }
   return steps;
+}
+
+/** Food a city founded on the tile would get from its centre, from what the player has seen of the tile. */
+export function centerFood(view: PlayerView, i: number): number {
+  const map = { width: view.width, height: view.height, terrain: view.terrain as TerrainId[], road: view.road, irrigation: view.irrigation, mine: view.mine, railroad: view.railroad, fortress: view.fortress, special: view.special, pollution: view.pollution, ruins: view.ruins };
+  return tileYield(map, i, true).food;
 }

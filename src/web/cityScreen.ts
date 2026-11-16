@@ -36,7 +36,7 @@ import {
 import { BUILDING_WIDTH, buildingPortraitCanvas, drawBuilding, drawHouse, tone } from "./buildingArt";
 import { drawTerrainPatch, drawUnitPortrait, playerColor, unitPortraitCanvas, type DrawInput } from "./render";
 import { describeBuilding, describeUnit, escapeHtml, moodLine } from "./texts";
-import { buildingArtCanvas, drawCityView, hasCityArt, hitAt, loadCityArt } from "./cityView";
+import { buildingArtCanvas, cityArtSettled, drawCityView, hasCityArt, hitAt, loadCityArt } from "./cityView";
 import { t, tn } from "./i18n";
 import { buildingName, cityLabel, productionLabel, terrainName, unitName } from "./i18n/names";
 
@@ -901,8 +901,20 @@ export function createCityScreen(host: CityHost) {
         const hit = at(e);
         if (hit) host.openEntry(hit.entry);
       });
-    } else {
+    } else if (cityArtSettled()) {
+      // The pictures could not be loaded: fall back to the drawn panorama.
       drawPanorama(pctx, vw, vh, s, c);
+    } else {
+      // The pictures are still on their way; a quiet sky beats a flash of the old drawing.
+      const sky = pctx.createLinearGradient(0, 0, 0, vh);
+      sky.addColorStop(0, "#9cc4dc");
+      sky.addColorStop(1, "#7fa86a");
+      pctx.fillStyle = sky;
+      pctx.fillRect(0, 0, vw, vh);
+      pctx.fillStyle = "rgba(20, 30, 20, 0.55)";
+      pctx.font = "14px system-ui, sans-serif";
+      pctx.textAlign = "center";
+      pctx.fillText(t("Načítám obrázek města…"), vw / 2, vh / 2);
     }
     view.append(pc);
 

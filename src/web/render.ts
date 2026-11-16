@@ -979,7 +979,7 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
         const start = { x: ax + ux * TILE * 0.3, y: ay + uy * TILE * 0.3 };
         pts.push([start.x, start.y]);
         widths.push(widthAt(flow[tiles[tiles.length - 1]!]!));
-        deltas.push({ x: start.x, y: start.y, ux, uy, reach: TILE * 0.9, spread: 0.75 });
+        deltas.push({ x: start.x, y: start.y, ux, uy, reach: TILE * 0.9, spread: 1.05 });
       } else {
         // A small river opens into a funnel-shaped mouth.
         pts.push([ax + ux * TILE * 0.85, ay + uy * TILE * 0.85]);
@@ -1084,34 +1084,36 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     }
   }
 
-  // Deltas: a fan of channels and sandbanks where a big river meets the sea.
-  const deltaLand: { x: number; y: number }[][] = [];
+  // Deltas: the river splits into a few channels that build fingers of marshy
+  // land out into the sea, like a bird's foot, with muddy water around them.
+  const deltaShapes: { ux: number; uy: number; reach: number; arms: Stream["pts"][] }[] = [];
+  const plumes: { x: number; y: number; r: number }[] = [];
   for (const d of deltas) {
     const base = Math.atan2(d.uy, d.ux);
-    const arms = 4;
-    const fan: { x: number; y: number }[] = [{ x: d.x - d.ux * 2, y: d.y - d.uy * 2 }];
-    for (let k = 0; k <= 12; k++) {
-      const a = base - d.spread + (2 * d.spread * k) / 12;
-      const r = d.reach * (1.05 + (hash(k, Math.round(d.x), 161) - 0.5) * 0.2);
-      fan.push({ x: d.x + Math.cos(a) * r, y: d.y + Math.sin(a) * r });
-    }
-    deltaLand.push(fan);
+    const seed = Math.round(d.x * 7 + d.y * 13);
+    const arms = 3 + Math.floor(hash(seed, 1, 161) * 2.99);
+    plumes.push({ x: d.x + d.ux * d.reach * 0.8, y: d.y + d.uy * d.reach * 0.8, r: d.reach * 1.5 });
+    const shape = { ux: d.ux, uy: d.uy, reach: d.reach, arms: [] as Stream["pts"][] };
+    deltaShapes.push(shape);
     for (let k = 0; k < arms; k++) {
-      const a = base - d.spread * 0.8 + (1.6 * d.spread * k) / (arms - 1);
+      const a = base - d.spread * 0.75 + (1.5 * d.spread * k) / (arms - 1) + (hash(seed, k, 162) - 0.5) * 0.25;
+      // Outer channels are shorter, so the coast of the delta is rounded and uneven.
+      const middle = 1 - Math.abs(k - (arms - 1) / 2) / ((arms - 1) / 2 + 0.001);
+      const length = d.reach * (0.65 + middle * 0.3 + hash(seed, k, 164) * 0.15);
       const pts: Stream["pts"] = [];
       const steps = 8;
       let px = d.x;
       let py = d.y;
-      let ang = base;
       for (let j = 0; j <= steps; j++) {
         // Each channel bends from the river's direction out to its own.
         const t = j / steps;
-        ang = base + (a - base) * Math.min(1, t * 1.6) + (hash(k, j, 163) - 0.5) * 0.3;
-        pts.push({ x: px, y: py, w: 2.2 - 1.4 * t });
-        px += Math.cos(ang) * ((d.reach * 1.1) / steps);
-        py += Math.sin(ang) * ((d.reach * 1.1) / steps);
+        const ang = base + (a - base) * Math.min(1, 0.35 + t * 2.5) + (hash(k, j + seed, 163) - 0.5) * 0.2;
+        pts.push({ x: px, y: py, w: 1.3 - 0.4 * t });
+        px += Math.cos(ang) * (length / steps);
+        py += Math.sin(ang) * (length / steps);
       }
       streams.push({ pts });
+      shape.arms.push(pts);
     }
   }
 
@@ -1124,21 +1126,77 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     p.y += ((drawNoise(fx * 1.6, fy * 1.6, 92) - 0.5) * 2 + (drawNoise(fx * 3.7, fy * 3.7, 94) - 0.5) * 0.8) * AMP;
   };
   for (const st of streams) for (const p of st.pts) bend(p);
-  for (const fan of deltaLand) for (const p of fan) bend(p);
 
   ctx.save();
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  // Sandy, reedy land of the deltas.
-  for (const fan of deltaLand) {
-    ctx.fillStyle = "rgba(170, 182, 112, 0.9)";
+  // Muddy water the river carries out to sea, then the land of the deltas:
+  // a sandy rim first and marsh on top. Each finger narrows towards its tip.
+  for (const pl of plumes) {
+    const g = ctx.createRadialGradient(pl.x, pl.y, 0, pl.x, pl.y, pl.r);
+    g.addColorStop(0, "rgba(176, 196, 160, 0.5)");
+    g.addColorStop(0.6, "rgba(150, 190, 180, 0.22)");
+    g.addColorStop(1, "rgba(150, 190, 180, 0)");
+    ctx.fillStyle = g;
     ctx.beginPath();
-    fan.forEach((p, k) => (k ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-    ctx.closePath();
+    ctx.arc(pl.x, pl.y, pl.r, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "rgba(240, 228, 180, 0.8)";
-    ctx.lineWidth = 0.8;
+  }
+  // The land of a delta: a fan whose coast bulges out at each channel's mouth
+  // and bends in between. It fades in from the coast, so it blends with the
+  // land behind it whatever terrain that is.
+  for (const d of deltaShapes) {
+    const apex = d.arms[0]![0]!;
+    const px = -d.uy;
+    const py = d.ux;
+    const tip = (arm: Stream["pts"]) => arm[arm.length - 1]!;
+    const left = { x: apex.x - px * d.reach * 0.6 - d.ux * d.reach * 0.1, y: apex.y - py * d.reach * 0.6 - d.uy * d.reach * 0.1 };
+    const right = { x: apex.x + px * d.reach * 0.6 - d.ux * d.reach * 0.1, y: apex.y + py * d.reach * 0.6 - d.uy * d.reach * 0.1 };
+    const first = tip(d.arms[0]!);
+    const last = tip(d.arms[d.arms.length - 1]!);
+    // The coast of the delta: out to the first mouth, bays between the mouths, back from the last.
+    const coast = () => {
+      ctx.quadraticCurveTo(first.x - px * d.reach * 0.3, first.y - py * d.reach * 0.3, first.x, first.y);
+      for (let k = 1; k < d.arms.length; k++) {
+        const a = tip(d.arms[k - 1]!);
+        const b = tip(d.arms[k]!);
+        const mx = (a.x + b.x) / 2;
+        const my = (a.y + b.y) / 2;
+        ctx.quadraticCurveTo(mx + (apex.x - mx) * 0.3, my + (apex.y - my) * 0.3, b.x, b.y);
+      }
+      ctx.quadraticCurveTo(last.x + px * d.reach * 0.3, last.y + py * d.reach * 0.3, right.x, right.y);
+    };
+    const fade = (r: number, g: number, b: number, alpha: number) => {
+      const grad = ctx.createLinearGradient(apex.x + d.ux * d.reach * 0.08, apex.y + d.uy * d.reach * 0.08, apex.x + d.ux * d.reach * 0.38, apex.y + d.uy * d.reach * 0.38);
+      grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`);
+      grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, ${alpha})`);
+      return grad;
+    };
+    ctx.beginPath();
+    ctx.moveTo(left.x, left.y);
+    coast();
+    ctx.strokeStyle = fade(226, 212, 162, 0.95);
+    ctx.lineWidth = 2.4;
     ctx.stroke();
+    ctx.closePath();
+    ctx.fillStyle = fade(122, 152, 84, 1);
+    ctx.fill();
+    // A few reeds on the marsh.
+    ctx.strokeStyle = "rgba(70, 96, 48, 0.6)";
+    ctx.lineWidth = 0.5;
+    for (let k = 0; k < 7; k++) {
+      const arm = d.arms[k % d.arms.length]!;
+      const p = arm[3 + (k % 3)]!;
+      const side = (hash(k, Math.round(apex.x), 166) - 0.5) * d.reach * 0.5;
+      const rx = p.x + px * side;
+      const ry = p.y + py * side;
+      ctx.beginPath();
+      ctx.moveTo(rx, ry + 1);
+      ctx.lineTo(rx - 0.4, ry - 1.2);
+      ctx.moveTo(rx + 0.8, ry + 1);
+      ctx.lineTo(rx + 1.1, ry - 1);
+      ctx.stroke();
+    }
   }
   // Thin streams are measured finely, so they can taper all the way down to a hairline.
   const step = (w: number) => (w < 1 ? Math.max(0.04, Math.round(w * 20) / 20) : Math.round(w * 4) / 4);

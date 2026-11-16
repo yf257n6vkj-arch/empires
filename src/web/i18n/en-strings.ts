@@ -411,8 +411,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Present day",
   "sever jih řeka hora údolí les zátoka pláň ostrov mys":
     "north south river hill valley forest bay plain island cape",
-  "Jsi {leader} a vedeš {realm}. Na kontinentu žijí i {rivals}. Najdi osadníkem dobré místo a založ hlavní město (klávesa B). Bude se jmenovat {capital}.":
-    "You are {leader} and you lead the {realm}. The {rivals} also live on the continent. Find a good spot with your settler and found your capital (key B). It will be called {capital}.",
   "Osadník staví cestu až do cíle. Když ho vybereš, stavbu zrušíš klávesou C.":
     "The settler builds a road all the way to the target. Select him and press C to stop.",
   "Osadník staví železnici až do cíle. Když ho vybereš, stavbu zrušíš klávesou C.":
@@ -1485,4 +1483,8 @@ export const EN_STRINGS: Record<string, string> = {
     "A map code that carries world settings, for example from another game, takes precedence over these settings.",
   "Všichni začínají na kontinentu. Na ostrovy se dostaneš jen lodí a první loď postavíš po objevení technologie {tech}.":
     "Everyone starts on the continent. You can reach the islands only by ship, and you can build the first ship once you discover {tech}.",
+  "Načítám obrázek města…":
+    "Loading the city picture…",
+  "Jsi {leader} a vedeš {realm}. Na kontinentu žijí i jiné národy a poznáš je, až na ně narazíš. Najdi osadníkem dobré místo a založ hlavní město (klávesa B). Bude se jmenovat {capital}.":
+    "You are {leader} and you lead the {realm}. Other nations live on the continent too, and you will meet them when you come across them. Find a good spot with your settler and found your capital (key B). It will be called {capital}.",
 };

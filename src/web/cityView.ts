@@ -25,6 +25,7 @@ interface Art {
 
 const art = new Map<string, Art>();
 let loading: Promise<void> | null = null;
+let settled = false;
 
 /** Finds the plinth: the widest part of the picture just above its lowest point. */
 function measure(img: HTMLImageElement): Art {
@@ -77,8 +78,14 @@ export function loadCityArt(): Promise<void> {
           }),
       ),
     );
+    settled = true;
   })();
   return loading;
+}
+
+/** True once loading has finished, whether or not every picture arrived. */
+export function cityArtSettled(): boolean {
+  return settled;
 }
 
 /** True when there are pictures to build a city from. */

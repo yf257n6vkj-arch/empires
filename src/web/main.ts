@@ -81,6 +81,7 @@ import { createCityScreen } from "./cityScreen";
 import { createEmpireDialogs } from "./empire";
 import { createCodex, entryKey } from "./codex";
 import { createNewGameDialog } from "./newGame";
+import { loadCityArt } from "./cityView";
 import { createMenus } from "./menu";
 import { createAdvisor } from "./advisorPanel";
 import { createCitiesOverview } from "./citiesOverview";
@@ -196,14 +197,13 @@ function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_
   const seed = formatGameCode(parsed.seed, world);
   state = newGame({ seed, playerCount: world.opponents + 1, civ, world });
   const civ0 = state.players[HUMAN]!.civ;
-  const rivals = state.players.filter((p) => p.id !== HUMAN).map((p) => civName(p.civ)).join(", ");
+  // The rivals stay unnamed: the player meets them while exploring.
   log = [
     {
       turn: 1,
-      text: t("Jsi {leader} a vedeš {realm}. Na kontinentu žijí i {rivals}. Najdi osadníkem dobré místo a založ hlavní město (klávesa B). Bude se jmenovat {capital}.", {
+      text: t("Jsi {leader} a vedeš {realm}. Na kontinentu žijí i jiné národy a poznáš je, až na ně narazíš. Najdi osadníkem dobré místo a založ hlavní město (klávesa B). Bude se jmenovat {capital}.", {
         leader: leaderName(civ0),
         realm: realmObject(civ0),
-        rivals,
         capital: cityLabel(CIVS[civ0].cities[0]!),
       }),
     },
@@ -1495,3 +1495,5 @@ if (saved) useGame(saved);
 else startNewGame(randomSeed(), undefined, DEFAULT_WORLD_CHOICE, false);
 menus.showStart();
 loadSprites();
+// Load the city pictures while the player looks at the map, so the city screen opens with them ready.
+setTimeout(() => void loadCityArt(), 1500);

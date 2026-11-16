@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Soupeře hráč pozná až při průzkumu a delta má bažinatý vějíř
+
+Úvodní hláška už nevyjmenuje národy, které na kontinentu žijí. Hráč je pozná, až na ně narazí. Michal chce, aby na to hráč přišel sám při hře.
+
+Delta řeky se kreslí jako vějíř bažinaté země, který řeka vysune do moře. Řeka se v něm rozdělí na tři až pět ramen a každé rameno ústí na výběžku vějíře, mezi rameny se pobřeží vrací v zátokách. Okraj vějíře lemuje písek a kolem ústí je kalnější voda. Vějíř u břehu průhlední, takže navazuje na jakýkoli terén za ním.
+
+Obrázky do pohledu na město se načítají hned po spuštění hry na pozadí. Kdo otevře město dřív, než jsou načtené, uvidí místo staré kreslené grafiky prázdnou krajinu s nápisem, že se obrázek načítá.
+
 ## 16. 11. 2026: Svět si hráč nastaví při založení hry
 
 Michal chtěl vybírat parametry mapy podobně jako v jiných hrách a schválil návrh podle Civilizace 1 a 6. V okně nové hry je tlačítko Nastavit svět. Kdo ho nepoužije, hraje na stejné mapě jako dřív.

@@ -249,7 +249,7 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
       e.id === "railroad"
         ? t("staví se na cestu, přidá polovinu štítů a jízda po ní nic nestojí")
         : e.id === "fortress"
-          ? t("zdvojí obranu jednotek na políčku (začne platit s bojem ve fázi 3)")
+          ? t("zdvojí obranu jednotek na políčku, a když obránce padne, ostatní jednotky na políčku přežijí")
           : e.id === "irrigation"
             ? t("potřebuje vodu na sousedním políčku a nesnese se s dolem")
             : e.id === "mine"

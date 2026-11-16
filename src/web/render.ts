@@ -76,6 +76,9 @@ export interface DrawUnit {
   /** Share of the current work done, 0..1. */
   workProgress?: number;
   hasMoves: boolean;
+  /** Hit points left as a share of a healthy unit, 0..1; missing means healthy. */
+  health?: number;
+  veteran?: boolean;
 }
 
 export interface DrawCity {
@@ -2587,6 +2590,35 @@ function drawUnits(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     const fx = top.x * TILE + (inCity ? 3.5 : TILE / 2);
     const fy = top.y * TILE + (inCity ? 19.5 : 21);
     drawMiniature(ctx, top, fx, fy, scale, top.id === input.selectedUnitId, units.length);
+    drawCondition(ctx, top, fx, fy, scale);
+  }
+}
+
+/** A health bar over a wounded unit and a gold chevron for a veteran. */
+function drawCondition(ctx: CanvasRenderingContext2D, u: DrawUnit, fx: number, fy: number, s: number): void {
+  if (u.health !== undefined && u.health < 1) {
+    const w = 12 * s;
+    const h = Math.max(1.2, 1.7 * s);
+    const x = fx - w / 2;
+    const y = fy - 19.5 * s;
+    ctx.fillStyle = "rgba(20, 16, 12, 0.85)";
+    ctx.fillRect(x - 0.5, y - 0.5, w + 1, h + 1);
+    ctx.fillStyle = u.health > 0.6 ? "#5fbf3f" : u.health > 0.3 ? "#e3b62c" : "#d9452b";
+    ctx.fillRect(x, y, Math.max(0.6, w * u.health), h);
+  }
+  if (u.veteran) {
+    const x = fx + 6.5 * s;
+    const y = fy - 1.5 * s;
+    ctx.strokeStyle = "rgba(30, 20, 5, 0.9)";
+    ctx.lineWidth = 1.6 * s;
+    ctx.beginPath();
+    ctx.moveTo(x - 2 * s, y - 1 * s);
+    ctx.lineTo(x, y + 0.6 * s);
+    ctx.lineTo(x + 2 * s, y - 1 * s);
+    ctx.stroke();
+    ctx.strokeStyle = "#f2c53a";
+    ctx.lineWidth = 0.9 * s;
+    ctx.stroke();
   }
 }
 

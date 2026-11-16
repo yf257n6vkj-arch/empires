@@ -15,6 +15,7 @@ import {
   wonderOwner,
 } from "./economy";
 import { aircraftSafe, continueGotoDraft, turnMoves } from "./units";
+import { healAmount } from "./combat";
 import type { GameEvent } from "./events";
 import { BUILDINGS, GOVERNMENTS, IMPROVEMENTS, RULES, TECH_IDS, UNIT_TYPES, type BuildingId, type ImprovementId, type TerrainId } from "./rules";
 import { Rng } from "./rng";
@@ -37,6 +38,7 @@ export function endTurnDraft(draft: GameState, events: GameEvent[]): void {
   for (const unit of draft.units.filter((u) => u.owner === player && u.work)) {
     progressWorkDraft(draft, unit, events);
   }
+  healDraft(draft, player);
   perilsDraft(draft, player, events);
   collapseDraft(draft, player, events);
   disasterDraft(draft, player, events);
@@ -49,6 +51,14 @@ export function endTurnDraft(draft: GameState, events: GameEvent[]): void {
   }
   draft.currentPlayer = next;
   startTurnDraft(draft, next, events);
+}
+
+/** Wounded units that spent the turn without moving get some hit points back (mutates the draft). */
+function healDraft(draft: GameState, player: PlayerId): void {
+  for (const unit of draft.units.filter((u) => u.owner === player)) {
+    const rested = unit.fortified || unit.work !== null || unit.movesLeft >= turnMoves(draft, unit);
+    if (rested) unit.hp += healAmount(draft, unit);
+  }
 }
 
 /**

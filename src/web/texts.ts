@@ -1,6 +1,7 @@
 /** Texts for the screen: error reasons and event messages. */
 import {
   RULES,
+  UNIT_TYPES,
   type BuildingRule,
   type CommandError,
   type DisasterId,
@@ -8,12 +9,14 @@ import {
   type GameState,
   type GovernmentRule,
   type Happiness,
+  type TechId,
   type UnitRule,
 } from "../core";
 import { t, tn } from "./i18n";
 import {
   buildingName,
   cityLabel,
+  civName,
   governmentName,
   improvementName,
   inSentence,
@@ -80,6 +83,8 @@ export const ERROR_TEXT: Record<CommandError, string> = {
   alreadySold: t("V tomhle městě jsi už v tomhle tahu jednu budovu prodal."),
   cityTooSmall: t("Výběrčí daní a vědce může mít až město s aspoň {specialistMinSize} obyvateli.", { specialistMinSize: RULES.specialistMinSize }),
   tooManySpecialists: t("Tolik obyvatel mimo pole město nemá."),
+  cannotAttack: t("Tahle jednotka sem zaútočit nemůže. Útočí jen vojenské jednotky, pozemní na souši a ne z lodi, lodě na moři a na pobřeží. Letadlo ve vzduchu dostihne jen jiné letadlo."),
+  nothingToAttack: t("Na políčku není nikdo, na koho by šlo zaútočit."),
 };
 
 /** "před požárem": what a building or technology keeps away, in the instrumental. */
@@ -131,6 +136,100 @@ export function realmName(state: GameState, player: number): string {
   const p = state.players[player];
   if (!p) return t("Jiná říše");
   return realmLabel(p.civ);
+}
+
+/** The people of a player, "Římané". */
+function nationOf(state: GameState, player: number): string {
+  const civ = state.players[player]?.civ;
+  return civ ? civName(civ) : "";
+}
+
+function lootText(gold: number, tech: TechId | null): string {
+  if (gold > 0 && tech) return t(" Kořist: {gold} zlata a objev {tech}.", { gold, tech: techName(tech) });
+  if (gold > 0) return t(" Kořist: {gold} zlata.", { gold });
+  if (tech) return t(" Kořist: objev {tech}.", { tech: techName(tech) });
+  return "";
+}
+
+/** One fight, told from the side of the viewer. */
+function combatText(state: GameState, e: Extract<GameEvent, { type: "combat" }>, viewer: number): string | null {
+  const mine = e.attacker.owner === viewer ? e.attacker : e.defender.owner === viewer ? e.defender : null;
+  if (!mine) return null;
+  const other = mine === e.attacker ? e.defender : e.attacker;
+  const nation = nationOf(state, other.owner);
+  const unit = unitName(mine.unitType);
+  const enemy = unitName(other.unitType);
+  const iWon = (mine === e.attacker) === e.attackerWon;
+  const max = UNIT_TYPES[mine.unitType].hp;
+  let text: string;
+  if (mine === e.attacker) {
+    text = iWon
+      ? t("Tvoje jednotka {unit} porazila jednotku {enemy} ({nation}) a zbývá jí {hp} z {max} životů.", { unit, enemy, nation, hp: e.winnerHp, max })
+      : t("Útok se nepovedl: tvoje jednotka {unit} padla v boji s jednotkou {enemy} ({nation}).", { unit, enemy, nation });
+  } else {
+    text = iWon
+      ? t("{nation} zaútočili jednotkou {enemy} na tvou jednotku {unit} a prohráli. Tvé jednotce zbývá {hp} z {max} životů.", { nation, enemy, unit, hp: e.winnerHp, max })
+      : t("{nation} zaútočili jednotkou {enemy} a tvoje jednotka {unit} padla.", { nation, enemy, unit });
+  }
+  if (e.alsoLost > 0) {
+    text += iWon
+      ? tn(" Nepříteli padla i další jednotka na políčku.| Nepříteli padly i další {n} jednotky na políčku.| Nepříteli padlo i dalších {n} jednotek na políčku.", e.alsoLost)
+      : tn(" Padla s ní i další jednotka na políčku.| Padly s ní i další {n} jednotky na políčku.| Padlo s ní i dalších {n} jednotek na políčku.", e.alsoLost);
+  }
+  if (e.promoted && iWon) text += t(" Jednotka {unit} se stala veteránem.", { unit });
+  return text;
+}
+
+/**
+ * Whether the viewer should hear about an event. Events from other players'
+ * turns mostly concern them alone; what the viewer would notice stays.
+ */
+export function eventConcerns(state: GameState, e: GameEvent, viewer: number): boolean {
+  const cityOwner = (id: number) => state.cities.find((c) => c.id === id)?.owner;
+  const unitOwner = (id: number) => state.units.find((u) => u.id === id)?.owner;
+  switch (e.type) {
+    case "wonderBuilt":
+    case "spaceshipLaunched":
+    case "spaceshipArrived":
+    case "globalWarming":
+    case "civDestroyed":
+    case "nuclearStrike":
+      return true;
+    case "combat":
+      return e.attacker.owner === viewer || e.defender.owner === viewer;
+    case "cityCaptured":
+      return e.from === viewer || e.to === viewer;
+    case "cityDestroyed":
+      return e.owner === viewer || e.by === viewer;
+    case "embassyOpened":
+      return e.player === viewer || e.with === viewer;
+    case "techStolen":
+      return e.player === viewer || e.from === viewer;
+    case "cityIncited":
+      return e.from === viewer || e.to === viewer;
+    case "techLearned":
+    case "researchNeeded":
+    case "revolutionStarted":
+    case "governmentChanged":
+    case "governmentCollapsed":
+    case "palaceMoved":
+    case "turnStarted":
+      return e.player === viewer;
+    case "unitLost":
+    case "unitDismissed":
+    case "unitUpgraded":
+    case "cityFounded":
+      return e.owner === viewer;
+    case "tradeRouteOpened":
+      return cityOwner(e.from) === viewer;
+    case "improvementDone":
+    case "gotoBlocked":
+    case "routeBuilt":
+    case "pollutionCleaned":
+      return unitOwner(e.unitId) === viewer;
+    default:
+      return "cityId" in e ? cityOwner(e.cityId) === viewer : false;
+  }
 }
 
 export function cityName(state: GameState, id: number): string {
@@ -262,12 +361,37 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
       return e.player === viewer
         ? t("Nepokoje ve městech svrhly vládu. Vládne anarchie, pak se vrátí {government}.", { government: inSentence(governmentName(e.government)) })
         : null;
+    case "combat":
+      return combatText(state, e, viewer);
+    case "cityCaptured": {
+      const city = cityName(state, e.cityId);
+      if (e.to === viewer) {
+        const loot = lootText(e.gold, e.tech);
+        const lost = e.lostBuildings.length ? t(" Při dobývání zaniklo: {list}.", { list: e.lostBuildings.map((b) => buildingName(b)).join(", ") }) : "";
+        return t("Dobyl jsi město {city}.", { city }) + loot + lost;
+      }
+      if (e.from === viewer) return t("{nation} dobyli tvé město {city}.", { nation: nationOf(state, e.to), city });
+      return null;
+    }
+    case "cityDestroyed": {
+      const city = cityLabel(e.name);
+      if (e.by === viewer) return t("Město {city} bylo tak malé, že při dobývání zaniklo.", { city }) + lootText(e.gold, e.tech);
+      if (e.owner === viewer) return t("{nation} zničili tvé město {city}.", { nation: nationOf(state, e.by), city });
+      return null;
+    }
+    case "palaceMoved":
+      return e.player === viewer ? t("Hlavní město padlo a vláda se přestěhovala do města {city}.", { city: cityName(state, e.cityId) }) : null;
+    case "civDestroyed":
+      return e.player === viewer
+        ? t("Přišel jsi o poslední město a tvoje říše zanikla.")
+        : t("{nation} přišli o poslední město a jejich říše zanikla.", { nation: nationOf(state, e.player) });
   }
 }
 
 /** One line about a unit for panels and the encyclopedia. */
 export function describeUnit(u: UnitRule, withCost = true): string {
-  const parts = [t("útok {attack}, obrana {defense}, pohyb {moves}", { attack: u.attack, defense: u.defense, moves: u.moves })];
+  const parts = [t("útok {attack}, obrana {defense}, pohyb {moves}, životy {hp}", { attack: u.attack, defense: u.defense, moves: u.moves, hp: u.hp })];
+  if (u.firepower > 1) parts.push(t("palebná síla {fp}", { fp: u.firepower }));
   if (u.foundsCity) parts.push(t("založí nové město"));
   if (u.buildsImprovements) parts.push(t("staví cesty, zavlažování a doly"));
   if (u.populationCost) parts.push(tn("ubere městu jednoho obyvatele|ubere městu {n} obyvatele|ubere městu {n} obyvatel", u.populationCost));
@@ -353,8 +477,10 @@ export function describeBuilding(b: BuildingRule, withCost = true): string {
   if (e.allGovernments) parts.push(t("můžeš zvolit každou vládu i bez technologie"));
   if (e.seesAllCities) parts.push(t("uvidíš všechna města světa a všichni můžou stavět vesmírné lodě"));
   if (e.militaryUnhappyCut) parts.push(t("vojáci mimo města rozladí méně obyvatel"));
-  if (e.peaceOffers) parts.push(t("soupeři ti budou nabízet mír (začne platit s diplomacií ve fázi 3)"));
-  if (e.defenseVsSeaPct) parts.push(t("zdvojí obranu proti lodím (začne platit s bojem ve fázi 3)"));
+  if (e.peaceOffers) parts.push(t("soupeři ti budou nabízet mír (začne platit s diplomacií)"));
+  if (e.defenseVsSeaPct) parts.push(t("obrana proti lodím +{pct} %", { pct: e.defenseVsSeaPct }));
+  if (e.defenseVsLandPct) parts.push(t("obrana proti pozemním jednotkám +{pct} %", { pct: e.defenseVsLandPct }));
+  if (e.veteranUnits) parts.push(t("vojáci z města jsou veteráni a zranění se tu vyléčí za jeden tah"));
   if (e.nuclearShield) parts.push(t("zastaví jaderné rakety do {nuclearShield} políček od města", { nuclearShield: e.nuclearShield }));
   if (b.spaceship) parts.push(b.spaceship === "structural" ? t("díl vesmírné lodi, nese motory a moduly") : b.spaceship === "component" ? t("díl vesmírné lodi, zkrátí let") : t("díl vesmírné lodi, zvýší šanci na přistání"));
   if (b.id === "manhattanProject") parts.push(t("všichni můžou stavět jaderné rakety"));

@@ -33,6 +33,7 @@ export function startingEconomy(): Pick<
   | "revolution"
   | "spaceship"
   | "embassies"
+  | "defeated"
 > {
   return {
     techs: [],
@@ -46,6 +47,7 @@ export function startingEconomy(): Pick<
     revolution: null,
     spaceship: emptySpaceship(),
     embassies: [],
+    defeated: false,
   };
 }
 
@@ -331,6 +333,8 @@ export interface CityEffects {
   noUnhappy: boolean;
   militaryUnhappyCut: number;
   defenseVsSeaPct: number;
+  defenseVsLandPct: number;
+  veteranUnits: boolean;
   nuclearShield: number;
 }
 
@@ -391,6 +395,8 @@ export function cityEffects(state: GameState, city: City): CityEffects {
     noUnhappy: false,
     militaryUnhappyCut: 0,
     defenseVsSeaPct: 0,
+    defenseVsLandPct: 0,
+    veteranUnits: false,
     nuclearShield: 0,
   };
   for (const e of sources) {
@@ -409,6 +415,8 @@ export function cityEffects(state: GameState, city: City): CityEffects {
     result.noUnhappy ||= e.noUnhappy ?? false;
     result.militaryUnhappyCut += e.militaryUnhappyCut ?? 0;
     result.defenseVsSeaPct += e.defenseVsSeaPct ?? 0;
+    result.defenseVsLandPct += e.defenseVsLandPct ?? 0;
+    result.veteranUnits ||= e.veteranUnits ?? false;
     result.nuclearShield = Math.max(result.nuclearShield, e.nuclearShield ?? 0);
   }
   return result;

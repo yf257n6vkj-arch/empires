@@ -7,7 +7,7 @@ import type { GameEvent } from "./events";
 import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
 import { mapOptionsFor, parseGameCode, type WorldSettings } from "./setup";
-import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, type CivId, type TechId } from "./rules";
+import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, UNIT_TYPES, type CivId, type TechId } from "./rules";
 import { chooseStartPositions } from "./start";
 import { canResearch, clampRate, fallbackProduction, fitRates, startingEconomy } from "./economy";
 import { emptySpaceship, STATE_VERSION, type GameState, type Player } from "./state";
@@ -206,6 +206,14 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
       c.disorderTurns ??= 0;
       c.soldTurn ??= null;
     }
+  }
+  if (version <= 11) {
+    // Version 12 adds combat: hit points, veterans and defeated players.
+    for (const u of state.units) {
+      u.hp ??= UNIT_TYPES[u.type].hp;
+      u.veteran ??= false;
+    }
+    for (const p of state.players) p.defeated ??= false;
   }
   state.version = STATE_VERSION;
   return state;

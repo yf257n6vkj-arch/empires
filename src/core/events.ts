@@ -54,5 +54,23 @@ export type GameEvent =
   | { type: "disaster"; cityId: CityId; disaster: DisasterId; building: BuildingId | null; size: number }
   /** A building or a technology kept a disaster away. */
   | { type: "disasterPrevented"; cityId: CityId; disaster: DisasterId; building: BuildingId | null; tech: TechId | null }
+  /** A fight between two units; the loser is gone, and outside a city or fortress so is the rest of a beaten stack. */
+  | {
+      type: "combat";
+      attacker: { id: UnitId; owner: PlayerId; unitType: UnitTypeId };
+      defender: { id: UnitId; owner: PlayerId; unitType: UnitTypeId };
+      at: Point;
+      attackerWon: boolean;
+      winnerHp: number;
+      alsoLost: number;
+      promoted: boolean;
+      winChance: number;
+    }
+  | { type: "cityCaptured"; cityId: CityId; from: PlayerId; to: PlayerId; gold: number; tech: TechId | null; lostBuildings: BuildingId[] }
+  | { type: "cityDestroyed"; cityId: CityId; name: string; owner: PlayerId; by: PlayerId; gold: number; tech: TechId | null }
+  /** The capital fell and the government moved to another city. */
+  | { type: "palaceMoved"; player: PlayerId; cityId: CityId }
+  /** The player lost the last city and is out of the game. */
+  | { type: "civDestroyed"; player: PlayerId; by: PlayerId | null }
   /** Disorder brought the government down into anarchy. */
   | { type: "governmentCollapsed"; player: PlayerId; government: GovernmentId };

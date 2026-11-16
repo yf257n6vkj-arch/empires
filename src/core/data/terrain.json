@@ -1,5 +1,5 @@
 {
-  "_comment": "Výnosy a pohyb podle Civilizace 1, obranné bonusy jsou zatím provizorní a doladíme je ve fázi pravidel. defenseBonus je v procentech. special je surovina, která se na části políček objeví a přidá k výnosu uvedené jídlo, štíty a obchod (Civilizace 1). Řeka je v Civilizaci 1 samostatný terén; cesta přes ni potřebuje stavbu mostů (viz improvements.json).",
+  "_comment": "Výnosy a pohyb podle Civilizace 1, defenseBonus je v procentech a odpovídá Civilizaci 2: kopce +100 %, hory +200 %, les, džungle, bažina a řeka +25 %. special je surovina, která se na části políček objeví a přidá k výnosu uvedené jídlo, štíty a obchod (Civilizace 1). Řeka je v Civilizaci 1 samostatný terén; cesta přes ni potřebuje stavbu mostů (viz improvements.json).",
   "terrains": [
     {
       "id": "ocean",
@@ -68,7 +68,7 @@
       "shields": 0,
       "trade": 0,
       "moveCost": 2,
-      "defenseBonus": 50,
+      "defenseBonus": 100,
       "land": true,
       "special": {
         "id": "coal",
@@ -83,7 +83,7 @@
       "shields": 1,
       "trade": 0,
       "moveCost": 3,
-      "defenseBonus": 100,
+      "defenseBonus": 200,
       "land": true,
       "special": {
         "id": "gold",

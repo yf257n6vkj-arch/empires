@@ -26,6 +26,7 @@ export const GUIDE_KEYS = [
   "how-wonders",
   "how-corruption",
   "how-disasters",
+  "how-combat",
   "how-space",
   "how-tips",
 ] as const;
@@ -56,6 +57,14 @@ export function guideNumbers(): Record<string, number> {
     successPerModule: RULES.spaceship.successPerModule,
     maxStructural: RULES.spaceship.maxStructural,
     celebrationMinSize: RULES.celebrationMinSize,
+    fortifiedPct: RULES.combat.fortifiedPct,
+    fortressPct: RULES.combat.fortressPct,
+    veteranPct: RULES.combat.veteranPct,
+    veteranChancePct: RULES.combat.veteranChancePct,
+    healFieldPct: RULES.combat.healFieldPct,
+    healCityPct: RULES.combat.healCityPct,
+    captureBuildingLossPct: RULES.combat.captureBuildingLossPct,
+    wallsPct: BUILDINGS.walls.effects.defenseVsLandPct ?? 200,
     specialistYield: RULES.specialistYield,
     specialistMinSize: RULES.specialistMinSize,
     empireSizeBase: RULES.empireSizeBase,
@@ -186,6 +195,21 @@ Velká výroba a hodně obyvatel špiní okolí. Do {pollutionFree} bodů zneči
 Když na světě zůstává moc znečištění, plní se počítadlo globálního oteplování nahoře. Až dojde na 100 %, krajina se změní. U moře vzniknou bažiny a džungle a ve vnitrozemí se louky, pláně a lesy změní v poušť.
 
 Vodní a jaderná elektrárna, recyklační centrum a městská hromadná doprava znečištění snižují. Jaderná elektrárna se ale ve městě v nepokojích může roztavit, zabít polovinu obyvatel a znečistit okolí. To hrozí, dokud neobjevíš jadernou fúzi.`,
+  },
+  "how-combat": {
+    title: "Jak bojovat",
+    icon: "⚔️",
+    text: `Na nepřítele zaútočíš tak, že na něj pošleš vojenskou jednotku ze sousedního políčka. Než boj začne, hra ukáže sílu obou jednotek a šanci na výhru, a ty se rozhodneš, jestli zaútočíš. Útok stojí jeden pohyb a útočník zůstane na svém políčku.
+
+Boj běží v kolech. V každém kole vyhraje útočník se šancí útok děleno součtem útoku a obrany. Poražený přijde o tolik životů, kolik má vítěz palebné síly. Kdo první přijde o všechny životy, padne. Proto silnější jednotka vyhrává mnohem jistěji, než by napovídal jeden hod.
+
+Obraně pomáhá terén. Kopce ji zdvojí, hory ztrojnásobí a les, džungle, bažina a řeka přidají čtvrtinu. Opevněná jednotka a jednotka ve městě brání o {fortifiedPct} % lépe, v pevnosti o {fortressPct} %. Hradby přidají proti pozemním jednotkám {wallsPct} %, pobřežní pevnost zdvojí obranu proti lodím.
+
+Když obránce padne v otevřené krajině, padnou s ním všechny jednotky na políčku. Ve městě a v pevnosti padne jen on. Vítěz se se šancí {veteranChancePct} % stane veteránem a útočí i brání o {veteranPct} % lépe. Jednotky z města s kasárnami jsou veteráni hned.
+
+Zraněná jednotka bojuje se zbytkem životů. Když celý tah stojí, vyléčí se v poli o {healFieldPct} %, ve vlastním městě o {healCityPct} % a ve městě s kasárnami úplně.
+
+Do města bez obránců vejde tvoje vojenská jednotka a dobude ho. Město se zmenší o jednoho obyvatele, každá budova zanikne se šancí {captureBuildingLossPct} % a divy zůstanou. Získáš část zlata poražené říše a jeden její objev. Město s jediným obyvatelem při dobývání zanikne. Kdo přijde o poslední město, prohrál.`,
   },
   "how-disasters": {
     title: "Jak chránit města před katastrofami",

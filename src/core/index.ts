@@ -3,6 +3,7 @@
  * so the same code runs in the page and in headless AI tournaments (Node).
  */
 export * from "./city";
+export * from "./combat";
 export * from "./commands";
 export * from "./economy";
 export * from "./events";

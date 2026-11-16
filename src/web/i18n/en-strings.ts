@@ -343,8 +343,6 @@ export const EN_STRINGS: Record<string, string> = {
     "{terrain} {n} turn{gain}|{terrain} {n} turns{gain}",
   "staví se na cestu, přidá polovinu štítů a jízda po ní nic nestojí":
     "built on a road, adds half the shields and moving along it costs nothing",
-  "zdvojí obranu jednotek na políčku (začne platit s bojem ve fázi 3)":
-    "doubles the defence of units on the tile (takes effect with combat in phase 3)",
   "potřebuje vodu na sousedním políčku a nesnese se s dolem":
     "needs water on a neighbouring tile and can't share a tile with a mine",
   "nesnese se se zavlažováním":
@@ -749,8 +747,6 @@ export const EN_STRINGS: Record<string, string> = {
     "{government} government",
   "osadník ji staví na cestu, přidá polovinu štítů a pohyb po ní nic nestojí":
     "a settler builds it on a road, it adds half the shields and moving along it costs nothing",
-  "osadník ji staví v krajině, zdvojí obranu jednotek (s bojem ve fázi 3)":
-    "a settler builds it in the open, it doubles the defence of units (with combat in phase 3)",
   "Div světa ":
     "Wonder of the World: ",
   "Jednotka už neexistuje.":
@@ -931,8 +927,6 @@ export const EN_STRINGS: Record<string, string> = {
     "The missile defence stopped a nuclear missile.",
   "Jaderná raketa vybuchla u [{at}, {at2}].":
     "A nuclear missile exploded at [{at}, {at2}].",
-  "útok {attack}, obrana {defense}, pohyb {moves}":
-    "attack {attack}, defence {defense}, moves {moves}",
   "založí nové město":
     "founds a new city",
   "staví cesty, zavlažování a doly":
@@ -1025,10 +1019,6 @@ export const EN_STRINGS: Record<string, string> = {
     "you see every city in the world and everyone can build spaceships",
   "vojáci mimo města rozladí méně obyvatel":
     "soldiers outside cities make fewer citizens unhappy",
-  "soupeři ti budou nabízet mír (začne platit s diplomacií ve fázi 3)":
-    "rivals will offer you peace (takes effect with diplomacy in phase 3)",
-  "zdvojí obranu proti lodím (začne platit s bojem ve fázi 3)":
-    "doubles defence against ships (takes effect with combat in phase 3)",
   "zastaví jaderné rakety do {nuclearShield} políček od města":
     "stops nuclear missiles up to {nuclearShield} tiles from the city",
   "díl vesmírné lodi, nese motory a moduly":
@@ -1499,4 +1489,96 @@ export const EN_STRINGS: Record<string, string> = {
     "Full page about the leader",
   "Národ vybere hra náhodně, až začneš. Kdo to bude, zjistíš na první mapě.":
     "The game picks a nation at random when you start. You will find out which one on the first map.",
+  "veterán":
+    "veteran",
+  "terén":
+    "terrain",
+  "opevnění":
+    "fortified",
+  "hradby":
+    "walls",
+  "pobřežní pevnost":
+    "coastal fortress",
+  "málo pohybu":
+    "few moves left",
+  "Útok: šance na výhru {pct} %":
+    "Attack: {pct}% chance of winning",
+  "životy {hp} z {max}":
+    "hit points {hp} of {max}",
+  "palebná síla {fp}":
+    "firepower {fp}",
+  "útok":
+    "attack",
+  "obrana":
+    "defence",
+  "Útok":
+    "Attack",
+  "Útočí":
+    "Attacker",
+  "Brání":
+    "Defender",
+  "Šance na výhru {pct} %":
+    "{pct}% chance of winning",
+  "Boj běží v kolech. V každém kole vyhraješ se šancí {round} % a poražený přijde o tolik životů, kolik má vítěz palebné síly. Kdo první přijde o všechny životy, padne. Když obránce padne mimo město a pevnost, padnou s ním všechny jednotky na políčku.":
+    "The fight runs in rounds. You win each round with a {round}% chance, and the loser loses as many hit points as the winner has firepower. Whoever loses all hit points first falls. When the defender falls outside a city or fortress, every unit on its tile falls with it.",
+  "Zrušit":
+    "Cancel",
+  "Zaútočit":
+    "Attack",
+  "zdvojí obranu jednotek na políčku, a když obránce padne, ostatní jednotky na políčku přežijí":
+    "doubles the defence of units on the tile, and when the defender falls, the other units on the tile survive",
+  "Útok {attack} · obrana {defense} · životy {hp} z {max}":
+    "Attack {attack} · defence {defense} · hit points {hp} of {max}",
+  "osadník ji staví v krajině, zdvojí obranu jednotek":
+    "settlers build it in the open; it doubles the defence of units",
+  "Tahle jednotka sem zaútočit nemůže. Útočí jen vojenské jednotky, pozemní na souši a ne z lodi, lodě na moři a na pobřeží. Letadlo ve vzduchu dostihne jen jiné letadlo.":
+    "This unit cannot attack here. Only military units attack: land units on land and not from a ship, ships at sea and on the coast. Only another aircraft can catch an aircraft in the air.",
+  "Na políčku není nikdo, na koho by šlo zaútočit.":
+    "There is nobody on the tile to attack.",
+  " Kořist: {gold} zlata a objev {tech}.":
+    " Spoils: {gold} gold and the technology {tech}.",
+  " Kořist: {gold} zlata.":
+    " Spoils: {gold} gold.",
+  " Kořist: objev {tech}.":
+    " Spoils: the technology {tech}.",
+  "Tvoje jednotka {unit} porazila jednotku {enemy} ({nation}) a zbývá jí {hp} z {max} životů.":
+    "Your {unit} beat the {enemy} of the {nation} and has {hp} of {max} hit points left.",
+  "Útok se nepovedl: tvoje jednotka {unit} padla v boji s jednotkou {enemy} ({nation}).":
+    "The attack failed: your {unit} fell fighting the {enemy} of the {nation}.",
+  "{nation} zaútočili jednotkou {enemy} na tvou jednotku {unit} a prohráli. Tvé jednotce zbývá {hp} z {max} životů.":
+    "The {nation} attacked your {unit} with a {enemy} and lost. Your unit has {hp} of {max} hit points left.",
+  "{nation} zaútočili jednotkou {enemy} a tvoje jednotka {unit} padla.":
+    "The {nation} attacked with a {enemy} and your {unit} fell.",
+  " Nepříteli padla i další jednotka na políčku.| Nepříteli padly i další {n} jednotky na políčku.| Nepříteli padlo i dalších {n} jednotek na políčku.":
+    " Another enemy unit on the tile fell too.| {n} more enemy units on the tile fell too.",
+  " Padla s ní i další jednotka na políčku.| Padly s ní i další {n} jednotky na políčku.| Padlo s ní i dalších {n} jednotek na políčku.":
+    " Another unit on the tile fell with it.| {n} more units on the tile fell with it.",
+  " Jednotka {unit} se stala veteránem.":
+    " Your {unit} became a veteran.",
+  " Při dobývání zaniklo: {list}.":
+    " Lost in the fighting: {list}.",
+  "Dobyl jsi město {city}.":
+    "You took the city of {city}.",
+  "{nation} dobyli tvé město {city}.":
+    "The {nation} took your city of {city}.",
+  "Město {city} bylo tak malé, že při dobývání zaniklo.":
+    "{city} was so small that it was destroyed when taken.",
+  "{nation} zničili tvé město {city}.":
+    "The {nation} destroyed your city of {city}.",
+  "Hlavní město padlo a vláda se přestěhovala do města {city}.":
+    "The capital fell and the government moved to {city}.",
+  "Přišel jsi o poslední město a tvoje říše zanikla.":
+    "You lost your last city and your empire is gone.",
+  "{nation} přišli o poslední město a jejich říše zanikla.":
+    "The {nation} lost their last city and their empire is gone.",
+  "útok {attack}, obrana {defense}, pohyb {moves}, životy {hp}":
+    "attack {attack}, defence {defense}, moves {moves}, hit points {hp}",
+  "soupeři ti budou nabízet mír (začne platit s diplomacií)":
+    "rivals will keep offering you peace (starts working with diplomacy)",
+  "obrana proti lodím +{pct} %":
+    "defence against ships +{pct}%",
+  "obrana proti pozemním jednotkám +{pct} %":
+    "defence against land units +{pct}%",
+  "vojáci z města jsou veteráni a zranění se tu vyléčí za jeden tah":
+    "soldiers from the city are veterans, and wounded units heal here in one turn",
 };

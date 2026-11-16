@@ -224,6 +224,10 @@ export interface UnitRule {
   cost: number;
   attack: number;
   defense: number;
+  /** Hit points of a healthy unit, as in Civilization 2 (10, 20, 30 or 40). */
+  hp: number;
+  /** Hit points a won combat round takes from the enemy. */
+  firepower: number;
   moves: number;
   foundsCity: boolean;
   buildsImprovements: boolean;
@@ -301,8 +305,12 @@ export interface BuildingEffects {
   militaryUnhappyCut?: number;
   /** Other leaders keep offering peace (diplomacy comes in phase 3). */
   peaceOffers?: boolean;
-  /** Defence bonus against ships in percent (combat comes in phase 3). */
+  /** Defence bonus against ships in percent. */
   defenseVsSeaPct?: number;
+  /** Defence bonus against land units in percent (walls). */
+  defenseVsLandPct?: number;
+  /** Land units built in the city start as veterans (barracks). */
+  veteranUnits?: boolean;
   /** Nuclear attacks within this many tiles fail. */
   nuclearShield?: number;
 }
@@ -402,7 +410,19 @@ export interface DisasterRule {
   preventTech?: TechId;
 }
 
+export interface CombatConstants {
+  fortifiedPct: number;
+  fortressPct: number;
+  veteranPct: number;
+  veteranChancePct: number;
+  healFieldPct: number;
+  healFortressPct: number;
+  healCityPct: number;
+  captureBuildingLossPct: number;
+}
+
 export interface GameConstants {
+  combat: CombatConstants;
   maxTurns: number;
   movesFraction: number;
   roadMoveCost: number;

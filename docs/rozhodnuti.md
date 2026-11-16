@@ -2,6 +2,16 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Fáze 3, krok 1: boj, dobývání měst a soupeři, kteří se brání
+
+Boj běží podle Civilizace 2. Jednotky mají životy a palebnou sílu z Civilizace 2, uložené v datech jednotek. Obraně pomáhá terén podle Civilizace 2 (kopce +100 %, hory +200 %, les, džungle, bažina a řeka +25 %), opevnění a pobyt ve městě +50 %, pevnost +100 %, hradby +200 % proti pozemním jednotkám a pobřežní pevnost +100 % proti lodím. Veterán je o 50 % silnější, vítěz se veteránem stane se šancí 50 % a kasárna cvičí veterány rovnou. Jednotka s méně než celým pohybem útočí slaběji. Pozemní jednotka útočí jen na souši a ne z lodi, loď na moři a na pobřeží, letadlo ve vzduchu dostihne jen jiné letadlo.
+
+Před útokem se ukáže okno se silou obou stran, s tím, z čeho se skládá, a se šancí na výhru. Šanci počítá jedna funkce přesně, stejnou použije AI, a test na tisících bojů ověřuje, že sedí. Když obránce padne v otevřené krajině, padnou všechny jednotky na políčku, ve městě a pevnosti jen on. Zraněná jednotka, která celý tah stála, se vyléčí o 10 % v poli, o 25 % v pevnosti, o 33 % ve vlastním městě a úplně ve městě s kasárnami.
+
+Do města bez obránců vejde vojenská pozemní jednotka a dobude ho. Město se zmenší o jednoho obyvatele, každá budova zanikne se šancí 34 %, divy zůstanou a palác zanikne. Vítěz získá část zlata podle velikosti města a jeden objev poraženého. Město velikosti 1 zanikne. Když padne hlavní město, vláda se zadarmo přestěhuje do největšího zbylého města, aby se říše nerozpadla. Kdo přijde o poslední město, prohrál a jeho zbylé jednotky zmizí.
+
+Soupeři teď dostanou startovní jednotky a hrají první verzi AI. Zatím se jen brání: založí hlavní město, drží v něm dva obránce, stavějí hradby a další budovy. Nerozšiřují se a neútočí, to přijde v dalších krocích. Hráč vidí cizí jednotky jen tam, kam právě dohlédne. Záznam událostí ukazuje jen to, co se hráče týká, takže z tahů soupeřů se dozví o bojích, dobytých městech, divech a vesmírných lodích. Uložené hry z dřívějška soupeře bez jednotek mají, proto je potřeba začít novou hru.
+
 ## 16. 11. 2026: Boj má životy jako v Civilizaci 2
 
 Claude navrhoval boj na kola bez trvalých zranění, Michal zvolil životy jako v Civilizaci 2. Boj běží v kolech. V každém kole vyhraje útočník s pravděpodobností útok / (útok + obrana) a poraženému ubude tolik životů, kolik má vítěz palebné síly. Boj končí, když jedné jednotce dojdou životy. Silnější jednotka tak vyhrává mnohem jistěji než v Civilizaci 1, třeba tank proti opevněnému kopiníkovi v kopcích asi v 96 % případů. Životy a palebnou sílu převezmeme z Civilizace 2 a budou v datech jednotek. Zraněná jednotka bojuje dál se zbytkem životů a léčí se, v poli pomalu, ve městě rychleji a s kasárnami do plného zdraví za tah. Šance na výhru před útokem počítá jedna funkce, která zná i zbývající životy obou jednotek, a stejnou funkci použije AI. AI se kvůli tomu musí naučit stáhnout zraněné jednotky k léčení.

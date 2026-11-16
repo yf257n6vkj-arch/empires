@@ -120,6 +120,21 @@ When too much pollution stays in the world, the global warming counter at the to
 
 Hydro and nuclear plants, recycling centres and mass transit reduce pollution. A nuclear plant in a rioting city can melt down, though, kill half the citizens and pollute the land around. That danger lasts until you discover fusion power.`,
   },
+  "how-combat": {
+    title: "How to fight",
+    icon: "⚔️",
+    text: `To attack an enemy, send a military unit at it from a neighbouring tile. Before the fight the game shows the strength of both units and the chance of winning, and you decide whether to attack. An attack costs one move and the attacker stays on its tile.
+
+A fight runs in rounds. In each round the attacker wins with a chance of attack divided by the sum of attack and defence. The loser loses as many hit points as the winner has firepower. Whoever loses all hit points first falls. That is why a stronger unit wins far more surely than a single roll of the dice would suggest.
+
+Terrain helps the defender. Hills double the defence, mountains triple it, and forest, jungle, swamp and river add a quarter. A fortified unit and a unit in a city defend {fortifiedPct}% better, in a fortress {fortressPct}% better. Walls add {wallsPct}% against land units, and a coastal fortress doubles the defence against ships.
+
+When a defender falls in the open, every unit on its tile falls with it. In a city or a fortress only the defender falls. The winner becomes a veteran with a {veteranChancePct}% chance and then attacks and defends {veteranPct}% better. Units from a city with barracks are veterans straight away.
+
+A wounded unit fights with the hit points it has left. When it stands still for a whole turn, it heals by {healFieldPct}% in the field, by {healCityPct}% in its own city and completely in a city with barracks.
+
+Your military unit can walk into a city without defenders and take it. The city loses one citizen, each building is lost with a {captureBuildingLossPct}% chance, and wonders stay. You get part of the defeated empire's gold and one of its technologies. A city with a single citizen is destroyed when taken. Whoever loses their last city is out of the game.`,
+  },
   "how-disasters": {
     title: "How to protect cities from disasters",
     icon: "🌋",

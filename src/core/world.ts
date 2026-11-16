@@ -49,6 +49,8 @@ export function makeUnit(id: number, owner: PlayerId, type: Unit["type"], at: Po
     orders: null,
     carriedBy: null,
     turnsAloft: 0,
+    hp: UNIT_TYPES[type].hp,
+    veteran: false,
   };
   unit.movesLeft = fullMoves(unit);
   return unit;

@@ -1,5 +1,5 @@
 import { startingEconomy, STATE_VERSION, type GameState, type TerrainId, type Unit, type UnitTypeId } from "../src/core";
-import { Rng, fullMoves } from "../src/core";
+import { Rng, fullMoves, UNIT_TYPES } from "../src/core";
 
 const LEGEND: Record<string, TerrainId> = {
   "~": "ocean",
@@ -64,6 +64,8 @@ export function addUnit(state: GameState, type: UnitTypeId, x: number, y: number
     orders: null,
     carriedBy: null,
     turnsAloft: 0,
+    hp: UNIT_TYPES[type].hp,
+    veteran: false,
   };
   unit.movesLeft = fullMoves(unit);
   state.units.push(unit);

@@ -9,6 +9,8 @@ import { RULES, TERRAINS, UNIT_TYPES } from "./rules";
 import type { GameState, Unit } from "./state";
 import type { CommandError } from "./commands";
 import { cityAt, domainOf, fullMoves, idx, moveCost, reveal, unitsAt } from "./world";
+import { canCapture, captureCityDraft } from "./combat";
+import { Rng } from "./rng";
 
 /** Units on board of a ship or carrier. */
 export function cargoOf(state: GameState, carrier: Unit): Unit[] {
@@ -51,10 +53,25 @@ export function canMove(state: GameState, unit: Unit, to: Point): CommandError |
   if (cost === null) return "cannotEnter";
   // A unit with full movement may always make one step, even into mountains.
   if (unit.movesLeft < cost && unit.movesLeft < fullMoves(unit)) return "notEnoughMoves";
-  const city = cityAt(state, to);
-  if (city && city.owner !== unit.owner) return "occupiedByOther";
   if (unitsAt(state, to).some((u) => u.owner !== unit.owner)) return "occupiedByOther";
+  // An empty enemy city falls to a soldier who walks in.
+  const city = cityAt(state, to);
+  if (city && city.owner !== unit.owner && !canCapture(unit)) return "occupiedByOther";
   return null;
+}
+
+/** Moves a unit one tile and takes an empty enemy city it walks into (mutates the draft). */
+export function enterTileDraft(draft: GameState, unit: Unit, to: Point, events: GameEvent[]): void {
+  moveDraft(draft, unit, to);
+  const city = cityAt(draft, to);
+  if (city && city.owner !== unit.owner) {
+    const rng = Rng.fromState(draft.rng);
+    captureCityDraft(draft, city, unit, rng, events);
+    draft.rng = rng.getState();
+    // Taking a city ends the unit's move.
+    unit.movesLeft = 0;
+    unit.goto = null;
+  }
 }
 
 /** Moves a unit one tile (mutates the draft; the move must already be checked). */
@@ -114,7 +131,8 @@ export function continueGotoDraft(draft: GameState, unit: Unit, events: GameEven
   }
   for (const step of path) {
     if (canMove(draft, unit, step) !== null) break;
-    moveDraft(draft, unit, step);
+    enterTileDraft(draft, unit, step, events);
+    if (!draft.units.includes(unit) || unit.movesLeft <= 0) break;
   }
   if (unit.x === target.x && unit.y === target.y) unit.goto = null;
   else unit.goto = target;

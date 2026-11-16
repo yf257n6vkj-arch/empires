@@ -7,9 +7,9 @@
  * sides play with the same information. New knowledge (enemy units, cities,
  * scores) must be added here, and only in the form a human could see it.
  */
-import type { Point } from "./geometry";
+import { tilesInRadius, type Point } from "./geometry";
 import { builtWonders, researchCost, wonderFlag } from "./economy";
-import { RULES, type BuildingId, type CivId, type GovernmentId, type TechId, type TerrainId } from "./rules";
+import { RULES, UNIT_TYPES, type BuildingId, type CivId, type GovernmentId, type TechId, type TerrainId } from "./rules";
 import type { City, GameState, PlayerId, Spaceship, Unit } from "./state";
 
 /** What a player knows about another empire. */
@@ -53,6 +53,10 @@ export interface PlayerView {
   /** Names of all players. Contact and diplomacy rules come later. */
   playerNames: string[];
   units: Unit[];
+  /** Other players' units on tiles the player sees right now, passengers of ships hidden. */
+  foreignUnits: Unit[];
+  /** Tiles the player sees right now; elsewhere the map shows what was last seen. */
+  visible: number[];
   cities: City[];
   /** Other players' cities the player has seen on explored land, or all of them with the space program. */
   foreignCities: City[];
@@ -77,9 +81,21 @@ export interface PlayerView {
   builtWonders: BuildingId[];
 }
 
+/** Tiles a player sees this moment: around own units by their sight and around own cities. */
+export function visibleTiles(state: GameState, playerId: PlayerId): number[] {
+  const seen = new Array<number>(state.map.width * state.map.height).fill(0);
+  const mark = (center: Point, radius: number) => {
+    for (const i of tilesInRadius(state.map, center, radius)) seen[i] = 1;
+  };
+  for (const u of state.units) if (u.owner === playerId) mark(u, UNIT_TYPES[u.type].sight ?? RULES.unitSight);
+  for (const c of state.cities) if (c.owner === playerId) mark(c, RULES.citySight);
+  return seen;
+}
+
 export function playerView(state: GameState, playerId: PlayerId): PlayerView {
   const player = state.players[playerId];
   if (!player) throw new Error(`playerView: unknown player ${playerId}`);
+  const visible = visibleTiles(state, playerId);
   const known = (values: number[]) => values.map((v, i) => (player.explored[i] ? v : 0));
   const seesAll = wonderFlag(state, playerId, "seesAllCities");
   return {
@@ -102,6 +118,10 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     playerNames: state.players.map((p) => p.name),
     // Only own units and cities until other players can be met.
     units: state.units.filter((u) => u.owner === playerId).map((u) => ({ ...u })),
+    foreignUnits: state.units
+      .filter((u) => u.owner !== playerId && u.carriedBy === null && visible[u.y * state.map.width + u.x])
+      .map((u) => ({ ...u, goto: null, orders: null, work: null, homeCity: null })),
+    visible,
     cities: state.cities.filter((c) => c.owner === playerId).map((c) => ({ ...c })),
     foreignCities: state.cities
       .filter((c) => c.owner !== playerId && (seesAll || player.explored[c.y * state.map.width + c.x]))

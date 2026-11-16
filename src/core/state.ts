@@ -6,7 +6,7 @@ import type { Point } from "./geometry";
 import type { BuildingId, CivId, GovernmentId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 11;
+export const STATE_VERSION = 12;
 
 export interface GameMap {
   width: number;
@@ -65,6 +65,8 @@ export interface Player {
   spaceship: Spaceship;
   /** Players whose capital hosts an embassy of this player. */
   embassies: PlayerId[];
+  /** The player lost the last city and is out of the game. */
+  defeated: boolean;
 }
 
 export interface Spaceship {
@@ -121,6 +123,10 @@ export interface Unit {
   carriedBy: UnitId | null;
   /** Turns an aircraft has ended away from a city or carrier. */
   turnsAloft: number;
+  /** Hit points left; a healthy unit has the full hp of its type. */
+  hp: number;
+  /** Veterans attack and defend better; units from a city with barracks start as veterans. */
+  veteran: boolean;
 }
 
 export type ProductionItem =

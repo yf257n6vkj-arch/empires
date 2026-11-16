@@ -32,7 +32,8 @@ import { Rng } from "./rng";
 import type { GameEvent } from "./events";
 import { distance, neighbors4, type Point } from "./geometry";
 import { findPath } from "./path";
-import { boardDraft, canMove, continueGotoDraft, moveDraft } from "./units";
+import { boardDraft, canMove, continueGotoDraft, enterTileDraft } from "./units";
+import { attackDraft, canAttack, defeatDraft } from "./combat";
 import { workerStepDraft } from "./workers";
 
 export { canMove };
@@ -56,6 +57,8 @@ import { cityAt, cityName, cloneState, getPlayer, idx, reveal, workableTiles } f
 
 export type Command =
   | { type: "move"; unitId: UnitId; to: Point }
+  /** Attacks the enemy on a neighbouring tile; the attacker stays where it is. */
+  | { type: "attack"; unitId: UnitId; to: Point }
   | { type: "goto"; unitId: UnitId; to: Point }
   | { type: "foundCity"; unitId: UnitId }
   | { type: "buildImprovement"; unitId: UnitId; improvement: ImprovementId }
@@ -151,7 +154,9 @@ export type CommandError =
   | "cannotSell"
   | "alreadySold"
   | "cityTooSmall"
-  | "tooManySpecialists";
+  | "tooManySpecialists"
+  | "cannotAttack"
+  | "nothingToAttack";
 
 export type CommandResult =
   | { ok: true; state: GameState; events: GameEvent[] }
@@ -258,7 +263,22 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       const u = draft.units.find((x) => x.id === unit.id)!;
       u.goto = null;
       u.orders = null;
-      moveDraft(draft, u, command.to);
+      enterTileDraft(draft, u, command.to, events);
+      return { ok: true, state: draft, events };
+    }
+
+    case "attack": {
+      const unit = ownUnit(state, command.unitId);
+      if (typeof unit === "string") return { ok: false, error: unit };
+      const error = canAttack(state, unit, command.to);
+      if (error) return { ok: false, error };
+      const draft = cloneState(state);
+      const u = draft.units.find((x) => x.id === unit.id)!;
+      u.orders = null;
+      u.work = null;
+      const rng = Rng.fromState(draft.rng);
+      attackDraft(draft, u, command.to, rng, events);
+      draft.rng = rng.getState();
       return { ok: true, state: draft, events };
     }
 
@@ -678,6 +698,9 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       const u = draft.units.find((x) => x.id === unit.id)!;
       getPlayer(draft, unit.owner).gold -= cost;
       u.type = target;
+      // A new kind of unit starts healthy and has to earn its experience again.
+      u.hp = UNIT_TYPES[target].hp;
+      u.veteran = false;
       // Retraining takes the rest of the turn.
       u.movesLeft = 0;
       u.fortified = false;
@@ -781,6 +804,7 @@ function diplomatCommand(state: GameState, unitId: UnitId, cityId: CityId, actio
       reveal(draft, me.id, target, RULES.citySight);
       assignWorkersDraft(draft, target);
       events.push({ type: "cityIncited", cityId: target.id, from, to: me.id });
+      if (!draft.cities.some((c) => c.owner === from)) defeatDraft(draft, from, me.id, events);
       break;
     }
   }

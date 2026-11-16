@@ -528,7 +528,10 @@ function completeProductionDraft(draft: GameState, city: City, cost: number, eve
     if (rule.populationCost > 0) city.manualTiles = false;
     city.shields -= cost;
     const unitId = draft.nextId++;
-    draft.units.push(makeUnit(unitId, city.owner, item.id, city, city.id));
+    const built = makeUnit(unitId, city.owner, item.id, city, city.id);
+    // Barracks train soldiers as veterans.
+    if (rule.domain === "land" && rule.attack > 0 && cityEffects(draft, city).veteranUnits) built.veteran = true;
+    draft.units.push(built);
     events.push({ type: "unitBuilt", cityId: city.id, unitId, unitType: item.id });
     // Without plans the city keeps making the same unit.
     if (city.queue.length > 0) nextProductionDraft(draft, city, events);

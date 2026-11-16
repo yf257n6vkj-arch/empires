@@ -406,7 +406,7 @@ export function createTechTree(host: TreeHost) {
       return `<b>${t("Vláda {government}", { government: escapeHtml(inSentence(governmentName(u.id))) })}</b><br><span class="muted">${escapeHtml(describeGovernment(GOVERNMENTS[u.id]))}</span>`;
     }
     if (u.kind === "improvement") {
-      const text = u.id === "railroad" ? t("osadník ji staví na cestu, přidá polovinu štítů a pohyb po ní nic nestojí") : t("osadník ji staví v krajině, zdvojí obranu jednotek (s bojem ve fázi 3)");
+      const text = u.id === "railroad" ? t("osadník ji staví na cestu, přidá polovinu štítů a pohyb po ní nic nestojí") : t("osadník ji staví v krajině, zdvojí obranu jednotek");
       return `<b>${escapeHtml(improvementName(u.id))}</b><br><span class="muted">${text}</span>`;
     }
     const b = BUILDINGS[u.id];

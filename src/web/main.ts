@@ -29,12 +29,12 @@ import {
   cityRadiusTiles,
   cityReport,
   cityTileYield,
+  canAttack,
   distance,
   findPath,
   fitRates,
   IMPROVEMENTS,
   newGame,
-  passComputerTurns,
   planPath,
   playerView,
   productionCost,
@@ -74,7 +74,9 @@ import {
   type Camera,
 } from "./camera";
 import { draw, setPlayerColors, setSprites, setupCanvas, tileSize, type DrawInput } from "./render";
-import { ERROR_TEXT, escapeHtml, eventText, moodLine } from "./texts";
+import { ERROR_TEXT, escapeHtml, eventConcerns, eventText, moodLine } from "./texts";
+import { attackHint, createAttackDialog } from "./attack";
+import { playComputerTurns } from "../ai";
 import { createTechTree, unlockNames } from "./techTree";
 import { techIconSvg } from "./techIcons";
 import { createCityScreen } from "./cityScreen";
@@ -195,7 +197,7 @@ function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_
   const parsed = parseGameCode(input);
   const world = parsed.world ?? resolveWorld(choice, parsed.seed);
   const seed = formatGameCode(parsed.seed, world);
-  state = newGame({ seed, playerCount: world.opponents + 1, civ, world });
+  state = newGame({ seed, playerCount: world.opponents + 1, civ, world, opponentUnits: true });
   const civ0 = state.players[HUMAN]!.civ;
   // The rivals stay unnamed: the player meets them while exploring.
   log = [
@@ -229,6 +231,7 @@ function say(text: string): void {
 
 function addLog(events: GameEvent[]): void {
   for (const e of events) {
+    if (!eventConcerns(state, e, HUMAN)) continue;
     const text = eventText(state, e);
     if (text) log.unshift({ turn: state.turn, text });
   }
@@ -245,7 +248,7 @@ function run(command: Command): boolean {
   state = result.state;
   const events = [...result.events];
   if (command.type === "endTurn") {
-    const passed = passComputerTurns(state);
+    const passed = playComputerTurns(state);
     state = passed.state;
     events.push(...passed.events);
   }
@@ -301,6 +304,14 @@ function afterUnitAction(): void {
 function moveSelected(to: Point): void {
   const unit = selectedUnit();
   if (!unit) return;
+  // A step onto an enemy asks first and shows the chance of winning.
+  if (distance(unit, to) === 1 && state.units.some((u) => u.x === to.x && u.y === to.y && u.owner !== unit.owner)) {
+    if (!attackDialog.open(unit, to)) {
+      say(ERROR_TEXT[canAttack(state, unit, to) ?? "cannotAttack"]);
+      refresh();
+    }
+    return;
+  }
   const mode = sendingUnitId === unit.id ? sendMode : "goto";
   const ok =
     mode !== "goto"
@@ -393,7 +404,7 @@ function buildDrawInput(): DrawInput {
     fortress: showAll ? state.map.fortress : view.fortress,
     special: showAll ? state.map.special : view.special,
     pollution: showAll ? state.map.pollution : view.pollution,
-    units: view.units.map((u) => ({
+    units: [...view.units, ...view.foreignUnits].map((u) => ({
       id: u.id,
       owner: u.owner,
       type: u.type,
@@ -405,6 +416,8 @@ function buildDrawInput(): DrawInput {
       working: u.work !== null,
       workProgress: u.work ? workShare(u) : undefined,
       hasMoves: needsOrders(u),
+      health: u.hp / UNIT_TYPES[u.type].hp,
+      veteran: u.veteran,
     })),
     cities: [...view.cities, ...view.foreignCities].map((c) => ({
       id: c.id,
@@ -581,6 +594,10 @@ const empire = createEmpireDialogs($<HTMLDialogElement>("#empire-dialog"), {
 governmentButton.addEventListener("click", () => empire.openGovernment());
 const codex = createCodex($<HTMLDialogElement>("#codex-dialog"), { openTech: (t) => techTree.openPage(t) });
 $<HTMLButtonElement>("#codex").addEventListener("click", () => codex.open());
+const attackDialog = createAttackDialog($<HTMLDialogElement>("#attack-dialog"), {
+  state: () => state,
+  attack: (unitId, to) => unitAction({ type: "attack", unitId, to }),
+});
 const newGameDialog = createNewGameDialog($<HTMLDialogElement>("#new-game-dialog"), {
   start: (seed, civ, world) => {
     menus.hideStart();
@@ -848,6 +865,7 @@ function renderUnit(unit: Unit): void {
   selectionPanel.innerHTML = `
     <div class="panel-title"><h3><button type="button" class="linklike" data-codex="${entryKey("unit", unit.type)}" title="${t("Co je to za jednotku? (klávesa E)")}">${unitName(unit.type)}</button></h3><span class="sub">[${unit.x}, ${unit.y}] ${terrainName(terrain)}</span></div>
     <p class="facts">${t("Pohyb: {moves}", { moves })}${home ? ` · ${t("domov: {city}", { city: escapeHtml(home) })}` : ""}<br>
+    ${t("Útok {attack} · obrana {defense} · životy {hp} z {max}", { attack: UNIT_TYPES[unit.type].attack, defense: UNIT_TYPES[unit.type].defense, hp: unit.hp, max: UNIT_TYPES[unit.type].hp })}${unit.veteran ? ` · <b>${t("veterán")}</b>` : ""}<br>
     <span class="muted">${status || (sendingUnitId === unit.id ? t("Klikni na políčko, kam má jít. Může to být i město nebo jiná jednotka.") : t("Klikni na mapu, kam má jít. Do města ji pošleš pravým klikem nebo klávesou G."))}</span></p>
     <div class="actions">${buttons.join("")}</div>`;
 
@@ -1238,7 +1256,9 @@ canvas.addEventListener("mousemove", (e) => {
     hoverTile = p;
     hoverRouteText = "";
     const unit = selectedUnit();
-    if (unit && clickWouldMove(unit, p)) hoverRouteText = routeText(routeTo(unit, p));
+    const enemy = unit && distance(unit, p) === 1 ? attackHint(state, unit, p) : null;
+    if (enemy) hoverRouteText = enemy;
+    else if (unit && clickWouldMove(unit, p)) hoverRouteText = routeText(routeTo(unit, p));
     draw(ctx, buildDrawInput());
   }
   if (hoverRouteText) tooltip.insertAdjacentHTML("beforeend", `<br><span class="route">${hoverRouteText}</span>`);
@@ -1298,7 +1318,7 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen() || celebration.isOpen()) return;
+  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || attackDialog.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen() || celebration.isOpen()) return;
   if (e.key.toLowerCase() === "o") {
     e.preventDefault();
     return citiesOverview.open();

@@ -17,6 +17,7 @@ import {
   playerView,
   RULES,
   scoreOf,
+  suggestTech,
   TECHS,
   UNIT_TYPES,
   VICTORY_PATHS,
@@ -25,7 +26,10 @@ import {
   type CoachTask,
   type GameEvent,
   type GameState,
+  type GovernmentId,
+  type ImprovementId,
   type PlayerView,
+  type Point,
   type StageProgress,
   type TechId,
   type UnitTypeId,
@@ -35,8 +39,9 @@ import { unlocks } from "./advisorPanel";
 import { codexPage, entryKey, pictureOf } from "./codex";
 import { techPage, techPicture } from "./encyclopedia";
 import { t, tn } from "./i18n";
-import { buildingName, cityLabel, civName, inSentence, leaderName, techName, unitName } from "./i18n/names";
+import { buildingName, cityLabel, civName, governmentName, improvementName, inSentence, leaderName, techName, unitName } from "./i18n/names";
 import { owlHtml, type OwlMood } from "./owl";
+import { nextStep, praise, stepDone, type Step } from "./steps";
 import { unitRole } from "./productionDetail";
 import { describeBuilding, escapeHtml } from "./texts";
 
@@ -47,6 +52,14 @@ export interface GuideHost {
   openTech(tech: TechId): void;
   openTechTree(): void;
   openGovernment(): void;
+  /** What is selected and open on the screen, for the step-by-step guide. */
+  ui(): { selectedUnitId: number | null; selectedCityId: number | null; openCityId: number | null };
+  /** Where a map tile is on the screen, or null when it is out of view. */
+  tileRect(p: Point): DOMRect | null;
+  /** Moves the map so the tile is in view. */
+  showTile(p: Point): void;
+  /** Moves the map so the tile sits in the middle of the screen. */
+  centerTile(p: Point): void;
 }
 
 const SETTINGS_KEY = "empires.guide.settings";
@@ -61,6 +74,8 @@ interface Settings {
 
 interface GameMemory {
   path: VictoryPath | null;
+  /** What the owl has taught by hand and now only names: improvements, "auto", "fortify". */
+  taught: string[];
   /** Keys of things the owl has already told a story about. */
   seen: string[];
   /** Index of the stage the owl last talked about. */
@@ -234,7 +249,7 @@ export function createGuide(host: GuideHost) {
   }
 
   function memory(): GameMemory {
-    return load(gameKey(), { path: null, seen: [], stage: 0 });
+    return load(gameKey(), { path: null, taught: [], seen: [], stage: 0 });
   }
 
   function remember(m: GameMemory): void {
@@ -428,19 +443,20 @@ export function createGuide(host: GuideHost) {
     const s = host.state();
     const me = host.player();
     for (const e of events) {
+      // Stories wait for "Tell me about it" instead of popping up.
       if (e.type === "techLearned" && e.player === me) {
-        if (firstTime(`tech-${e.tech}`) && TECHS[e.tech]) push(techCard(e.tech));
+        if (firstTime(`tech-${e.tech}`) && TECHS[e.tech]) remember_(`tech:${e.tech}`);
       } else if (e.type === "unitBuilt") {
         const city = s.cities.find((c) => c.id === e.cityId);
-        if (city?.owner === me && firstTime(`unit-${e.unitType}`)) push(unitCard(e.unitType));
+        if (city?.owner === me && firstTime(`unit-${e.unitType}`)) remember_(entryKey("unit", e.unitType));
       } else if (e.type === "buildingBuilt") {
         const city = s.cities.find((c) => c.id === e.cityId);
-        if (city?.owner === me && firstTime(`bld-${e.building}`)) push(buildingCard(e.building, false));
+        if (city?.owner === me && firstTime(`bld-${e.building}`)) remember_(entryKey("building", e.building));
       } else if (e.type === "wonderBuilt" && e.owner === me) {
         push(buildingCard(e.building, true));
       } else if (e.type === "contactMade" && (e.a === me || e.b === me)) {
         const other = s.players[e.a === me ? e.b : e.a];
-        if (other && other.civ !== "barbarians" && firstTime(`civ-${other.civ}`)) push(nationCard(other.civ as CivId, false));
+        if (other && other.civ !== "barbarians" && firstTime(`civ-${other.civ}`)) remember_(`civ-${other.civ}`);
       } else if (e.type === "cityCaptured" && e.from === me) {
         const city = s.cities.find((c) => c.id === e.cityId);
         push({
@@ -490,7 +506,7 @@ export function createGuide(host: GuideHost) {
     const s = host.state();
     const civ = s.players[host.player()]!.civ as CivId;
     queue.length = 0;
-    remember({ path: null, seen: [], stage: 0 });
+    remember({ path: null, taught: [], seen: [], stage: 0 });
     push({
       important: true,
       mood: "praise",
@@ -499,6 +515,189 @@ export function createGuide(host: GuideHost) {
     });
     if (firstTime(`civ-${civ}`)) push(nationCard(civ, true));
     askPath();
+  }
+
+  // ---------- step by step ----------
+
+  /** New things the owl can tell a story about when asked, newest first. */
+  let recent: string[] = [];
+
+  function remember_(entry: string): void {
+    recent = [entry, ...recent.filter((x) => x !== entry)].slice(0, 4);
+  }
+
+  /** The story card for a codex key or "tech:<id>". */
+  function entryCard(entry: string): Card | null {
+    if (entry.startsWith("tech:")) return TECHS[entry.slice(5) as TechId] ? techCard(entry.slice(5) as TechId) : null;
+    if (entry.startsWith("unit-")) return unitCard(entry.slice(5) as UnitTypeId);
+    if (entry.startsWith("bld-") || entry.startsWith("wdr-")) return buildingCard(entry.slice(4) as BuildingId, entry.startsWith("wdr-"));
+    if (entry.startsWith("civ-")) return nationCard(entry.slice(4) as CivId, entry.slice(4) === host.state().players[host.player()]?.civ);
+    const page = codexPage(entry)?.page;
+    if (!page) return null;
+    const title = entry.startsWith("imp-") ? improvementName(entry.slice(4) as ImprovementId) : entry.startsWith("gov-") ? governmentName(entry.slice(4) as GovernmentId) : "";
+    return { important: true, mood: "advise", title, entry, story: firstSentences(page.text, 3), fact: page.fact };
+  }
+
+  /** Name of the thing a story is about, for the button. */
+  function entryName(entry: string): string {
+    if (entry.startsWith("tech:")) return techName(entry.slice(5) as TechId);
+    if (entry.startsWith("unit-")) return unitName(entry.slice(5) as UnitTypeId);
+    if (entry.startsWith("bld-") || entry.startsWith("wdr-")) return buildingName(entry.slice(4) as BuildingId);
+    if (entry.startsWith("civ-")) return civName(entry.slice(4) as CivId);
+    if (entry.startsWith("imp-")) return improvementName(entry.slice(4) as ImprovementId);
+    if (entry.startsWith("gov-")) return governmentName(entry.slice(4) as GovernmentId);
+    return "";
+  }
+
+  const bubble = document.createElement("div");
+  bubble.className = "owl-step";
+  bubble.hidden = true;
+  document.body.append(bubble);
+  const ping = document.createElement("div");
+  ping.className = "owl-ping";
+  ping.hidden = true;
+  document.body.append(ping);
+
+  let step: Step | null = null;
+  let stepTurn = -1;
+  let praiseUntil = 0;
+  let praiseCount = 0;
+  let hiddenTurn = -1;
+  let glowing: Element | null = null;
+  let centeredFor: string | null = null;
+
+  /** Notes what the child has learned to do, from what the units are doing now. */
+  function learn(): void {
+    const s = host.state();
+    const m = memory();
+    const mine = s.units.filter((u) => u.owner === host.player());
+    const learned = [
+      ...mine.flatMap((u) => (u.work ? [u.work.improvement] : [])),
+      ...(mine.some((u) => u.orders?.kind === "auto") ? ["auto"] : []),
+      ...(mine.some((u) => u.fortified) ? ["fortify"] : []),
+    ].filter((x) => !m.taught.includes(x));
+    if (learned.length === 0) return;
+    m.taught = [...m.taught, ...new Set(learned)];
+    remember(m);
+  }
+
+  function findTarget(selector: string): HTMLElement | null {
+    for (const one of selector.split("||")) {
+      const found = Array.from(document.querySelectorAll<HTMLElement>(one)).find((el) => el.offsetParent !== null || el.getClientRects().length > 0);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  /** Puts the blinking ring on the map target and the glow on a button. */
+  function placeHighlight(): void {
+    if (glowing) glowing.classList.remove("owl-glow");
+    glowing = null;
+    ping.hidden = true;
+    if (!step || bubble.hidden) return;
+    const target = step.target;
+    if (target.kind === "button") {
+      const el = findTarget(target.selector);
+      if (el) {
+        el.classList.add("owl-glow");
+        glowing = el;
+      }
+      return;
+    }
+    if (target.kind === "none") return;
+    // The map is under every dialog: no ring while one is open.
+    if (document.querySelector("dialog[open]")) return;
+    const r = host.tileRect(target.at);
+    if (!r) return;
+    // A panel over the tile would swallow the click: the map moves the tile to the middle once per step.
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const under = document.elementFromPoint(cx, cy);
+    if (under && under.tagName !== "CANVAS" && !bubble.contains(under) && centeredFor !== step.id) {
+      centeredFor = step.id;
+      host.centerTile(target.at);
+      return;
+    }
+    ping.hidden = false;
+    ping.style.left = `${r.left + r.width / 2}px`;
+    ping.style.top = `${r.top + r.height / 2}px`;
+    ping.style.setProperty("--size", `${Math.max(28, r.width * 1.4)}px`);
+    // The bubble must never cover what the child should click: it moves to the top then.
+    bubble.classList.remove("top");
+    const b = bubble.getBoundingClientRect();
+    const covered = r.right > b.left && r.left < b.right && r.bottom > b.top && r.top < b.bottom;
+    if (covered) bubble.classList.add("top");
+  }
+
+  /** Works out the next step and shows it; called after every change on the screen. */
+  function updateSteps(enabled: boolean): void {
+    const s = host.state();
+    if (!enabled || hiddenTurn === s.turn || dialog.open || scores.open) {
+      bubble.hidden = true;
+      placeHighlight();
+      return;
+    }
+    learn();
+    const m = memory();
+    // Without a chosen way to win the owl still guides by the builder's plan, the gentlest of the three.
+    const stage = currentStage(view(), m.path ?? "score");
+    const task = stage.tasks.find((x) => !x.done)?.task ?? null;
+    const context = {
+      state: s,
+      me: host.player(),
+      ...host.ui(),
+      governmentOpen: !!document.querySelector("dialog[open] [data-gov]"),
+      taught: m.taught,
+      task,
+      // Without a plan the owl recommends what the advisor would.
+      wantedTech: wantedTech() ?? suggestTech(s, host.player()).tech,
+    };
+    const next = nextStep(context);
+    if (step && next && next.id !== step.id && stepTurn === s.turn && stepDone(step, context)) {
+      praiseUntil = performance.now() + 2200;
+      praiseCount++;
+    }
+    const changed = next?.id !== step?.id;
+    step = next;
+    stepTurn = s.turn;
+    if (!step) {
+      bubble.hidden = true;
+      placeHighlight();
+      return;
+    }
+    // A new map target out of view: bring it into view once.
+    if (changed && step.target.kind !== "button" && step.target.kind !== "none" && !host.tileRect(step.target.at) && !document.querySelector("dialog[open]")) host.showTile(step.target.at);
+    const story = step.entry ?? recent[0];
+    const praiseText = performance.now() < praiseUntil ? `<b class="os-praise">${escapeHtml(praise(praiseCount))}</b> ` : "";
+    bubble.innerHTML = `
+      <div class="os-owl">${owlHtml(praiseText ? "praise" : "advise", 64)}</div>
+      <div class="os-body">
+        <div class="os-name">${escapeHtml(name())}</div>
+        <p class="os-text">${praiseText}${escapeHtml(step.text)}</p>
+        <div class="os-actions">
+          ${story ? `<button type="button" data-os="story">${t("Povídej mi o: {thing}", { thing: escapeHtml(entryName(story)) })}</button>` : ""}
+          <button type="button" class="quiet" data-os="hide" title="${t("Schovat do příštího tahu")}">${t("Schovat")}</button>
+        </div>
+      </div>`;
+    bubble.querySelector('[data-os="story"]')?.addEventListener("click", () => {
+      const card = entryCard(story!);
+      recent = recent.filter((x) => x !== story);
+      if (card) push({ ...card, important: true });
+    });
+    bubble.querySelector('[data-os="hide"]')?.addEventListener("click", () => {
+      hiddenTurn = host.state().turn;
+      updateSteps(true);
+    });
+    // Inside a dialog the bubble has to live in it, or the dialog covers it.
+    const dialogs = Array.from(document.querySelectorAll<HTMLDialogElement>("dialog[open]"));
+    const parent = dialogs[dialogs.length - 1] ?? document.body;
+    if (bubble.parentElement !== parent) parent.append(bubble);
+    bubble.classList.toggle("in-dialog", parent !== document.body);
+    // For tests that follow the owl like a child would.
+    bubble.dataset.step = step.id;
+    bubble.dataset.target = step.target.kind;
+    bubble.hidden = false;
+    placeHighlight();
   }
 
   // ---------- the panel ----------
@@ -629,6 +828,8 @@ export function createGuide(host: GuideHost) {
   return {
     onEvents,
     onNewGame,
+    updateSteps,
+    placeHighlight,
     onChange,
     panelHead,
     panelFoot,

@@ -801,7 +801,7 @@ export function createCityScreen(host: CityHost) {
       const cost = o.kind === "wealth" ? t("+{gold} zl.", { gold: goldPerTurn }) : `${productionCost(o)} ${yieldIcon("shields", 11)}`;
       const time = o.kind === "wealth" ? t("každý tah") : left ? turns(left) : "—";
       const entry = o.kind === "wealth" ? "" : o.kind === "unit" ? `unit-${o.id}` : `${wonder ? "wdr" : "bld"}-${o.id}`;
-      return `<div class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}"><button type="button" class="cs-opt-main" data-opt="${n}"><span class="cs-opt-pic"></span><span class="cs-opt-text"><span class="cs-opt-name">${escapeHtml(productionLabel(o))}</span><span class="cs-opt-desc">${escapeHtml(benefit(o))}</span></span><span class="cs-opt-cost">${cost}</span><span class="cs-opt-turns">${time}</span></button>${entry ? `<button type="button" class="cs-opt-info ${detail && sameItem(detail, o) ? "on" : ""}" data-detail="${n}" title="${t("Podrobnosti")}">?</button>` : ""}${o.kind === "wealth" ? "" : `<button type="button" class="cs-opt-add" data-add="${n}" ${planned || full ? "disabled" : ""} title="${planned ? t("Už je v plánu.") : full ? t("Plán je plný.") : t("Přidat do plánu, město to postaví potom")}">+</button>`}</div>`;
+      return `<div class="cs-opt ${sameItem(o, c.production) ? "on" : ""} ${wonder ? "wonder" : ""}"><button type="button" class="cs-opt-main" data-opt="${n}" data-item="${o.kind === "wealth" ? "wealth" : `${o.kind}:${o.id}`}"><span class="cs-opt-pic"></span><span class="cs-opt-text"><span class="cs-opt-name">${escapeHtml(productionLabel(o))}</span><span class="cs-opt-desc">${escapeHtml(benefit(o))}</span></span><span class="cs-opt-cost">${cost}</span><span class="cs-opt-turns">${time}</span></button>${entry ? `<button type="button" class="cs-opt-info ${detail && sameItem(detail, o) ? "on" : ""}" data-detail="${n}" title="${t("Podrobnosti")}">?</button>` : ""}${o.kind === "wealth" ? "" : `<button type="button" class="cs-opt-add" data-add="${n}" ${planned || full ? "disabled" : ""} title="${planned ? t("Už je v plánu.") : full ? t("Plán je plný.") : t("Přidat do plánu, město to postaví potom")}">+</button>`}</div>`;
     };
     const group = (title: string, pick: (o: ProductionItem) => boolean) => {
       const rows = options.map((o, n) => (pick(o) ? optionRow(o, n) : "")).join("");
@@ -1308,6 +1308,8 @@ export function createCityScreen(host: CityHost) {
   return {
     open,
     isOpen: () => dialog.open,
+    /** The city whose screen is open, or null. */
+    openCityId: () => (dialog.open ? cityId : null),
     refresh(): void {
       if (dialog.open) render();
     },

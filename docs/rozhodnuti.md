@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Sova vede krok za krokem a ukazuje, kam kliknout
+
+Syn Sovu přehlížel a nepřišel na to, jak stavět cesty, zavlažování a železnici. Sova teď v bublině dole na obrazovce říká vždycky jen jednu věc, kterou má hráč udělat hned teď. To, na co má kliknout, na mapě bliká žlutým kroužkem a tlačítka v panelech svítí. Když hráč krok udělá, Sova ho pochválí a ukáže další. Vede tak celou hru: založit město, vybrat výzkum, vybrat jednotku, opevnit vojáka, poslat průzkumníka, postavit osadníka, dojít s ním na dobré místo a založit tam město, stavět ve městě, co chce zvolený plán, a nakonec ukončit tah.
+
+Cestu, zavlažování, důl a železnici ukáže Sova poprvé ručně a řekne, k čemu jsou. Teprve potom naučí tlačítko pro automatickou práci. Na průzkum posílá vždycky jen jednoho vojáka, ostatní vede domů do měst. Když políčko, na které se má kliknout, zakrývá panel, mapa se přiblíží a políčko posune doprostřed. Když hráč nemá zvolený plán, vede ho Sova podle plánu stavitele. Povídání o objevech, jednotkách a budovách už samo nevyskakuje, Sova ho nabídne tlačítkem v bublině. Bublinu jde na jeden tah schovat.
+
+Zkoušel jsem to automatem, který 30 tahů klikal jen tam, kam Sova ukázala. Nikde se nezasekl, založil tři města, postavil cestu a zavlažování a ve 30. tahu měl rozjetý výzkum.
+
 ## 16. 11. 2026: Jednotky chodí rovně a je vidět, kam jdou
 
 Michal si všiml, že jednotka na cestě k cíli málokdy jde rovně. Hledání cesty mělo dvě chyby. Mezi stejně dlouhými cestami vybíralo tu, která vedla po políčkách s nejmenším číslem, tedy nahoru a doleva. A les nebo kopec počítalo jako dvojnásobnou cestu, i když pomalá jednotka s jedním pohybem do nich vstoupí za jeden tah stejně jako na louku, takže zbytečně obcházela. Teď krok nikdy nestojí víc než celý tah jednotky a mezi stejně dlouhými cestami vyhraje ta nejblíž přímce k cíli. Platí to pro hráče i pro soupeře.

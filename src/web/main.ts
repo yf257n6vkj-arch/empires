@@ -69,7 +69,9 @@ import {
 import {
   clampCamera,
   DEFAULT_CAMERA,
+  isVisible,
   keepInView,
+  centerOn,
   MAX_ZOOM,
   panBy,
   screenToTile,
@@ -170,6 +172,8 @@ let disbandConfirmUnitId: number | null = null;
 
 /** Whether a real game is running (the placeholder behind the start screen is never saved). */
 let gameStarted = false;
+/** Runs after every map drawing; the owl's ring follows the map once the guide exists. */
+let afterDraw: () => void = () => {};
 
 function save(): void {
   // Storage may be unavailable (private mode, embedded viewer); the game still works.
@@ -466,7 +470,9 @@ function drawMap(): void {
     } else animation = null;
   }
   draw(ctx, input);
+  afterDraw();
 }
+
 
 function buildDrawInput(): DrawInput {
   const unit = selectedUnit();
@@ -609,6 +615,7 @@ function refresh(): void {
   cityScreen.refresh();
   citiesOverview.refresh();
   advisor.render();
+  guide.updateSteps(advisor.mode() === "guide");
 }
 
 // ---------- economy and research ----------
@@ -810,7 +817,32 @@ const guide = createGuide({
   openTech: (tech) => techTree.openPage(tech),
   openTechTree: () => techTree.open(),
   openGovernment: () => empire.openGovernment(),
+  ui: () => ({ selectedUnitId, selectedCityId, openCityId: cityScreen.openCityId() }),
+  tileRect: (p) => {
+    if (!isVisible(camera, p, state.map, 0)) return null;
+    const rect = canvas.getBoundingClientRect();
+    const size = tileSize() * camera.zoom;
+    return new DOMRect(rect.left + (p.x - camera.x) * size, rect.top + (p.y - camera.y) * size, size, size);
+  },
+  centerTile: (p) => {
+    // With the whole map in view nothing can move, so the map zooms in first.
+    camera = centerOn({ ...camera, zoom: Math.max(camera.zoom, 2) }, p, state.map);
+    drawMap();
+  },
+  showTile: (p) => {
+    camera = keepInView(camera, p, state.map);
+    drawMap();
+  },
 });
+afterDraw = () => guide.placeHighlight();
+// The owl's step follows every click and key: dialogs open and close without a refresh of the game.
+let stepTimer = 0;
+const stepSoon = () => {
+  window.clearTimeout(stepTimer);
+  stepTimer = window.setTimeout(() => guide.updateSteps(advisor.mode() === "guide"), 0);
+};
+document.addEventListener("click", stepSoon, true);
+document.addEventListener("keyup", stepSoon, true);
 const advisor = createAdvisor($<HTMLElement>("#advisor"), $<HTMLSelectElement>("#helper-mode"), {
   guide,
   state: () => state,

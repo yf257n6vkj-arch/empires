@@ -708,3 +708,21 @@ label.rate input#lux { width: 60px; } .rate.tax { color: var(--muted); white-spa
 .ec-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
 .ec-title { font-size: 20px; color: #f0d58a; margin: 4px 0 6px; }
 .ec-facts { margin-top: 8px; max-width: 360px; }
+
+/* The owl, step by step */
+.owl-step { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 50; display: flex; gap: 12px; align-items: flex-start; width: min(580px, calc(100vw - 32px)); background: rgba(38, 31, 23, 0.96); border: 2px solid #d9b25f; border-radius: 16px; padding: 10px 14px 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55); color: #f6ecd8; }
+.owl-step[hidden] { display: none; }
+.owl-step.top { bottom: auto; top: 64px; }
+.owl-step .os-owl { flex: none; }
+.owl-step .os-body { flex: 1; min-width: 0; }
+.owl-step .os-name { font-weight: 700; color: #d9b25f; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+.owl-step .os-text { font-size: 17px; line-height: 1.4; margin: 3px 0 8px; }
+.owl-step .os-praise { color: #a6e88f; }
+.owl-step .os-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.owl-step .os-actions button { font-size: 13px; }
+.owl-ping { position: fixed; width: var(--size, 40px); height: var(--size, 40px); margin-left: calc(var(--size, 40px) / -2); margin-top: calc(var(--size, 40px) / -2); border-radius: 50%; border: 3px solid #ffe066; box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.45), 0 0 18px #ffe066; pointer-events: none; z-index: 40; animation: owl-ping 1s ease-in-out infinite; }
+.owl-ping[hidden] { display: none; }
+@keyframes owl-ping { 0%, 100% { transform: scale(0.85); opacity: 1; } 50% { transform: scale(1.18); opacity: 0.55; } }
+.owl-glow { outline: 3px solid #ffe066 !important; outline-offset: 2px; box-shadow: 0 0 16px #ffe066 !important; animation: owl-glow 1s ease-in-out infinite; position: relative; z-index: 2; }
+@keyframes owl-glow { 50% { outline-color: #fff6c0; box-shadow: 0 0 4px #ffe066 !important; } }
+@media (prefers-reduced-motion: reduce) { .owl-ping, .owl-glow { animation: none; } }

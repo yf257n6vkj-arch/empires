@@ -2305,4 +2305,82 @@ export const EN_STRINGS: Record<string, string> = {
     "Keep playing",
   "Poslat sem: {unit}":
     "Send here: {unit}",
+  "Povídej mi o: {thing}":
+    "Tell me about: {thing}",
+  "Schovat do příštího tahu":
+    "Hide until next turn",
+  "Stiskni R a osadník postaví cestu. Po cestě se chodí třikrát rychleji a políčko dá víc obchodu.":
+    "Press R and the settler builds a road. Units walk three times faster on roads and the tile gives more trade.",
+  "Stiskni I a osadník políčko zavlaží. Zavlažené políčko dá víc jídla a město poroste rychleji.":
+    "Press I and the settler irrigates the tile. An irrigated tile gives more food and the city grows faster.",
+  "Stiskni M a osadník postaví důl. Důl dá víc štítů, takže město staví rychleji.":
+    "Press M and the settler builds a mine. A mine gives more shields, so the city builds faster.",
+  "Stiskni Z a osadník postaví železnici. Po železnici se jezdí zadarmo a políčko dá víc štítů.":
+    "Press Z and the settler builds a railroad. Travel on railroads is free and the tile gives more shields.",
+  "Stiskni {key} a osadník začne pracovat.":
+    "Press {key} and the settler gets to work.",
+  "Klikni na jednotku {unit}, která bliká na mapě.":
+    "Click the {unit} blinking on the map.",
+  "Klikni na {item} a město to začne stavět.":
+    "Click {item} and the city starts building it.",
+  "Klikni na Otevřít město.":
+    "Click Open city.",
+  "Potřebujeme další osadníky na nová města.":
+    "We need more settlers for new cities.",
+  "Ve městě {city} by se hodila stavba {item}.":
+    "{city} could use a {item}.",
+  "Město {city} by mělo postavit: {item}.":
+    "{city} should build: {item}.",
+  "Klikni na město {city}.":
+    "Click the city of {city}.",
+  "Tady je dobré místo. Stiskni B a založ hlavní město.":
+    "This is a good spot. Press B to found your capital.",
+  "Tady je dobré místo. Stiskni B a založ nové město.":
+    "This is a good spot. Press B to found a new city.",
+  "Klikni na blikající políčko. Osadník tam dojde a založí tam město.":
+    "Click the blinking tile. The settler walks there to found a city.",
+  "Klikni na blikající políčko. Osadník tam dojde a něco tam postaví.":
+    "Click the blinking tile. The settler walks there to build something.",
+  "Stiskni A a osadník bude pracovat sám.":
+    "Press A and the settler works on his own.",
+  "Teď už víš, co osadník umí. Stiskni A a bude stavět cesty, zavlažování a doly sám, kde je to nejvíc potřeba.":
+    "Now you know what a settler can do. Press A and he builds roads, irrigation and mines on his own, wherever they are needed most.",
+  "Vedle stojí nepřítel a máš velkou šanci vyhrát ({pct} %). Klikni na něj a potvrď útok.":
+    "An enemy stands next to you and you have a good chance to win ({pct} %). Click it and confirm the attack.",
+  "Prozkoumej okolí. Klikni na blikající políčko na kraji tmy a voják tam dojde.":
+    "Explore around. Click the blinking tile at the edge of the dark and the soldier walks there.",
+  "Stiskni F a voják se ve městě opevní.":
+    "Press F and the soldier fortifies in the city.",
+  "Stiskni F a voják se ve městě opevní. Opevněný voják brání město o polovinu lépe.":
+    "Press F and the soldier fortifies in the city. A fortified soldier defends the city half as well again.",
+  "Pošli vojáka bránit město {city}. Klikni na to město pravým tlačítkem, na trackpadu dvěma prsty.":
+    "Send the soldier to defend {city}. Right-click that city, or click with two fingers on a trackpad.",
+  "Stiskni mezerník a jednotka počká do dalšího tahu.":
+    "Press space and the unit waits until next turn.",
+  "Zavři město tlačítkem Zavřít nebo klávesou Esc.":
+    "Close the city with the Close button or the Esc key.",
+  "Vyber, co budou vědci zkoumat. Doporučuju {tech}, klikni na něj vlevo.":
+    "Choose what your scientists research. I suggest {tech}, click it on the left.",
+  "Vyber, co budou vědci zkoumat. Klikni na jeden z objevů vlevo.":
+    "Choose what your scientists research. Click one of the advances on the left.",
+  "Klikni na Vyhlásit revoluci u vlády, kterou ti doporučuju.":
+    "Click Start a revolution at the government I suggest.",
+  "Je čas na lepší vládu. Klikni nahoře na tlačítko Vláda.":
+    "Time for a better government. Click the Government button at the top.",
+  "Tahle jednotka čeká na rozkaz. Když nevíš, co s ní, stiskni mezerník a počká.":
+    "This unit waits for orders. If you are not sure what to do with it, press space and it waits.",
+  "Všechno je hotové. Stiskni Enter nebo klikni na Konec tahu.":
+    "Everything is done. Press Enter or click End turn.",
+  "Výborně!":
+    "Well done!",
+  "Skvěle!":
+    "Great!",
+  "Přesně tak!":
+    "Exactly!",
+  "Dobrá práce!":
+    "Good job!",
+  "V panelu vlevo klikni na Vybrat u jednotky {unit}.":
+    "In the panel on the left, click Select next to the {unit}.",
+  "Ve městě {city} čeká jednotka {unit}. Klikni na to město.":
+    "A {unit} is waiting in {city}. Click that city.",
 };

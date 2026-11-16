@@ -20,6 +20,7 @@ export * from "./state";
 export { workTurns } from "./turn";
 export * from "./units";
 export * from "./view";
+export * from "./bribe";
 export * from "./world";
 export * from "./workers";
 export * from "./advisor";

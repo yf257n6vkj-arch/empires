@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Diplomat AI podplácí a sabotuje
+
+Michal schválil, aby diplomat AI uměl totéž co hráčův. Soupeř teď podplácí malá města do velikosti 4 u nepřítele, se kterým válčí, a u barbarů. Město musí ležet nejvýš osm políček od jeho vlastního města a hlavní město podplatit nejde. Cenu odhaduje stejným vzorcem jako hra, z toho, co ví: zlato majitele zná jen s velvyslanectvím, vzdálenost k hlavnímu městu jen když ho viděl, a obránce jen když na město dohlédne. Přesnou cenu uvidí, až diplomat stojí vedle města, stejně jako hráč na tlačítku diplomata. Na úplatek do 300 zlatých si soupeř šetří a nekupuje za ně budovy. Když je cena nakonec moc vysoká, diplomat ve městě ukradne objev nebo ho sabotuje. Sabotovat chodí ve válce města, která staví div nebo vesmírnou loď. To ale ví jen s velvyslanectvím, protože výrobu cizích měst bez něj nevidí ani hráč.
+
+Na 20 automatických partiích podplatili soupeři 5 měst, z toho 3 barbarská, a barbaři na konci drželi 2 města místo 7. Sabotáž byla jen výjimečně, protože soupeř zřídka ví, že nepřítel staví div.
+
 ## 16. 11. 2026: Soupeři berou barbarům města zpátky
 
 Na nastavení málo vzali soupeři barbarům zpátky jen jedno město ze třinácti. Rozbor ukázal tři chyby v armádě. Děla a katapulty zůstávaly ve městech jako posádka, takže armáda nikdy nebyla pohromadě. Armáda čekala na tři jednotky i proti jednomu barbarovi. A soupeř hádal obranu města podle jeho velikosti, i když na posádku viděl. Teď drží města nejdřív obránci, obléhací jednotky ve válce posádku nedělají a menší skupina zaútočí, když je aspoň dvakrát silnější než obrana. Město, na které soupeř vidí, posuzuje podle jednotek, které v něm opravdu stojí. Barbarské město do šesti políček od vlastního města je pro armádu první cíl, i když soupeř zrovna válčí jinde.

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { apply, cityReport, playerView, type GameState } from "../src/core";
+import { apply, cityReport, inciteCost, playerView, type GameState } from "../src/core";
+import { bribeSavings, guessBribe } from "../src/ai/agents";
+import { landmasses } from "../src/ai/knowledge";
 import { decide } from "../src/ai";
 import { barbarianCityNearby } from "../src/ai";
 import { cityDefense } from "../src/ai/war";
@@ -92,5 +94,53 @@ describe("the computer players late in the game", () => {
     s.players[0]!.isHuman = false;
     s.players[0]!.techs.push("spaceFlight");
     expect(() => decide(playerView(s, 0))).not.toThrow();
+  });
+});
+
+describe("the computer diplomat", () => {
+  /** A computer player and a barbarian city three tiles from its own. */
+  function nearBarbarians(): GameState {
+    let s = stateFromAscii(["..........", "..........", ".........."], 2);
+    s = found(s, 1, 1);
+    s = found(s, 5, 1, 1);
+    s.players[1]!.civ = "barbarians";
+    s.players[0]!.isHuman = false;
+    s.players[0]!.atWar = [1];
+    s.players[1]!.atWar = [0];
+    s.players[0]!.techs.push("writing");
+    const theirs = s.cities.find((c) => c.owner === 1)!;
+    theirs.size = 3;
+    // A town the barbarians took: no palace, and they keep no gold.
+    theirs.buildings = theirs.buildings.filter((b) => b !== "palace");
+    s.players[1]!.gold = 0;
+    addUnit(s, "warriors", 5, 1, 1);
+    return s;
+  }
+
+  it("guesses the bribe the way the game prices it when it knows everything that counts", () => {
+    const s = nearBarbarians();
+    addUnit(s, "diplomat", 4, 1, 0);
+    const view = playerView(s, 0);
+    const theirs = s.cities.find((c) => c.owner === 1)!;
+    expect(view.bribePrices[theirs.id]).toBe(inciteCost(s, theirs));
+    expect(guessBribe(view, view.foreignCities.find((c) => c.id === theirs.id)!)).toBe(inciteCost(s, theirs));
+  });
+
+  it("bribes a small barbarian city next to it when the treasury allows", () => {
+    const s = nearBarbarians();
+    const d = addUnit(s, "diplomat", 4, 1, 0);
+    s.players[0]!.gold = 500;
+    const commands = decide(playerView(s, 0));
+    expect(commands).toContainEqual(expect.objectContaining({ type: "diplomat", unitId: d.id, action: "incite" }));
+  });
+
+  it("keeps gold for a bribe instead of buying buildings", () => {
+    const s = nearBarbarians();
+    s.players[0]!.gold = 250;
+    const city = s.cities.find((c) => c.owner === 0)!;
+    city.production = { kind: "building", id: "barracks" };
+    city.shields = 5;
+    const view = playerView(s, 0);
+    expect(bribeSavings(view, landmasses(view))).toBeGreaterThan(0);
   });
 });

@@ -10,7 +10,7 @@
 import { applyCommand, BUILDINGS, buyCost, CIVS, distance, playerView, sameItem, UNIT_TYPES, type BuildingId, type City, type Command, type GameEvent, type GameState, type PlayerView } from "../core";
 import { barbarianCommands } from "./barbarians";
 import { chooseProduction } from "./build";
-import { caravanCommands, diplomatCommands, isCaravan, isDiplomat } from "./agents";
+import { bribeSavings, caravanCommands, diplomatCommands, isCaravan, isDiplomat } from "./agents";
 import { peaceCommands, underTreaty } from "./diplomacy";
 import { launchCommands, partUrgency, spaceBuilders } from "./space";
 import { upkeepCommands } from "./upkeep";
@@ -140,7 +140,7 @@ export function decide(view: PlayerView): Command[] {
     const goal = space ? "production" : null;
     if (city.governor !== goal) commands.push({ type: "setGovernor", cityId: city.id, goal });
   }
-  commands.push(...buyCommands(view), ...launchCommands(view), ...upkeepCommands(view, ctx.plan));
+  commands.push(...buyCommands(view, land), ...launchCommands(view), ...upkeepCommands(view, ctx.plan));
   return commands;
 }
 
@@ -153,7 +153,7 @@ const BUY_RESERVE_PER_CITY = 10;
  * the way a player hurries a library instead of letting the treasury pile up.
  * A city in danger hurries its defender first.
  */
-export function buyCommands(view: PlayerView): Command[] {
+export function buyCommands(view: PlayerView, land: Int32Array = landmasses(view)): Command[] {
   // Spaceship parts come first and need only a small reserve: the race is won with gold at the end.
   const partSpare = view.economy.gold - BUY_RESERVE / 2;
   const parts = view.cities
@@ -173,7 +173,8 @@ export function buyCommands(view: PlayerView): Command[] {
         .sort((a, b) => a.cost - b.cost)
     : [];
   if (caravans[0]) return [{ type: "buy", cityId: caravans[0].c.id }];
-  const reserve = BUY_RESERVE + BUY_RESERVE_PER_CITY * view.cities.length;
+  // Gold set aside for a bribe within reach stays in the treasury too.
+  const reserve = BUY_RESERVE + BUY_RESERVE_PER_CITY * view.cities.length + bribeSavings(view, land);
   const spare = view.economy.gold - reserve;
   if (spare <= 0) return [];
   const options = view.cities

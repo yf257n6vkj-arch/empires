@@ -7,7 +7,8 @@
  * sides play with the same information. New knowledge (enemy units, cities,
  * scores) must be added here, and only in the form a human could see it.
  */
-import { tilesInRadius, type Point } from "./geometry";
+import { distance, tilesInRadius, type Point } from "./geometry";
+import { inciteCost } from "./bribe";
 import { scoreOf, type Score } from "./score";
 import { buildingUpkeep, builtWonders, researchCost, wonderFlag } from "./economy";
 import { cityReport } from "./city";
@@ -93,6 +94,11 @@ export interface PlayerView {
   /** Tiles the player sees right now; elsewhere the map shows what was last seen. */
   visible: number[];
   cities: City[];
+  /**
+   * Price of bribing each foreign city an own diplomat stands next to, as the
+   * diplomat's button shows it; keyed by city id.
+   */
+  bribePrices: Record<number, number>;
   /** Shields each own city adds to its production per turn, as its city screen shows; keyed by city id. */
   cityShields: Record<number, number>;
   /**
@@ -178,6 +184,11 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
       .map((u) => ({ ...u, goto: null, orders: null, work: null, homeCity: null })),
     visible,
     cities: state.cities.filter((c) => c.owner === playerId).map((c) => ({ ...c })),
+    bribePrices: Object.fromEntries(
+      state.cities
+        .filter((c) => c.owner !== playerId && state.units.some((u) => u.owner === playerId && UNIT_TYPES[u.type].special === "diplomat" && distance(u, c) <= 1))
+        .map((c) => [c.id, inciteCost(state, c)]),
+    ),
     cityShields: Object.fromEntries(state.cities.filter((c) => c.owner === playerId).map((c) => [c.id, cityReport(state, c).shieldSurplus])),
     foreignCities: state.cities
       .filter((c) => c.owner !== playerId && (seesAll || player.explored[c.y * state.map.width + c.x]))

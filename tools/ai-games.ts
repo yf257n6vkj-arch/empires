@@ -44,6 +44,9 @@ let routes = 0;
 let helped = 0;
 let embassies = 0;
 let stolen = 0;
+let incited = 0;
+let incitedBarbarian = 0;
+let sabotaged = 0;
 let launches = 0;
 let offers = 0;
 let rejected = 0;
@@ -76,6 +79,10 @@ for (let g = 0; g < games; g++) {
         else if (e.type === "wonderHelped") helped++;
         else if (e.type === "embassyOpened") embassies++;
         else if (e.type === "techStolen") stolen++;
+        else if (e.type === "cityIncited") {
+          incited++;
+          if (isBarbarian(s.players[e.from])) incitedBarbarian++;
+        } else if (e.type === "citySabotaged") sabotaged++;
         else if (e.type === "spaceshipLaunched") launches++;
         if (e.type === "peaceOffered") offers++;
         else if (e.type === "peaceRejected") rejected++;
@@ -163,4 +170,4 @@ if (difficultyArg) {
   console.log(`obtížnost ${difficulty}: hráč na místě člověka vyhrál ${seatWins.reference}×, soupeři ${seatWins.others}× · města na konci: hráč medián ${med(seatCities.reference)}, soupeři medián ${med(seatCities.others)} · skóre hráče v % nejlepšího soupeře: medián ${med(scoreShare)}`);
 }
 console.log(`mír: nabídek ${offers}, odmítnutých ${rejected}, uzavřených mírů ${peaces} · válka do míru trvala medián ${med(warLengths)} tahů · porušených smluv ${broken}`);
-console.log(`karavany: obchodních cest ${routes}, pomoc s divy ${helped}× · diplomati: velvyslanectví ${embassies}, ukradených objevů ${stolen} · vypuštěných lodí ${launches}`);
+console.log(`karavany: obchodních cest ${routes}, pomoc s divy ${helped}× · diplomati: velvyslanectví ${embassies}, ukradených objevů ${stolen}, podplacených měst ${incited} (barbarských ${incitedBarbarian}), sabotáží ${sabotaged} · vypuštěných lodí ${launches}`);

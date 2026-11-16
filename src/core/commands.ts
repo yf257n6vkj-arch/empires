@@ -55,6 +55,7 @@ import {
 } from "./rules";
 import { isBarbarian, type City, type CityId, type GameState, type ProductionItem, type Unit, type UnitId } from "./state";
 import { endTurnDraft } from "./turn";
+import { inciteCost } from "./bribe";
 import { cityAt, cityName, cloneState, getPlayer, idx, reveal, workableTiles } from "./world";
 
 export type Command =
@@ -841,15 +842,6 @@ export function canOpenTradeRoute(state: GameState, unit: Unit, cityId: CityId):
 }
 
 /** Gold a diplomat must pay to make a city change sides. */
-export function inciteCost(state: GameState, city: City): number {
-  const owner = getPlayer(state, city.owner);
-  const capital = capitalOf(state, city.owner);
-  const far = capital ? distance(city, capital) : 32;
-  const units = state.units.filter((u) => u.x === city.x && u.y === city.y).length;
-  const base = ((owner.gold + 1000) * city.size) / (far + 3) + units * 20;
-  return Math.round(cityReport(state, city).happiness.disorder ? base / 2 : base);
-}
-
 function diplomatCommand(state: GameState, unitId: UnitId, cityId: CityId, action: DiplomatAction): CommandResult {
   const events: GameEvent[] = [];
   const unit = ownUnit(state, unitId);

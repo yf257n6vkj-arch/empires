@@ -27,6 +27,8 @@ const seatCities = { reference: [] as number[], others: [] as number[] };
 /** Score of seat 0 in percent of the best rival's score at the end. */
 const scoreShare: number[] = [];
 const games = Number(args[0] ?? 20);
+/** First seed number, so several runs can share the work without playing the same maps. */
+const from = Number(process.argv.find((a) => a.startsWith("--from="))?.split("=")[1] ?? 0);
 const digits = args[1];
 const CHECKS = [20, 40, 60, 80, 100, 120];
 
@@ -48,6 +50,8 @@ let routes = 0;
 let helped = 0;
 let embassies = 0;
 let stolen = 0;
+let cityAttacks = 0;
+let groupAttacks = 0;
 let warshipsBuilt = 0;
 let aircraftBuilt = 0;
 let airAttacks = 0;
@@ -72,7 +76,7 @@ const wins: Record<string, number> = {};
 let barbarianCities = 0;
 const started = performance.now();
 
-for (let g = 0; g < games; g++) {
+for (let g = from; g < from + games; g++) {
   const seed = digits ? `ai-${g}/${digits}` : `ai-${g}`;
   try {
     const world = parseGameCode(seed).world;
@@ -134,6 +138,15 @@ for (let g = 0; g < games; g++) {
           battles++;
           if (UNIT_TYPES[e.attacker.unitType].domain === "sea") seaAttacks++;
           if (UNIT_TYPES[e.attacker.unitType].domain === "air") airAttacks++;
+          // An attack on a city counts as a group attack when two more soldiers of the attacker stand close by.
+          const onCity = s.cities.some((c) => c.x === e.at.x && c.y === e.at.y);
+          if (onCity && UNIT_TYPES[e.attacker.unitType].domain === "land" && !isBarbarian(s.players[e.attacker.owner])) {
+            cityAttacks++;
+            const near = played.state.units.filter(
+              (u) => u.owner === e.attacker.owner && u.id !== e.attacker.id && UNIT_TYPES[u.type].domain === "land" && UNIT_TYPES[u.type].attack > 0 && Math.max(Math.abs(u.x - e.at.x), Math.abs(u.y - e.at.y)) <= 2,
+            ).length;
+            if (near >= 2) groupAttacks++;
+          }
           if (e.attackerWon) attackerWins++;
         }
       }
@@ -197,6 +210,7 @@ if (difficultyArg) {
   console.log(`obtížnost ${difficulty}: hráč na místě člověka vyhrál ${seatWins.reference}×, soupeři ${seatWins.others}× · města na konci: hráč medián ${med(seatCities.reference)}, soupeři medián ${med(seatCities.others)} · skóre hráče v % nejlepšího soupeře: medián ${med(scoreShare)}`);
 }
 console.log(`mír: nabídek ${offers}, odmítnutých ${rejected}, uzavřených mírů ${peaces} · válka do míru trvala medián ${med(warLengths)} tahů · porušených smluv ${broken}`);
+console.log(`útoky na města: ${cityAttacks}, z toho ve skupině aspoň tří vojáků ${cityAttacks ? Math.round((100 * groupAttacks) / cityAttacks) : 0} %`);
 console.log(`moře: postavených válečných lodí ${warshipsBuilt}, útoků lodí ${seaAttacks}, měst dobytých za mořem ${overseas}`);
 console.log(`vzduch: postavených letadel ${aircraftBuilt}, útoků letadel ${airAttacks}, letadel bez paliva ${aircraftLost} · jaderných útoků ${nukes}, z toho zastavených štítem ${nukesStopped}`);
 console.log(`karavany: obchodních cest ${routes}, pomoc s divy ${helped}× · diplomati: velvyslanectví ${embassies}, ukradených objevů ${stolen}, podplacených měst ${incited} (barbarských ${incitedBarbarian}), sabotáží ${sabotaged} · vypuštěných lodí ${launches}`);

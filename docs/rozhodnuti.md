@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Automatické partie pro bránu fáze 3
+
+Pro bránu fáze 3 odehrála AI 600 partií bez chyby. Na 300 partiích standardního světa měl soupeř ve 120. tahu v mediánu 9 měst, desetina soupeřů 3 až 4 města a nejlepší desetina 15 až 16. Jen s jedním městem zůstalo po 60. tahu 36 z 1200 hráčů, tedy 3 %, a 15 hráčů prohrálo úplně. Válka byla v 297 partiích a první začala v mediánu ve 54. tahu. Do měst útočili soupeři ve dvou třetinách případů ve skupině aspoň tří vojáků. Vesmírnou lodí vyhrál soupeř ve 24 partiích, ostatní rozhodlo skóre. Barbaři dobyli 235 měst a soupeři z nich 103 vzali zpátky.
+
+Na 100 partiích světa s ostrovy stálo na ostrovech v průměru přes dvě města na partii a za mořem dobyl soupeř město jen jednou. Na 100 partiích normální obtížnosti vyhrálo místo, které hraje jako člověk, 23 partií, což odpovídá férovému podílu jedné čtvrtiny. Na těžké vyhrálo 12 partií a mělo v mediánu 60 % skóre nejlepšího soupeře místo 72 až 79 %. Rozdíl mezi normální a těžkou obtížností je tedy na větším vzorku jasně vidět, dřívější měření na 20 partiích bylo jen šum.
+
 ## 16. 11. 2026: Soupeři používají jadernou raketu volně
 
 Claude navrhl raketu jen jako odvetu, Michal chtěl, aby ji AI používala volně. Za války si soupeř postaví jednu raketu v nejproduktivnějším městě, jakmile někdo dokončí projekt Manhattan a soupeř zná raketovou techniku. Raketa čeká ve městě nejblíž nepříteli. Odpálí ji na město, na které jde jeho armáda, když v něm vidí obránce, nebo na nepřátelské město, kde výbuch vezme aspoň osm bodů: každý obyvatel, o kterého město přijde, je bod a každý zničený voják dva. Nikdy nestřílí tam, kde by výbuch zasáhl jeho vlastní město nebo jednotky, na národ, se kterým má mír, ani na město, o kterém ví, že ho chrání protiraketový štít. Štít vidí jen s velvyslanectvím, stejně jako hráč. Jakmile někdo dokončí projekt Manhattan, staví soupeř štít ve dvou největších městech od velikosti 6.

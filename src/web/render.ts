@@ -1686,7 +1686,20 @@ function drawRuins(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     for (let x = view.x0; x <= view.x1; x++) {
       const i = y * width + x;
       if (!terrain[i] || !ruins[i]) continue;
-      drawRuin(ctx, x * TILE, y * TILE, x, y);
+      const pics = terrainPictures("ruiny");
+      if (pics.length) {
+        // Painted ruins on a patch of trodden earth.
+        const cx = x * TILE + TILE / 2;
+        const cy = y * TILE + TILE * 0.68;
+        const earth = ctx.createRadialGradient(cx, cy, 1, cx, cy, TILE * 0.5);
+        earth.addColorStop(0, "rgba(190, 166, 118, 0.6)");
+        earth.addColorStop(1, "rgba(190, 166, 118, 0)");
+        ctx.fillStyle = earth;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, TILE * 0.5, TILE * 0.36, 0, 0, Math.PI * 2);
+        ctx.fill();
+        drawTerrainSprite(ctx, pics[Math.floor(hash(x, y, 731) * pics.length)]!, cx, y * TILE + TILE * 0.86, TILE * 1.05);
+      } else drawRuin(ctx, x * TILE, y * TILE, x, y);
     }
   }
   ctx.restore();

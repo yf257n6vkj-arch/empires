@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Šestnáct druhů hor a každé pohoří má svůj ráz
+
+Michal chtěl členitější mapu, a tak Gemini namaloval dalších deset hor. Přibyl alpský štít s ledovcem, zubatý hřeben, dvojvrchol s jezírkem, žulová kupole, stolová hora z červeného pískovce, hora s lesem na úbočí, vápencové skály, velký trojvrcholový masiv, nízké předhůří a tmavá skalnatá hora.
+
+Aby pohoří nebylo strakaté, mají hory tři rázy: zasněžené štíty, hnědé a šedé skály a teplé pouštní skály. Ráz se mění po kusech mapy zhruba pět na čtyři políčka. Hory u pouště dostanou pouštní skály a hory u ledovce a tundry sníh. V rámci jednoho rázu si každé políčko vybere svůj obrázek, takže hory vedle sebe nejsou stejné, a přesto k sobě patří.
+
 ## 16. 11. 2026: Gemini maluje všechno, co stojí na jednom políčku
 
 Michal schválil, že Gemini namaluje i ruiny, všech jedenáct surovin, důl, pevnost a znečištění. Ruiny mají čtyři podoby: řecký chrám, zbořenou věž, zbytky městečka a zarostlou pyramidu. Zadání jsou v souborech ruiny.tsv a veci.tsv a Michal je spustí jedním skriptem veci.sh. Hra obrázky použije v obou pohledech, a dokud nejsou, kreslí tyhle věci kódem jako dosud.

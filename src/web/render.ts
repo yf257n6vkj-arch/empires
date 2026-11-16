@@ -522,6 +522,7 @@ function drawCompassRose(ctx: CanvasRenderingContext2D, x: number, y: number, r:
 
 function drawBackground(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height, terrain } = input;
+  mapTerrain = { width, height, terrain };
   drawParchment(ctx, width, height);
 
   const depth = seaDepth(input);
@@ -773,8 +774,8 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
     // Seen from above the relief of the ground shows hills and mountains; on the tilted map they rise.
     case "mountains":
       if (activeTilt < 1 && terrainPictures("hora").length) {
-        const pics = terrainPictures("hora");
-        drawTerrainSprite(ctx, pics[Math.floor(r(13) * pics.length)]!, px + 12 + (r(5) - 0.5) * 4, py + 21 + r(6) * 2, TILE * (1.25 + r(7) * 0.15));
+        const pic = mountainPicture(x, y, r(13));
+        if (pic) drawTerrainSprite(ctx, pic, px + 12 + (r(5) - 0.5) * 4, py + 21 + r(6) * 2, TILE * (1.25 + r(7) * 0.15));
       } else if (activeTilt < 1) {
         drawMassif(ctx, px + 12 + (r(5) - 0.5) * 5, py + 18 + r(6) * 2, 14 + r(7) * 3, 14 + r(8) * 5, (k) => r(40 + k));
         // Now and then a lower spur in front, so a range does not look like a row of the same mountain.
@@ -795,6 +796,44 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
     default:
       break;
   }
+}
+
+/** Terrain of the map being drawn, so a mountain can look at its neighbours. */
+let mapTerrain: { width: number; height: number; terrain: (TerrainId | null)[] } | null = null;
+
+/**
+ * Kinds of painted mountains by their look. A range keeps one look over a stretch of land,
+ * so snowy peaks do not stand right next to red sandstone; the look changes between regions
+ * and by what lies around: next to desert the mountains are warm rock, next to ice snowy.
+ */
+const MOUNTAIN_LOOKS = {
+  snowy: [1, 2, 4, 6, 7, 8, 9, 12, 14, 16],
+  rocky: [3, 5, 10, 13, 15],
+  desert: [3, 5, 11, 15],
+};
+
+function mountainPicture(x: number, y: number, roll: number): HTMLImageElement | undefined {
+  let look: keyof typeof MOUNTAIN_LOOKS = hash(Math.floor(x / 5), Math.floor(y / 4), 751) < 0.62 ? "snowy" : "rocky";
+  if (mapTerrain) {
+    const { width, height, terrain } = mapTerrain;
+    let dry = 0;
+    let cold = 0;
+    for (let dy = -2; dy <= 2; dy++) {
+      for (let dx = -2; dx <= 2; dx++) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+        const t = terrain[ny * width + nx];
+        if (t === "desert") dry++;
+        if (t === "arctic" || t === "tundra") cold++;
+      }
+    }
+    if (dry >= 3 && dry > cold) look = "desert";
+    else if (cold >= 3) look = "snowy";
+  }
+  const pics = MOUNTAIN_LOOKS[look].map((n) => sprites.get(`hora-${n}`)).filter((p): p is HTMLImageElement => !!p);
+  const all = pics.length ? pics : terrainPictures("hora");
+  return all[Math.floor(roll * all.length)];
 }
 
 /** Painted pictures of a terrain (hora-1, hora-2 ...), in a fixed order so every tile keeps its picture. */

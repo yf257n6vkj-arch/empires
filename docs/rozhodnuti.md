@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Soupeři používají jadernou raketu volně
+
+Claude navrhl raketu jen jako odvetu, Michal chtěl, aby ji AI používala volně. Za války si soupeř postaví jednu raketu v nejproduktivnějším městě, jakmile někdo dokončí projekt Manhattan a soupeř zná raketovou techniku. Raketa čeká ve městě nejblíž nepříteli. Odpálí ji na město, na které jde jeho armáda, když v něm vidí obránce, nebo na nepřátelské město, kde výbuch vezme aspoň osm bodů: každý obyvatel, o kterého město přijde, je bod a každý zničený voják dva. Nikdy nestřílí tam, kde by výbuch zasáhl jeho vlastní město nebo jednotky, na národ, se kterým má mír, ani na město, o kterém ví, že ho chrání protiraketový štít. Štít vidí jen s velvyslanectvím, stejně jako hráč. Jakmile někdo dokončí projekt Manhattan, staví soupeř štít ve dvou největších městech od velikosti 6.
+
+V automatických partiích zatím jadernou raketu nikdo neodpálil, protože soupeři projekt Manhattan sami nestaví. Raketu tedy uvidíš hlavně tehdy, když projekt postavíš ty.
+
 ## 16. 11. 2026: Soupeři létají s bombardéry a stíhačkami
 
 Michal schválil letadla bez letadlových lodí. Bombardéry staví soupeř z rozpočtu armády, jeden místo každého čtvrtého útočníka, takže letectvo nebere štíty jiným stavbám. První pokus se samostatným rozpočtem pro letadla stál soupeře výrazně víc výher vesmírnou lodí. Bombardér letí jen na cíl, ze kterého se ještě týž tah vrátí do města: na nepřátelské jednotky v poli, které soupeř vidí, a na obránce města, na které jde jeho armáda. Zaútočí, když má šanci aspoň 65 %. Stíhačky staví soupeř až ve chvíli, kdy uvidí nepřátelské letadlo. Čekají ve městě nejblíž nepříteli a sestřelují letadla v dosahu.

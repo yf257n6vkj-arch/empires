@@ -10,6 +10,7 @@ import { nature } from "./research";
 import { bestAttacker, isAttacker, skill } from "./war";
 import { spacePart, type SpaceClaims } from "./space";
 import { aircraftProduction } from "./air";
+import { missileProduction, wantsShield } from "./nukes";
 import { invasionShipType, isTransport, isWarship, warshipType, type Invasion } from "./navy";
 import { agentProduction } from "./agents";
 
@@ -144,8 +145,9 @@ function buildingValue(view: PlayerView, city: City, b: BuildingId, plan: Plan):
     case "factory":
       return big >= 7 ? 30 : 6;
     case "coastalFortress":
-    case "sdiDefense":
       return 0;
+    case "sdiDefense":
+      return wantsShield(view, city) ? 40 : 0;
     default:
       return 10;
   }
@@ -224,6 +226,8 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
   // Fighters when enemy aircraft show up.
   const fighter = aircraftProduction(view, city, plan.enemies ?? [], "fighters");
   if (fighter) return { kind: "unit", id: fighter };
+  const missile = missileProduction(view, city, plan.enemies ?? []);
+  if (missile) return { kind: "unit", id: missile };
 
   // An army for the war, from cities big enough to spare the shields.
   // Units as strong in defence as in attack end up guarding cities, so only true attackers count as the army.

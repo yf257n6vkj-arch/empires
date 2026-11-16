@@ -14,6 +14,7 @@ import { bribeSavings, caravanCommands, diplomatCommands, isCaravan, isDiplomat 
 import { peaceCommands, underTreaty } from "./diplomacy";
 import { launchCommands, partUrgency, spaceBuilders } from "./space";
 import { aircraftCommands, isAircraft } from "./air";
+import { isMissileUnit, missileCommands } from "./nukes";
 import { invasionShipCommands, isTransport, isWarship, seaInvasion, warshipCommands, warshipsWanted } from "./navy";
 import { upkeepCommands } from "./upkeep";
 import { at, isMilitary, isSettler, landmasses } from "./knowledge";
@@ -138,6 +139,7 @@ export function decide(view: PlayerView): Command[] {
     else if (isDiplomat(u)) commands.push(...diplomatCommands(view, u, land));
     else if (isWarship(u)) commands.push(...warshipCommands(view, u, enemies, target));
     else if (isAircraft(u)) commands.push(...aircraftCommands(view, u, enemies, target));
+    else if (isMissileUnit(u)) commands.push(...missileCommands(view, u, enemies, target));
     else if (UNIT_TYPES[u.type].domain === "sea") {
       const landing = invasion && isTransport(u) ? invasionShipCommands(view, u, invasion) : null;
       commands.push(...(landing ?? shipCommands(ctx, u)));

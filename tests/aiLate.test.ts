@@ -221,3 +221,46 @@ describe("the computer's aircraft", () => {
     expect({ x: b.x, y: b.y }).toEqual({ x: 1, y: 1 });
   });
 });
+
+describe("the computer's nuclear missile", () => {
+  function armed(): { s: GameState; missile: number; theirs: number } {
+    let s = stateFromAscii(["............", "............", "............"], 3);
+    s = found(s, 1, 1);
+    s = found(s, 8, 1, 1);
+    s.players[0]!.isHuman = false;
+    for (const p of s.players) {
+      p.contacts = s.players.filter((q) => q.id !== p.id).map((q) => q.id);
+      p.explored = p.explored.map(() => 1);
+    }
+    s.players[0]!.atWar = [1];
+    s.players[1]!.atWar = [0];
+    const theirs = s.cities.find((c) => c.owner === 1)!;
+    theirs.size = 8;
+    for (let i = 0; i < 3; i++) addUnit(s, "musketeers", 8, 1, 1);
+    addUnit(s, "warriors", 3, 1, 0);
+    const missile = addUnit(s, "nuclear", 1, 1, 0).id;
+    // A bomber two tiles away sees the target city and its garrison.
+    addUnit(s, "bomber", 6, 1, 0);
+    return { s, missile, theirs: theirs.id };
+  }
+
+  it("fires at a big enemy city full of soldiers", () => {
+    const { s, missile, theirs } = armed();
+    const commands = decide(playerView(s, 0));
+    expect(commands).toContainEqual({ type: "detonate", unitId: missile, at: { x: 8, y: 1 } });
+    void theirs;
+  });
+
+  it("holds fire when its own soldiers stand in the blast", () => {
+    const { s, missile } = armed();
+    addUnit(s, "warriors", 7, 1, 0);
+    expect(decide(playerView(s, 0)).some((c) => c.type === "detonate" && c.unitId === missile)).toBe(false);
+  });
+
+  it("never fires at a nation it is at peace with", () => {
+    const { s, missile } = armed();
+    s.players[0]!.atWar = [];
+    s.players[1]!.atWar = [];
+    expect(decide(playerView(s, 0)).some((c) => c.type === "detonate" && c.unitId === missile)).toBe(false);
+  });
+});

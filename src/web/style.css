@@ -610,7 +610,7 @@ label.rate input#lux { width: 60px; } .rate.tax { color: var(--muted); white-spa
 .advisor.guide { background: linear-gradient(180deg, rgba(58, 46, 28, 0.97), rgba(40, 32, 22, 0.97)); }
 .gd-head { display: flex; align-items: flex-start; gap: 8px; }
 .gd-head .owl { flex: 0 0 auto; }
-.gd-head img.owl { border-radius: 50%; object-fit: cover; }
+.gd-head img.owl { border-radius: 10px; object-fit: cover; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5); }
 .gd-say { flex: 1; min-width: 0; background: rgba(255, 244, 214, 0.08); border: 1px solid rgba(240, 210, 150, 0.22); border-radius: 10px; padding: 5px 9px; }
 .gd-say b { color: #f1d796; font-size: 13px; }
 .gd-say p { margin: 2px 0 0; font-size: 13px; line-height: 1.4; }
@@ -636,7 +636,7 @@ label.rate input#lux { width: 60px; } .rate.tax { color: var(--muted); white-spa
 .guide-card { width: min(720px, calc(100vw - 32px)); border: 1px solid #8a6d3b; border-radius: 14px; padding: 0; background: linear-gradient(180deg, #3a2e1d, #2a2218); }
 .gc { display: flex; gap: 16px; padding: 18px 20px; }
 .gc-owl { flex: 0 0 120px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.gc-owl img.owl { border-radius: 50%; object-fit: cover; }
+.gc-owl img.owl { border-radius: 14px; object-fit: cover; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); }
 .gc-name { font: 700 14px Georgia, "Times New Roman", serif; color: #f1d796; }
 .gc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .gc-body h2 { margin: 0; font: 700 21px Georgia, "Times New Roman", serif; color: #f1d796; }

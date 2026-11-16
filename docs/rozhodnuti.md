@@ -12,7 +12,7 @@ Sova sedí na místě rádce. Na začátku hry se představí, poví něco o hr�
 
 Ve chvílích, kdy se ve hře objeví něco nového, ukáže sova kartu s obrázkem z encyklopedie, dvěma větami příběhu a zajímavostí. Pod tím vysvětlí, co to znamená pro hru. Karta přijde po každém novém objevu, u první jednotky a první budovy každého druhu, u vlastního divu a když hráč potká nový národ. U souseda sova poradí podle jeho povahy. Varovná karta přijde, když hráč přijde o město nebo když se u jeho města objeví barbaři. V menu jde vyprávění ztlumit na to důležité a sově změnit jméno.
 
-Sovu zatím kreslí kód ve třech náladách, kdy radí, chválí a varuje. Malované portréty pro Gemini jsou připravené v tools/mac/sova.tsv. Spustí je Michal příkazem bash sova.sh a hra je použije, jakmile budou ve složce src/web/guide.
+Sova má tři malované portréty od Gemini podle toho, jestli radí, chválí, nebo varuje. Zadání jsou v tools/mac/sova.tsv a Michal je spustil příkazem bash sova.sh. Kdyby obrázek chyběl, nakreslí sovu kód.
 
 ## 16. 11. 2026: Ruiny a barbaři podle Civilizace 2
 

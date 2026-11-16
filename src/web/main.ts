@@ -31,6 +31,7 @@ import {
   cityTileYield,
   canAttack,
   distance,
+  visibleTiles,
   findPath,
   fitRates,
   IMPROVEMENTS,
@@ -253,6 +254,12 @@ function run(command: Command): boolean {
     events.push(...passed.events);
   }
   addLog(events);
+  // A declaration of war against the player must not slip by in the log.
+  const war = events.find((e) => e.type === "warDeclared" && e.on === HUMAN);
+  if (war && war.type === "warDeclared") {
+    const nation = civName(state.players[war.by]!.civ);
+    attackDialog.notice(t("Válka!"), t("{nation} ti vyhlásili válku. Posil obranu měst, hlavně těch, která leží blízko jejich území.", { nation }));
+  }
   for (const e of events) {
     if (e.type === "wonderBuilt" && e.owner === HUMAN) {
       const city = state.cities.find((c) => c.id === e.cityId);
@@ -306,8 +313,10 @@ function moveSelected(to: Point): void {
   if (!unit) return;
   // A step onto an enemy asks first and shows the chance of winning.
   if (distance(unit, to) === 1 && state.units.some((u) => u.x === to.x && u.y === to.y && u.owner !== unit.owner)) {
-    if (!attackDialog.open(unit, to)) {
-      say(ERROR_TEXT[canAttack(state, unit, to) ?? "cannotAttack"]);
+    const problem = canAttack(state, unit, to);
+    if (problem === "notAtWar") attackDialog.openWar(unit, to);
+    else if (!attackDialog.open(unit, to)) {
+      say(ERROR_TEXT[problem ?? "cannotAttack"]);
       refresh();
     }
     return;
@@ -439,6 +448,20 @@ function buildDrawInput(): DrawInput {
     target: route ? { point: route.target, turns: route.turns } : null,
     camera,
   };
+}
+
+/** Who owns the foreign units or city on the tile, and whether it is war or peace with them. */
+function foreignLine(p: Point): string {
+  const i = p.y * state.map.width + p.x;
+  const city = state.cities.find((c) => c.x === p.x && c.y === p.y && c.owner !== HUMAN);
+  const seen = visibleTiles(state, HUMAN)[i] === 1;
+  const units = seen ? state.units.filter((u) => u.x === p.x && u.y === p.y && u.owner !== HUMAN && u.carriedBy === null) : [];
+  const owner = city?.owner ?? units[0]?.owner;
+  if (owner === undefined) return "";
+  const me = state.players[HUMAN]!;
+  const relation = me.atWar.includes(owner) ? `<b class="neg">${t("válka")}</b>` : t("mír");
+  const list = units.map((u) => `${unitName(u.type)} ${u.hp}/${UNIT_TYPES[u.type].hp}${u.veteran ? " ★" : ""}`).join(", ");
+  return `<br>${escapeHtml(civName(state.players[owner]!.civ))} · ${relation}${list ? `<br>${escapeHtml(list)}` : ""}`;
 }
 
 /** Share of a settler's current improvement that is done, 0..1. */
@@ -597,6 +620,11 @@ $<HTMLButtonElement>("#codex").addEventListener("click", () => codex.open());
 const attackDialog = createAttackDialog($<HTMLDialogElement>("#attack-dialog"), {
   state: () => state,
   attack: (unitId, to) => unitAction({ type: "attack", unitId, to }),
+  declareWar: (player) => {
+    const ok = run({ type: "declareWar", player });
+    refresh();
+    return ok;
+  },
 });
 const newGameDialog = createNewGameDialog($<HTMLDialogElement>("#new-game-dialog"), {
   start: (seed, civ, world) => {
@@ -1249,7 +1277,8 @@ canvas.addEventListener("mousemove", (e) => {
       `<b>${city ? escapeHtml(cityLabel(city.name)) + " · " : ""}${terrainName(ter)}${special}</b> [${p.x}, ${p.y}]<br>` +
       t("jídlo {food} · štíty {shields} · obchod {trade}", { food: y.food, shields: y.shields, trade: y.trade }) +
       (extras.length ? `<br>${extras.join(", ")}` : "") +
-      (r.land ? `<br>${t("pohyb {cost}", { cost: r.moveCost })}${r.defenseBonus ? ` · ${t("obrana +{pct} %", { pct: r.defenseBonus })}` : ""}` : "");
+      (r.land ? `<br>${t("pohyb {cost}", { cost: r.moveCost })}${r.defenseBonus ? ` · ${t("obrana +{pct} %", { pct: r.defenseBonus })}` : ""}` : "") +
+      foreignLine(p);
   }
   // Highlight the target and redraw only when the tile under the mouse changes.
   if (!hoverTile || hoverTile.x !== p.x || hoverTile.y !== p.y) {

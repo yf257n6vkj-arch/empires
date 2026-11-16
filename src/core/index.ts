@@ -5,6 +5,7 @@
 export * from "./city";
 export * from "./combat";
 export * from "./commands";
+export * from "./diplomacy";
 export * from "./economy";
 export * from "./events";
 export * from "./game";

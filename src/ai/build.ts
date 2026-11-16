@@ -7,6 +7,7 @@
 import { BUILDINGS, RULES, UNIT_TYPES, type BuildingId, type City, type PlayerView, type ProductionItem, type UnitTypeId } from "../core";
 import { coastal, isMilitary, isSettler } from "./knowledge";
 import { nature } from "./research";
+import { bestAttacker, isAttacker } from "./war";
 
 export interface Plan {
   /** Good free sites on own land. */
@@ -19,6 +20,8 @@ export interface Plan {
   exploring: boolean;
   /** Tiles of foreign military units the AI sees. */
   threats: { x: number; y: number }[];
+  /** Attacking units the AI wants to have. */
+  armyWanted: number;
 }
 
 function knows(view: PlayerView, tech: string | null): boolean {
@@ -164,6 +167,10 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
 
   // Settlers who improve the land: about one for every two cities.
   if (city.size >= 3 && workers + (building ? 1 : 0) < Math.ceil(cityCount / 2) && underway === 0) return { kind: "unit", id: "settlers" };
+
+  // An army for the war, from cities big enough to spare the shields.
+  const army = view.units.filter(isAttacker).length + view.cities.filter((c) => c.production.kind === "unit" && isAttacker({ type: c.production.id }) && c.id !== city.id).length;
+  if (army < plan.armyWanted && city.size >= 3) return { kind: "unit", id: bestAttacker(view) };
 
   let best: { item: ProductionItem; priority: number } | null = null;
   for (const b of Object.keys(BUILDINGS) as BuildingId[]) {

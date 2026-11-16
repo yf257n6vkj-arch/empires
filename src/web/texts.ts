@@ -85,6 +85,9 @@ export const ERROR_TEXT: Record<CommandError, string> = {
   tooManySpecialists: t("Tolik obyvatel mimo pole město nemá."),
   cannotAttack: t("Tahle jednotka sem zaútočit nemůže. Útočí jen vojenské jednotky, pozemní na souši a ne z lodi, lodě na moři a na pobřeží. Letadlo ve vzduchu dostihne jen jiné letadlo."),
   nothingToAttack: t("Na políčku není nikdo, na koho by šlo zaútočit."),
+  notAtWar: t("S tímhle národem jsi v míru. Zaútočit můžeš, až mu vyhlásíš válku."),
+  noContact: t("S tímhle národem ses ještě nepotkal."),
+  alreadyAtWar: t("S tímhle národem už válčíš."),
 };
 
 /** "před požárem": what a building or technology keeps away, in the instrumental. */
@@ -199,6 +202,13 @@ export function eventConcerns(state: GameState, e: GameEvent, viewer: number): b
       return e.attacker.owner === viewer || e.defender.owner === viewer;
     case "cityCaptured":
       return e.from === viewer || e.to === viewer;
+    case "contactMade":
+      return e.a === viewer || e.b === viewer;
+    case "warDeclared": {
+      // Wars between others are news once the viewer knows both sides.
+      const knows = (p: number) => state.players[viewer]?.contacts.includes(p) ?? false;
+      return e.by === viewer || e.on === viewer || (knows(e.by) && knows(e.on));
+    }
     case "cityDestroyed":
       return e.owner === viewer || e.by === viewer;
     case "embassyOpened":
@@ -381,6 +391,14 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
     }
     case "palaceMoved":
       return e.player === viewer ? t("Hlavní město padlo a vláda se přestěhovala do města {city}.", { city: cityName(state, e.cityId) }) : null;
+    case "contactMade": {
+      const other = e.a === viewer ? e.b : e.b === viewer ? e.a : null;
+      return other === null ? null : t("Potkal jsi nový národ: {nation}. Zatím spolu žijete v míru.", { nation: nationOf(state, other) });
+    }
+    case "warDeclared":
+      if (e.by === viewer) return t("Vyhlásil jsi válku. Válčíš teď s národem {nation}.", { nation: nationOf(state, e.on) });
+      if (e.on === viewer) return t("{nation} ti vyhlásili válku!", { nation: nationOf(state, e.by) });
+      return t("{a} vyhlásili válku. Proti nim teď stojí {b}.", { a: nationOf(state, e.by), b: nationOf(state, e.on) });
     case "civDestroyed":
       return e.player === viewer
         ? t("Přišel jsi o poslední město a tvoje říše zanikla.")

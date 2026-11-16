@@ -133,7 +133,9 @@ When a defender falls in the open, every unit on its tile falls with it. In a ci
 
 A wounded unit fights with the hit points it has left. When it stands still for a whole turn, it heals by {healFieldPct}% in the field, by {healCityPct}% in its own city and completely in a city with barracks.
 
-Your military unit can walk into a city without defenders and take it. The city loses one citizen, each building is lost with a {captureBuildingLossPct}% chance, and wonders stay. You get part of the defeated empire's gold and one of its technologies. A city with a single citizen is destroyed when taken. Whoever loses their last city is out of the game.`,
+Your military unit can walk into a city without defenders and take it. The city loses one citizen, each building is lost with a {captureBuildingLossPct}% chance, and wonders stay. You get part of the defeated empire's gold and one of its technologies. A city with a single citizen is destroyed when taken. Whoever loses their last city is out of the game.
+
+Nations meet when their units or cities see each other, and at first they live in peace. You can only attack a nation you are at war with. When you send a unit at a nation you are at peace with, the game asks whether you want to declare war on it. Rivals declare war on their own when their army is stronger, and then march on the nearest city as a group. Making peace will come in a later version of the game.`,
   },
   "how-disasters": {
     title: "How to protect cities from disasters",

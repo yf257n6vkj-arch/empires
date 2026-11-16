@@ -15,7 +15,19 @@ import {
   type GameState,
   type UnitTypeId,
 } from "../src/core";
-import { addUnit, stateFromAscii, unit } from "./helpers";
+import { addUnit, stateFromAscii as asciiState, unit } from "./helpers";
+
+/** A map where players 0 and 1 have met and are at war. */
+function stateFromAscii(rows: string[], players = 1): GameState {
+  const s = asciiState(rows, players);
+  if (players >= 2) {
+    s.players[0]!.contacts = [1];
+    s.players[1]!.contacts = [0];
+    s.players[0]!.atWar = [1];
+    s.players[1]!.atWar = [0];
+  }
+  return s;
+}
 
 const FIELD = [
   "......",
@@ -256,6 +268,40 @@ describe("hit points", () => {
     const s = stateFromAscii(FIELD, 1);
     const t = addUnit(s, "tank", 0, 0);
     expect(t.hp).toBe(UNIT_TYPES.tank.hp);
+  });
+});
+
+describe("war", () => {
+  it("allows attacks and conquest only at war", () => {
+    let s = stateFromAscii(FIELD, 2);
+    s.players[0]!.atWar = [];
+    s.players[1]!.atWar = [];
+    s = foundCity(s, 2, 2, 1);
+    const a = addUnit(s, "swordsmen", 1, 2);
+    addUnit(s, "warriors", 3, 3, 1);
+    const b = addUnit(s, "swordsmen", 2, 3);
+    expect(canAttack(s, b, { x: 3, y: 3 })).toBe("notAtWar");
+    expect(applyCommand(s, { type: "move", unitId: a.id, to: { x: 2, y: 2 } }).ok).toBe(false);
+    const r = applyCommand(s, { type: "declareWar", player: 1 });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.state.players[1]!.atWar).toEqual([0]);
+    expect(applyCommand(r.state, { type: "move", unitId: a.id, to: { x: 2, y: 2 } }).ok).toBe(true);
+  });
+
+  it("needs contact before war", () => {
+    const s = asciiState(FIELD, 2);
+    expect(applyCommand(s, { type: "declareWar", player: 1 })).toEqual({ ok: false, error: "noContact" });
+  });
+
+  it("lets empires meet when they see each other", () => {
+    const s = asciiState(["............"], 2);
+    const u = addUnit(s, "warriors", 1, 0);
+    addUnit(s, "warriors", 3, 0, 1);
+    expect(s.players[0]!.contacts).toEqual([]);
+    const r = applyCommand(s, { type: "move", unitId: u.id, to: { x: 2, y: 0 } });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.state.players[0]!.contacts).toEqual([1]);
+    expect(r.events.some((e) => e.type === "contactMade")).toBe(true);
   });
 });
 

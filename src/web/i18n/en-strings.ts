@@ -1581,4 +1581,34 @@ export const EN_STRINGS: Record<string, string> = {
     "defence against land units +{pct}%",
   "vojáci z města jsou veteráni a zranění se tu vyléčí za jeden tah":
     "soldiers from the city are veterans, and wounded units heal here in one turn",
+  "Vyhlásit válku?":
+    "Declare war?",
+  "S národem {nation} žiješ v míru. Když zaútočíš, vyhlásíš mu válku. Jeho jednotky a města pak budou bojovat proti tobě a mír zatím uzavřít nejde.":
+    "You are at peace with the {nation}. If you attack, you declare war on them. Their units and cities will then fight against you, and peace cannot be made yet.",
+  "Vyhlásit válku":
+    "Declare war",
+  "Rozumím":
+    "Got it",
+  "Válka!":
+    "War!",
+  "{nation} ti vyhlásili válku. Posil obranu měst, hlavně těch, která leží blízko jejich území.":
+    "The {nation} have declared war on you. Strengthen the defence of your cities, especially those near their land.",
+  "válka":
+    "war",
+  "mír":
+    "peace",
+  "S tímhle národem jsi v míru. Zaútočit můžeš, až mu vyhlásíš válku.":
+    "You are at peace with this nation. You can attack once you declare war on them.",
+  "S tímhle národem ses ještě nepotkal.":
+    "You have not met this nation yet.",
+  "S tímhle národem už válčíš.":
+    "You are already at war with this nation.",
+  "Potkal jsi nový národ: {nation}. Zatím spolu žijete v míru.":
+    "You have met a new nation: the {nation}. For now you live in peace.",
+  "Vyhlásil jsi válku. Válčíš teď s národem {nation}.":
+    "You declared war. You are now at war with the {nation}.",
+  "{nation} ti vyhlásili válku!":
+    "The {nation} have declared war on you!",
+  "{a} vyhlásili válku. Proti nim teď stojí {b}.":
+    "The {a} have declared war. Facing them now are the {b}.",
 };

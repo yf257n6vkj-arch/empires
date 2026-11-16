@@ -70,6 +70,9 @@ export type GameEvent =
   | { type: "cityDestroyed"; cityId: CityId; name: string; owner: PlayerId; by: PlayerId; gold: number; tech: TechId | null }
   /** The capital fell and the government moved to another city. */
   | { type: "palaceMoved"; player: PlayerId; cityId: CityId }
+  /** Two empires saw each other for the first time. */
+  | { type: "contactMade"; a: PlayerId; b: PlayerId }
+  | { type: "warDeclared"; by: PlayerId; on: PlayerId }
   /** The player lost the last city and is out of the game. */
   | { type: "civDestroyed"; player: PlayerId; by: PlayerId | null }
   /** Disorder brought the government down into anarchy. */

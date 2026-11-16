@@ -3,7 +3,8 @@
  * soldiers guard cities and one of them explores, ships ferry settlers to
  * islands. Unciv's order of checks: wounded units first go home to heal.
  */
-import { distance, neighbors8, RULES, UNIT_TYPES, type Command, type PlayerView, type Point, type Unit } from "../core";
+import { distance, neighbors8, RULES, UNIT_TYPES, type City, type Command, type PlayerView, type Point, type Unit } from "../core";
+import { armyCommands, attackNow, isAttacker } from "./war";
 import { garrison, garrisonNeed, type Plan } from "./build";
 import { at, coastal, frontier, isLand, isMilitary, isSea, isSettler, pointOf, seaPath, seaReach } from "./knowledge";
 import { averageKnownValue, bestSite, islandSites, MIN_SITE_SCORE, siteValue, type Site } from "./settle";
@@ -141,7 +142,7 @@ export function shipCommands(ctx: Context, s: Unit): Command[] {
 // ---------- soldiers ----------
 
 /** Soldiers: wounded go home, cities keep their garrison, one explores, the rest reinforce. */
-export function soldierCommands(ctx: Context, soldiers: Unit[]): Command[] {
+export function soldierCommands(ctx: Context, soldiers: Unit[], target: City | null = null): Command[] {
   const { view } = ctx;
   const commands: Command[] = [];
   const need = new Map(view.cities.map((c) => [c.id, garrisonNeed(view, c, ctx.plan)]));
@@ -152,10 +153,20 @@ export function soldierCommands(ctx: Context, soldiers: Unit[]): Command[] {
     const city = view.cities.find((c) => c.x === u.x && c.y === u.y);
     if (city && (stays.get(city.id) ?? 0) < (need.get(city.id) ?? 1)) {
       stays.set(city.id, (stays.get(city.id) ?? 0) + 1);
-      if (!u.fortified && u.movesLeft > 0) commands.push({ type: "fortify", unitId: u.id });
+      // A defender strikes at an enemy next to its city when it is very likely to win and others hold the city.
+      const strike = garrison(view, city) >= 2 ? attackNow(view, u, 0.75) : null;
+      if (strike) commands.push(strike);
+      else if (!u.fortified && u.movesLeft > 0) commands.push({ type: "fortify", unitId: u.id });
       continue;
     }
     free.push(u);
+  }
+
+  // At war the free attackers march on the target together.
+  if (target) {
+    const army = free.filter((u) => isAttacker(u));
+    commands.push(...armyCommands(view, army, target));
+    free.splice(0, free.length, ...free.filter((u) => !army.includes(u)));
   }
 
   // One free soldier explores while there is land left to see.

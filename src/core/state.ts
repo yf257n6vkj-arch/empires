@@ -6,7 +6,7 @@ import type { Point } from "./geometry";
 import type { BuildingId, CivId, GovernmentId, ImprovementId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 12;
+export const STATE_VERSION = 13;
 
 export interface GameMap {
   width: number;
@@ -67,6 +67,10 @@ export interface Player {
   embassies: PlayerId[];
   /** The player lost the last city and is out of the game. */
   defeated: boolean;
+  /** Players this one has met: their units or cities have been in sight. */
+  contacts: PlayerId[];
+  /** Players this one is at war with; the list is kept the same on both sides. */
+  atWar: PlayerId[];
 }
 
 export interface Spaceship {

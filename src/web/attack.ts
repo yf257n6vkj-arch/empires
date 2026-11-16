@@ -12,6 +12,8 @@ export interface AttackHost {
   state(): GameState;
   /** Carries out the attack. */
   attack(unitId: number, to: Point): void;
+  /** Declares war; returns false when the rules refused. */
+  declareWar(player: number): boolean;
 }
 
 function factorText(f: StrengthFactor): string {
@@ -85,5 +87,42 @@ export function createAttackDialog(dialog: HTMLDialogElement, host: AttackHost) 
     dialog.querySelector<HTMLButtonElement>('[data-act="attack"]')?.focus();
     return true;
   }
-  return { open, isOpen: () => dialog.open };
+  /** Before an attack on a nation at peace: ask whether to declare war first. */
+  function openWar(unit: Unit, to: Point): boolean {
+    const state = host.state();
+    const enemy = state.units.find((u) => u.x === to.x && u.y === to.y && u.owner !== unit.owner);
+    if (!enemy) return false;
+    const nation = civName(state.players[enemy.owner]!.civ);
+    dialog.innerHTML = `
+      <div class="at">
+        <h2>${t("Vyhlásit válku?")}</h2>
+        <p>${t("S národem {nation} žiješ v míru. Když zaútočíš, vyhlásíš mu válku. Jeho jednotky a města pak budou bojovat proti tobě a mír zatím uzavřít nejde.", { nation: escapeHtml(nation) })}</p>
+        <div class="at-buttons">
+          <button type="button" data-act="cancel">${t("Zrušit")} <kbd>Esc</kbd></button>
+          <button type="button" class="primary danger" data-act="war">${t("Vyhlásit válku")}</button>
+        </div>
+      </div>`;
+    dialog.querySelector('[data-act="cancel"]')!.addEventListener("click", () => dialog.close());
+    dialog.querySelector('[data-act="war"]')!.addEventListener("click", () => {
+      dialog.close();
+      if (host.declareWar(enemy.owner)) open(unit, to);
+    });
+    dialog.showModal();
+    dialog.querySelector<HTMLButtonElement>('[data-act="cancel"]')?.focus();
+    return true;
+  }
+
+  /** A message the player has to notice, such as a declaration of war. */
+  function notice(title: string, text: string): void {
+    dialog.innerHTML = `
+      <div class="at">
+        <h2>${escapeHtml(title)}</h2>
+        <p>${escapeHtml(text)}</p>
+        <div class="at-buttons"><button type="button" class="primary" data-act="ok">${t("Rozumím")}</button></div>
+      </div>`;
+    dialog.querySelector('[data-act="ok"]')!.addEventListener("click", () => dialog.close());
+    dialog.showModal();
+  }
+
+  return { open, openWar, notice, isOpen: () => dialog.open };
 }

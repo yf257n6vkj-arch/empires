@@ -34,6 +34,7 @@ import { distance, neighbors4, type Point } from "./geometry";
 import { findPath } from "./path";
 import { boardDraft, canMove, continueGotoDraft, enterTileDraft } from "./units";
 import { attackDraft, canAttack, defeatDraft } from "./combat";
+import { meetDraft } from "./diplomacy";
 import { workerStepDraft } from "./workers";
 
 export { canMove };
@@ -57,6 +58,8 @@ import { cityAt, cityName, cloneState, getPlayer, idx, reveal, workableTiles } f
 
 export type Command =
   | { type: "move"; unitId: UnitId; to: Point }
+  /** Declares war on another player the declaring player has met. */
+  | { type: "declareWar"; player: number }
   /** Attacks the enemy on a neighbouring tile; the attacker stays where it is. */
   | { type: "attack"; unitId: UnitId; to: Point }
   | { type: "goto"; unitId: UnitId; to: Point }
@@ -156,7 +159,10 @@ export type CommandError =
   | "cityTooSmall"
   | "tooManySpecialists"
   | "cannotAttack"
-  | "nothingToAttack";
+  | "nothingToAttack"
+  | "notAtWar"
+  | "noContact"
+  | "alreadyAtWar";
 
 export type CommandResult =
   | { ok: true; state: GameState; events: GameEvent[] }
@@ -250,7 +256,16 @@ export function canUpgrade(state: GameState, unit: Unit): CommandError | null {
   return null;
 }
 
+/** Commands after which units or cities may come into sight of another empire. */
+const MOVING: Command["type"][] = ["move", "goto", "attack", "foundCity", "endTurn", "buildRoute", "automate", "board"];
+
 export function applyCommand(state: GameState, command: Command): CommandResult {
+  const result = applyCommandInner(state, command);
+  if (result.ok && result.state !== state && MOVING.includes(command.type)) meetDraft(result.state, result.events);
+  return result;
+}
+
+function applyCommandInner(state: GameState, command: Command): CommandResult {
   const events: GameEvent[] = [];
 
   switch (command.type) {
@@ -264,6 +279,19 @@ export function applyCommand(state: GameState, command: Command): CommandResult 
       u.goto = null;
       u.orders = null;
       enterTileDraft(draft, u, command.to, events);
+      return { ok: true, state: draft, events };
+    }
+
+    case "declareWar": {
+      const me = getPlayer(state, state.currentPlayer);
+      const them = state.players[command.player];
+      if (!them || them.id === me.id || them.defeated) return { ok: false, error: "noContact" };
+      if (!me.contacts.includes(them.id)) return { ok: false, error: "noContact" };
+      if (me.atWar.includes(them.id)) return { ok: false, error: "alreadyAtWar" };
+      const draft = cloneState(state);
+      getPlayer(draft, me.id).atWar.push(them.id);
+      getPlayer(draft, them.id).atWar.push(me.id);
+      events.push({ type: "warDeclared", by: me.id, on: them.id });
       return { ok: true, state: draft, events };
     }
 

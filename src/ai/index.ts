@@ -7,11 +7,12 @@
  * defenders at home, improves the land and builds and researches by its
  * nature. Armies, war and diplomacy come in the next steps of phase 3.
  */
-import { applyCommand, playerView, sameItem, UNIT_TYPES, type Command, type GameEvent, type GameState, type PlayerView } from "../core";
+import { applyCommand, CIVS, playerView, sameItem, UNIT_TYPES, type Command, type GameEvent, type GameState, type PlayerView } from "../core";
 import { chooseProduction } from "./build";
 import { isMilitary, isSettler, landmasses } from "./knowledge";
 import { governmentCommands, researchCommands } from "./research";
 import { averageKnownValue, roomToExpand } from "./settle";
+import { targetCity, total, warMotivation } from "./war";
 import { exploring, makeContext, passengerCommands, settlerCommands, shipCommands, soldierCommands } from "./units";
 
 /** Plays every computer player in a row until a human is on turn (or the game ends). */
@@ -63,18 +64,33 @@ export function decide(view: PlayerView): Command[] {
   const threats = view.foreignUnits.filter((u) => UNIT_TYPES[u.type].attack > 0).map((u) => ({ x: u.x, y: u.y }));
   const ships = view.units.filter((u) => UNIT_TYPES[u.type].domain === "sea" && (UNIT_TYPES[u.type].capacity ?? 0) > 0).length;
   const average = averageKnownValue(view);
+  const room = roomToExpand(view, land, average);
+
+  // War: keep the ones running, declare a new one when the motivation is there.
+  const enemies = view.rivals.filter((r) => r.atWar).map((r) => r.id);
+  for (const rival of view.rivals) {
+    if (!rival.contact || rival.atWar || enemies.length > 0) continue;
+    if (total(warMotivation(view, rival, land, room)) > 0) {
+      commands.push({ type: "declareWar", player: rival.id });
+      enemies.push(rival.id);
+    }
+  }
+  const target = enemies.length > 0 ? targetCity(view, land, enemies) : null;
+  const n = CIVS[view.civ].personality;
+  const peaceArmy = n === "war" ? Math.max(2, Math.ceil(view.cities.length / 2)) : n === "expansion" && room === 0 ? 2 : 0;
   const ctx = makeContext(view, land, {
-    room: roomToExpand(view, land, average),
+    room,
     ships,
     exploring: exploring(view, land),
     threats,
+    armyWanted: target ? Math.max(4, view.cities.length + 2) : peaceArmy,
   });
 
   for (const u of view.units) {
     if (isSettler(u)) commands.push(...(u.carriedBy !== null ? passengerCommands(ctx, u) : settlerCommands(ctx, u)));
     else if (UNIT_TYPES[u.type].domain === "sea") commands.push(...shipCommands(ctx, u));
   }
-  commands.push(...soldierCommands(ctx, view.units.filter(isMilitary)));
+  commands.push(...soldierCommands(ctx, view.units.filter(isMilitary), target));
 
   for (const city of view.cities) {
     const wanted = chooseProduction(view, city, ctx.plan);

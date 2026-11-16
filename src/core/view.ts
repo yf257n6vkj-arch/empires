@@ -18,6 +18,9 @@ export interface RivalView {
   /** Nation, so the AI and the screen know the leader, colour and nature. */
   civ: CivId;
   name: string;
+  /** The two empires have met. */
+  contact: boolean;
+  atWar: boolean;
   /** Details only an embassy reveals. */
   embassy: { techs: TechId[]; gold: number; government: GovernmentId } | null;
   /** Everybody hears about a launched spaceship and when it lands. */
@@ -132,6 +135,8 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
         id: p.id,
         civ: p.civ,
         name: p.name,
+        contact: player.contacts.includes(p.id),
+        atWar: player.atWar.includes(p.id),
         embassy: player.embassies.includes(p.id) ? { techs: [...p.techs], gold: p.gold, government: p.government } : null,
         spaceshipArrival: p.spaceship.arrivalTurn,
       })),

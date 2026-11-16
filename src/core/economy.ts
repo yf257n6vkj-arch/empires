@@ -34,6 +34,8 @@ export function startingEconomy(): Pick<
   | "spaceship"
   | "embassies"
   | "defeated"
+  | "contacts"
+  | "atWar"
 > {
   return {
     techs: [],
@@ -48,6 +50,8 @@ export function startingEconomy(): Pick<
     spaceship: emptySpaceship(),
     embassies: [],
     defeated: false,
+    contacts: [],
+    atWar: [],
   };
 }
 

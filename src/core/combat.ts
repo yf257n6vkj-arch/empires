@@ -13,9 +13,10 @@ import type { CommandError } from "./commands";
 import { capitalOf, cityEffects, fallbackProduction, learnTechDraft } from "./economy";
 import type { GameEvent } from "./events";
 import { distance, type Point } from "./geometry";
-import { BUILDINGS, RULES, TERRAINS, UNIT_TYPES, type BuildingId, type TechId } from "./rules";
+import { BUILDINGS, RULES, TERRAINS, UNIT_TYPES, type BuildingId, type TechId, type TerrainId } from "./rules";
 import type { Rng } from "./rng";
 import type { City, GameState, PlayerId, Unit } from "./state";
+import type { PlayerView } from "./view";
 import { cityAt, domainOf, idx, reveal, unitsAt } from "./world";
 
 /** One reason a strength differs from the unit's base value, in percent. */
@@ -60,26 +61,80 @@ export function attackStrength(attacker: Unit): Strength {
   return apply(UNIT_TYPES[attacker.type].attack, factors);
 }
 
+/**
+ * What a fight needs to know about the world. The game builds it from the
+ * full state; the AI builds it from its PlayerView, so it judges an attack
+ * from exactly what a human in its seat would see.
+ */
+export interface CombatWorld {
+  terrain(p: Point): TerrainId | null;
+  fortress(p: Point): boolean;
+  /** The city on the tile with the defence bonuses its owner's buildings give. */
+  city(p: Point): { owner: PlayerId; defenseVsLandPct: number; defenseVsSeaPct: number } | null;
+  /** All known units on the tile. */
+  unitsAt(p: Point): Unit[];
+  atWar(a: PlayerId, b: PlayerId): boolean;
+}
+
+export function stateWorld(state: GameState): CombatWorld {
+  return {
+    terrain: (p) => state.map.terrain[idx(state.map, p)] ?? null,
+    fortress: (p) => state.map.fortress[idx(state.map, p)] === 1,
+    city: (p) => {
+      const c = cityAt(state, p);
+      if (!c) return null;
+      const e = cityEffects(state, c);
+      return { owner: c.owner, defenseVsLandPct: e.defenseVsLandPct, defenseVsSeaPct: e.defenseVsSeaPct };
+    },
+    unitsAt: (p) => unitsAt(state, p),
+    atWar: (a, b) => atWar(state, a, b),
+  };
+}
+
+/** The world as one player sees it: own and visible foreign units, known cities with their walls. */
+export function viewWorld(view: PlayerView): CombatWorld {
+  const i = (p: Point) => p.y * view.width + p.x;
+  const units = [...view.units, ...view.foreignUnits];
+  const cities = [...view.cities, ...view.foreignCities];
+  const bonus = (buildings: BuildingId[], key: "defenseVsLandPct" | "defenseVsSeaPct") =>
+    buildings.reduce((n, b) => n + (BUILDINGS[b].effects[key] ?? 0), 0);
+  return {
+    terrain: (p) => view.terrain[i(p)] ?? null,
+    fortress: (p) => view.fortress[i(p)] === 1,
+    city: (p) => {
+      const c = cities.find((x) => x.x === p.x && x.y === p.y);
+      return c ? { owner: c.owner, defenseVsLandPct: bonus(c.buildings, "defenseVsLandPct"), defenseVsSeaPct: bonus(c.buildings, "defenseVsSeaPct") } : null;
+    },
+    unitsAt: (p) => units.filter((u) => u.x === p.x && u.y === p.y),
+    atWar: (a, b) => {
+      const other = a === view.playerId ? b : b === view.playerId ? a : null;
+      return other !== null && view.rivals.some((r) => r.id === other && r.atWar);
+    },
+  };
+}
+
+/** True when the two players are at war with each other. */
+export function atWar(state: GameState, a: PlayerId, b: PlayerId): boolean {
+  return state.players[a]?.atWar.includes(b) ?? false;
+}
+
 /** How well the unit holds against this attacker on its tile. */
-export function defenseStrength(state: GameState, defender: Unit, attacker: Unit): Strength {
+export function defenseStrength(world: CombatWorld, defender: Unit, attacker: Unit): Strength {
   const factors: StrengthFactor[] = [];
   if (defender.veteran) factors.push({ kind: "veteran", pct: RULES.combat.veteranPct });
-  const i = idx(state.map, defender);
-  const terrain = state.map.terrain[i];
-  const land = terrain !== undefined && TERRAINS[terrain].land;
+  const terrain = world.terrain(defender);
+  const land = terrain !== null && TERRAINS[terrain].land;
+  const city = world.city(defender);
   if (land && domainOf(defender) === "land") {
     const bonus = TERRAINS[terrain].defenseBonus;
     if (bonus) factors.push({ kind: "terrain", pct: bonus });
-    const city = cityAt(state, defender);
-    if (!city && state.map.fortress[i]) factors.push({ kind: "fortress", pct: RULES.combat.fortressPct });
+    if (!city && world.fortress(defender)) factors.push({ kind: "fortress", pct: RULES.combat.fortressPct });
     else if (defender.fortified || city) factors.push({ kind: "fortified", pct: RULES.combat.fortifiedPct });
   }
-  const city = cityAt(state, defender);
   if (city && city.owner === defender.owner) {
-    const effects = cityEffects(state, city);
     const by = domainOf(attacker);
-    if (by === "land" && effects.defenseVsLandPct) factors.push({ kind: "walls", pct: effects.defenseVsLandPct });
-    if (by === "sea" && effects.defenseVsSeaPct) factors.push({ kind: "coastalFortress", pct: effects.defenseVsSeaPct });
+    if (by === "land" && city.defenseVsLandPct) factors.push({ kind: "walls", pct: city.defenseVsLandPct });
+    if (by === "sea" && city.defenseVsSeaPct) factors.push({ kind: "coastalFortress", pct: city.defenseVsSeaPct });
   }
   return apply(UNIT_TYPES[defender.type].defense, factors);
 }
@@ -108,9 +163,9 @@ function roundsToKill(hp: number, firepower: number): number {
   return Math.ceil(Math.max(0, hp) / Math.max(1, firepower));
 }
 
-function oddsAgainst(state: GameState, attacker: Unit, defender: Unit): CombatOdds {
+function oddsAgainst(world: CombatWorld, attacker: Unit, defender: Unit): CombatOdds {
   const attack = attackStrength(attacker);
-  const defense = defenseStrength(state, defender, attacker);
+  const defense = defenseStrength(world, defender, attacker);
   const total = attack.value + defense.value;
   const roundChance = total > 0 ? attack.value / total : 0;
   const needed = roundsToKill(defender.hp, UNIT_TYPES[attacker.type].firepower);
@@ -119,45 +174,59 @@ function oddsAgainst(state: GameState, attacker: Unit, defender: Unit): CombatOd
 }
 
 /** Enemy units the attacker would face on the tile: everyone but passengers of a ship. */
-function defendersAt(state: GameState, attacker: Unit, at: Point): Unit[] {
-  const all = unitsAt(state, at).filter((u) => u.owner !== attacker.owner);
+function defendersAt(world: CombatWorld, attacker: Unit, at: Point): Unit[] {
+  const all = world.unitsAt(at).filter((u) => u.owner !== attacker.owner);
   const free = all.filter((u) => u.carriedBy === null);
   return free.length > 0 ? free : all;
 }
 
 /** The unit that defends the tile: the one the attacker is least likely to beat. */
-export function bestDefender(state: GameState, attacker: Unit, at: Point): Unit | undefined {
+export function bestDefenderIn(world: CombatWorld, attacker: Unit, at: Point): Unit | undefined {
   let best: { unit: Unit; chance: number } | undefined;
-  for (const unit of defendersAt(state, attacker, at)) {
-    const chance = oddsAgainst(state, attacker, unit).winChance;
+  for (const unit of defendersAt(world, attacker, at)) {
+    const chance = oddsAgainst(world, attacker, unit).winChance;
     if (!best || chance < best.chance || (chance === best.chance && unit.hp > best.unit.hp)) best = { unit, chance };
   }
   return best?.unit;
 }
 
 /** Why the unit cannot attack the tile, or null when it can. */
-export function canAttack(state: GameState, unit: Unit, to: Point): CommandError | null {
+export function canAttackIn(world: CombatWorld, unit: Unit, to: Point): CommandError | null {
   const rule = UNIT_TYPES[unit.type];
   if (rule.attack <= 0 || rule.special === "nuclear") return "cannotAttack";
   if (unit.movesLeft <= 0) return "noMovesLeft";
   if (distance(unit, to) !== 1) return "notAdjacent";
-  const defenders = defendersAt(state, unit, to);
+  const defenders = defendersAt(world, unit, to);
   if (defenders.length === 0) return "nothingToAttack";
+  if (!world.atWar(unit.owner, defenders[0]!.owner)) return "notAtWar";
   const domain = domainOf(unit);
-  const terrain = state.map.terrain[idx(state.map, to)];
-  const landTarget = terrain !== undefined && TERRAINS[terrain].land;
+  const terrain = world.terrain(to);
+  const landTarget = terrain !== null && TERRAINS[terrain].land;
   // Soldiers fight on land and not from the deck of a ship; ships fight at sea and shell the coast.
   if (domain === "land" && (!landTarget || unit.carriedBy !== null)) return "cannotAttack";
   // Aircraft in the open sky can only be caught by other aircraft.
-  if (domain !== "air" && !cityAt(state, to) && defenders.every((d) => domainOf(d) === "air")) return "cannotAttack";
+  if (domain !== "air" && !world.city(to) && defenders.every((d) => domainOf(d) === "air")) return "cannotAttack";
   return null;
 }
 
 /** The chance of the attack on the tile, or null when the unit cannot attack it. */
+export function combatOddsIn(world: CombatWorld, attacker: Unit, to: Point): CombatOdds | null {
+  if (canAttackIn(world, attacker, to) !== null) return null;
+  const defender = bestDefenderIn(world, attacker, to);
+  return defender ? oddsAgainst(world, attacker, defender) : null;
+}
+
+export function canAttack(state: GameState, unit: Unit, to: Point): CommandError | null {
+  return canAttackIn(stateWorld(state), unit, to);
+}
+
 export function combatOdds(state: GameState, attacker: Unit, to: Point): CombatOdds | null {
-  if (canAttack(state, attacker, to) !== null) return null;
-  const defender = bestDefender(state, attacker, to);
-  return defender ? oddsAgainst(state, attacker, defender) : null;
+  return combatOddsIn(stateWorld(state), attacker, to);
+}
+
+/** The same chance as the screen shows, worked out from what the player sees. */
+export function combatOddsInView(view: PlayerView, attacker: Unit, to: Point): CombatOdds | null {
+  return combatOddsIn(viewWorld(view), attacker, to);
 }
 
 /** True when a lost defence costs only the defender: in a city or a fortress. */

@@ -9,7 +9,7 @@ import { RULES, TERRAINS, UNIT_TYPES } from "./rules";
 import type { GameState, Unit } from "./state";
 import type { CommandError } from "./commands";
 import { cityAt, domainOf, fullMoves, idx, moveCost, reveal, unitsAt } from "./world";
-import { canCapture, captureCityDraft } from "./combat";
+import { atWar, canCapture, captureCityDraft } from "./combat";
 import { Rng } from "./rng";
 
 /** Units on board of a ship or carrier. */
@@ -56,7 +56,7 @@ export function canMove(state: GameState, unit: Unit, to: Point): CommandError |
   if (unitsAt(state, to).some((u) => u.owner !== unit.owner)) return "occupiedByOther";
   // An empty enemy city falls to a soldier who walks in.
   const city = cityAt(state, to);
-  if (city && city.owner !== unit.owner && !canCapture(unit)) return "occupiedByOther";
+  if (city && city.owner !== unit.owner && (!canCapture(unit) || !atWar(state, unit.owner, city.owner))) return "occupiedByOther";
   return null;
 }
 

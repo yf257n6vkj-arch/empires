@@ -3,6 +3,7 @@ import { apply, mainContinent, newGame, playerView, UNIT_TYPES, type GameState }
 import { decide, playComputerTurns, playTurn } from "../src/ai";
 import { isLand, landmasses } from "../src/ai/knowledge";
 import { averageKnownValue, bestSite, siteValue } from "../src/ai/settle";
+import { total, warMotivation } from "../src/ai/war";
 
 /** A game where every seat is played by the AI, run until the given turn. */
 function aiGame(seed: string, turns: number): GameState {
@@ -56,6 +57,42 @@ describe("computer players", () => {
     // The settler founds the capital on its first turn when the spot is fine.
     const commands = decide(view);
     expect(commands.some((c) => c.type === "foundCity" || c.type === "goto")).toBe(true);
+  });
+});
+
+describe("war", () => {
+  it("goes to war with a stronger army and attacks only with a good chance", { timeout: 60000 }, () => {
+    let wars = 0;
+    let captured = 0;
+    const chances: number[] = [];
+    for (const seed of ["war-1", "war-2"]) {
+      let s = newGame({ seed, playerCount: 4, opponentUnits: true });
+      s.players[0]!.isHuman = false;
+      while (s.turn <= 110) {
+        const played = playTurn(s);
+        for (const e of played.events) {
+          if (e.type === "warDeclared") {
+            wars++;
+            // Nobody rushes into war in the first turns.
+            expect(s.turn).toBeGreaterThanOrEqual(30);
+          }
+          if (e.type === "cityCaptured" || e.type === "cityDestroyed") captured++;
+          if (e.type === "combat") chances.push(e.winChance);
+        }
+        s = played.state;
+      }
+    }
+    expect(wars).toBeGreaterThan(0);
+    expect(captured).toBeGreaterThan(0);
+    expect(Math.min(...chances)).toBeGreaterThanOrEqual(0.44);
+  });
+
+  it("does not think of war early in the game", () => {
+    const s = newGame({ seed: "calm", playerCount: 4, opponentUnits: true });
+    const view = playerView(s, 1);
+    const reasons = warMotivation(view, view.rivals[0]!, landmasses(view), 3);
+    expect(total(reasons)).toBeLessThan(0);
+    expect(reasons.map((r) => r.item)).toContain("early game");
   });
 });
 

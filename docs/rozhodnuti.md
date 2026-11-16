@@ -2,6 +2,16 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Fáze 3, krok 3: soupeři vyhlašují válku a útočí ve skupině
+
+Národy se poznají, když jejich jednotky nebo města přijdou na dohled, a pak spolu žijí v míru. Útočit a dobývat města jde jen ve válce a válku může vyhlásit jen národ, který toho druhého zná. Když hráč pošle jednotku na národ, se kterým žije v míru, hra se zeptá, jestli mu chce vyhlásit válku. Hráč se dozví i o válkách mezi soupeři, pokud zná obě strany. Bublina nad cizí jednotkou ukazuje národ, jestli s ním hráč válčí, a životy jednotek na políčku. Uložené hry z dřívějška fungují, všechny národy v nich začínají v míru a bez kontaktu.
+
+O válce AI rozhoduje podle pojmenovaných důvodů, jak to dělá Unciv. Každý důvod přidá nebo ubere body a válku vyhlásí, když součet vyjde kladný. Válečník k ní má blíž, vědec daleko. Před 30. tahem AI nevyhlásí válku nikomu. Nevyhlásí ji ani tehdy, když nemá na dosah žádné cizí město nebo má méně než tři útočné jednotky. Hlavní váhu má poměr sil obou armád. Body přidá nedostatek místa k rozšíření a uberou vzdálenost a každá válka, kterou už AI vede. Dokud jednu válku vede, další nevyhlásí.
+
+Ve válce si AI vybere nepřátelské město nejblíž svému hlavnímu městu a postaví na ně armádu podle počtu svých měst. Útočné jednotky se nejdřív shromáždí na políčku před cílem a vyrazí, až jich je dost. Zaútočí jen tehdy, když má šanci na výhru aspoň 60 %, válečník už od 50 %. Šanci počítá stejná funkce, kterou vidí hráč v okně před útokem, jen z toho, co AI opravdu vidí. Zraněné jednotky se vracejí do nejbližšího města léčit. Obránci ve městě vyrazí na sousední políčko, jen když je šance aspoň 75 % a ve městě zůstane druhý obránce.
+
+Na 40 partiích standardního světa došlo k válce ve 39 z nich, první válka přišla v mediánu v 64. tahu. Odehrálo se 1102 bojů, útočník vyhrál 94 % z nich, protože AI útočí jen s dobrou šancí. Soupeři dobyli 54 měst a 19 jich zaniklo, dva hráči prohráli. Na 8 partiích světa s ostrovy válčili soupeři ve všech a dobyli 19 měst. Mír zatím uzavřít nejde, válka trvá do konce partie. Mír a nabídky míru přijdou v dalším kroku.
+
 ## 16. 11. 2026: Fáze 3, krok 2: soupeři zakládají města, stavějí a bádají
 
 AI je ve složce src/ai a vidí jen PlayerView, stejně jako člověk na jejím místě. Hraje stejnými příkazy jako člověk. Každý tah projde ve třech kolech, aby další krok viděl výsledek předchozího, třeba nové město hned dostane výrobu.

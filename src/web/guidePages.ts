@@ -209,7 +209,9 @@ Když obránce padne v otevřené krajině, padnou s ním všechny jednotky na p
 
 Zraněná jednotka bojuje se zbytkem životů. Když celý tah stojí, vyléčí se v poli o {healFieldPct} %, ve vlastním městě o {healCityPct} % a ve městě s kasárnami úplně.
 
-Do města bez obránců vejde tvoje vojenská jednotka a dobude ho. Město se zmenší o jednoho obyvatele, každá budova zanikne se šancí {captureBuildingLossPct} % a divy zůstanou. Získáš část zlata poražené říše a jeden její objev. Město s jediným obyvatelem při dobývání zanikne. Kdo přijde o poslední město, prohrál.`,
+Do města bez obránců vejde tvoje vojenská jednotka a dobude ho. Město se zmenší o jednoho obyvatele, každá budova zanikne se šancí {captureBuildingLossPct} % a divy zůstanou. Získáš část zlata poražené říše a jeden její objev. Město s jediným obyvatelem při dobývání zanikne. Kdo přijde o poslední město, prohrál.
+
+Národy se poznají, když se jejich jednotky nebo města uvidí, a zpočátku spolu žijí v míru. Zaútočit můžeš jen na národ, se kterým válčíš. Když pošleš jednotku na národ, se kterým žiješ v míru, hra se zeptá, jestli mu chceš vyhlásit válku. Soupeři vyhlásí válku sami, když mají silnější armádu, a pak táhnou na nejbližší město ve skupině. Uzavírat mír se půjde v další verzi hry.`,
   },
   "how-disasters": {
     title: "Jak chránit města před katastrofami",

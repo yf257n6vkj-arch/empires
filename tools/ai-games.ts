@@ -21,6 +21,12 @@ let stuck = 0;
 let islandCities = 0;
 let failures = 0;
 let defeated = 0;
+const firstWar: number[] = [];
+let wars = 0;
+let captured = 0;
+let destroyed = 0;
+let battles = 0;
+let attackerWins = 0;
 const started = performance.now();
 
 for (let g = 0; g < games; g++) {
@@ -33,8 +39,25 @@ for (let g = 0; g < games; g++) {
       for (const u of s.units) if (u.owner === p.id) u.movesLeft = u.movesLeft;
     }
     // The human seat has no starting units until now; give it the same as the others.
+    let warTurn: number | null = null;
     while (s.turn <= 120 && !s.victory) {
-      s = playTurn(s).state;
+      const played = playTurn(s);
+      for (const e of played.events) {
+        if (e.type === "warDeclared") {
+          wars++;
+          warTurn ??= s.turn;
+        } else if (e.type === "cityCaptured") captured++;
+        else if (e.type === "cityDestroyed") destroyed++;
+        else if (e.type === "combat") {
+          battles++;
+          if (e.attackerWon) attackerWins++;
+        }
+      }
+      if (warTurn !== null && !firstWar.includes(-g - 1)) {
+        firstWar.push(warTurn);
+        firstWar.push(-g - 1);
+      }
+      s = played.state;
       if (s.currentPlayer === 0 && rows.has(s.turn - 1)) {
         const row = rows.get(s.turn - 1)!;
         for (const p of s.players) {
@@ -70,3 +93,5 @@ for (const [turn, r] of rows) {
   console.log(`tah ${String(turn).padStart(3)}: města medián ${med(r.cities)} (10 % ${pct(r.cities, 0.1)}, 90 % ${pct(r.cities, 0.9)}) · technologie medián ${med(r.techs)} · jednotky medián ${med(r.units)}`);
 }
 console.log(`hráčů s jedním městem po 60. tahu: ${stuck} · poražených: ${defeated} · měst na ostrovech: ${islandCities}`);
+const warTurns = firstWar.filter((t) => t >= 0);
+console.log(`válek: ${wars} · partií s válkou: ${warTurns.length} z ${games} · první válka medián v tahu ${med(warTurns)} · bitev: ${battles} (útočník vyhrál ${battles ? Math.round((100 * attackerWins) / battles) : 0} %) · dobytých měst: ${captured} · zničených měst: ${destroyed}`);

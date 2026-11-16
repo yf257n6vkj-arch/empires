@@ -215,6 +215,13 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
     }
     for (const p of state.players) p.defeated ??= false;
   }
+  if (version <= 12) {
+    // Version 13 adds contact and war. Old games start at peace; everybody has met everybody seen so far.
+    for (const p of state.players) {
+      p.contacts ??= [];
+      p.atWar ??= [];
+    }
+  }
   state.version = STATE_VERSION;
   return state;
 }

@@ -574,3 +574,5 @@ label.rate input#lux { width: 60px; } .rate.tax { color: var(--muted); white-spa
 .at-chance.even { color: #f2c53a; }
 .at-chance.bad { color: #f07a5a; }
 .at-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+.at-dialog .primary.danger { background: #a8402c; border-color: #d0603f; color: #fff; }
+.at p { font-size: 14px; line-height: 1.5; }

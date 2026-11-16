@@ -35,6 +35,7 @@ let barbarianGroups = 0;
 let barbarianUnits = 0;
 let takenByBarbarians = 0;
 let retaken = 0;
+const wins: Record<string, number> = {};
 let barbarianCities = 0;
 const started = performance.now();
 
@@ -49,7 +50,7 @@ for (let g = 0; g < games; g++) {
     }
     // The human seat has no starting units until now; give it the same as the others.
     let warTurn: number | null = null;
-    while (s.turn <= 120 && !s.victory) {
+    while (s.turn <= 121 && !s.victory) {
       const played = playTurn(s);
       for (const e of played.events) {
         if (e.type === "warDeclared") {
@@ -85,6 +86,8 @@ for (let g = 0; g < games; g++) {
         }
       }
     }
+    const kind = s.victory?.kind ?? "none";
+    wins[kind] = (wins[kind] ?? 0) + 1;
     const main = mainContinent(s.map);
     islandCities += s.cities.filter((c) => !main.has(c.y * s.map.width + c.x)).length;
     barbarianCities += s.cities.filter((c) => isBarbarian(s.players[c.owner])).length;
@@ -115,3 +118,4 @@ console.log(`hráčů s jedním městem po 60. tahu: ${stuck} · poražených: $
 const warTurns = firstWar.filter((t) => t >= 0);
 console.log(`válek: ${wars} · partií s válkou: ${warTurns.length} z ${games} · první válka medián v tahu ${med(warTurns)} · bitev: ${battles} (útočník vyhrál ${battles ? Math.round((100 * attackerWins) / battles) : 0} %) · dobytých měst: ${captured} · zničených měst: ${destroyed}`);
 console.log(`barbaři (${level}): skupin ${barbarianGroups}, jednotek ${barbarianUnits} · dobyli měst: ${takenByBarbarians}, vzato zpět: ${retaken} · drží na konci měst: ${barbarianCities} · prozkoumaných ruin: ${ruins}`);
+console.log(`výhry: ${Object.entries(wins).map(([k, n]) => `${k} ${n}`).join(" · ")}`);

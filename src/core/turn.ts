@@ -2,6 +2,7 @@
  * Ending a player's turn and starting the next one. Players move one after
  * another; when the last player ends, a new game turn begins.
  */
+import { scoreVictoryDraft } from "./score";
 import { barbarianTurnDraft } from "./barbarians";
 import { assignWorkersDraft, processCityDraft, removeUnitDraft } from "./city";
 import {
@@ -50,6 +51,7 @@ export function endTurnDraft(draft: GameState, events: GameEvent[]): void {
     draft.turn += 1;
     spaceshipsDraft(draft, events);
     warmingDraft(draft, events);
+    scoreVictoryDraft(draft, events);
   }
   draft.currentPlayer = next;
   startTurnDraft(draft, next, events);

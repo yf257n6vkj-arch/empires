@@ -27,6 +27,8 @@ export type GameEvent =
     }
   /** Barbarians rose up in the wilds, landed on a coast or came out of ruins. */
   | { type: "barbariansAppeared"; at: Point; count: number; reason: "uprising" | "landing" | "ruins" }
+  /** Somebody won by conquest or score; a spaceship win is told by spaceshipArrived. */
+  | { type: "gameWon"; player: PlayerId; kind: "conquest" | "score" }
   /** The city governor picked what the city builds next. */
   | { type: "governorChose"; cityId: CityId; item: ProductionItem }
   | { type: "improvementDone"; unitId: UnitId; at: Point; improvement: ImprovementId }

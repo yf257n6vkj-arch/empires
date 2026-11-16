@@ -2,6 +2,18 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Průvodkyně Sova pro děti a výhra dobytím a skóre
+
+Michal chtěl dětského průvodce, který radí, vypráví o národu, objevech a jednotkách a hlavně pomáhá vyhrát. Rozhodli jsme tři věci. Průvodce je postava s kartami, kterou hráč zapne v menu místo rádce. Je to moudrá sova, jméno jí vybere syn a do té doby se jmenuje Sova. Plán na výhru potřeboval něco, co měří, a tak jsme z kroku 5 předběhli skóre a výhru dobytím.
+
+Skóre dává bod za každého obyvatele, další bod za každého šťastného, dva body za objev, dvacet za div a sto za vesmírnou loď, která přistála. Čísla jsou v datech pravidel. Kdo porazí všechny ostatní národy, vyhraje dobytím, barbaři se nepočítají. Když po 120. tahu nikdo nevyhrál, vyhraje národ s nejvyšším skóre. Skóre národů, které hráč zná, ukazuje žebříček v menu. Na 10 automatických partiích skončily všechny výhrou na skóre. Závěrečná obrazovka a hodnocení hry zůstávají v kroku 5.
+
+Sova sedí na místě rádce. Na začátku hry se představí, poví něco o hráčově národu a vládci a zeptá se, jak chce dítě vyhrát: jako Dobyvatel, Vědec, nebo Budovatel. Ke každé cestě má plán s pěti etapami. Každá etapa má cílový tah a dva až tři úkoly, třeba mít do 35. tahu čtyři města a znát zpracování bronzu. Plány jsou v datech a sova je čte jen z toho, co hráč vidí na obrazovce. Úkoly se v jejím okně odškrtávají a sova hlídá tempo. Když etapa nestíhá, řekne, kolik tahů zbývá a co udělat. Splněnou etapu pochválí a představí další. Pod plánem ukazuje dvě nejdůležitější rady rádce. Výzkum doporučí podle plánu.
+
+Ve chvílích, kdy se ve hře objeví něco nového, ukáže sova kartu s obrázkem z encyklopedie, dvěma větami příběhu a zajímavostí. Pod tím vysvětlí, co to znamená pro hru. Karta přijde po každém novém objevu, u první jednotky a první budovy každého druhu, u vlastního divu a když hráč potká nový národ. U souseda sova poradí podle jeho povahy. Varovná karta přijde, když hráč přijde o město nebo když se u jeho města objeví barbaři. V menu jde vyprávění ztlumit na to důležité a sově změnit jméno.
+
+Sovu zatím kreslí kód ve třech náladách, kdy radí, chválí a varuje. Malované portréty pro Gemini jsou připravené v tools/mac/sova.tsv. Spustí je Michal příkazem bash sova.sh a hra je použije, jakmile budou ve složce src/web/guide.
+
 ## 16. 11. 2026: Ruiny a barbaři podle Civilizace 2
 
 Michal vybral barbary podle Civilizace 2. V okně nové hry si hráč nastaví žádné, málo, nebo hodně barbarů, výchozí je málo. Barbaři hrají jako zvláštní hráč na konci pořadí a válčí se všemi od začátku hry. Nepotkávají se s ostatními a mír s nimi uzavřít nepůjde. Při nastavení málo se začnou objevovat od 45. tahu, při nastavení hodně od 25. tahu. Každý svůj tah mají šanci, že se vzbouří v divočině nejméně šest políček od měst, nebo se vylodí na pobřeží dvě až tři políčka od pobřežního města. Skupina má dvě až čtyři jednotky podle nastavení a jednotky odpovídají nejpokročilejšímu národu, od válečníků a jezdců po tanky. Barbarů je najednou nejvýš 6, nebo 18 při nastavení hodně. Barbaři táhnou na nejbližší město, na které dojdou pěšky, a útočí už se šancí 35 %. Dobyté město si nechají, jedna jednotka v něm zůstane a město staví útočníky. Soupeři vyrazí dobýt barbarské město zpátky, když leží do deseti políček od jejich měst, a pošlou na to menší armádu než do války.

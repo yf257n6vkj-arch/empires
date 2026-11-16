@@ -63,12 +63,28 @@
         <button type="button" data-act="cities" data-i18n>Přehled měst</button>
         <button type="button" data-act="codex" data-i18n>Encyklopedie</button>
         <button type="button" data-act="advisor" data-i18n>Rádce</button>
+        <button type="button" data-act="scores" data-i18n>Žebříček</button>
         <button type="button" data-act="help" data-i18n>Ovládání</button>
         <button type="button" data-act="main" data-i18n>Hlavní menu</button>
       </nav>
       <div class="gm-settings">
         <p class="hint" data-i18n>Hra se průběžně ukládá sama. Kód téhle mapy je <b id="seed-label"></b>. Když ho zadáš u nové hry, dostaneš stejnou mapu.</p>
-        <label class="check"><input id="advisor-on" type="checkbox" checked /> <span data-i18n>Rádce radí, co dělat dál</span></label>
+        <label class="check gm-row"><span data-i18n>Pomocník</span>
+          <select id="helper-mode">
+            <option value="on" data-i18n>Rádce radí, co dělat dál</option>
+            <option value="guide" data-i18n>Průvodce pro děti</option>
+            <option value="off" data-i18n>Nikdo, hraju sám</option>
+          </select>
+        </label>
+        <div class="gm-guide">
+          <label class="check gm-row"><span data-i18n>Průvodce vypráví</span>
+            <select id="guide-volume">
+              <option value="all" data-i18n>o všem novém</option>
+              <option value="important" data-i18n>jen to důležité</option>
+            </select>
+          </label>
+          <label class="check gm-row"><span data-i18n>Jméno průvodce</span> <input id="guide-name" type="text" maxlength="24" placeholder="Sova" /></label>
+        </div>
         <label class="check"><input id="show-all" type="checkbox" /> <span data-i18n>Ukázat celou mapu (ladění)</span></label>
         <div class="check lang-pick"><span data-i18n>Jazyk</span> <span id="language" class="lang-flags"></span></div>
       </div>

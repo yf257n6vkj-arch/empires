@@ -486,6 +486,7 @@ export interface GameConstants {
   combat: CombatConstants;
   governor: GovernorConstants;
   ruins: RuinConstants;
+  score: { citizen: number; happy: number; tech: number; wonder: number; spaceship: number };
   barbarians: BarbarianConstants;
   maxTurns: number;
   movesFraction: number;

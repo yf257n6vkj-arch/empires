@@ -55,6 +55,7 @@ function barbarianPlayer(id: number, map: GameState["map"]): Player {
     start: { x: 0, y: 0 },
     explored: new Array<number>(map.width * map.height).fill(1),
     citiesFounded: 0,
+    captured: 0,
     ...startingEconomy(),
     scienceRate: 0,
   };
@@ -91,6 +92,7 @@ export function newGame(options: NewGameOptions): GameState {
     start,
     explored: new Array<number>(map.width * map.height).fill(0),
     citiesFounded: 0,
+    captured: 0,
     ...startingEconomy(),
   }));
 
@@ -268,6 +270,10 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
     // It also adds ruins and barbarians; older games have neither.
     state.map.ruins ??= new Array<number>(state.map.width * state.map.height).fill(0);
     state.barbarians ??= "none";
+  }
+  if (version <= 14) {
+    // Version 15 counts conquered cities for the score and the guide; earlier conquests are not known.
+    for (const p of state.players) p.captured ??= 0;
   }
   state.version = STATE_VERSION;
   return state;

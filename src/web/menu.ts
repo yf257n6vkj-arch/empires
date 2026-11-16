@@ -41,6 +41,8 @@ export interface MenuHost {
   openCodex(): void;
   /** Shows the advisor's tips again. */
   openAdvisor(): void;
+  /** Shows the leaderboard of known nations. */
+  openScores(): void;
   /** Opens the overview of all cities. */
   openCities(): void;
   /** Player whose game is saved, for slot names. */
@@ -144,6 +146,10 @@ export function createMenus(
     act("advisor", () => {
       menuDialog.close();
       host.openAdvisor();
+    });
+    act("scores", () => {
+      menuDialog.close();
+      host.openScores();
     });
     act("main", showStart);
     const picker = menuDialog.querySelector<HTMLElement>("#language");

@@ -25,3 +25,5 @@ export * from "./workers";
 export * from "./advisor";
 export * from "./governor";
 export * from "./barbarians";
+export * from "./score";
+export * from "./coach";

@@ -40,6 +40,7 @@ export function stateFromAscii(rows: string[], players = 1): GameState {
       start: { x: 0, y: 0 },
       explored: id === 0 ? new Array<number>(width * height).fill(1) : zeros(),
       citiesFounded: 0,
+      captured: 0,
       ...startingEconomy(),
     })),
     units: [],

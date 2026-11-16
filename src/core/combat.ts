@@ -8,6 +8,7 @@
  * `combatOdds` gives the exact chance of winning before an attack. The screen
  * shows it and the AI decides by it, so both see the same number.
  */
+import { conquestDraft } from "./score";
 import { assignWorkersDraft, removeUnitDraft } from "./city";
 import type { CommandError } from "./commands";
 import { capitalOf, cityEffects, fallbackProduction, learnTechDraft } from "./economy";
@@ -301,6 +302,7 @@ export function captureCityDraft(draft: GameState, city: City, unit: Unit, rng: 
   loser.gold -= gold;
   winner.gold += gold;
 
+  winner.captured += 1;
   const options = loser.techs.filter((t) => !winner.techs.includes(t));
   const tech: TechId | null = options.length > 0 ? options[rng.int(options.length)]! : null;
   if (tech) learnTechDraft(draft, winnerId, tech, events);
@@ -338,6 +340,7 @@ export function captureCityDraft(draft: GameState, city: City, unit: Unit, rng: 
     city.celebrating = false;
     city.disorderTurns = 0;
     city.soldTurn = null;
+    city.governor = null;
     city.production = fallbackProduction(draft, winnerId);
     reveal(draft, winnerId, city, RULES.citySight);
     assignWorkersDraft(draft, city);
@@ -361,6 +364,7 @@ export function defeatDraft(draft: GameState, playerId: PlayerId, by: PlayerId |
   player.defeated = true;
   for (const u of draft.units.filter((x) => x.owner === playerId)) removeUnitDraft(draft, u.id);
   events.push({ type: "civDestroyed", player: playerId, by });
+  conquestDraft(draft, events);
 }
 
 /** Hit points the unit gets back at the end of a turn it spent without moving. */

@@ -153,7 +153,7 @@ An earthquake in cities by hills knocks down a building and nothing helps agains
   "how-space": {
     title: "How to win",
     icon: "🚀",
-    text: `The game lasts {maxTurns} turns. For now you win when your spaceship lands at a distant star first. Conquering rivals and winning on score will come with combat in phase 3.
+    text: `The game lasts {maxTurns} turns and there are three ways to win. Defeat all your rivals and you win by conquest. Land your spaceship at a distant star first and you win the space race. And if nobody has won after the last turn, the empire with the highest score wins. The score gives a point for every citizen, another for every happy one, {scoreTech} points for every discovery and {scoreWonder} for every wonder. The leaderboard in the menu shows how you stand against the nations you know.
 
 Spaceship parts are built in cities like buildings, but only after the Apollo Programme. Structures, at most {maxStructural}, hold the engines and modules. Engines shorten the flight, and each module adds {successPerModule} % to the chance of a safe landing. The ship launches from your capital.
 

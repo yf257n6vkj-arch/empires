@@ -7,7 +7,7 @@ import type { GovernorGoal } from "./governor";
 import type { BarbarianLevel, BuildingId, CivId, GovernmentId, ImprovementId, NationId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 14;
+export const STATE_VERSION = 15;
 
 export interface GameMap {
   width: number;
@@ -50,6 +50,8 @@ export interface Player {
   explored: number[];
   /** How many city names the player has used, for naming the next city. */
   citiesFounded: number;
+  /** Enemy cities this player has taken or razed. */
+  captured: number;
   /** Technologies the player knows, in the order they were learned. */
   techs: TechId[];
   /** Technology being researched, null = the player has to choose. */
@@ -199,7 +201,7 @@ export interface GameState {
   /** Global warming counter: grows with polluted tiles, warming strikes at RULES.warmingLimit. */
   warming: number;
   /** Set when somebody has won; the game can go on, but the result stays. */
-  victory: { player: PlayerId; kind: "space"; turn: number } | null;
+  victory: { player: PlayerId; kind: "space" | "conquest" | "score"; turn: number } | null;
   /** How many barbarians the game has; with any, the last player is the barbarians. */
   barbarians: BarbarianLevel;
 }

@@ -18,7 +18,18 @@ export interface AdvisorHost {
   openGovernment(): void;
   /** Runs a command for the player; true when it went through. */
   run(command: Command): boolean;
+  /** The children's guide, which takes over the panel when the player chooses her. */
+  guide: {
+    panelHead(): string;
+    panelFoot(): string;
+    wirePanel(panel: HTMLElement, rerender: () => void): void;
+    /** A technology the guide's plan asks for now. */
+    wantedTech(): TechId | null;
+  };
 }
+
+/** Who helps the player: nobody, the advisor, or the children's guide. */
+export type HelperMode = "off" | "on" | "guide";
 
 interface Tip {
   /** What to do. */
@@ -32,7 +43,7 @@ interface Tip {
 }
 
 /** What a technology opens up, as a list of names. */
-function unlocks(tech: TechId): string {
+export function unlocks(tech: TechId): string {
   const names = [
     ...UNIT_TYPE_IDS.filter((u) => UNIT_TYPES[u].requires === tech).map(unitName),
     ...BUILDING_IDS.filter((b) => BUILDINGS[b].requires === tech && !BUILDINGS[b].spaceship).map(buildingName),
@@ -43,29 +54,35 @@ function unlocks(tech: TechId): string {
 
 const STORAGE_KEY = "empires.advisor";
 const SHOWN = 3;
+/** Under the guide's plan fewer tips fit. */
+const GUIDE_SHOWN = 2;
 /** Whether all tips are shown, not just the first few. */
 let showAll = false;
 
-export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host: AdvisorHost) {
-  let enabled = true;
+export function createAdvisor(panel: HTMLElement, picker: HTMLSelectElement, host: AdvisorHost) {
+  let mode: HelperMode = "on";
   try {
-    enabled = localStorage.getItem(STORAGE_KEY) !== "off";
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "off" || stored === "guide") mode = stored;
   } catch {
     // Without storage the advisor is simply on.
   }
   /** Turn in which the player closed the panel; it comes back next turn. */
   let hiddenInTurn = -1;
-  toggle.checked = enabled;
-  toggle.addEventListener("change", () => {
-    enabled = toggle.checked;
+  picker.value = mode;
+  picker.addEventListener("change", () => setMode(picker.value as HelperMode));
+
+  function setMode(next: HelperMode): void {
+    mode = next;
+    picker.value = mode;
     try {
-      localStorage.setItem(STORAGE_KEY, enabled ? "on" : "off");
+      localStorage.setItem(STORAGE_KEY, mode);
     } catch {
       // The choice holds until the page reloads.
     }
     hiddenInTurn = -1;
     render();
-  });
+  }
 
   function cityName(id: CityId): string {
     const name = host.state().cities.find((c) => c.id === id)?.name;
@@ -89,6 +106,17 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
           act: () => host.selectUnit(a.unitId),
         };
       case "chooseResearch": {
+        const planned = mode === "guide" ? host.guide.wantedTech() : null;
+        if (planned) {
+          const gives = unlocks(planned);
+          return {
+            text: t("Vědci čekají na úkol. Pro tvůj plán potřebuješ objev {tech}.", { tech: `<b>${escapeHtml(techName(planned))}</b>` }),
+            why: gives ? t("Odemkne {what}. Vědci k němu půjdou sami, i když bude potřebovat jiné objevy předem.", { what: escapeHtml(gives) }) : t("Vědci k němu půjdou sami, i když bude potřebovat jiné objevy předem."),
+            button: t("Zkoumat {tech}", { tech: escapeHtml(techName(planned)) }),
+            act: () => host.run({ type: "setResearchGoal", tech: planned }),
+            more: { button: t("Vybrat jiný"), act: host.openTechTree },
+          };
+        }
         if (!a.tech) return { text: t("Vyber vědcům další objev."), why: t("Dokud nic nevybereš, výzkum stojí a body vědy přicházejí nazmar."), button: t("Vybrat objev"), act: host.openTechTree };
         const gives = unlocks(a.tech);
         const why = a.leadsTo
@@ -260,17 +288,22 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
 
   function render(): void {
     const s = host.state();
-    if (!enabled || hiddenInTurn === s.turn) {
+    if (mode === "off" || hiddenInTurn === s.turn) {
       panel.hidden = true;
       return;
     }
+    const guide = mode === "guide";
     const all = advise(s, host.player());
-    const tips = (showAll ? all : all.slice(0, SHOWN)).map(words);
+    const shown = guide ? GUIDE_SHOWN : SHOWN;
+    const tips = (showAll ? all : all.slice(0, shown)).map(words);
     const hiddenCount = all.length - tips.length;
     panel.hidden = false;
+    panel.classList.toggle("guide", guide);
     panel.innerHTML =
-      `<div class="adv-head"><span class="adv-owl" aria-hidden="true">🦉</span><b>${t("Rádce")}</b><span class="spacer"></span>` +
-      `<button type="button" class="adv-close" data-close title="${t("Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu.")}" aria-label="${t("Schovat")}">×</button></div>` +
+      (guide
+        ? host.guide.panelHead() + `<div class="gd-now">${t("Co udělat teď")}</div>`
+        : `<div class="adv-head"><span class="adv-owl" aria-hidden="true">🦉</span><b>${t("Rádce")}</b><span class="spacer"></span>` +
+          `<button type="button" class="adv-close" data-close title="${t("Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu.")}" aria-label="${t("Schovat")}">×</button></div>`) +
       `<ol class="adv-tips">${tips
         .map(
           (tip, n) =>
@@ -279,9 +312,11 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
         .join("")}</ol>` +
       (hiddenCount > 0
         ? `<button type="button" class="adv-all" data-all>${tn("Další rada|Další {n} rady|Dalších {n} rad", hiddenCount)}</button>`
-        : showAll && all.length > SHOWN
+        : showAll && all.length > shown
           ? `<button type="button" class="adv-all" data-all>${t("Jen nejdůležitější")}</button>`
-          : "");
+          : "") +
+      (guide ? host.guide.panelFoot() : "");
+    if (guide) host.guide.wirePanel(panel, render);
     panel.querySelector("[data-all]")?.addEventListener("click", () => {
       showAll = !showAll;
       render();
@@ -300,14 +335,9 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
 
   /** Shows the panel again, also when the player switched the advisor off or closed it this turn. */
   function show(): void {
-    if (!enabled) {
-      enabled = true;
-      toggle.checked = true;
-      try {
-        localStorage.setItem(STORAGE_KEY, "on");
-      } catch {
-        // The choice holds until the page reloads.
-      }
+    if (mode === "off") {
+      setMode("on");
+      return;
     }
     hiddenInTurn = -1;
     render();
@@ -323,5 +353,5 @@ export function createAdvisor(panel: HTMLElement, toggle: HTMLInputElement, host
     }
   }
 
-  return { render, show, toggleShown };
+  return { render, show, toggleShown, mode: () => mode, setMode };
 }

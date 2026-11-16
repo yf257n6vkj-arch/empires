@@ -53,6 +53,8 @@ export function guideNumbers(): Record<string, number> {
     pollutionFree: RULES.pollutionFree,
     queueLength: RULES.queueLength,
     maxTurns: RULES.maxTurns,
+    scoreTech: RULES.score.tech,
+    scoreWonder: RULES.score.wonder,
     tradeRouteMinDistance: RULES.tradeRouteMinDistance,
     successPerModule: RULES.spaceship.successPerModule,
     maxStructural: RULES.spaceship.maxStructural,
@@ -229,7 +231,7 @@ Zemětřesení ve městech u kopců zbourá budovu a nic proti němu nepomůže.
   "how-space": {
     title: "Jak vyhrát",
     icon: "🚀",
-    text: `Hra trvá {maxTurns} tahů. Teď se vyhrává tak, že tvoje vesmírná loď přistane u cizí hvězdy jako první. Dobývání soupeřů a vítězství podle skóre přibudou s bojem ve fázi 3.
+    text: `Hra trvá {maxTurns} tahů a vyhrát jde třemi způsoby. Když porazíš všechny soupeře, vyhraješ dobytím. Když tvoje vesmírná loď přistane u cizí hvězdy jako první, vyhraješ vesmírným závodem. A když po posledním tahu nikdo nevyhrál, vyhraje říše s nejvyšším skóre. Skóre dává bod za každého obyvatele, další bod za každého šťastného, {scoreTech} body za každý objev a {scoreWonder} bodů za každý div. Jak si stojíš proti národům, které znáš, ukáže žebříček v menu.
 
 Díly lodi se stavějí ve městech jako budovy, ale až po programu Apollo. Nosné konstrukce, nejvýš {maxStructural}, drží motory a moduly. Motory zkrátí let a každý modul přidá {successPerModule} % šance na bezpečné přistání. Loď odstartuje z hlavního města.
 

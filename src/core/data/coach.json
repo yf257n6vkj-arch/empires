@@ -1,0 +1,225 @@
+{
+  "_comment": "Plans of the children's guide: for each way to win, stages with a target turn and tasks. Task kinds: cities, techs, knows (tech), government (any but despotism and anarchy), building (n cities with it), everyBig (every city of at least minSize has it), attackers, captured, defeated (rival nations out of the game), wonders, rank (place on the leaderboard among known nations), apollo (the Apollo Program stands somewhere), launched.",
+  "paths": {
+    "conquest": [
+      {
+        "id": "expand",
+        "by": 35,
+        "tasks": [
+          {
+            "kind": "cities",
+            "n": 4
+          },
+          {
+            "kind": "knows",
+            "tech": "bronze"
+          }
+        ]
+      },
+      {
+        "id": "army",
+        "by": 60,
+        "tasks": [
+          {
+            "kind": "building",
+            "building": "barracks",
+            "n": 1
+          },
+          {
+            "kind": "attackers",
+            "n": 4
+          },
+          {
+            "kind": "government"
+          }
+        ]
+      },
+      {
+        "id": "firstCity",
+        "by": 80,
+        "tasks": [
+          {
+            "kind": "captured",
+            "n": 1
+          },
+          {
+            "kind": "cities",
+            "n": 6
+          }
+        ]
+      },
+      {
+        "id": "firstRival",
+        "by": 100,
+        "tasks": [
+          {
+            "kind": "defeated",
+            "n": 1
+          },
+          {
+            "kind": "captured",
+            "n": 3
+          }
+        ]
+      },
+      {
+        "id": "world",
+        "by": 120,
+        "tasks": [
+          {
+            "kind": "rank",
+            "n": 1
+          },
+          {
+            "kind": "conquest"
+          }
+        ]
+      }
+    ],
+    "space": [
+      {
+        "id": "expand",
+        "by": 40,
+        "tasks": [
+          {
+            "kind": "cities",
+            "n": 5
+          },
+          {
+            "kind": "knows",
+            "tech": "writing"
+          }
+        ]
+      },
+      {
+        "id": "schools",
+        "by": 65,
+        "tasks": [
+          {
+            "kind": "everyBig",
+            "building": "library",
+            "minSize": 3
+          },
+          {
+            "kind": "government"
+          },
+          {
+            "kind": "techs",
+            "n": 18
+          }
+        ]
+      },
+      {
+        "id": "science",
+        "by": 90,
+        "tasks": [
+          {
+            "kind": "building",
+            "building": "university",
+            "n": 2
+          },
+          {
+            "kind": "techs",
+            "n": 35
+          }
+        ]
+      },
+      {
+        "id": "apollo",
+        "by": 110,
+        "tasks": [
+          {
+            "kind": "techs",
+            "n": 55
+          },
+          {
+            "kind": "apollo"
+          }
+        ]
+      },
+      {
+        "id": "launch",
+        "by": 120,
+        "tasks": [
+          {
+            "kind": "launched"
+          }
+        ]
+      }
+    ],
+    "score": [
+      {
+        "id": "expand",
+        "by": 40,
+        "tasks": [
+          {
+            "kind": "cities",
+            "n": 5
+          },
+          {
+            "kind": "knows",
+            "tech": "ceremonies"
+          }
+        ]
+      },
+      {
+        "id": "content",
+        "by": 65,
+        "tasks": [
+          {
+            "kind": "everyBig",
+            "building": "temple",
+            "minSize": 4
+          },
+          {
+            "kind": "building",
+            "building": "granary",
+            "n": 2
+          },
+          {
+            "kind": "government"
+          }
+        ]
+      },
+      {
+        "id": "wonder",
+        "by": 85,
+        "tasks": [
+          {
+            "kind": "wonders",
+            "n": 1
+          },
+          {
+            "kind": "techs",
+            "n": 30
+          }
+        ]
+      },
+      {
+        "id": "grow",
+        "by": 105,
+        "tasks": [
+          {
+            "kind": "citizens",
+            "n": 50
+          },
+          {
+            "kind": "wonders",
+            "n": 2
+          }
+        ]
+      },
+      {
+        "id": "first",
+        "by": 120,
+        "tasks": [
+          {
+            "kind": "rank",
+            "n": 1
+          }
+        ]
+      }
+    ]
+  },
+  "tightTurns": 5
+}

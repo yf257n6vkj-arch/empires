@@ -345,5 +345,13 @@
       }
     ],
     "attackChance": 0.35
+  },
+  "score": {
+    "_comment": "Points for the score: each citizen, each happy citizen once more, each technology, each wonder and a spaceship that landed. After maxTurns the nation with the highest score wins.",
+    "citizen": 1,
+    "happy": 1,
+    "tech": 2,
+    "wonder": 20,
+    "spaceship": 100
   }
 }

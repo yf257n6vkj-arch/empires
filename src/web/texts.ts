@@ -208,6 +208,8 @@ export function eventConcerns(state: GameState, e: GameEvent, viewer: number): b
       return e.a === viewer || e.b === viewer;
     case "ruinsExplored":
       return e.owner === viewer;
+    case "gameWon":
+      return true;
     case "barbariansAppeared":
       // The player hears of barbarians they can see or that landed near their cities.
       return visibleTiles(state, viewer)[e.at.y * state.map.width + e.at.x] === 1 || nearestOwnCity(state, e.at, viewer, 4) !== null;
@@ -417,6 +419,11 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
     }
     case "palaceMoved":
       return e.player === viewer ? t("Hlavní město padlo a vláda se přestěhovala do města {city}.", { city: cityName(state, e.cityId) }) : null;
+    case "gameWon":
+      if (e.player === viewer) return e.kind === "conquest" ? t("Zbyl jsi jen ty. Vyhrál jsi dobytím světa!") : t("Hra skončila a máš nejvyšší skóre. Vyhrál jsi!");
+      return e.kind === "conquest"
+        ? t("{realm} ovládla celý svět a vyhrála.", { realm: realmName(state, e.player) })
+        : t("Hra skončila. Nejvyšší skóre má {realm} a vyhrála.", { realm: realmName(state, e.player) });
     case "ruinsExplored":
       switch (e.outcome) {
         case "gold":

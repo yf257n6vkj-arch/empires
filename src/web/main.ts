@@ -88,6 +88,7 @@ import { createNewGameDialog } from "./newGame";
 import { loadCityArt } from "./cityView";
 import { createMenus } from "./menu";
 import { createAdvisor } from "./advisorPanel";
+import { createGuide } from "./guide";
 import { createCitiesOverview } from "./citiesOverview";
 import { createCelebration } from "./celebration";
 import { payloadOf, readAutosave, writeAutosave, type LogEntry, type SavePayload } from "./saves";
@@ -223,6 +224,7 @@ function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_
   save();
   ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());
   refresh();
+  if (persist && advisor.mode() === "guide") guide.onNewGame();
 }
 
 // ---------- commands ----------
@@ -255,6 +257,7 @@ function run(command: Command): boolean {
     events.push(...passed.events);
   }
   addLog(events);
+  if (advisor.mode() === "guide") guide.onEvents(events);
   // A declaration of war against the player must not slip by in the log.
   const war = events.find((e) => e.type === "warDeclared" && e.on === HUMAN);
   if (war && war.type === "warDeclared") {
@@ -699,7 +702,16 @@ const cityScreen = createCityScreen({
   openEntry: (key) => codex.show(key),
 });
 
-const advisor = createAdvisor($<HTMLElement>("#advisor"), $<HTMLInputElement>("#advisor-on"), {
+const guide = createGuide({
+  state: () => state,
+  player: () => HUMAN,
+  openEntry: (key) => codex.show(key),
+  openTech: (tech) => techTree.openPage(tech),
+  openTechTree: () => techTree.open(),
+  openGovernment: () => empire.openGovernment(),
+});
+const advisor = createAdvisor($<HTMLElement>("#advisor"), $<HTMLSelectElement>("#helper-mode"), {
+  guide,
   state: () => state,
   player: () => HUMAN,
   openCity: (id) => cityScreen.open(id),
@@ -722,6 +734,25 @@ const advisor = createAdvisor($<HTMLElement>("#advisor"), $<HTMLInputElement>("#
 });
 
 $<HTMLButtonElement>("#advisor-button").addEventListener("click", () => advisor.toggleShown());
+
+// Settings of the children's guide in the menu.
+const helperMode = $<HTMLSelectElement>("#helper-mode");
+const guideVolume = $<HTMLSelectElement>("#guide-volume");
+const guideName = $<HTMLInputElement>("#guide-name");
+const guideSettings = document.querySelector<HTMLElement>(".gm-guide")!;
+guideVolume.value = guide.settings().volume;
+guideName.value = guide.settings().name;
+guideName.placeholder = t("Sova");
+guideSettings.hidden = advisor.mode() !== "guide";
+helperMode.addEventListener("change", () => {
+  guideSettings.hidden = advisor.mode() !== "guide";
+  if (advisor.mode() === "guide" && gameStarted && !guide.hasPath()) guide.askPath();
+});
+guideVolume.addEventListener("change", () => guide.setVolume(guideVolume.value as "all" | "important"));
+guideName.addEventListener("change", () => {
+  guide.setName(guideName.value);
+  advisor.render();
+});
 
 const celebration = createCelebration($<HTMLDialogElement>("#celebration-dialog"), { openEntry: (key) => codex.show(key) });
 const citiesOverview = createCitiesOverview($<HTMLDialogElement>("#cities-dialog"), {
@@ -1355,7 +1386,7 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || attackDialog.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen() || celebration.isOpen()) return;
+  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || attackDialog.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen() || celebration.isOpen() || guide.isOpen()) return;
   if (e.key.toLowerCase() === "o") {
     e.preventDefault();
     return citiesOverview.open();
@@ -1435,6 +1466,7 @@ const menus = createMenus($<HTMLElement>("#start-screen"), $<HTMLDialogElement>(
   },
   openCodex: () => codex.open(),
   openAdvisor: () => advisor.show(),
+  openScores: () => guide.openScores(),
   openCities: () => citiesOverview.open(),
   player: HUMAN,
 });

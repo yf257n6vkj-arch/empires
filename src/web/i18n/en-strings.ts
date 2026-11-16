@@ -1847,4 +1847,250 @@ export const EN_STRINGS: Record<string, string> = {
     "A barbarian landed on the coast.|{n} barbarians landed on the coast.",
   "V divočině se vzbouřil barbar.|V divočině se vzbouřili {n} barbaři.|V divočině se vzbouřilo {n} barbarů.":
     "A barbarian rose up in the wilds.|{n} barbarians rose up in the wilds.",
+  "Co udělat teď":
+    "What to do now",
+  "V tahu {turn} padl poslední soupeř. Celý svět teď patří tvé říši.":
+    "In turn {turn} your last rival fell. The whole world now belongs to your empire.",
+  "{realm} v tahu {turn} porazila všechny soupeře a ovládla svět.":
+    "In turn {turn} {realm} defeated all its rivals and took over the world.",
+  "Po {turn} tazích má tvoje říše nejvyšší skóre: {score} bodů.":
+    "After {turn} turns your empire has the highest score: {score} points.",
+  "Po {turn} tazích má nejvyšší skóre {realm}.":
+    "After {turn} turns {realm} has the highest score.",
+  "Konec hry":
+    "Game over",
+  "Dobyvatel":
+    "Conqueror",
+  "Vědec":
+    "Scientist",
+  "Budovatel":
+    "Builder",
+  "Postavíš silnou armádu a dobudeš města soupeřů. Vyhraješ, až zůstaneš jediný. Soupeři se ale budou bránit.":
+    "You build a strong army and take your rivals' cities. You win when you are the only one left. Your rivals will defend themselves, though.",
+  "Postavíš knihovny a univerzity a jako první pošleš loď k cizí hvězdě. Je to nejtěžší cesta, do {turns} tahů ji stihneš jen s hodně rychlou vědou.":
+    "You build libraries and universities and are the first to send a ship to a distant star. It is the hardest way: within {turns} turns you only make it with very fast science.",
+  "Postavíš velká spokojená města a divy světa a poznáš hodně objevů. Vyhraješ, když budeš mít po posledním tahu nejvyšší skóre.":
+    "You build big, happy cities and wonders of the world and learn many discoveries. You win if you have the highest score after the last turn.",
+  "Rozšiř říši":
+    "Grow your empire",
+  "Připrav armádu":
+    "Raise an army",
+  "Dobuď první město":
+    "Take your first city",
+  "Poraz prvního soupeře":
+    "Defeat your first rival",
+  "Ovládni svět":
+    "Rule the world",
+  "Postav školy":
+    "Build schools",
+  "Zrychli vědu":
+    "Speed up science",
+  "Program Apollo":
+    "Apollo Program",
+  "Vypusť loď":
+    "Launch the ship",
+  "Spokojená města":
+    "Happy cities",
+  "První div":
+    "First wonder",
+  "Velká říše":
+    "A great empire",
+  "Buď první":
+    "Be first",
+  "Měj {n} město|Měj {n} města|Měj {n} měst":
+    "Have {n} city|Have {n} cities",
+  "Poznej {n} objev|Poznej {n} objevy|Poznej {n} objevů":
+    "Learn {n} discovery|Learn {n} discoveries",
+  "Měj ve městech dohromady {n} obyvatele|Měj ve městech dohromady {n} obyvatele|Měj ve městech dohromady {n} obyvatel":
+    "Have {n} citizen in your cities|Have {n} citizens in your cities",
+  "Měj {n} útočnou jednotku|Měj {n} útočné jednotky|Měj {n} útočných jednotek":
+    "Have {n} attacking unit|Have {n} attacking units",
+  "Dobuď {n} nepřátelské město|Dobuď {n} nepřátelská města|Dobuď {n} nepřátelských měst":
+    "Take {n} enemy city|Take {n} enemy cities",
+  "Poraz {n} národ|Poraz {n} národy|Poraz {n} národů":
+    "Defeat {n} nation|Defeat {n} nations",
+  "Postav {n} div světa|Postav {n} divy světa|Postav {n} divů světa":
+    "Build {n} wonder of the world|Build {n} wonders of the world",
+  "Buď první v žebříčku":
+    "Be first on the leaderboard",
+  "Objev {tech}":
+    "Discover {tech}",
+  "Postav {building}":
+    "Build {building}",
+  "Postav {building} v {n} městě|Postav {building} ve {n} městech|Postav {building} v {n} městech":
+    "Build {building} in {n} city|Build {building} in {n} cities",
+  "Postav {building} v každém městě od {size} obyvatel":
+    "Build {building} in every city of {size} citizens or more",
+  "Zaveď lepší vládu, než je despocie":
+    "Bring in a better government than despotism",
+  "Počkej na program Apollo, nebo ho postav sám":
+    "Wait for the Apollo Program, or build it yourself",
+  "Vypusť vesmírnou loď":
+    "Launch a spaceship",
+  "Poraz všechny soupeře":
+    "Defeat all your rivals",
+  "Stav osadníky ve městech, která mají aspoň dva obyvatele, a zakládej nová města tři až čtyři políčka od starých.":
+    "Build settlers in cities with at least two citizens and found new cities three or four tiles from the old ones.",
+  "Postav ve městech knihovny a posuň nahoře posuvník Věda doprava.":
+    "Build libraries in your cities and move the Science slider at the top to the right.",
+  "Nech osadníky zavlažovat louky kolem měst a stav sýpky. Přes {size} obyvatel město pustí až akvadukt.":
+    "Let settlers irrigate the meadows around your cities and build granaries. Only an aqueduct lets a city grow past {size} citizens.",
+  "Útočník má útok vyšší než obranu, třeba lučištník, jezdec nebo legionář. Stav je ve městě s kasárnami, pak z nich budou veteráni.":
+    "An attacker has more attack than defence, such as an archer, a horseman or a legionary. Build them in a city with barracks and they become veterans.",
+  "Vyber nejbližší nepřátelské město. Shromáždi útočníky na políčku vedle něj a zaútoč, až má každý šanci aspoň 60 %. Národu musíš nejdřív vyhlásit válku.":
+    "Pick the nearest enemy city. Gather your attackers on a tile next to it and attack once each has at least a 60 % chance. You have to declare war on the nation first.",
+  "Národ prohraje, když přijde o poslední město. Dobývej jeho města jedno po druhém a začni tím nejbližším.":
+    "A nation loses when it loses its last city. Take its cities one by one, starting with the nearest.",
+  "Div stav v městě, které má nejvíc štítů. Karavany z jiných měst můžou se stavbou pomoct.":
+    "Build a wonder in the city with the most shields. Caravans from other cities can help with the building.",
+  "Skóre dávají obyvatelé, šťastní obyvatelé, objevy a divy. V žebříčku uvidíš, kdo je před tebou.":
+    "The score comes from citizens, happy citizens, discoveries and wonders. The leaderboard shows who is ahead of you.",
+  "Otevři strom technologií a vyber {tech} jako cíl, vědci k němu půjdou sami.":
+    "Open the technology tree and set {tech} as your goal; your scientists will head for it on their own.",
+  "Ve městě otevři výběr výroby a dej stavbu {building} na začátek plánu. Když máš dost zlata, můžeš ji koupit.":
+    "In the city, open the production list and put {building} at the start of the plan. If you have enough gold, you can buy it.",
+  "Objev monarchii a v okně Vláda vyhlas revoluci. Despocie bere výnos bohatým políčkům.":
+    "Discover monarchy and start a revolution in the Government window. Despotism takes yield away from rich tiles.",
+  "Program Apollo je div, který potřebuje objev Vesmírné lety. Jakmile ho kdokoli postaví, můžou všichni stavět vesmírné lodě.":
+    "The Apollo Program is a wonder that needs the Space Flight discovery. As soon as anyone builds it, everybody can build spaceships.",
+  "Stav díly lodi ve více městech najednou a vypusť loď, až bude mít aspoň tři moduly.":
+    "Build spaceship parts in several cities at once and launch the ship once it has at least three modules.",
+  "Dobývej jedno město za druhým. Každé dobyté město ti dá zlato a často i nový objev.":
+    "Take one city after another. Every city you take gives you gold and often a new discovery too.",
+  "Sova":
+    "Owl",
+  "Víš, že…":
+    "Did you know…",
+  "Pro tvou hru:":
+    "For your game:",
+  "Přeskočit další kartu|Přeskočit další {n} karty|Přeskočit dalších {n} karet":
+    "Skip the next card|Skip the next {n} cards",
+  "Vyberu později":
+    "I'll choose later",
+  "Další":
+    "Next",
+  "Cesta: {path}":
+    "Path: {path}",
+  "Plán má {n} etap. Teď začínáme etapou „{stage}“ a měla by být hotová do tahu {turn}. Úkoly uvidíš v mém okně vlevo nahoře.":
+    "The plan has {n} stages. We start with the stage “{stage}”, which should be done by turn {turn}. You will see the tasks in my window at the top left.",
+  "Jak chceš vyhrát?":
+    "How do you want to win?",
+  "Vyber si cestu a já ti k ní udělám plán. Cestu můžeš kdykoli změnit v mém okně.":
+    "Choose a path and I will make you a plan for it. You can change the path any time in my window.",
+  "Teď můžeš stavět nebo zavést: {what}.":
+    "Now you can build or bring in: {what}.",
+  "Sám nic nového neodemyká, ale vede k dalším objevům.":
+    "It unlocks nothing new by itself, but it leads to further discoveries.",
+  "Tenhle objev potřebuješ k etapě „{stage}“.":
+    "You need this discovery for the stage “{stage}”.",
+  "Nový objev: {tech}":
+    "New discovery: {tech}",
+  "První jednotka: {unit}":
+    "First unit: {unit}",
+  "Útok {attack}, obrana {defense}, pohyb {moves}.":
+    "Attack {attack}, defence {defense}, moves {moves}.",
+  "Tvůj div světa: {building}":
+    "Your wonder of the world: {building}",
+  "První stavba: {building}":
+    "First building: {building}",
+  "Co dělá: {what}.":
+    "What it does: {what}.",
+  "Tvým vládcem je {leader} a první město se bude jmenovat {capital}. Najdi pro něj místo u řeky nebo u moře, kde je kolem hodně luk.":
+    "Your ruler is {leader}, and your first city will be called {capital}. Find a spot for it by a river or the sea, with plenty of meadows around.",
+  "Jejich vládcem je {leader} a rádi zakládají nová města, takže ti budou brát volnou zemi. Pospěš si s osadníky.":
+    "Their ruler is {leader}, and they love founding new cities, so they will take free land from you. Hurry up with your settlers.",
+  "Jejich vládcem je {leader} a spoléhají na armádu. Ve městech u jejich hranic drž aspoň dva obránce a stav hradby.":
+    "Their ruler is {leader}, and they rely on their army. Keep at least two defenders in the cities near their border and build walls.",
+  "Jejich vládcem je {leader} a sázejí na vědu. Budou rychle bádat, armádu ale mívají slabší.":
+    "Their ruler is {leader}, and they bet on science. They will research fast, but their army is usually weaker.",
+  "Tvůj národ: {nation}":
+    "Your nation: {nation}",
+  "Nový soused: {nation}":
+    "New neighbour: {nation}",
+  "Přišel jsi o město {city}":
+    "You lost the city of {city}",
+  "{nation} ho dobyli. Shromáždi útočníky a vezmi si ho zpátky, a do měst kolem pošli obránce, ať nepadne další.":
+    "The {nation} took it. Gather your attackers and take it back, and send defenders to the cities around it so no other one falls.",
+  "Barbaři u města {city}!":
+    "Barbarians near {city}!",
+  "Barbaři zaútočí, jakmile budou mít šanci. Dej do města aspoň dva obránce a opevni je klávesou F. Prázdné město dobudou hned.":
+    "The barbarians will attack as soon as they get a chance. Put at least two defenders in the city and fortify them with the F key. An empty city falls at once.",
+  "Etapa splněna: {stage}":
+    "Stage done: {stage}",
+  "Skvělá práce! Další etapa je „{stage}“ a měla by být hotová do tahu {turn}.":
+    "Great work! The next stage is “{stage}” and should be done by turn {turn}.",
+  "Splnil jsi celý plán. Teď už jen dotáhni vítězství!":
+    "You have finished the whole plan. Now just bring the victory home!",
+  "Ahoj, já jsem {name}!":
+    "Hello, I'm {name}!",
+  "Pamatuju si všechny časy od první vesnice až po lety ke hvězdám. Budu ti vyprávět, co se v nich dělo, a pomůžu ti vyhrát. Když budu mluvit moc, ztlum mě v menu.":
+    "I remember every age from the first village to flights to the stars. I will tell you what happened in them and help you win. If I talk too much, turn me down in the menu.",
+  "Vyhrál jsi! Jsem na tebe pyšná.":
+    "You won! I'm so proud of you.",
+  "Celý plán je splněný. Hraj dál a hlídej si náskok.":
+    "The whole plan is done. Keep playing and keep your lead.",
+  "Etapa „{stage}“ měla být hotová v tahu {turn}. Dá se to dohnat. {hint}":
+    "The stage “{stage}” should have been done in turn {turn}. You can still catch up. {hint}",
+  "Do konce etapy zbývá jen {n} tah. {hint}|Do konce etapy zbývají jen {n} tahy. {hint}|Do konce etapy zbývá jen {n} tahů. {hint}":
+    "Only {n} turn is left in this stage. {hint}|Only {n} turns are left in this stage. {hint}",
+  "Jde ti to dobře. Na etapu máš ještě {n} tah.|Jde ti to dobře. Na etapu máš ještě {n} tahy.|Jde ti to dobře. Na etapu máš ještě {n} tahů.":
+    "You're doing well. You still have {n} turn for this stage.|You're doing well. You still have {n} turns for this stage.",
+  "Vyber si, jak chceš vyhrát, a já ti udělám plán.":
+    "Choose how you want to win and I will make you a plan.",
+  "etapa {n} z {all}":
+    "stage {n} of {all}",
+  "do tahu {turn}":
+    "by turn {turn}",
+  "Žebříček":
+    "Leaderboard",
+  "Změnit cestu":
+    "Change path",
+  "Skóre národů, které znáš. Po tahu {turn} vyhraje ten, kdo má nejvíc.":
+    "Scores of the nations you know. After turn {turn} whoever has the most wins.",
+  "Jeden národ ještě neznáš.|Ještě neznáš {n} národy.|Ještě neznáš {n} národů.":
+    "You don't know one nation yet.|You don't know {n} nations yet.",
+  "Už prohráli: {list}":
+    "Already out: {list}",
+  "Z čeho máš skóre":
+    "Where your score comes from",
+  "obyvatelé":
+    "citizens",
+  "šťastní obyvatelé":
+    "happy citizens",
+  "objevy":
+    "discoveries",
+  "divy světa":
+    "wonders of the world",
+  "vesmírná loď":
+    "spaceship",
+  "Místo v žebříčku: {rank}.":
+    "Place on the leaderboard: {rank}.",
+  "Zbyl jsi jen ty. Vyhrál jsi dobytím světa!":
+    "You are the only one left. You won by conquering the world!",
+  "Hra skončila a máš nejvyšší skóre. Vyhrál jsi!":
+    "The game is over and you have the highest score. You won!",
+  "{realm} ovládla celý svět a vyhrála.":
+    "{realm} took over the whole world and won.",
+  "Hra skončila. Nejvyšší skóre má {realm} a vyhrála.":
+    "The game is over. {realm} has the highest score and won.",
+  "Pomocník":
+    "Helper",
+  "Průvodce pro děti":
+    "Children's guide",
+  "Nikdo, hraju sám":
+    "Nobody, I play alone",
+  "Průvodce vypráví":
+    "The guide tells stories",
+  "o všem novém":
+    "about everything new",
+  "jen to důležité":
+    "only what matters",
+  "Jméno průvodce":
+    "Guide's name",
+  "Vědci čekají na úkol. Pro tvůj plán potřebuješ objev {tech}.":
+    "Your scientists are waiting for a task. Your plan needs {tech}.",
+  "Odemkne {what}. Vědci k němu půjdou sami, i když bude potřebovat jiné objevy předem.":
+    "It unlocks {what}. Your scientists will head for it on their own, even if it needs other discoveries first.",
+  "Vědci k němu půjdou sami, i když bude potřebovat jiné objevy předem.":
+    "Your scientists will head for it on their own, even if it needs other discoveries first.",
 };

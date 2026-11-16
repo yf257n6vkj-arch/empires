@@ -8,6 +8,7 @@
  * scores) must be added here, and only in the form a human could see it.
  */
 import { tilesInRadius, type Point } from "./geometry";
+import { scoreOf, type Score } from "./score";
 import { builtWonders, researchCost, wonderFlag } from "./economy";
 import { RULES, UNIT_TYPES, type BuildingId, type GovernmentId, type NationId, type TechId, type TerrainId } from "./rules";
 import { isBarbarian, type City, type GameState, type PlayerId, type Spaceship, type Unit } from "./state";
@@ -27,6 +28,10 @@ export interface RivalView {
   embassy: { techs: TechId[]; gold: number; government: GovernmentId } | null;
   /** Everybody hears about a launched spaceship and when it lands. */
   spaceshipArrival: number | null;
+  /** Score, known once the two have met; the barbarians have none. */
+  score: number | null;
+  /** The nation has lost its last city; everybody hears of it. */
+  defeated: boolean;
 }
 
 export interface PlayerView {
@@ -82,8 +87,12 @@ export interface PlayerView {
     revolution: { target: GovernmentId; turnsLeft: number } | null;
     spaceship: Spaceship;
     embassies: PlayerId[];
+    /** Enemy cities this player has taken or razed. */
+    captured: number;
   };
   victory: GameState["victory"];
+  /** The player's own score with its parts. */
+  score: Score;
   /** Wonders already standing somewhere; every player hears when one is finished. */
   builtWonders: BuildingId[];
 }
@@ -140,6 +149,8 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
         id: p.id,
         civ: p.civ,
         barbarian: isBarbarian(p),
+        score: player.contacts.includes(p.id) && !isBarbarian(p) && !p.defeated ? scoreOf(state, p.id).total : null,
+        defeated: p.defeated,
         name: p.name,
         contact: player.contacts.includes(p.id),
         atWar: player.atWar.includes(p.id),
@@ -159,8 +170,10 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
       revolution: player.revolution ? { ...player.revolution } : null,
       spaceship: { ...player.spaceship },
       embassies: [...player.embassies],
+      captured: player.captured,
     },
     victory: state.victory ? { ...state.victory } : null,
+    score: scoreOf(state, playerId),
     builtWonders: builtWonders(state),
   };
 }

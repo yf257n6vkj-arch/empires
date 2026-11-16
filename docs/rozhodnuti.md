@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Mapa se dívá šikmo a hory, stromy, města i jednotky na ní stojí
+
+Michal chtěl hru víc do 3D. Vybrali jsme šikmý pohled místo plného 3D přes WebGL, protože se dál kreslí do Canvasu a nic ze stávající hry se nerozbije. Plné 3D by znamenalo přepsat kreslení i klikání a v Safari na starším Macu by mohlo zpomalit. Krok šest z fáze 4, grafiku mapy, jsme tím vzali dřív, než bylo v plánu.
+
+Mapa je teď nakloněná jako deska na stole. Políčko je na obrazovce o čtvrtinu nižší, než je široké, a přední okraj mapy má hnědou hranu. Na horách stojí skalní štíty, některé se sněhem, na kopcích zelené pahorky. Stromy, palmy, rákosí, kaktusy, zvířata u surovin, ruiny, města, jednotky i praporek na konci cesty stojí vzpřímeně, nejsou splácnuté se zemí. Jména měst a čísla tahů na cestě zůstávají čitelná. Kdo klikne na horní část města nebo jednotky, která přesahuje do políčka za ní, vybere ji. Když je jednotka vybraná, klik ji posílá přesně na políčko pod myší.
+
+V menu jde pohled přepnout zpátky na plán shora a hra si volbu pamatuje. Okno města kreslí okolí dál shora. Konec tahu v pozdní hře trvá v prohlížeči i se šikmou mapou 110 až 250 milisekund.
+
 ## 16. 11. 2026: Sova vede krok za krokem a ukazuje, kam kliknout
 
 Syn Sovu přehlížel a nepřišel na to, jak stavět cesty, zavlažování a železnici. Sova teď v bublině dole na obrazovce říká vždycky jen jednu věc, kterou má hráč udělat hned teď. To, na co má kliknout, na mapě bliká žlutým kroužkem a tlačítka v panelech svítí. Když hráč krok udělá, Sova ho pochválí a ukáže další. Vede tak celou hru: založit město, vybrat výzkum, vybrat jednotku, opevnit vojáka, poslat průzkumníka, postavit osadníka, dojít s ním na dobré místo a založit tam město, stavět ve městě, co chce zvolený plán, a nakonec ukončit tah.

@@ -53,11 +53,11 @@ export function panBy(cam: Camera, dx: number, dy: number, map: MapSize): Camera
   return clampCamera({ zoom: cam.zoom, x: cam.x + dx, y: cam.y + dy }, map);
 }
 
-/** Map tile shown at a canvas position given in CSS pixels; `tilePx` is the tile size at zoom 1. */
-export function screenToTile(cam: Camera, px: number, py: number, tilePx: number): { x: number; y: number } {
+/** Map tile shown at a canvas position given in CSS pixels; `tilePx` is the tile size at zoom 1 and `tilt` squashes the map's height. */
+export function screenToTile(cam: Camera, px: number, py: number, tilePx: number, tilt = 1): { x: number; y: number } {
   return {
     x: Math.floor(cam.x + px / (tilePx * cam.zoom)),
-    y: Math.floor(cam.y + py / (tilePx * cam.zoom)),
+    y: Math.floor(cam.y + py / (tilePx * cam.zoom * tilt)),
   };
 }
 

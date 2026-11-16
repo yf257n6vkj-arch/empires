@@ -56,4 +56,9 @@ describe("camera", () => {
     expect(isVisible(cam, { x: 10, y: 10 }, map)).toBe(false);
     expect(keepInView(cam, { x: 35, y: 20 }, map)).toEqual(centerOn(cam, { x: 35, y: 20 }, map));
   });
+  it("finds the tile under the mouse on the tilted map, where tiles are shorter than wide", () => {
+    // 25 px tiles squashed to 18 px: the mouse 40 px down is in the third row.
+    expect(screenToTile(DEFAULT_CAMERA, 30, 40, 25, 0.72)).toEqual({ x: 1, y: 2 });
+    expect(screenToTile(DEFAULT_CAMERA, 30, 40, 25)).toEqual({ x: 1, y: 1 });
+  });
 });

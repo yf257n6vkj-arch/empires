@@ -2383,4 +2383,10 @@ export const EN_STRINGS: Record<string, string> = {
     "In the panel on the left, click Select next to the {unit}.",
   "Ve městě {city} čeká jednotka {unit}. Klikni na to město.":
     "A {unit} is waiting in {city}. Click that city.",
+  "Pohled na mapu":
+    "Map view",
+  "Šikmo, hory a města stojí":
+    "At an angle, mountains and cities stand up",
+  "Shora jako plán":
+    "From above, like a plan",
 };

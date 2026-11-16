@@ -79,7 +79,7 @@ import {
   ZOOM_STEP,
   type Camera,
 } from "./camera";
-import { draw, setPlayerColors, setSprites, setupCanvas, tileSize, type DrawInput } from "./render";
+import { draw, mapTilt, setPlayerColors, setSprites, setTilt, setupCanvas, tileSize, type DrawInput } from "./render";
 import { ERROR_TEXT, escapeHtml, eventConcerns, eventText, moodLine } from "./texts";
 import { attackHint, createAttackDialog } from "./attack";
 import { playComputerTurns } from "../ai";
@@ -134,6 +134,13 @@ const seedLabel = $<HTMLElement>("#seed-label");
 const mapWrap = $<HTMLDivElement>("#map-wrap");
 const minimap = $<HTMLCanvasElement>("#minimap");
 const showAllBox = $<HTMLInputElement>("#show-all");
+/** The map seen at an angle: a tile is this much shorter than wide, and mountains, trees, cities and units stand up. */
+const MAP_TILT = 0.72;
+const MAP_VIEW_KEY = "empires.mapView";
+const mapViewSelect = $<HTMLSelectElement>("#map-view");
+mapViewSelect.value = localStorage.getItem(MAP_VIEW_KEY) === "flat" ? "flat" : "tilted";
+setTilt(mapViewSelect.value === "flat" ? 1 : MAP_TILT);
+document.body.classList.toggle("map-tilted", mapViewSelect.value !== "flat");
 const researchButton = $<HTMLButtonElement>("#research");
 const goldLabel = $<HTMLSpanElement>("#gold");
 const rateInput = $<HTMLInputElement>("#rate");
@@ -556,7 +563,7 @@ function workShare(u: Unit): number {
 /** Largest tile size that fits the whole map into the map area of the window. */
 function fitTileSize(): number {
   const byWidth = mapWrap.clientWidth / state.map.width;
-  const byHeight = mapWrap.clientHeight / state.map.height;
+  const byHeight = mapWrap.clientHeight / (state.map.height * mapTilt());
   return Math.max(16, Math.min(56, Math.floor(Math.min(byWidth, byHeight))));
 }
 
@@ -822,7 +829,8 @@ const guide = createGuide({
     if (!isVisible(camera, p, state.map, 0)) return null;
     const rect = canvas.getBoundingClientRect();
     const size = tileSize() * camera.zoom;
-    return new DOMRect(rect.left + (p.x - camera.x) * size, rect.top + (p.y - camera.y) * size, size, size);
+    const k = mapTilt();
+    return new DOMRect(rect.left + (p.x - camera.x) * size, rect.top + (p.y - camera.y) * size * k, size, size * k);
   },
   centerTile: (p) => {
     // With the whole map in view nothing can move, so the map zooms in first.
@@ -1255,9 +1263,26 @@ function closeCity(): void {
 
 function tileFromEvent(e: MouseEvent): Point | null {
   const rect = canvas.getBoundingClientRect();
-  const { x, y } = screenToTile(camera, e.clientX - rect.left, e.clientY - rect.top, tileSize());
+  const { x, y } = screenToTile(camera, e.clientX - rect.left, e.clientY - rect.top, tileSize(), mapTilt());
   if (x < 0 || y < 0 || x >= state.map.width || y >= state.map.height) return null;
   return { x, y };
+}
+
+/**
+ * On the tilted map cities and units stand up and reach into the lower part of the tile behind them.
+ * A click there on an empty tile picks the city or unit that stands in front, so clicking the picture works.
+ */
+function standingTileFromEvent(e: MouseEvent): Point | null {
+  const p = tileFromEvent(e);
+  if (!p || mapTilt() === 1 || p.y + 1 >= state.map.height) return p;
+  const rect = canvas.getBoundingClientRect();
+  const rowY = camera.y + (e.clientY - rect.top) / (tileSize() * camera.zoom * mapTilt());
+  if (rowY - p.y < 0.55) return p;
+  const occupied = (q: Point) =>
+    state.cities.some((c) => c.x === q.x && c.y === q.y && (c.owner === HUMAN || knownForeignCity(q))) ||
+    state.units.some((u) => u.x === q.x && u.y === q.y && u.owner === HUMAN);
+  const front = { x: p.x, y: p.y + 1 };
+  return !occupied(p) && occupied(front) ? front : p;
 }
 
 // ---------- zoom and scrolling ----------
@@ -1275,7 +1300,7 @@ function setCamera(next: Camera): void {
 function zoomTo(zoom: number, px?: number, py?: number): void {
   const t = tileSize();
   const ax = px === undefined ? state.map.width / 2 : px / t;
-  const ay = py === undefined ? state.map.height / 2 : py / t;
+  const ay = py === undefined ? state.map.height / 2 : py / (t * mapTilt());
   setCamera(zoomAt(camera, zoom, ax, ay, state.map));
 }
 
@@ -1305,7 +1330,7 @@ canvas.addEventListener(
       return;
     }
     const px = tileSize() * camera.zoom;
-    setCamera(panBy(camera, (e.deltaX * unit) / px, (e.deltaY * unit) / px, state.map));
+    setCamera(panBy(camera, (e.deltaX * unit) / px, (e.deltaY * unit) / (px * mapTilt()), state.map));
   },
   { passive: false },
 );
@@ -1347,7 +1372,7 @@ canvas.addEventListener("pointermove", (e) => {
     canvas.classList.add("dragging");
   }
   const px = tileSize() * camera.zoom;
-  setCamera(panBy(camera, -dx / px, -dy / px, state.map));
+  setCamera(panBy(camera, -dx / px, -dy / (px * mapTilt()), state.map));
   drag.x = e.clientX;
   drag.y = e.clientY;
 });
@@ -1383,9 +1408,10 @@ canvas.addEventListener("click", (e) => {
     suppressClick = false;
     return;
   }
-  const p = tileFromEvent(e);
-  if (!p) return;
   const unit = selectedUnit();
+  // With a unit selected a click gives it orders, so it goes exactly where the mouse is.
+  const p = unit || targetingUnitId !== null ? tileFromEvent(e) : standingTileFromEvent(e);
+  if (!p) return;
   if (targetingUnitId !== null) {
     const missile = targetingUnitId;
     targetingUnitId = null;
@@ -1586,6 +1612,14 @@ document.addEventListener("keydown", (e) => {
 
 endTurnButton.addEventListener("click", endTurn);
 showAllBox.addEventListener("change", refresh);
+mapViewSelect.addEventListener("change", () => {
+  const flat = mapViewSelect.value === "flat";
+  localStorage.setItem(MAP_VIEW_KEY, flat ? "flat" : "tilted");
+  setTilt(flat ? 1 : MAP_TILT);
+  document.body.classList.toggle("map-tilted", !flat);
+  ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());
+  refresh();
+});
 
 const menus = createMenus($<HTMLElement>("#start-screen"), $<HTMLDialogElement>("#menu-dialog"), $<HTMLDialogElement>("#saves-dialog"), $<HTMLDialogElement>("#help-dialog"), {
   autosaveInfo: () => {

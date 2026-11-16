@@ -135,6 +135,33 @@ export interface DrawInput {
 // ---------- canvas setup ----------
 
 let tilePixels = TILE;
+/** How much the map is tilted away from the viewer: the height of a tile on screen relative to its width. 1 = seen from straight above. */
+let tiltSetting = 1;
+/** Tilt of the drawing in progress; the city screen and other flat patches draw with 1. */
+let activeTilt = 1;
+
+/** Tilts the main map; call before setupCanvas. */
+export function setTilt(k: number): void {
+  tiltSetting = Math.max(0.5, Math.min(1, k));
+}
+
+export function mapTilt(): number {
+  return tiltSetting;
+}
+
+/**
+ * Draws something standing upright on the tilted map: the drawing keeps its full
+ * height, anchored at its foot (ax, ay), instead of being squashed with the ground.
+ */
+function upright(ctx: CanvasRenderingContext2D, ax: number, ay: number, paint: () => void): void {
+  if (activeTilt === 1) return paint();
+  ctx.save();
+  ctx.translate(ax, ay);
+  ctx.scale(1, 1 / activeTilt);
+  ctx.translate(-ax, -ay);
+  paint();
+  ctx.restore();
+}
 let pixelRatio = 1;
 let background: HTMLCanvasElement | null = null;
 let backgroundKey = "";
@@ -161,10 +188,11 @@ export function setupCanvas(
 ): CanvasRenderingContext2D {
   tilePixels = tile;
   pixelRatio = window.devicePixelRatio || 1;
+  activeTilt = tiltSetting;
   canvas.width = Math.round(width * tile * pixelRatio);
-  canvas.height = Math.round(height * tile * pixelRatio);
+  canvas.height = Math.round(height * tile * tiltSetting * pixelRatio);
   canvas.style.width = `${width * tile}px`;
-  canvas.style.height = `${height * tile}px`;
+  canvas.style.height = `${height * tile * tiltSetting}px`;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D is not available");
   applyScale(ctx);
@@ -175,7 +203,8 @@ export function setupCanvas(
 /** Scales design units to device pixels; (ox, oy) is the map tile shown at the canvas corner. */
 function applyScale(ctx: CanvasRenderingContext2D, ox = camera.x, oy = camera.y): void {
   const s = (pixelRatio * tilePixels * camera.zoom) / TILE;
-  ctx.setTransform(s, 0, 0, s, -ox * TILE * s, -oy * TILE * s);
+  const k = activeTilt;
+  ctx.setTransform(s, 0, 0, s * k, -ox * TILE * s, -oy * TILE * s * k);
 }
 
 // ---------- small helpers ----------
@@ -221,7 +250,7 @@ function inputKey(input: DrawInput): string {
     mix(owner + 7);
     for (const i of tiles) mix(i);
   }
-  return `${h >>> 0}:${input.width}x${input.height}:${tilePixels}:${pixelRatio}:${camera.zoom}`;
+  return `${h >>> 0}:${input.width}x${input.height}:${tilePixels}:${pixelRatio}:${camera.zoom}:${activeTilt}`;
 }
 
 // ---------- main entry ----------
@@ -229,6 +258,7 @@ function inputKey(input: DrawInput): string {
 export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height } = input;
   camera = input.camera ?? DEFAULT_CAMERA;
+  activeTilt = tiltSetting;
   const viewW = width / camera.zoom;
   const viewH = height / camera.zoom;
   const key = inputKey(input);
@@ -256,7 +286,7 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     const px = tilePixels * camera.zoom * pixelRatio;
     background ??= document.createElement("canvas");
     background.width = Math.max(ctx.canvas.width, Math.ceil(bgRegion.w * px));
-    background.height = Math.max(ctx.canvas.height, Math.ceil(bgRegion.h * px));
+    background.height = Math.max(ctx.canvas.height, Math.ceil(bgRegion.h * px * activeTilt));
     const bg = background.getContext("2d")!;
     applyScale(bg, bgRegion.x, bgRegion.y);
     drawBackground(bg, input);
@@ -264,7 +294,7 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   }
   const px = tilePixels * camera.zoom * pixelRatio;
   const sx = Math.max(0, Math.min(background.width - ctx.canvas.width, Math.round((camera.x - bgRegion.x) * px)));
-  const sy = Math.max(0, Math.min(background.height - ctx.canvas.height, Math.round((camera.y - bgRegion.y) * px)));
+  const sy = Math.max(0, Math.min(background.height - ctx.canvas.height, Math.round((camera.y - bgRegion.y) * px * activeTilt)));
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -305,7 +335,7 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   if (input.target) drawTarget(ctx, input.target, width, height);
   for (const s of input.starts) drawStart(ctx, s.point, s.playerId);
   const cities = [...input.cities].sort((a, b) => a.y - b.y || a.x - b.x);
-  for (const c of cities) drawCity(ctx, c, c.id === input.selectedCityId);
+  for (const c of cities) upright(ctx, c.x * TILE + TILE / 2, c.y * TILE + TILE - 2, () => drawCity(ctx, c, c.id === input.selectedCityId));
   drawUnits(ctx, input);
   for (const c of input.cities) drawCityLabel(ctx, c, width);
 }
@@ -325,6 +355,8 @@ export function drawTerrainPatch(
   pixelsPerTile: number,
 ): void {
   const saved = view;
+  const savedTilt = activeTilt;
+  activeTilt = 1;
   view = {
     x0: Math.max(0, x0 - 1),
     y0: Math.max(0, y0 - 1),
@@ -340,6 +372,7 @@ export function drawTerrainPatch(
   }
   ctx.restore();
   view = saved;
+  activeTilt = savedTilt;
 }
 
 // ---------- background ----------
@@ -521,11 +554,11 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
         break;
       case "plains":
         if (roll < 0.66) drawGrassTuft(ctx, gx, gy, 3 + r(260 + k) * 1.2, "#8a7a2e", "#dccd7c");
-        else if (roll > 0.94) drawShrub(ctx, gx, gy);
+        else if (roll > 0.94) upright(ctx, gx, gy + 1, () => drawShrub(ctx, gx, gy));
         break;
       case "forest":
-        if (r(300 + k) > 0.45) drawConifer(ctx, gx, gy, 0.85 + r(320 + k) * 0.15);
-        else drawLeafTree(ctx, gx, gy, 0.85 + r(320 + k) * 0.15);
+        if (r(300 + k) > 0.45) upright(ctx, gx, gy + 4, () => drawConifer(ctx, gx, gy, 0.85 + r(320 + k) * 0.15));
+        else upright(ctx, gx, gy + 4, () => drawLeafTree(ctx, gx, gy, 0.85 + r(320 + k) * 0.15));
         break;
       case "desert":
         if (roll < 0.45) {
@@ -533,7 +566,7 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
           ctx.beginPath();
           ctx.ellipse(gx, gy, 0.7, 0.45, 0, 0, Math.PI * 2);
           ctx.fill();
-        } else if (roll > 0.97) drawCactus(ctx, gx, gy);
+        } else if (roll > 0.97) upright(ctx, gx, gy, () => drawCactus(ctx, gx, gy));
         break;
       case "hills":
         if (t !== "hills" && roll < 0.4) drawGrassTuft(ctx, gx, gy, 2.2, "#5c6a2c", "#a7ae66");
@@ -562,8 +595,8 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
         }
         break;
       case "jungle":
-        if (r(300 + k) > 0.35) drawJungleTree(ctx, gx, gy, 0.9 + r(320 + k) * 0.2);
-        else drawPalm(ctx, gx, gy, 0.9);
+        if (r(300 + k) > 0.35) upright(ctx, gx, gy + 3.5, () => drawJungleTree(ctx, gx, gy, 0.9 + r(320 + k) * 0.2));
+        else upright(ctx, gx, gy + 3.2, () => drawPalm(ctx, gx, gy, 0.9));
         break;
       case "swamp":
         if (roll < 0.4) {
@@ -576,7 +609,7 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
           ctx.beginPath();
           ctx.ellipse(gx - 0.4, gy - 0.2, 1.4, 0.5, 0, Math.PI, Math.PI * 2);
           ctx.stroke();
-        } else if (roll < 0.8) drawReeds(ctx, gx, gy);
+        } else if (roll < 0.8) upright(ctx, gx, gy, () => drawReeds(ctx, gx, gy));
         break;
       default:
         break;
@@ -584,7 +617,19 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
   }
 
   switch (t) {
-    // Hills and mountains need no pictures: the relief of the ground shows them.
+    // Seen from above the relief of the ground shows hills and mountains; on the tilted map they rise.
+    case "mountains":
+      if (activeTilt < 1) {
+        drawPeak(ctx, px + 7 + r(5) * 3, py + 15, 10 + r(6) * 2, 15 + r(7) * 4, r(8) > 0.35);
+        drawPeak(ctx, px + 15 + r(9) * 3, py + 21, 9 + r(10) * 2, 11 + r(11) * 3, r(12) > 0.6);
+      }
+      break;
+    case "hills":
+      if (activeTilt < 1) {
+        drawMound(ctx, px + 8 + r(5) * 2, py + 14, 8 + r(6) * 2, 5 + r(7) * 1.5);
+        drawMound(ctx, px + 15 + r(8) * 2, py + 21, 9 + r(9) * 2, 5.5 + r(10) * 1.5);
+      }
+      break;
     case "desert": {
       drawDune(ctx, px + 2 + r(1) * 3, py + 9 + r(2) * 2, 13);
       drawDune(ctx, px + 8 + r(3) * 3, py + 18 + r(4) * 2, 14);
@@ -593,6 +638,94 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
     default:
       break;
   }
+}
+
+/** A mountain standing on the tilted map: foot centre (x, y), half width w, height h, maybe a snow cap. */
+function drawPeak(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, snow: boolean): void {
+  // The shadow lies on the ground, so it is drawn before the mountain stands up.
+  ctx.fillStyle = "rgba(20, 16, 10, 0.25)";
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.35, y, w * 1.05, w * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+  upright(ctx, x, y, () => {
+    const top = y - h;
+    const tx = x - w * 0.12;
+    // Lit west face, shaded east face, a ridge between them.
+    ctx.fillStyle = "#a29a8c";
+    ctx.beginPath();
+    ctx.moveTo(x - w, y);
+    ctx.lineTo(tx, top);
+    ctx.lineTo(x + w * 0.1, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#6b6358";
+    ctx.beginPath();
+    ctx.moveTo(tx, top);
+    ctx.lineTo(x + w, y);
+    ctx.lineTo(x + w * 0.1, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(60, 52, 44, 0.55)";
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(tx, top);
+    ctx.lineTo(x + w * 0.1, y);
+    ctx.moveTo(x - w * 0.55, y - h * 0.32);
+    ctx.lineTo(x - w * 0.3, y - h * 0.12);
+    ctx.stroke();
+    if (snow) {
+      const f = 0.32;
+      ctx.fillStyle = "#f4f6f7";
+      ctx.beginPath();
+      ctx.moveTo(tx, top);
+      ctx.lineTo(tx - w * f, top + h * f);
+      ctx.lineTo(tx - w * f * 0.4, top + h * f * 0.8);
+      ctx.lineTo(tx, top + h * f * 1.05);
+      ctx.lineTo(tx + w * f * 0.5, top + h * f * 0.75);
+      ctx.lineTo(tx + w * f * 1.1, top + h * f);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(170, 190, 205, 0.7)";
+      ctx.beginPath();
+      ctx.moveTo(tx, top);
+      ctx.lineTo(tx + w * f * 1.1, top + h * f);
+      ctx.lineTo(tx + w * f * 0.5, top + h * f * 0.75);
+      ctx.lineTo(tx, top + h * f * 1.05);
+      ctx.closePath();
+      ctx.fill();
+    }
+  });
+}
+
+/** A grassy hill standing on the tilted map: foot centre (x, y), half width w, height h. */
+function drawMound(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  ctx.fillStyle = "rgba(20, 16, 10, 0.2)";
+  ctx.beginPath();
+  ctx.ellipse(x + w * 0.3, y, w * 1.05, w * 0.38, 0, 0, Math.PI * 2);
+  ctx.fill();
+  upright(ctx, x, y, () => {
+    ctx.fillStyle = "#7d8846";
+    ctx.beginPath();
+    ctx.moveTo(x - w, y);
+    ctx.bezierCurveTo(x - w * 0.6, y - h * 1.3, x + w * 0.5, y - h * 1.3, x + w, y);
+    ctx.closePath();
+    ctx.fill();
+    // Light from the west on the left flank.
+    ctx.fillStyle = "rgba(214, 220, 140, 0.45)";
+    ctx.beginPath();
+    ctx.moveTo(x - w, y);
+    ctx.bezierCurveTo(x - w * 0.65, y - h * 1.25, x - w * 0.1, y - h * 1.05, x - w * 0.05, y - h * 0.95);
+    ctx.quadraticCurveTo(x - w * 0.45, y - h * 0.4, x - w * 0.5, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(40, 46, 20, 0.28)";
+    ctx.beginPath();
+    ctx.moveTo(x + w, y);
+    ctx.bezierCurveTo(x + w * 0.7, y - h * 0.8, x + w * 0.35, y - h * 0.95, x + w * 0.15, y - h * 0.98);
+    ctx.quadraticCurveTo(x + w * 0.5, y - h * 0.4, x + w * 0.45, y);
+    ctx.closePath();
+    ctx.fill();
+  });
 }
 
 /** A low bush on the plains. */
@@ -1262,7 +1395,7 @@ function drawSpecials(ctx: CanvasRenderingContext2D, input: DrawInput): void {
       const t = terrain[i];
       if (!t || !special[i]) continue;
       const id = TERRAINS[t].special?.id;
-      if (id) drawSpecial(ctx, id, x * TILE, y * TILE, x, y);
+      if (id) upright(ctx, x * TILE + TILE / 2, y * TILE + TILE * 0.75, () => drawSpecial(ctx, id, x * TILE, y * TILE, x, y));
     }
   }
   ctx.restore();
@@ -1281,7 +1414,7 @@ function drawRuins(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     for (let x = view.x0; x <= view.x1; x++) {
       const i = y * width + x;
       if (!terrain[i] || !ruins[i]) continue;
-      drawRuin(ctx, x * TILE, y * TILE, x, y);
+      upright(ctx, x * TILE + TILE / 2, y * TILE + TILE * 0.75, () => drawRuin(ctx, x * TILE, y * TILE, x, y));
     }
   }
   ctx.restore();
@@ -2063,6 +2196,12 @@ function drawRoutes(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     ctx.setLineDash([]);
     // A small flag on the destination.
     const [x, y] = center(r.path[r.path.length - 1]!);
+    upright(ctx, x, y + 5, () => drawFlag(ctx, x, y));
+  }
+}
+
+function drawFlag(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  {
     ctx.strokeStyle = "rgba(20, 20, 20, 0.8)";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -2139,6 +2278,10 @@ function drawTarget(
   const bx = Math.min(px + TILE - 2, width * TILE - w / 2 - 1);
   const by = Math.max(py, 8);
   void height;
+  upright(ctx, bx, by + 7, () => drawBadge(ctx, label, color, bx, by, w));
+}
+
+function drawBadge(ctx: CanvasRenderingContext2D, label: string, color: string, bx: number, by: number, w: number): void {
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.roundRect(bx - w / 2, by - 7, w, 14, 7);
@@ -2667,7 +2810,7 @@ function drawCityLabel(ctx: CanvasRenderingContext2D, c: DrawCity, width: number
   const y = c.y * TILE + TILE + 0.5;
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(k, k);
+  ctx.scale(k, k / activeTilt);
   ctx.fillStyle = "rgba(18, 18, 20, 0.85)";
   ctx.beginPath();
   ctx.roundRect(0, 0, w, 11, 5.5);
@@ -2708,8 +2851,10 @@ function drawUnits(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     const scale = inCity ? 0.6 : 1;
     const fx = top.x * TILE + (inCity ? 3.5 : TILE / 2);
     const fy = top.y * TILE + (inCity ? 19.5 : 21);
-    drawMiniature(ctx, top, fx, fy, scale, top.id === input.selectedUnitId, units.length);
-    drawCondition(ctx, top, fx, fy, scale);
+    upright(ctx, fx, fy, () => {
+      drawMiniature(ctx, top, fx, fy, scale, top.id === input.selectedUnitId, units.length);
+      drawCondition(ctx, top, fx, fy, scale);
+    });
   }
 }
 

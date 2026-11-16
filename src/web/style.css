@@ -726,3 +726,5 @@ label.rate input#lux { width: 60px; } .rate.tax { color: var(--muted); white-spa
 .owl-glow { outline: 3px solid #ffe066 !important; outline-offset: 2px; box-shadow: 0 0 16px #ffe066 !important; animation: owl-glow 1s ease-in-out infinite; position: relative; z-index: 2; }
 @keyframes owl-glow { 50% { outline-color: #fff6c0; box-shadow: 0 0 4px #ffe066 !important; } }
 @media (prefers-reduced-motion: reduce) { .owl-ping, .owl-glow { animation: none; } }
+/* On the tilted map the land is a board on the table: a dark edge of earth below its front side. */
+body.map-tilted #map { box-shadow: 0 10px 0 #4a3a28, 0 11px 0 #2c2218, 0 22px 30px rgba(0, 0, 0, 0.55); }

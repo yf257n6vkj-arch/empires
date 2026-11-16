@@ -17,18 +17,29 @@ import numpy as np
 from PIL import Image
 
 
-def cut(src: pathlib.Path, width: int, feather: float, strip_soil: bool) -> Image.Image:
+def cut(src: pathlib.Path, width: int, feather: float, strip_soil: bool, no_purple: bool = False) -> Image.Image:
     rgb = np.asarray(Image.open(src).convert("RGB")).astype(np.float32)
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     # How magenta a pixel is: red and blue high, green low.
     magenta = np.clip((np.minimum(r, b) - g) / 255.0, 0, 1)
     # Fully magenta above 0.45, fully subject below 0.2, soft in between (JPEG edges).
     alpha = np.clip((0.45 - magenta) / 0.25, 0, 1)
-    # Remove the pink cast on the rim: pull red and blue down towards green where magenta remains.
+    # A half-transparent pixel (an edge, smoke) is the subject mixed with magenta: take the magenta
+    # back out, so edges and smoke keep their own colour instead of a pink cast.
+    a3 = np.maximum(alpha, 0.05)[..., None]
+    fixed = (rgb - (1 - a3) * np.array([255.0, 0.0, 255.0])) / a3
+    # What stays pinkish after that is spill on solid pixels: pull red and blue towards green.
     spill = np.clip(magenta * 2.5, 0, 1)[..., None]
-    fixed = rgb.copy()
-    fixed[..., 0:1] = rgb[..., 0:1] - spill * np.maximum(0, rgb[..., 0:1] - g[..., None])
-    fixed[..., 2:3] = rgb[..., 2:3] - spill * np.maximum(0, rgb[..., 2:3] - g[..., None])
+    fixed[..., 0:1] = fixed[..., 0:1] - spill * np.maximum(0, fixed[..., 0:1] - fixed[..., 1:2])
+    fixed[..., 2:3] = fixed[..., 2:3] - spill * np.maximum(0, fixed[..., 2:3] - fixed[..., 1:2])
+    # The unmixing is unsure where little of the subject is left; those faint pixels lean
+    # towards a neutral smoky brown instead of a guessed colour.
+    doubt = np.clip((0.75 - alpha) / 0.75, 0, 1)[..., None]
+    fixed = fixed * (1 - doubt) + np.array([112.0, 98.0, 82.0]) * doubt
+    if no_purple:
+        purple = fixed[..., 2] > fixed[..., 1]
+        fixed[..., 2] = np.where(purple, fixed[..., 1] * 0.85, fixed[..., 2])
+        fixed[..., 0] = np.where(purple & (fixed[..., 0] > fixed[..., 1] * 1.35), fixed[..., 1] * 1.35, fixed[..., 0])
     out = np.dstack([np.clip(fixed, 0, 255), alpha * 255]).astype(np.uint8)
     img = Image.fromarray(out, "RGBA")
     # Small specks of leftover background are not part of the subject.
@@ -91,6 +102,7 @@ def main() -> None:
     p.add_argument("--out", default="src/web/sprites")
     p.add_argument("--strip-soil", action="store_true", help="remove a block of earth painted under grassy hills")
     p.add_argument("--only", help="comma-separated name prefixes to process, e.g. kopec")
+    p.add_argument("--no-purple", action="store_true", help="turn purplish tints brown, for smoke Gemini painted see-through over the magenta")
     args = p.parse_args()
     out = pathlib.Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -98,7 +110,7 @@ def main() -> None:
     if args.only:
         files = [f for f in files if any(f.stem.startswith(o) for o in args.only.split(","))]
     for f in files:
-        img = cut(f, args.width, args.feather, args.strip_soil)
+        img = cut(f, args.width, args.feather, args.strip_soil, args.no_purple)
         target = out / f"{f.stem}.webp"
         img.save(target, "WEBP", quality=86, method=6)
         print(f"{target}  {img.width}x{img.height}")

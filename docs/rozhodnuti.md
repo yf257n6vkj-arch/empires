@@ -8,6 +8,8 @@ Michal schválil, že Gemini namaluje i ruiny, všech jedenáct surovin, důl, p
 
 Podklad terénu, řeky, cesty, železnice, zavlažování, hranice států a mlha zůstávají kreslené kódem. Mění totiž tvar podle sousedních políček a z obrázků by vznikla šachovnice. Stromy v lesích a džunglích taky zůstávají kreslené, protože je jich na mapě tisíce a malované shluky by se opakovaly. Podle toho jsme upravili i pravidlo v CLAUDE.md, které dřív říkalo, že celý terén kreslí kód. Hory a kopce od Gemini ho přitom už porušovaly.
 
+Gemini všechno nakreslil a obrázky jsou ve hře. Kvádr hlíny tentokrát nenamaloval, jen pevnost stojí na hliněném valu, což k ní patří. Kouř u znečištění Gemini namaloval průsvitný přes purpurové pozadí a po vyříznutí byl do fialova. Skript proto umí u poloprůhledných míst purpurovou barvu z obrázku odečíst a kouř přebarvit do hnědé.
+
 ## 16. 11. 2026: Cesty a železnice vypadají jako skutečné
 
 Michal chtěl cesty a železnici realističtější. Dřív vedla z každého políčka k sousedům rovná čára a tři políčka do L udělala trojúhelník. Teď se cesta na políčku, kterým jen prochází, plynule ohne, rovný úsek se lehce vlní a šikmá spojka chybí tam, kde se dvě políčka potkají přes společného souseda. Cesta je udusaná písčitá polní cesta s tmavší krajnicí a dvěma vyjetými kolejemi od vozů. Železnice má štěrkové lože, dřevěné pražce v pravidelných rozestupech a dvě ocelové kolejnice s odleskem. Kde vede železnice, cesta se vedle ní nekreslí a odbočuje jen k políčkům, kde železnice není.

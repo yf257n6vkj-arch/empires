@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Řeky se u pramene ztrácejí a suroviny jsou nakreslené v krajině
+
+Michal chtěl, aby se řeky u pramene zužovaly do ztracena, a nechal na Claudovi, jak nakreslit vzácné suroviny. Pravidla se nemění.
+
+Šířka řeky roste s odmocninou množství vody, které jí protéká, a u pramene začíná skoro jako čára. Krajní potoky pramenného vějíře a boční přítoky se zužují až na vlásek. Tenké potoky postupně blednou a jejich tmavý břeh se zužuje spolu s nimi, takže se u konce ztratí v krajině. Delší přítok má cestou ještě jeden menší přítok. Tak to kreslí i fyzické mapy, kde je šířka čáry úměrná průtoku.
+
+Suroviny už nejsou odznaky v rohu políčka. Nakreslili jsme je kódem přímo do krajiny: hejno ryb pod hladinou, pasoucí se koně, bažant na mýtině, jeleni v tundře, uhlí vylamující se ze svahu, zlatá žíla se zlatými valouny ve skále, drahokamy v džungli, oáza s jezírkem a palmami, tuleni na ledu, nařezaná rašelina a bujná louka s květy. Každé políčko obrázek trochu obmění, aby sousední suroviny nevypadaly jako razítko. Kdyby Michal chtěl malovanější vzhled, můžeme suroviny nechat namalovat od Gemini jako ostatní obrázky.
+
 ## 16. 11. 2026: Mapa vzniká podle přírody a kreslí se jako fyzická mapa
 
 Michal schválil návrh realističtější mapy a chtěl hezčí řeky. Pravidla se nemění. Políčka zůstávají políčky Civilizace 1 a každý terén má zhruba stejný podíl země jako dřív, což hlídá kontrola na 500 mapách.

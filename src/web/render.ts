@@ -887,7 +887,8 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   for (const i of order) if (isRiver(down[i]!)) upstream[down[i]!] = 1;
 
   const centre = (i: number): [number, number] => [((i % width) + 0.5) * TILE, (Math.floor(i / width) + 0.5) * TILE];
-  const widthAt = (f: number) => Math.min(4.6, 1.1 + Math.sqrt(f) * 0.85);
+  // Width grows with the square root of the water flowing through, from a thin line at the source.
+  const widthAt = (f: number) => Math.min(4.6, 0.35 + Math.sqrt(f) * 0.8);
   const streams: Stream[] = [];
   const deltas: { x: number; y: number; ux: number; uy: number; reach: number; spread: number }[] = [];
   /** Where each river tile's course was drawn, so later courses join it there. */
@@ -920,7 +921,8 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
 
   /** A fan of small streams that join into one, like the springs of a river. */
   const springs = (x: number, y: number, angle: number, len: number, w: number, depth: number, seed: number) => {
-    const pts = creek(x, y, angle, len, w, w * 0.75, seed);
+    // The last streams of the fan thin out to nothing, the others hand their width to two smaller ones.
+    const pts = creek(x, y, angle, len, w, depth <= 0 ? w * 0.08 : w * 0.75, seed);
     if (depth <= 0 || pts.length < 3) return;
     const tip = pts[pts.length - 1]!;
     const mid = pts[Math.floor(pts.length * 0.5)]!;
@@ -930,7 +932,7 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     // Now and then one more little stream joins halfway.
     if (hash(seed, 9, 137) > 0.45) {
       const side = hash(seed, 11, 139) > 0.5 ? 1 : -1;
-      creek(mid.x, mid.y, angle + side * (0.9 + hash(seed, 13, 141) * 0.4), len * 0.55, w * 0.6, w * 0.4, seed * 7 + 5);
+      creek(mid.x, mid.y, angle + side * (0.9 + hash(seed, 13, 141) * 0.4), len * 0.55, w * 0.6, w * 0.06, seed * 7 + 5);
     }
   };
 
@@ -1055,7 +1057,7 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
         }
       }
     }
-    springs(head.x, head.y, back, TILE * 0.75, 0.95, 2, sx * 97 + sy * 13 + 1);
+    springs(head.x, head.y, back, TILE * 0.75, head.w * 0.85, 2, sx * 97 + sy * 13 + 1);
 
     // Side creeks along the way, joining at a sharp angle from upstream.
     const sideStart = 12;
@@ -1068,15 +1070,16 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
       const side = hash(k, tile, 153) > 0.5 ? 1 : -1;
       const angle = along + side * (0.75 + hash(k, tile, 155) * 0.5);
       const w0 = Math.min(1.3, p.w * 0.45);
-      const pts2 = creek(p.x, p.y, angle, TILE * (0.8 + hash(k, tile, 157) * 0.8), w0, 0.35, tile * 17 + k, (x, y) => {
+      const len = TILE * (0.8 + hash(k, tile, 157) * 0.8);
+      const pts2 = creek(p.x, p.y, angle, len, w0, 0.05, tile * 17 + k, (x, y) => {
         const j = tileAtPoint(x, y);
         return j !== tile && j >= 0 && isRiver(j);
       });
-      // The longer creeks fork once near their end.
+      // The longer creeks take in a smaller one of their own on the way up.
       if (pts2.length > 10) {
-        const tip = pts2[pts2.length - 1]!;
-        creek(tip.x, tip.y, angle + 0.5, TILE * 0.4, tip.w, 0.3, tile * 19 + k);
-        creek(tip.x, tip.y, angle - 0.5, TILE * 0.4, tip.w, 0.3, tile * 23 + k);
+        const at = pts2[Math.floor(pts2.length * 0.55)]!;
+        const turn = hash(k, tile, 159) > 0.5 ? 0.6 : -0.6;
+        creek(at.x, at.y, angle + turn, TILE * 0.45, at.w * 0.75, 0.04, tile * 19 + k);
       }
     }
   }
@@ -1137,6 +1140,8 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     ctx.lineWidth = 0.8;
     ctx.stroke();
   }
+  // Thin streams are measured finely, so they can taper all the way down to a hairline.
+  const step = (w: number) => (w < 1 ? Math.max(0.04, Math.round(w * 20) / 20) : Math.round(w * 4) / 4);
   const stroke = (color: string, grow: number, scale: number, minWidth = 0) => {
     ctx.strokeStyle = color;
     for (const st of streams) {
@@ -1144,21 +1149,24 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
       // Pieces of about the same width share one path.
       let k = 0;
       while (k < line.length - 1) {
-        const w = Math.round((line[k]!.w * scale + grow) * 4) / 4;
+        const w = step(line[k]!.w);
         let j = k + 1;
-        if (line[k]!.w >= minWidth) {
-          ctx.lineWidth = w;
+        if (w >= minWidth) {
+          // The bank and the dark edge shrink with the stream, and the thinnest water fades out.
+          ctx.lineWidth = w * scale + grow * Math.min(1, w / 1.4);
+          ctx.globalAlpha = w < 0.9 ? 0.3 + 0.7 * (w / 0.9) : 1;
           ctx.beginPath();
           ctx.moveTo(line[k]!.x, line[k]!.y);
           for (; j < line.length; j++) {
             ctx.lineTo(line[j]!.x, line[j]!.y);
-            if (Math.round((line[j]!.w * scale + grow) * 4) / 4 !== w) break;
+            if (step(line[j]!.w) !== w) break;
           }
           ctx.stroke();
         }
         k = Math.max(k + 1, j);
       }
     }
+    ctx.globalAlpha = 1;
   };
   // Green banks, a dark edge, the water and a light sheen on the wider streams.
   stroke("rgba(52, 96, 40, 0.28)", 2, 1);
@@ -1168,149 +1176,511 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   ctx.restore();
 }
 
-/** A small picture of the special resource in a corner of the tile. */
+/**
+ * Special resources are painted into the landscape of the tile: a shoal of
+ * fish in the sea, horses grazing on the plains, a gold vein in the rock.
+ * Each tile varies the picture a little, so neighbouring specials don't look
+ * stamped.
+ */
 function drawSpecials(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, terrain } = input;
   const special = input.special;
   if (!special) return;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
   for (let y = view.y0; y <= view.y1; y++) {
     for (let x = view.x0; x <= view.x1; x++) {
       const i = y * width + x;
       const t = terrain[i];
       if (!t || !special[i]) continue;
       const id = TERRAINS[t].special?.id;
-      if (id) drawSpecial(ctx, id, x * TILE + TILE * 0.3, y * TILE + TILE * 0.72);
+      if (id) drawSpecial(ctx, id, x * TILE, y * TILE, x, y);
     }
   }
+  ctx.restore();
 }
 
-function drawSpecial(ctx: CanvasRenderingContext2D, id: string, x: number, y: number): void {
-  ctx.save();
-  // A soft round plate so the sign reads on any ground.
-  ctx.fillStyle = "rgba(255, 250, 235, 0.82)";
-  ctx.strokeStyle = "rgba(40, 32, 20, 0.7)";
-  ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.arc(x, y, 3.6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
+function drawSpecial(ctx: CanvasRenderingContext2D, id: string, ox: number, oy: number, tx: number, ty: number): void {
+  const r = (k: number) => hash(tx, ty, 300 + k);
+  const flip = r(0) > 0.5 ? 1 : -1;
   ctx.lineWidth = 0.6;
   switch (id) {
     case "fish": {
-      ctx.fillStyle = "#3a7fb0";
+      // A shoal: small dark backs just under the surface and a ripple around them.
+      const cx = ox + TILE * (0.45 + r(1) * 0.1);
+      const cy = oy + TILE * (0.5 + r(2) * 0.1);
+      ctx.strokeStyle = "rgba(220, 240, 250, 0.45)";
+      ctx.lineWidth = 0.6;
       ctx.beginPath();
-      ctx.ellipse(x - 0.4, y, 1.8, 1, 0, 0, Math.PI * 2);
-      ctx.moveTo(x + 1.2, y);
-      ctx.lineTo(x + 2.6, y - 1);
-      ctx.lineTo(x + 2.6, y + 1);
-      ctx.closePath();
-      ctx.fill();
+      ctx.ellipse(cx, cy, TILE * 0.36, TILE * 0.22, -0.2, 0, Math.PI * 2);
+      ctx.stroke();
+      const dir = r(3) * Math.PI * 2;
+      for (let k = 0; k < 4; k++) {
+        const fx = cx + (r(10 + k) - 0.5) * TILE * 0.46;
+        const fy = cy + (r(20 + k) - 0.5) * TILE * 0.26;
+        fish(ctx, fx, fy, dir + (r(30 + k) - 0.5) * 0.6, 0.8 + r(40 + k) * 0.4);
+      }
       break;
     }
     case "horses": {
-      ctx.fillStyle = "#7a4a26";
-      ctx.beginPath();
-      ctx.ellipse(x - 0.2, y + 0.3, 1.8, 0.9, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillRect(x + 1, y - 1.8, 0.8, 2);
-      ctx.fillRect(x - 1.6, y + 0.8, 0.5, 1.6);
-      ctx.fillRect(x + 0.9, y + 0.8, 0.5, 1.6);
+      horse(ctx, ox + TILE * 0.34, oy + TILE * 0.58, flip, "#6b3f1f", 1.2);
+      horse(ctx, ox + TILE * 0.64, oy + TILE * 0.42, -flip, r(5) > 0.5 ? "#2e2620" : "#a8743e", 1);
       break;
     }
-    case "pheasant":
+    case "pheasant": {
+      pheasant(ctx, ox + TILE * (0.4 + r(1) * 0.15), oy + TILE * 0.62, flip);
+      break;
+    }
     case "game": {
-      ctx.fillStyle = id === "game" ? "#8a6a44" : "#a8552a";
-      ctx.beginPath();
-      ctx.ellipse(x, y + 0.4, 1.7, 1.1, 0, 0, Math.PI * 2);
-      ctx.arc(x + 1.5, y - 0.8, 0.7, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = ctx.fillStyle;
-      ctx.beginPath();
-      if (id === "game") {
-        ctx.moveTo(x + 1.4, y - 1.4);
-        ctx.lineTo(x + 0.8, y - 2.8);
-        ctx.moveTo(x + 1.8, y - 1.4);
-        ctx.lineTo(x + 2.4, y - 2.8);
-      } else {
-        ctx.moveTo(x - 1.5, y);
-        ctx.lineTo(x - 3, y - 1.2);
-      }
-      ctx.stroke();
+      deer(ctx, ox + TILE * 0.38, oy + TILE * 0.6, flip, 1);
+      deer(ctx, ox + TILE * 0.66, oy + TILE * 0.44, flip, 0.8);
       break;
     }
     case "coal": {
-      ctx.fillStyle = "#2b2b2b";
-      for (const [dx, dy] of [
-        [-1, 0.6],
-        [0.9, 0.5],
-        [0, -0.8],
-      ] as const) {
+      // Dark coal breaking out of the hillside as angular blocks, with loose lumps below.
+      const cx = ox + TILE * 0.5;
+      const cy = oy + TILE * 0.6;
+      rock(ctx, cx - 3.2 * flip, cy - 0.6, 3.6, "#1b1a19", "#4a4846", r(1));
+      rock(ctx, cx + 2.4 * flip, cy - 1.8, 2.8, "#232120", "#55524f", r(2));
+      rock(ctx, cx + 1 * flip, cy + 2.2, 2.2, "#1b1a19", "#4a4846", r(3));
+      ctx.fillStyle = "#262422";
+      for (let k = 0; k < 3; k++) {
         ctx.beginPath();
-        ctx.arc(x + dx, y + dy, 1.1, 0, Math.PI * 2);
+        ctx.arc(cx + (r(50 + k) - 0.5) * 11, cy + 3.6 + r(60 + k) * 1.4, 0.6 + r(70 + k) * 0.4, 0, Math.PI * 2);
         ctx.fill();
       }
       break;
     }
-    case "gold":
-    case "gems": {
-      ctx.fillStyle = id === "gold" ? "#e3b62c" : "#c0398f";
-      ctx.strokeStyle = id === "gold" ? "#8a6612" : "#6b1d50";
+    case "gold": {
+      // A brown rock face cut by a golden vein, with nuggets that catch the light.
+      const cx = ox + TILE * 0.5;
+      const cy = oy + TILE * 0.6;
+      rock(ctx, cx, cy, 5.2, "#5b4a3a", "#8a7560", r(1));
+      ctx.strokeStyle = "#f2c53a";
+      ctx.lineWidth = 0.9;
       ctx.beginPath();
-      ctx.moveTo(x, y - 2);
-      ctx.lineTo(x + 1.8, y - 0.3);
-      ctx.lineTo(x, y + 2);
-      ctx.lineTo(x - 1.8, y - 0.3);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(cx - 3.6 * flip, cy + 1.8);
+      ctx.lineTo(cx - 1.2 * flip, cy + 0.4);
+      ctx.lineTo(cx - 0.2 * flip, cy + 1.2);
+      ctx.lineTo(cx + 2.6 * flip, cy - 1.6);
+      ctx.moveTo(cx - 0.2 * flip, cy + 1.2);
+      ctx.lineTo(cx + 1.2 * flip, cy + 3);
       ctx.stroke();
+      for (const [dx, dy, sz] of [
+        [-4.6, 4.4, 1.2],
+        [-2.4, 5, 0.9],
+        [3.8, 4.2, 1],
+      ] as const) {
+        ctx.fillStyle = "#c8921c";
+        ctx.beginPath();
+        ctx.ellipse(cx + dx * flip, cy + dy, sz * 1.2, sz * 0.85, 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffe27a";
+        ctx.beginPath();
+        ctx.ellipse(cx + dx * flip - sz * 0.3, cy + dy - sz * 0.3, sz * 0.5, sz * 0.35, 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      sparkle(ctx, cx + 2.6 * flip, cy - 1.8, 2.2, "#fff6c8");
+      sparkle(ctx, cx - 4.6 * flip, cy + 3.8, 1.5, "#fff6c8");
+      break;
+    }
+    case "gems": {
+      const cx = ox + TILE * 0.5;
+      const cy = oy + TILE * 0.6;
+      gem(ctx, cx - 3.2, cy + 0.8, 2.2, "#d0378f");
+      gem(ctx, cx + 2.6, cy + 1.2, 1.8, "#2fb6c8");
+      gem(ctx, cx + 0.2, cy - 2.4, 1.6, "#5fd05a");
+      sparkle(ctx, cx - 2.4, cy - 0.6, 1.8, "#ffffff");
       break;
     }
     case "oasis": {
+      // A pond with a ring of green and two palms leaning over it.
+      const cx = ox + TILE * 0.5;
+      const cy = oy + TILE * 0.62;
+      ctx.fillStyle = "rgba(92, 150, 60, 0.85)";
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 7.5, 3.8, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = "#3f8fc0";
       ctx.beginPath();
-      ctx.ellipse(x, y + 1, 2.2, 0.9, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx + 0.5, cy + 0.4, 5, 2.4, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "#2f7a32";
+      ctx.strokeStyle = "rgba(210, 238, 250, 0.7)";
+      ctx.lineWidth = 0.5;
       ctx.beginPath();
-      ctx.moveTo(x, y + 0.6);
-      ctx.lineTo(x, y - 1.6);
-      ctx.moveTo(x - 1.6, y - 1.2);
-      ctx.quadraticCurveTo(x, y - 2.6, x + 1.6, y - 1.2);
+      ctx.moveTo(cx - 2, cy);
+      ctx.lineTo(cx + 2, cy);
       ctx.stroke();
-      break;
-    }
-    case "resources": {
-      // A small shield: the land gives more shields.
-      ctx.fillStyle = "#6f8aa6";
-      ctx.beginPath();
-      ctx.moveTo(x - 1.6, y - 1.8);
-      ctx.lineTo(x + 1.6, y - 1.8);
-      ctx.lineTo(x + 1.6, y);
-      ctx.quadraticCurveTo(x + 1.6, y + 1.4, x, y + 2);
-      ctx.quadraticCurveTo(x - 1.6, y + 1.4, x - 1.6, y);
-      ctx.closePath();
-      ctx.fill();
-      break;
-    }
-    case "peat": {
-      ctx.fillStyle = "#5a3d24";
-      ctx.fillRect(x - 1.8, y - 0.4, 1.6, 1.4);
-      ctx.fillRect(x + 0.2, y - 0.4, 1.6, 1.4);
-      ctx.fillRect(x - 0.8, y - 1.9, 1.6, 1.4);
+      palm(ctx, cx - 4.5, cy - 0.5, -0.25, 9);
+      palm(ctx, cx + 4, cy - 1, 0.3, 7.5);
       break;
     }
     case "seals": {
-      ctx.fillStyle = "#6c7b86";
+      // Seals lying on the ice next to a breathing hole.
+      const cx = ox + TILE * 0.5;
+      const cy = oy + TILE * 0.58;
+      ctx.fillStyle = "#3d6f8e";
       ctx.beginPath();
-      ctx.ellipse(x, y + 0.5, 2.2, 1, -0.2, 0, Math.PI * 2);
-      ctx.arc(x + 1.8, y - 0.4, 0.8, 0, Math.PI * 2);
+      ctx.ellipse(cx + flip * 4.5, cy + 2.5, 3, 1.4, 0, 0, Math.PI * 2);
       ctx.fill();
+      seal(ctx, cx - flip * 2, cy, flip, 1);
+      seal(ctx, cx + flip * 1.5, cy - 3.5, -flip, 0.75);
+      break;
+    }
+    case "peat": {
+      // Rows of cut peat drying on the bog, with the dark cut face behind.
+      const cx = ox + TILE * 0.5;
+      const cy = oy + TILE * 0.6;
+      ctx.fillStyle = "#2e1d10";
+      ctx.fillRect(cx - 7, cy - 4.5, 14, 2);
+      for (let row = 0; row < 2; row++) {
+        for (let k = 0; k < 4; k++) {
+          const bx = cx - 6.5 + k * 3.4 + row * 1.6;
+          const by = cy - 0.5 + row * 3;
+          ctx.fillStyle = (k + row) % 2 ? "#5e3d22" : "#4d311b";
+          ctx.fillRect(bx, by, 2.6, 1.8);
+          ctx.fillStyle = "rgba(160, 120, 80, 0.6)";
+          ctx.fillRect(bx, by, 2.6, 0.5);
+        }
+      }
+      break;
+    }
+    case "resources": {
+      // Rich, lush ground: darker tufts of grass and flowers.
+      const cx = ox + TILE * 0.5;
+      const cy = oy + TILE * 0.56;
+      ctx.fillStyle = "rgba(40, 96, 30, 0.55)";
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 8, 4.5, -0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#2f6e22";
+      ctx.lineWidth = 0.7;
+      for (let k = 0; k < 7; k++) {
+        const gx = cx + (r(80 + k) - 0.5) * 13;
+        const gy = cy + (r(90 + k) - 0.5) * 6 + 1.5;
+        ctx.beginPath();
+        ctx.moveTo(gx - 1.2, gy - 2);
+        ctx.lineTo(gx, gy);
+        ctx.lineTo(gx + 1.2, gy - 2);
+        ctx.moveTo(gx, gy);
+        ctx.lineTo(gx, gy - 2.6);
+        ctx.stroke();
+      }
+      const colours = ["#f4d33c", "#ffffff", "#e8603c", "#f4d33c", "#b07ae0"];
+      for (let k = 0; k < 6; k++) {
+        ctx.fillStyle = colours[k % colours.length]!;
+        ctx.beginPath();
+        ctx.arc(cx + (r(100 + k) - 0.5) * 12, cy + (r(110 + k) - 0.5) * 6, 0.75, 0, Math.PI * 2);
+        ctx.fill();
+      }
       break;
     }
     default:
       break;
   }
+}
+
+function fish(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, size: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.scale(size, size);
+  ctx.fillStyle = "rgba(28, 58, 84, 0.75)";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 2.3, 0.85, 0, 0, Math.PI * 2);
+  ctx.moveTo(-1.8, 0);
+  ctx.lineTo(-3.4, -1);
+  ctx.lineTo(-3.4, 1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgba(200, 230, 245, 0.55)";
+  ctx.beginPath();
+  ctx.ellipse(0.4, -0.35, 1.2, 0.25, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
+}
+
+function horse(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, colour: string, size: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(dir * size, size);
+  // A grazing horse: the head goes down to the grass.
+  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+  ctx.beginPath();
+  ctx.ellipse(0, 3.4, 3.6, 0.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = colour;
+  ctx.fillStyle = colour;
+  ctx.lineWidth = 0.75;
+  ctx.beginPath();
+  ctx.moveTo(-2, 0.5);
+  ctx.lineTo(-2.3, 3.3);
+  ctx.moveTo(-1.1, 0.7);
+  ctx.lineTo(-1, 3.3);
+  ctx.moveTo(1.4, 0.7);
+  ctx.lineTo(1.6, 3.3);
+  ctx.moveTo(2.2, 0.5);
+  ctx.lineTo(2.6, 3.3);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(0, -0.2, 3, 1.35, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Neck down to the head.
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  ctx.moveTo(2.4, -0.6);
+  ctx.quadraticCurveTo(4.2, -0.4, 4.4, 2.2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(4.5, 2.5, 0.75, 1.05, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  // Tail.
+  ctx.lineWidth = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(-2.9, -0.6);
+  ctx.quadraticCurveTo(-4, 0, -3.8, 1.8);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function pheasant(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(dir, 1);
+  // A light clearing, so the bird stands out against the trees.
+  ctx.fillStyle = "rgba(190, 170, 110, 0.55)";
+  ctx.beginPath();
+  ctx.ellipse(0.5, 1.6, 5.5, 1.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Long barred tail.
+  ctx.strokeStyle = "#7a4a20";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-1.5, -0.2);
+  ctx.lineTo(-6.5, -2.8);
+  ctx.stroke();
+  ctx.fillStyle = "#b8562a";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 2.6, 1.6, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#e4b064";
+  ctx.beginPath();
+  ctx.ellipse(-0.4, -0.3, 1.2, 0.6, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Green head with the white ring and the red face.
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(1.6, -0.8);
+  ctx.lineTo(2.3, -1.1);
+  ctx.stroke();
+  ctx.fillStyle = "#1f5a3a";
+  ctx.beginPath();
+  ctx.arc(2.6, -1.9, 0.95, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#d62a1e";
+  ctx.beginPath();
+  ctx.arc(2.9, -1.9, 0.45, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#5a3a1c";
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(-0.3, 1.3);
+  ctx.lineTo(-0.3, 2.6);
+  ctx.moveTo(0.7, 1.3);
+  ctx.lineTo(0.9, 2.6);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function deer(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, size: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(dir * size, size);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.16)";
+  ctx.beginPath();
+  ctx.ellipse(0, 3.4, 3.2, 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  const c = "#7a5a3a";
+  ctx.strokeStyle = c;
+  ctx.fillStyle = c;
+  ctx.lineWidth = 0.65;
+  ctx.beginPath();
+  ctx.moveTo(-1.8, 0.4);
+  ctx.lineTo(-1.9, 3.3);
+  ctx.moveTo(-0.9, 0.6);
+  ctx.lineTo(-0.8, 3.3);
+  ctx.moveTo(1.2, 0.6);
+  ctx.lineTo(1.3, 3.3);
+  ctx.moveTo(1.9, 0.4);
+  ctx.lineTo(2.2, 3.3);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(0, -0.2, 2.6, 1.15, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#e8e0d0";
+  ctx.beginPath();
+  ctx.ellipse(-2.3, -0.3, 0.6, 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Head held up, with antlers.
+  ctx.fillStyle = c;
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(2, -0.6);
+  ctx.lineTo(3, -2.6);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(3.5, -2.9, 1, 0.65, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#d8c8a8";
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(3, -3.3);
+  ctx.lineTo(2.2, -5.4);
+  ctx.moveTo(2.6, -4.3);
+  ctx.lineTo(1.6, -4.6);
+  ctx.moveTo(3.4, -3.4);
+  ctx.lineTo(4, -5.6);
+  ctx.moveTo(3.7, -4.5);
+  ctx.lineTo(4.7, -4.9);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function seal(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, size: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(dir * size, size);
+  ctx.fillStyle = "rgba(60, 80, 100, 0.25)";
+  ctx.beginPath();
+  ctx.ellipse(0, 1.6, 4, 0.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#5d6a73";
+  ctx.beginPath();
+  ctx.moveTo(-4, 1);
+  ctx.quadraticCurveTo(-1, -1.8, 2.2, -1.2);
+  ctx.quadraticCurveTo(3.8, -1, 3.6, 0.4);
+  ctx.quadraticCurveTo(1, 1.8, -4, 1);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-3.8, 1);
+  ctx.lineTo(-5, 0);
+  ctx.lineTo(-4.8, 1.6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgba(220, 230, 236, 0.5)";
+  ctx.beginPath();
+  ctx.ellipse(0, -0.6, 2, 0.4, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#1a1a1a";
+  ctx.beginPath();
+  ctx.arc(2.8, -0.6, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function vein(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number): void {
+  ctx.beginPath();
+  ctx.moveTo(x - dir * 6, y + 3.5);
+  ctx.lineTo(x - dir * 2.5, y + 1);
+  ctx.lineTo(x - dir * 1.5, y + 2.2);
+  ctx.lineTo(x + dir * 2.5, y - 1.5);
+  ctx.lineTo(x + dir * 5.5, y - 2.5);
+  ctx.moveTo(x - dir * 1.5, y + 2.2);
+  ctx.lineTo(x + dir * 1, y + 3.8);
+  ctx.stroke();
+}
+
+function sparkle(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, colour: string): void {
+  ctx.fillStyle = colour;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size);
+  ctx.lineTo(x + size * 0.22, y - size * 0.22);
+  ctx.lineTo(x + size, y);
+  ctx.lineTo(x + size * 0.22, y + size * 0.22);
+  ctx.lineTo(x, y + size);
+  ctx.lineTo(x - size * 0.22, y + size * 0.22);
+  ctx.lineTo(x - size, y);
+  ctx.lineTo(x - size * 0.22, y - size * 0.22);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/** An angular block of rock: a lit top, a dark face and a soft shadow. */
+function rock(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, body: string, top: string, seed: number): void {
+  const pts: [number, number][] = [];
+  for (let k = 0; k < 6; k++) {
+    const a = (k / 6) * Math.PI * 2 + seed;
+    const rr = size * (0.75 + hash(k, seed * 100, 401) * 0.35);
+    pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.7]);
+  }
+  ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.15, y + size * 0.65, size * 1.05, size * 0.35, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  pts.forEach(([px, py], k) => (k ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+  ctx.closePath();
+  ctx.fill();
+  // The upper left facet faces the light, which comes from the north-west.
+  ctx.fillStyle = top;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15, y - size * 0.1);
+  for (const [px, py] of pts) if (py < y + size * 0.05 && px < x + size * 0.6) ctx.lineTo(px, py);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function gem(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, colour: string): void {
+  // A cut stone seen from the side: a flat table on top and a point below.
+  ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 1.3, size * 1.1, size * 0.35, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = colour;
+  ctx.strokeStyle = "rgba(20, 10, 20, 0.7)";
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.55, y - size * 0.7);
+  ctx.lineTo(x + size * 0.55, y - size * 0.7);
+  ctx.lineTo(x + size, y - size * 0.15);
+  ctx.lineTo(x, y + size);
+  ctx.lineTo(x - size, y - size * 0.15);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.55, y - size * 0.7);
+  ctx.lineTo(x, y - size * 0.7);
+  ctx.lineTo(x - size * 0.3, y - size * 0.15);
+  ctx.lineTo(x - size, y - size * 0.15);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function palm(ctx: CanvasRenderingContext2D, x: number, y: number, lean: number, height: number): void {
+  const topX = x + Math.sin(lean) * height;
+  const topY = y - Math.cos(lean) * height;
+  ctx.strokeStyle = "#7a5a30";
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.quadraticCurveTo(x + Math.sin(lean) * height * 0.2, y - height * 0.6, topX, topY);
+  ctx.stroke();
+  ctx.strokeStyle = "#2f7a2c";
+  ctx.lineWidth = 0.9;
+  for (let k = 0; k < 5; k++) {
+    const a = -Math.PI * 0.95 + k * (Math.PI * 0.9 / 4) + lean * 0.5;
+    const ex = topX + Math.cos(a) * 3.6;
+    const ey = topY + Math.sin(a) * 1.8 + 1.4;
+    ctx.beginPath();
+    ctx.moveTo(topX, topY);
+    ctx.quadraticCurveTo((topX + ex) / 2, topY + Math.sin(a) * 2.6 - 0.6, ex, ey);
+    ctx.stroke();
+  }
 }
 
 function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void {

@@ -89,7 +89,10 @@ export type GameEvent =
   | { type: "palaceMoved"; player: PlayerId; cityId: CityId }
   /** Two empires saw each other for the first time. */
   | { type: "contactMade"; a: PlayerId; b: PlayerId }
-  | { type: "warDeclared"; by: PlayerId; on: PlayerId }
+  | { type: "warDeclared"; by: PlayerId; on: PlayerId; brokeTreaty?: boolean }
+  | { type: "peaceOffered"; from: PlayerId; to: PlayerId }
+  | { type: "peaceMade"; a: PlayerId; b: PlayerId }
+  | { type: "peaceRejected"; by: PlayerId; from: PlayerId }
   /** The player lost the last city and is out of the game. */
   | { type: "civDestroyed"; player: PlayerId; by: PlayerId | null }
   /** Disorder brought the government down into anarchy. */

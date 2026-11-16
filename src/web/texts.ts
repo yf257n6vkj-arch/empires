@@ -90,6 +90,9 @@ export const ERROR_TEXT: Record<CommandError, string> = {
   noContact: t("S tímhle národem ses ještě nepotkal."),
   alreadyAtWar: t("S tímhle národem už válčíš."),
   invalidGovernor: t("Takový cíl správce nezná."),
+  noPeaceWithBarbarians: t("S barbary mír uzavřít nejde."),
+  peaceAlreadyOffered: t("Mír jsi jim už nabídl, počkej na odpověď."),
+  noPeaceOffer: t("Tenhle národ ti mír nenabídl."),
 };
 
 /** "před požárem": what a building or technology keeps away, in the instrumental. */
@@ -208,6 +211,14 @@ export function eventConcerns(state: GameState, e: GameEvent, viewer: number): b
       return e.a === viewer || e.b === viewer;
     case "ruinsExplored":
       return e.owner === viewer;
+    case "peaceOffered":
+      return e.to === viewer || e.from === viewer;
+    case "peaceRejected":
+      return e.from === viewer;
+    case "peaceMade": {
+      const knows = (p: number) => state.players[viewer]?.contacts.includes(p) ?? false;
+      return e.a === viewer || e.b === viewer || (knows(e.a) && knows(e.b));
+    }
     case "gameWon":
       return true;
     case "barbariansAppeared":
@@ -419,6 +430,19 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
     }
     case "palaceMoved":
       return e.player === viewer ? t("Hlavní město padlo a vláda se přestěhovala do města {city}.", { city: cityName(state, e.cityId) }) : null;
+    case "peaceOffered":
+      return e.to === viewer
+        ? t("{nation} ti nabízejí mír.", { nation: nationOf(state, e.from) })
+        : e.from === viewer
+          ? t("Nabídl jsi mír národu {nation}. Odpoví ve svém tahu.", { nation: nationOf(state, e.to) })
+          : null;
+    case "peaceMade": {
+      const other = e.a === viewer ? e.b : e.b === viewer ? e.a : null;
+      if (other !== null) return t("Uzavřel jsi mír s národem {nation}. Než na ně znovu zaútočíš, musí uplynout {n} tahů, jinak porušíš smlouvu.", { nation: nationOf(state, other), n: RULES.diplomacy.treatyTurns });
+      return t("{a} a {b} uzavřeli mír.", { a: nationOf(state, e.a), b: nationOf(state, e.b) });
+    }
+    case "peaceRejected":
+      return e.from === viewer ? t("{nation} tvou nabídku míru odmítli.", { nation: nationOf(state, e.by) }) : null;
     case "gameWon":
       if (e.player === viewer) return e.kind === "conquest" ? t("Zbyl jsi jen ty. Vyhrál jsi dobytím světa!") : t("Hra skončila a máš nejvyšší skóre. Vyhrál jsi!");
       return e.kind === "conquest"
@@ -456,7 +480,7 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
     }
     case "warDeclared":
       if (e.by === viewer) return t("Vyhlásil jsi válku. Válčíš teď s národem {nation}.", { nation: nationOf(state, e.on) });
-      if (e.on === viewer) return t("{nation} ti vyhlásili válku!", { nation: nationOf(state, e.by) });
+      if (e.on === viewer) return e.brokeTreaty ? t("{nation} porušili mírovou smlouvu a vyhlásili ti válku!", { nation: nationOf(state, e.by) }) : t("{nation} ti vyhlásili válku!", { nation: nationOf(state, e.by) });
       return t("{a} vyhlásili válku. Proti nim teď stojí {b}.", { a: nationOf(state, e.by), b: nationOf(state, e.on) });
     case "civDestroyed":
       return e.player === viewer
@@ -554,7 +578,7 @@ export function describeBuilding(b: BuildingRule, withCost = true): string {
   if (e.allGovernments) parts.push(t("můžeš zvolit každou vládu i bez technologie"));
   if (e.seesAllCities) parts.push(t("uvidíš všechna města světa a všichni můžou stavět vesmírné lodě"));
   if (e.militaryUnhappyCut) parts.push(t("vojáci mimo města rozladí méně obyvatel"));
-  if (e.peaceOffers) parts.push(t("soupeři ti budou nabízet mír (začne platit s diplomacií)"));
+  if (e.peaceOffers) parts.push(t("soupeři ti budou ochotněji nabízet a přijímat mír"));
   if (e.defenseVsSeaPct) parts.push(t("obrana proti lodím +{pct} %", { pct: e.defenseVsSeaPct }));
   if (e.defenseVsLandPct) parts.push(t("obrana proti pozemním jednotkám +{pct} %", { pct: e.defenseVsLandPct }));
   if (e.veteranUnits) parts.push(t("vojáci z města jsou veteráni a zranění se tu vyléčí za jeden tah"));

@@ -2,6 +2,32 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Válka jde ukončit mírem, který platí 15 tahů
+
+Tímhle je hotový krok 4 fáze 3. Tlačítko Národy nahoře otevře okno se všemi národy, které hráč zná. U každého ukazuje, jestli s ním válčí nebo má mír a od kterého tahu, jakou má soupeř povahu, jeho skóre a jestli chce mír. Odtud jde nabídnout mír nebo vyhlásit válku. Válku je potřeba potvrdit druhým klikem. Když soupeř nabídne mír hráči, hra se na začátku tahu zeptá oknem s portrétem vládce a hráč nabídku přijme nebo odmítne. Nabídka platí do konce tahu toho, komu přišla.
+
+Mír platí aspoň 15 tahů. Kdo vyhlásí válku dřív, poruší smlouvu a ostatní národy si to pamatují. Okno útoku na to hráče upozorní, než útok potvrdí. S barbary mír uzavřít nejde. Velká čínská zeď a Organizace spojených národů teď opravdu působí. Soupeři jejich majiteli mír nabízejí častěji a jeho nabídky snáz přijmou.
+
+Soupeři rozhodují o míru podle nálady, kterou skládají z jednotlivých důvodů podobně jako Unciv. Mír chtějí víc, čím déle válka trvá, když jsou slabší než obrana nepřátelských měst nebo když mají nepřátelské vojáky u svých měst. Vědci chtějí mír snáz, válečníci hůř. Válku chtějí dál, když mají jasnou převahu, když nepřítel už porušil smlouvu nebo jim víckrát vyhlásil válku. Nabízejí mír nejdřív po šesti tazích války a pak nejvýš jednou za šest tahů. Na 40 automatických partiích padlo 445 nabídek a 134 skončilo mírem. Válka trvala v mediánu 18 tahů a žádný soupeř smlouvu neporušil.
+
+Soupeři navíc posílají karavany pomáhat stavět divy a zakládat obchodní cesty a diplomaty zakládat velvyslanectví, ve válce i krást objevy.
+
+## 16. 11. 2026: Soupeři bádají rychleji a staví vesmírnou loď
+
+Michal si všiml, že AI bádá pomaleji, než by mohla. Rozbor ukázal čtyři příčiny. Soupeři zůstávali celou hru v monarchii, nechávali vědu na výchozím poměru, v republice je dusila údržba starých jednotek a nikdy si nic nekoupili. Teď soupeři přejdou z monarchie do republiky od 80. tahu, nebo dřív, když už nemají kde zakládat města. Válečník ve válce v monarchii zůstane. Posuvník vědy nastavují podle příjmu a nechávají si rezervu 50 zlatých. Zastaralé obránce za zlato povýší, a když na to nemají, propustí ty, bez kterých se město ubrání. Zbylé zlato nad rezervu dají do dokoupení budov.
+
+Soupeř měl ve 120. tahu v mediánu 63 až 66 objevů místo 55. Na konci partie zbylo ve stromu dost objevů na vesmírnou loď, a tak jsme ji zlevnili. Projekt Apollo stojí 180 štítů, součástka 60, modul 90 a let trvá základně 12 tahů. Soupeři Apollo staví v největším městě a pak loď v pořadí, které nejdřív dá dohromady nejmenší loď schopnou letu. Odstartují, když je loď hotová nebo když by jinak nestihla doletět. Výroba soupeřů je ale pořád nízká a v automatických partiích zatím žádný neodstartoval. Plán Vědce u Sovy jsme posunuli: školy do 60. tahu, věda do 85., Apollo do 100. a start do 110. tahu.
+
+## 16. 11. 2026: Barbaři na nastavení málo jsou slabší
+
+Michal napsal, že barbaři jsou silní i na nastavení málo. Při nastavení málo se teď objeví až od 50. tahu, je jich najednou nejvýš 4 a chodí po dvou. Útočí, až když mají šanci na výhru aspoň 55 %. Dobyté město nic nestaví, takže ho jde snadno vzít zpátky. Jednotky odpovídají éře, do které došla aspoň polovina národů, dřív stačil jeden nejpokročilejší národ. Z ruin vylezou barbaři až od 30. tahu. Nastavení hodně zůstalo jako dřív.
+
+Na 40 automatických partiích dobyli barbaři zhruba 0,6 města na partii, předtím 1,5. Zpátky je soupeři pořád berou málokdy.
+
+## 16. 11. 2026: Skok mezi normální a těžkou obtížností je menší
+
+Michal chtěl menší skok mezi normální a těžkou úrovní. Na těžké mají města soupeřů o 20 % víc jídla a štítů, na velmi těžké o 45 % víc a osadníka navíc. Při nových pravidlech pro výzkum a barbary vyšly úrovně na 20 partiích takhle (medián skóre místa, které hraje jako člověk, v procentech skóre nejlepšího soupeře): velmi snadná 112, snadná 112, normální 95, těžká 72, velmi těžká 59. Velmi snadná a snadná se podle skóre neliší. Na velmi snadné soupeři hlavně nezačínají války, a to skóre neukáže.
+
 ## 16. 11. 2026: Pět úrovní obtížnosti
 
 Michal chtěl aspoň tři úrovně. Claude navrhl čtyři, Michal vybral pět. Obtížnost se volí v okně nové hry vedle barbarů a výchozí je normální. Podle zadání určuje na lehčích úrovních obtížnost to, jak dobře soupeři rozhodují, a na těžších dostanou soupeři bonusy. Hráč ani barbaři bonusy nikdy nedostanou. Všechna čísla jsou v datech pravidel.

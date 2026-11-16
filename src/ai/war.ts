@@ -38,7 +38,7 @@ export interface Reason {
 }
 
 /** Strength a unit brings to an attack: attack × share of health, veterans more. */
-function punch(u: Unit): number {
+export function punch(u: Unit): number {
   const rule = UNIT_TYPES[u.type];
   return rule.attack * (u.hp / rule.hp) * (u.veteran ? 1.5 : 1);
 }

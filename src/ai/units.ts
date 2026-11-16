@@ -40,13 +40,18 @@ export function makeContext(view: PlayerView, land: Int32Array, plan: Omit<Plan,
 
 // ---------- settlers ----------
 
+/** A settler with no city to found improves the land around the cities. */
+function spareSettler(_ctx: Context, u: Unit): Command[] {
+  return [{ type: "automate", unitId: u.id }];
+}
+
 export function settlerCommands(ctx: Context, u: Unit): Command[] {
   const { view, land, average } = ctx;
   if (u.orders || u.work) return [];
   if (u.carriedBy !== null) return [];
   if (u.movesLeft <= 0) return [];
   // On the easy levels the computer stops founding cities early; spare settlers improve the land.
-  if (view.cities.length > 0 && view.cities.length + ctx.claimed.length >= skill(view).cityLimit) return [{ type: "automate", unitId: u.id }];
+  if (view.cities.length > 0 && view.cities.length + ctx.claimed.length >= skill(view).cityLimit) return spareSettler(ctx, u);
   const here = siteValue(view, at(view, u), ctx.claimed, average);
   const best = bestSite(view, u, land, average, ctx.claimed);
   if (Number.isFinite(here) && here >= 0.6 * MIN_SITE_SCORE && (!best || here >= best.score * 0.9)) {
@@ -71,8 +76,8 @@ export function settlerCommands(ctx: Context, u: Unit): Command[] {
       return goto(u, port);
     }
   }
-  // Nothing to found: improve the land around the cities.
-  return [{ type: "automate", unitId: u.id }];
+  // Nothing to found: improve the land around the cities, or join a city when there are workers enough.
+  return spareSettler(ctx, u);
 }
 
 /** A settler on a ship steps onto the island when the ship lies next to it. */

@@ -26,8 +26,8 @@
     {"id": "coastalFortress", "name": "Pobřežní pevnost", "cost": 40, "upkeep": 1, "requires": "metallurgy", "requiresBuilding": null, "wonder": false, "coastal": true, "effects": {"defenseVsSeaPct": 100}},
     {"id": "sdiDefense", "name": "Protiraketový štít", "cost": 100, "upkeep": 4, "requires": "superconductor", "requiresBuilding": null, "wonder": false, "effects": {"nuclearShield": 3}},
     {"id": "ssStructural", "name": "Nosná konstrukce lodi", "cost": 40, "upkeep": 0, "requires": "spaceFlight", "requiresBuilding": null, "wonder": false, "spaceship": "structural", "requiresWonder": "apolloProgram", "effects": {}},
-    {"id": "ssComponent", "name": "Motor lodi", "cost": 80, "upkeep": 0, "requires": "plastics", "requiresBuilding": null, "wonder": false, "spaceship": "component", "requiresWonder": "apolloProgram", "effects": {}},
-    {"id": "ssModule", "name": "Modul lodi", "cost": 120, "upkeep": 0, "requires": "robotics", "requiresBuilding": null, "wonder": false, "spaceship": "module", "requiresWonder": "apolloProgram", "effects": {}},
+    {"id": "ssComponent", "name": "Motor lodi", "cost": 60, "upkeep": 0, "requires": "plastics", "requiresBuilding": null, "wonder": false, "spaceship": "component", "requiresWonder": "apolloProgram", "effects": {}},
+    {"id": "ssModule", "name": "Modul lodi", "cost": 90, "upkeep": 0, "requires": "robotics", "requiresBuilding": null, "wonder": false, "spaceship": "module", "requiresWonder": "apolloProgram", "effects": {}},
     {"id": "stoneCircle", "name": "Kamenný kruh", "cost": 90, "upkeep": 0, "requires": "ceremonies", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": {"content": 1}},
     {"id": "pyramids", "name": "Pyramidy v Gíze", "cost": 120, "upkeep": 0, "requires": "masonry", "requiresBuilding": null, "wonder": true, "scope": "all", "obsoleteBy": "communism", "effects": {"noAnarchy": true, "allGovernments": true}},
     {"id": "colossus", "name": "Rhodský kolos", "cost": 80, "upkeep": 0, "requires": "bronze", "requiresBuilding": null, "wonder": true, "scope": "city", "obsoleteBy": "electricity", "effects": {"tradeOnTradeTiles": 1}},
@@ -50,7 +50,7 @@
     {"id": "unitedNations", "name": "Organizace spojených národů", "cost": 240, "upkeep": 0, "requires": "communism", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": {"peaceOffers": true}},
     {"id": "manhattanProject", "name": "Projekt Manhattan", "cost": 240, "upkeep": 0, "requires": "nuclearFission", "requiresBuilding": null, "wonder": true, "scope": "city", "effects": {}},
     {"id": "setiProgram", "name": "Program SETI", "cost": 240, "upkeep": 0, "requires": "computers", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": {"sciencePct": 50}},
-    {"id": "apolloProgram", "name": "Program Apollo", "cost": 240, "upkeep": 0, "requires": "spaceFlight", "requiresBuilding": null, "wonder": true, "scope": "city", "effects": {"seesAllCities": true}},
+    {"id": "apolloProgram", "name": "Program Apollo", "cost": 180, "upkeep": 0, "requires": "spaceFlight", "requiresBuilding": null, "wonder": true, "scope": "city", "effects": {"seesAllCities": true}},
     {"id": "genomeProject", "name": "Projekt lidského genomu", "cost": 240, "upkeep": 0, "requires": "geneticEngineering", "requiresBuilding": null, "wonder": true, "scope": "all", "effects": {"content": 1}}
   ]
 }

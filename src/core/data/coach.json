@@ -93,7 +93,7 @@
       },
       {
         "id": "schools",
-        "by": 65,
+        "by": 60,
         "tasks": [
           {
             "kind": "everyBig",
@@ -111,7 +111,7 @@
       },
       {
         "id": "science",
-        "by": 90,
+        "by": 85,
         "tasks": [
           {
             "kind": "building",
@@ -120,17 +120,17 @@
           },
           {
             "kind": "techs",
-            "n": 35
+            "n": 40
           }
         ]
       },
       {
         "id": "apollo",
-        "by": 110,
+        "by": 100,
         "tasks": [
           {
             "kind": "techs",
-            "n": 55
+            "n": 58
           },
           {
             "kind": "apollo"
@@ -139,7 +139,7 @@
       },
       {
         "id": "launch",
-        "by": 120,
+        "by": 110,
         "tasks": [
           {
             "kind": "launched"

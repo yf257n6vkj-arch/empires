@@ -36,6 +36,12 @@ export function startingEconomy(): Pick<
   | "defeated"
   | "contacts"
   | "atWar"
+  | "peaceOffers"
+  | "warSince"
+  | "peaceSince"
+  | "declaredOnMe"
+  | "offeredPeace"
+  | "treatiesBroken"
 > {
   return {
     techs: [],
@@ -52,6 +58,12 @@ export function startingEconomy(): Pick<
     defeated: false,
     contacts: [],
     atWar: [],
+    peaceOffers: [],
+    warSince: {},
+    peaceSince: {},
+    declaredOnMe: {},
+    offeredPeace: {},
+    treatiesBroken: 0,
   };
 }
 
@@ -205,9 +217,17 @@ export function wonderEffect(state: GameState, player: PlayerId, key: "shipMoves
   return total;
 }
 
-export function wonderFlag(state: GameState, player: PlayerId, key: "safeTriremes" | "noAnarchy" | "allGovernments" | "seesAllCities"): boolean {
+export function wonderFlag(state: GameState, player: PlayerId, key: "safeTriremes" | "noAnarchy" | "allGovernments" | "seesAllCities" | "peaceOffers"): boolean {
+  const owner = state.players[player];
   return state.cities.some(
-    (c) => c.owner === player && c.buildings.some((b) => BUILDINGS[b].effects[key] && wonderOwner(state, b) === player),
+    (c) =>
+      c.owner === player &&
+      c.buildings.some((b) => {
+        const rule = BUILDINGS[b];
+        // A wonder stops working once its owner knows the technology that makes it obsolete.
+        if (rule.obsoleteBy && owner && knowsTech(owner, rule.obsoleteBy)) return false;
+        return rule.effects[key] && wonderOwner(state, b) === player;
+      }),
   );
 }
 

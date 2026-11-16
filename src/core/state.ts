@@ -7,7 +7,7 @@ import type { GovernorGoal } from "./governor";
 import type { BarbarianLevel, BuildingId, Difficulty, CivId, GovernmentId, ImprovementId, NationId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 16;
+export const STATE_VERSION = 17;
 
 export interface GameMap {
   width: number;
@@ -77,6 +77,18 @@ export interface Player {
   contacts: PlayerId[];
   /** Players this one is at war with; the list is kept the same on both sides. */
   atWar: PlayerId[];
+  /** Players who offered this one peace and wait for an answer; the offer lapses at the end of this player's turn. */
+  peaceOffers: PlayerId[];
+  /** Turn the war with each player began, keyed by player id. */
+  warSince: Record<string, number>;
+  /** Turn of the last peace with each player, keyed by player id. */
+  peaceSince: Record<string, number>;
+  /** How many times each player has declared war on this one, keyed by player id. */
+  declaredOnMe: Record<string, number>;
+  /** Turn this player last offered peace to each player, keyed by player id. */
+  offeredPeace: Record<string, number>;
+  /** Peace treaties this player broke by declaring war too soon; every nation hears of it. */
+  treatiesBroken: number;
 }
 
 export interface Spaceship {

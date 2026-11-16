@@ -54,6 +54,7 @@ export function guideNumbers(): Record<string, number> {
     queueLength: RULES.queueLength,
     maxTurns: RULES.maxTurns,
     scoreTech: RULES.score.tech,
+    treatyTurns: RULES.diplomacy.treatyTurns,
     scoreWonder: RULES.score.wonder,
     tradeRouteMinDistance: RULES.tradeRouteMinDistance,
     successPerModule: RULES.spaceship.successPerModule,
@@ -213,7 +214,7 @@ Zraněná jednotka bojuje se zbytkem životů. Když celý tah stojí, vyléčí
 
 Do města bez obránců vejde tvoje vojenská jednotka a dobude ho. Město se zmenší o jednoho obyvatele, každá budova zanikne se šancí {captureBuildingLossPct} % a divy zůstanou. Získáš část zlata poražené říše a jeden její objev. Město s jediným obyvatelem při dobývání zanikne. Kdo přijde o poslední město, prohrál.
 
-Národy se poznají, když se jejich jednotky nebo města uvidí, a zpočátku spolu žijí v míru. Zaútočit můžeš jen na národ, se kterým válčíš. Když pošleš jednotku na národ, se kterým žiješ v míru, hra se zeptá, jestli mu chceš vyhlásit válku. Soupeři vyhlásí válku sami, když mají silnější armádu, a pak táhnou na nejbližší město ve skupině. Uzavírat mír se půjde v další verzi hry.
+Národy se poznají, když se jejich jednotky nebo města uvidí, a zpočátku spolu žijí v míru. Zaútočit můžeš jen na národ, se kterým válčíš. Když pošleš jednotku na národ, se kterým žiješ v míru, hra se zeptá, jestli mu chceš vyhlásit válku. Soupeři vyhlásí válku sami, když mají silnější armádu, a pak táhnou na nejbližší město ve skupině. Mír nabídneš v okně Národy a soupeř odpoví ve svém tahu. Soupeři sami nabízejí mír, když je válka unavuje nebo jim nejde. Uzavřený mír platí aspoň {treatyTurns} tahů a kdo ho poruší dřív, tomu ostatní národy přestanou věřit.
 
 Na mapě leží ruiny starých měst. Když do nich vstoupí tvoje pozemní jednotka, najde v nich zlato, starý objev, žoldnéře nebo kočovníky, kteří se k tobě přidají. Někdy jsou ruiny prázdné a někdy z nich vyrazí barbaři. Barbaři válčí se všemi. Objevují se v divočině daleko od měst nebo se vylodí u pobřeží a táhnou na nejbližší město. Když jich nastavíš málo, přijdou zhruba od 45. tahu, při nastavení hodně už od 25. tahu. Dobyté město si nechají a staví v něm další barbary, dokud ho někdo nedobude zpátky. Kolik jich bude, nastavíš v okně nové hry.`,
   },

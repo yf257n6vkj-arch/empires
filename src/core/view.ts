@@ -9,8 +9,9 @@
  */
 import { tilesInRadius, type Point } from "./geometry";
 import { scoreOf, type Score } from "./score";
-import { builtWonders, researchCost, wonderFlag } from "./economy";
-import { RULES, UNIT_TYPES, type BuildingId, type Difficulty, type GovernmentId, type NationId, type TechId, type TerrainId } from "./rules";
+import { buildingUpkeep, builtWonders, researchCost, wonderFlag } from "./economy";
+import { cityReport } from "./city";
+import { RULES, UNIT_TYPES, type BarbarianLevel, type BuildingId, type Difficulty, type GovernmentId, type NationId, type TechId, type TerrainId } from "./rules";
 import { isBarbarian, type City, type GameState, type PlayerId, type Spaceship, type Unit } from "./state";
 
 /** What a player knows about another empire. */
@@ -32,6 +33,22 @@ export interface RivalView {
   score: number | null;
   /** The nation has lost its last city; everybody hears of it. */
   defeated: boolean;
+  /** Turn the war with this nation began, null at peace. */
+  warSince: number | null;
+  /** Turn of the last peace with this nation, null if there was none. */
+  peaceSince: number | null;
+  /** This nation offered peace and waits for an answer. */
+  offersPeace: boolean;
+  /** The player offered this nation peace and waits for its answer. */
+  peaceOffered: boolean;
+  /** Turn the player last offered this nation peace, null if never. */
+  lastOfferTurn: number | null;
+  /** How many times this nation declared war on the player. */
+  declaredOnUs: number;
+  /** Peace treaties this nation has broken; every nation hears of it. */
+  treatiesBroken: number;
+  /** The nation owns a working wonder that makes others keener on peace. */
+  peaceWonder: boolean;
 }
 
 export interface PlayerView {
@@ -89,6 +106,8 @@ export interface PlayerView {
     embassies: PlayerId[];
     /** Enemy cities this player has taken or razed. */
     captured: number;
+    /** Gold the treasury gains each turn after building upkeep, as the top bar shows it. */
+    income: number;
   };
   victory: GameState["victory"];
   /** The player's own score with its parts. */
@@ -97,6 +116,8 @@ export interface PlayerView {
   difficulty: Difficulty;
   /** A person plays this seat; the difficulty does not weaken them. */
   isHuman: boolean;
+  /** How many barbarians the game has; everybody knows it. */
+  barbarians: BarbarianLevel;
   /** Wonders already standing somewhere; every player hears when one is finished. */
   builtWonders: BuildingId[];
 }
@@ -146,7 +167,7 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     cities: state.cities.filter((c) => c.owner === playerId).map((c) => ({ ...c })),
     foreignCities: state.cities
       .filter((c) => c.owner !== playerId && (seesAll || player.explored[c.y * state.map.width + c.x]))
-      .map((c) => ({ ...c, worked: [], food: 0, shields: 0, queue: [], tradeRoutes: [], stolenBy: [], taxmen: 0, scientists: 0, disorderTurns: 0, soldTurn: null, governor: null })),
+      .map((c) => ({ ...c, worked: [], food: 0, shields: 0, queue: [], tradeRoutes: [], stolenBy: c.stolenBy.filter((p) => p === playerId), taxmen: 0, scientists: 0, disorderTurns: 0, soldTurn: null, governor: null })),
     rivals: state.players
       .filter((p) => p.id !== playerId)
       .map((p) => ({
@@ -155,6 +176,14 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
         barbarian: isBarbarian(p),
         score: player.contacts.includes(p.id) && !isBarbarian(p) && !p.defeated ? scoreOf(state, p.id).total : null,
         defeated: p.defeated,
+        warSince: player.warSince[String(p.id)] ?? null,
+        peaceSince: player.peaceSince[String(p.id)] ?? null,
+        offersPeace: player.peaceOffers.includes(p.id),
+        peaceOffered: p.peaceOffers.includes(playerId),
+        lastOfferTurn: player.offeredPeace[String(p.id)] ?? null,
+        declaredOnUs: player.declaredOnMe[String(p.id)] ?? 0,
+        treatiesBroken: p.treatiesBroken,
+        peaceWonder: wonderFlag(state, p.id, "peaceOffers"),
         name: p.name,
         contact: player.contacts.includes(p.id),
         atWar: player.atWar.includes(p.id),
@@ -175,11 +204,16 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
       spaceship: { ...player.spaceship },
       embassies: [...player.embassies],
       captured: player.captured,
+      income: state.cities.filter((c) => c.owner === playerId).reduce((n, c) => {
+        const r = cityReport(state, c);
+        return n + r.gold + r.wealthGold;
+      }, 0) - buildingUpkeep(state, playerId),
     },
     victory: state.victory ? { ...state.victory } : null,
     score: scoreOf(state, playerId),
     difficulty: state.difficulty,
     isHuman: player.isHuman,
+    barbarians: state.barbarians,
     builtWonders: builtWonders(state),
   };
 }

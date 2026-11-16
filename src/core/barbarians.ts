@@ -16,12 +16,17 @@ import { RULES, TERRAINS, UNIT_TYPES, type RuinOutcome, type UnitTypeId } from "
 import { barbarianId, isBarbarian, type GameState, type Unit } from "./state";
 import { idx, makeUnit, reveal } from "./world";
 
-/** Unit types barbarians use now: the row of the most advanced technology anybody knows. */
+/**
+ * Unit types barbarians use now: the row of the most advanced technology that
+ * at least half of the nations know, so one fast nation does not arm them with tanks.
+ */
 export function barbarianUnitTypes(state: GameState): UnitTypeId[] {
   const rows = RULES.barbarians.units;
+  const nations = state.players.filter((p) => !isBarbarian(p) && !p.defeated);
   let types = rows[0]!.units;
   for (const row of rows) {
-    if (row.tech === null || state.players.some((p) => !isBarbarian(p) && knowsTech(p, row.tech))) types = row.units;
+    const knowing = nations.filter((p) => knowsTech(p, row.tech)).length;
+    if (row.tech === null || knowing * 2 >= nations.length) types = row.units;
   }
   return types;
 }

@@ -6,7 +6,7 @@
  * RULES.barbarians.attackChance. A captured city keeps one barbarian inside
  * and builds attackers.
  */
-import { distance, neighbors8, RULES, UNIT_TYPES, type City, type Command, type PlayerView, type Point, type Unit } from "../core";
+import { distance, neighbors8, RULES, sameItem, UNIT_TYPES, type City, type Command, type PlayerView, type Point, type ProductionItem, type Unit } from "../core";
 import { at, isLand, landmasses, pointOf } from "./knowledge";
 import { attackNow, bestAttacker } from "./war";
 
@@ -33,8 +33,10 @@ export function barbarianCommands(view: PlayerView): Command[] {
   for (const city of view.cities) {
     const guard = view.units.find((u) => u.x === city.x && u.y === city.y && UNIT_TYPES[u.type].domain === "land");
     if (guard) keepers.add(guard.id);
-    const make = bestAttacker(view);
-    if (city.production.kind !== "unit" || city.production.id !== make) commands.push({ type: "setProduction", cityId: city.id, item: { kind: "unit", id: make } });
+    // With few barbarians a taken city lies idle; with many it builds attackers.
+    const builds = view.barbarians !== "none" && RULES.barbarians.levels[view.barbarians].cityBuilds;
+    const make: ProductionItem = builds ? { kind: "unit", id: bestAttacker(view) } : { kind: "wealth" };
+    if (!sameItem(city.production, make)) commands.push({ type: "setProduction", cityId: city.id, item: make });
   }
   const land = landmasses(view);
   for (const u of view.units) {
@@ -42,7 +44,7 @@ export function barbarianCommands(view: PlayerView): Command[] {
     // Barbarians have no ships: they go only for what they can walk to.
     const home = land[at(view, u)];
     const reachable = <T extends Point>(list: T[]) => list.filter((p) => land[at(view, p)] === home);
-    const strike = attackNow(view, u, RULES.barbarians.attackChance);
+    const strike = attackNow(view, u, view.barbarians === "none" ? 1 : RULES.barbarians.levels[view.barbarians].attackChance);
     if (keepers.has(u.id)) {
       if (strike && view.units.filter((x) => x.x === u.x && x.y === u.y).length > 1) commands.push(strike);
       else if (!u.fortified) commands.push({ type: "fortify", unitId: u.id });

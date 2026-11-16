@@ -39,6 +39,16 @@ let destroyed = 0;
 let battles = 0;
 let attackerWins = 0;
 let ruins = 0;
+let peaces = 0;
+let routes = 0;
+let helped = 0;
+let embassies = 0;
+let stolen = 0;
+let launches = 0;
+let offers = 0;
+let rejected = 0;
+let broken = 0;
+const warLengths: number[] = [];
 let barbarianGroups = 0;
 let barbarianUnits = 0;
 let takenByBarbarians = 0;
@@ -62,6 +72,19 @@ for (let g = 0; g < games; g++) {
     while (s.turn <= 121 && !s.victory) {
       const played = playTurn(s);
       for (const e of played.events) {
+        if (e.type === "tradeRouteOpened") routes++;
+        else if (e.type === "wonderHelped") helped++;
+        else if (e.type === "embassyOpened") embassies++;
+        else if (e.type === "techStolen") stolen++;
+        else if (e.type === "spaceshipLaunched") launches++;
+        if (e.type === "peaceOffered") offers++;
+        else if (e.type === "peaceRejected") rejected++;
+        else if (e.type === "peaceMade") {
+          peaces++;
+          const since = s.players[e.a]?.warSince[String(e.b)];
+          if (since !== undefined) warLengths.push(s.turn - since);
+        }
+        if (e.type === "warDeclared" && e.brokeTreaty) broken++;
         if (e.type === "warDeclared") {
           wars++;
           warTurn ??= s.turn;
@@ -139,3 +162,5 @@ console.log(`výhry: ${Object.entries(wins).map(([k, n]) => `${k} ${n}`).join(" 
 if (difficultyArg) {
   console.log(`obtížnost ${difficulty}: hráč na místě člověka vyhrál ${seatWins.reference}×, soupeři ${seatWins.others}× · města na konci: hráč medián ${med(seatCities.reference)}, soupeři medián ${med(seatCities.others)} · skóre hráče v % nejlepšího soupeře: medián ${med(scoreShare)}`);
 }
+console.log(`mír: nabídek ${offers}, odmítnutých ${rejected}, uzavřených mírů ${peaces} · válka do míru trvala medián ${med(warLengths)} tahů · porušených smluv ${broken}`);
+console.log(`karavany: obchodních cest ${routes}, pomoc s divy ${helped}× · diplomati: velvyslanectví ${embassies}, ukradených objevů ${stolen} · vypuštěných lodí ${launches}`);

@@ -431,7 +431,7 @@ export interface DifficultyLevel {
   /** Units each computer player gets on top of the usual start. */
   extraUnits: UnitTypeId[];
   /** How well the computer players decide. */
-  ai: { warShift: number; attackOddsAdd: number; cityLimit: number; armyPct: number };
+  ai: { warShift: number; attackOddsAdd: number; cityLimit: number; armyPct: number; republic: boolean; manageRates: boolean };
 }
 
 export type RuinOutcome = "gold" | "tech" | "mercenaries" | "settlers" | "barbarians" | "empty";
@@ -459,6 +459,10 @@ export interface BarbarianLevelConstants {
   maxUnits: number;
   groupMin: number;
   groupMax: number;
+  /** A city the barbarians hold builds more barbarians. */
+  cityBuilds: boolean;
+  /** Win chance barbarians want before they attack. */
+  attackChance: number;
 }
 
 export interface BarbarianConstants {
@@ -468,7 +472,6 @@ export interface BarbarianConstants {
   landingCityDistance: number[];
   /** Unit types by the most advanced technology anyone knows; the last row whose tech is known applies. */
   units: { tech: TechId | null; units: UnitTypeId[] }[];
-  attackChance: number;
 }
 
 export interface GovernorGoalConstants {
@@ -501,6 +504,7 @@ export interface GameConstants {
   ruins: RuinConstants;
   score: { citizen: number; happy: number; tech: number; wonder: number; spaceship: number };
   difficulty: { levels: Record<Difficulty, DifficultyLevel> };
+  diplomacy: { treatyTurns: number };
   barbarians: BarbarianConstants;
   maxTurns: number;
   movesFraction: number;

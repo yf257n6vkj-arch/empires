@@ -61,11 +61,11 @@ describe("computer players", () => {
 });
 
 describe("war", () => {
-  it("goes to war with a stronger army and attacks only with a good chance", { timeout: 60000 }, () => {
+  it("goes to war with a stronger army and attacks only with a good chance", { timeout: 120000 }, () => {
     let wars = 0;
     let captured = 0;
     const chances: number[] = [];
-    for (const seed of ["war-1", "war-2"]) {
+    for (const seed of ["war-1", "war-2", "war-3", "war-4"]) {
       let s = newGame({ seed, playerCount: 4, opponentUnits: true });
       s.players[0]!.isHuman = false;
       while (s.turn <= 110) {

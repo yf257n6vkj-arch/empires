@@ -3,7 +3,8 @@
  * brief asks: the expanding nation wants growth and ships, the warrior
  * weapons, the scientist books. Past the list the AI takes whatever is open.
  */
-import { CIVS, TECHS, type Command, type GovernmentId, type PlayerView, type TechId } from "../core";
+import { skill } from "./war";
+import { CIVS, clampRate, RULES, TECHS, type Command, type GovernmentId, type PlayerView, type TechId } from "../core";
 
 type Nature = (typeof CIVS)[keyof typeof CIVS]["personality"];
 
@@ -29,9 +30,48 @@ export function researchCommands(view: PlayerView): Command[] {
   return open ? [{ type: "setResearch", tech: open }] : [];
 }
 
-/** Monarchy as soon as it is known: less waste than despotism and martial law keeps cities calm. */
-export function governmentCommands(view: PlayerView): Command[] {
-  const want: GovernmentId = "monarchy";
-  if (view.economy.government !== "despotism" || view.economy.revolution) return [];
-  return knows(view, "monarchy") ? [{ type: "revolution", government: want }] : [];
+/**
+ * Monarchy as soon as it is known: less waste than despotism and martial law
+ * keeps cities calm. Then the republic, whose extra trade pays for science,
+ * once the land is settled; a nation that lives for war waits for peace.
+ */
+export function governmentCommands(view: PlayerView, sitesLeft = 0): Command[] {
+  if (view.economy.revolution) return [];
+  const gov = view.economy.government;
+  const atWar = view.rivals.some((r) => r.atWar && !r.barbarian);
+  // The republic pays for science; only the nation that lives for war keeps its monarchy while it fights.
+  // Settlers eat more under the republic and every unit costs a shield, so the AI first fills its land.
+  // The expanding nation keeps settling islands with its monarchy's cheap settlers until late in the game.
+  const settled = view.turn >= REPUBLIC_BY || (sitesLeft <= 1 && nature(view) !== "expansion");
+  const republicOk = skill(view).republic && settled && (nature(view) !== "war" || !atWar);
+  if (gov !== "republic" && knows(view, "republic") && republicOk) return [{ type: "revolution", government: "republic" }];
+  if (gov === "despotism" && knows(view, "monarchy")) return [{ type: "revolution", government: "monarchy" as GovernmentId }];
+  return [];
+}
+
+/** Turn by which the AI moves to the republic even with land left to settle. */
+const REPUBLIC_BY = 80;
+
+/** Gold the AI keeps in the treasury before it puts more into science. */
+const RESERVE = 50;
+
+/**
+ * The science rate: as high as the treasury allows, the way a player moves the
+ * slider while watching the income in the top bar. One step per pass.
+ */
+export function rateCommands(view: PlayerView): Command[] {
+  if (!skill(view).manageRates) return [];
+  const { scienceRate, income, gold, government } = view.economy;
+  const step = RULES.rateStep;
+  if (income < 0 && gold + income * 5 < RESERVE) {
+    const down = clampRate(scienceRate - step, government);
+    return down !== scienceRate ? [{ type: "setScienceRate", rate: down }] : [];
+  }
+  // Room to spare: one step more science when the income stays positive with a margin.
+  const margin = Math.max(1, Math.ceil(view.cities.length / 3));
+  if (income >= margin && gold >= RESERVE) {
+    const up = clampRate(scienceRate + step, government);
+    return up !== scienceRate ? [{ type: "setScienceRate", rate: up }] : [];
+  }
+  return [];
 }

@@ -8,6 +8,8 @@ import { BUILDINGS, RULES, UNIT_TYPES, type BuildingId, type City, type PlayerVi
 import { coastal, isMilitary, isSettler } from "./knowledge";
 import { nature } from "./research";
 import { bestAttacker, isAttacker, skill } from "./war";
+import { spacePart } from "./space";
+import { agentProduction } from "./agents";
 
 export interface Plan {
   /** Good free sites on own land. */
@@ -22,6 +24,10 @@ export interface Plan {
   threats: { x: number; y: number }[];
   /** Attacking units the AI wants to have. */
   armyWanted: number;
+  /** Cities that build spaceship parts. */
+  spaceBuilders: number[];
+  /** Landmass of every tile, to keep caravans on reachable roads. */
+  land: Int32Array;
 }
 
 function knows(view: PlayerView, tech: string | null): boolean {
@@ -92,6 +98,8 @@ function buildingValue(view: PlayerView, city: City, b: BuildingId, plan: Plan):
     // Wonders only in the biggest city of an empire that has some cities to spare.
     const biggest = view.cities.every((c) => c.size <= city.size);
     if (!biggest || view.cities.length < 4) return 0;
+    // The Apollo Program opens the space race, which every nation wants to win.
+    if (b === "apolloProgram") return n === "science" ? 45 : 32;
     const fits = n === "science" ? (rule.effects.sciencePct ?? 0) > 0 || rule.effects.techsFromOthers : (rule.effects.content ?? 0) > 0;
     return fits ? 30 : 12;
   }
@@ -149,6 +157,19 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
 
   if (garrison(view, city) < garrisonNeed(view, city, plan)) return { kind: "unit", id: defender };
 
+  // The space race starts with the Apollo Program, built in the biggest city as soon as it is known.
+  const biggest = view.cities.every((c) => c.size < city.size || (c.size === city.size && c.id >= city.id));
+  const onApollo = city.production.kind === "building" && city.production.id === "apolloProgram";
+  if ((onApollo || biggest) && canBuild(view, city, "apolloProgram") && !view.cities.some((c) => c.id !== city.id && c.production.kind === "building" && c.production.id === "apolloProgram")) {
+    return { kind: "building", id: "apolloProgram" };
+  }
+
+  // Spaceship parts in the biggest cities once the Apollo Program stands.
+  if (plan.spaceBuilders.includes(city.id)) {
+    const part = spacePart(view, city);
+    if (part) return part;
+  }
+
   // An explorer from the capital early on.
   if (!plan.exploring && city.buildings.includes("palace") && view.turn < 60) return { kind: "unit", id: "warriors" };
 
@@ -170,8 +191,15 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
   if (city.size >= 3 && workers + (building ? 1 : 0) < Math.ceil(cityCount / 2) && underway === 0) return { kind: "unit", id: "settlers" };
 
   // An army for the war, from cities big enough to spare the shields.
-  const army = view.units.filter(isAttacker).length + view.cities.filter((c) => c.production.kind === "unit" && isAttacker({ type: c.production.id }) && c.id !== city.id).length;
-  if (army < plan.armyWanted && city.size >= 3) return { kind: "unit", id: bestAttacker(view) };
+  // Units as strong in defence as in attack end up guarding cities, so only true attackers count as the army.
+  const striker = (type: UnitTypeId) => isAttacker({ type }) && UNIT_TYPES[type].attack > UNIT_TYPES[type].defense;
+  const army = view.units.filter((u) => striker(u.type)).length + view.cities.filter((c) => c.production.kind === "unit" && striker(c.production.id) && c.id !== city.id).length;
+  const attacker = bestAttacker(view);
+  if (army < plan.armyWanted && city.size >= 3 && striker(attacker)) return { kind: "unit", id: attacker };
+
+  // Caravans for a wonder or a trade route, a diplomat for embassies.
+  const agent = agentProduction(view, city, plan.land);
+  if (agent) return agent;
 
   let best: { item: ProductionItem; priority: number } | null = null;
   for (const b of Object.keys(BUILDINGS) as BuildingId[]) {

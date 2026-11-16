@@ -45,6 +45,9 @@ export function endTurnDraft(draft: GameState, events: GameEvent[]): void {
   collapseDraft(draft, player, events);
   disasterDraft(draft, player, events);
   if (isBarbarian(draft.players[player])) barbarianTurnDraft(draft, events);
+  // Peace offers this player left unanswered lapse with the turn.
+  const me = draft.players[player];
+  if (me) me.peaceOffers = [];
 
   const next = (player + 1) % draft.players.length;
   if (next === 0) {

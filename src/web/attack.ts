@@ -2,8 +2,8 @@
  * The attack window: before a unit attacks, the player sees both sides'
  * strength, what makes it up and the chance of winning, and confirms.
  */
-import { combatOdds, UNIT_TYPES, type GameState, type Point, type Strength, type StrengthFactor, type Unit } from "../core";
-import { t } from "./i18n";
+import { combatOdds, RULES, UNIT_TYPES, type GameState, type Point, type Strength, type StrengthFactor, type Unit } from "../core";
+import { t, tn } from "./i18n";
 import { civName, unitName } from "./i18n/names";
 import { unitPortraitCanvas } from "./render";
 import { escapeHtml } from "./texts";
@@ -93,10 +93,13 @@ export function createAttackDialog(dialog: HTMLDialogElement, host: AttackHost) 
     const enemy = state.units.find((u) => u.x === to.x && u.y === to.y && u.owner !== unit.owner);
     if (!enemy) return false;
     const nation = civName(state.players[enemy.owner]!.civ);
+    const since = state.players[unit.owner]!.peaceSince[String(enemy.owner)];
+    const young = since !== undefined && state.turn - since < RULES.diplomacy.treatyTurns;
     dialog.innerHTML = `
       <div class="at">
         <h2>${t("Vyhlásit válku?")}</h2>
-        <p>${t("S národem {nation} žiješ v míru. Když zaútočíš, vyhlásíš mu válku. Jeho jednotky a města pak budou bojovat proti tobě a mír zatím uzavřít nejde.", { nation: escapeHtml(nation) })}</p>
+        <p>${t("S národem {nation} žiješ v míru. Když zaútočíš, vyhlásíš mu válku. Jeho jednotky a města pak budou bojovat proti tobě, dokud spolu neuzavřete mír.", { nation: escapeHtml(nation) })}</p>
+        ${young ? `<p class="neg">${tn("Mír jste uzavřeli teprve před jedním tahem. Porušíš smlouvu a všechny národy ti pak budou méně věřit.|Mír jste uzavřeli teprve před {n} tahy. Porušíš smlouvu a všechny národy ti pak budou méně věřit.|Mír jste uzavřeli teprve před {n} tahy. Porušíš smlouvu a všechny národy ti pak budou méně věřit.", state.turn - since!)}</p>` : ""}
         <div class="at-buttons">
           <button type="button" data-act="cancel">${t("Zrušit")} <kbd>Esc</kbd></button>
           <button type="button" class="primary danger" data-act="war">${t("Vyhlásit válku")}</button>

@@ -53,7 +53,7 @@ import {
   type ImprovementId,
   type TechId,
 } from "./rules";
-import type { City, CityId, GameState, ProductionItem, Unit, UnitId } from "./state";
+import { isBarbarian, type City, type CityId, type GameState, type ProductionItem, type Unit, type UnitId } from "./state";
 import { endTurnDraft } from "./turn";
 import { cityAt, cityName, cloneState, getPlayer, idx, reveal, workableTiles } from "./world";
 
@@ -61,6 +61,10 @@ export type Command =
   | { type: "move"; unitId: UnitId; to: Point }
   /** Declares war on another player the declaring player has met. */
   | { type: "declareWar"; player: number }
+  /** Offers peace to a nation at war with this one; it answers on its own turn. */
+  | { type: "offerPeace"; player: number }
+  /** Accepts or turns down a peace offer the player received. */
+  | { type: "answerPeace"; player: number; accept: boolean }
   /** Attacks the enemy on a neighbouring tile; the attacker stays where it is. */
   | { type: "attack"; unitId: UnitId; to: Point }
   | { type: "goto"; unitId: UnitId; to: Point }
@@ -109,6 +113,9 @@ export type CommandError =
   | "notYourUnit"
   | "unknownCity"
   | "invalidGovernor"
+  | "noPeaceWithBarbarians"
+  | "peaceAlreadyOffered"
+  | "noPeaceOffer"
   | "notYourCity"
   | "noMovesLeft"
   | "notAdjacent"
@@ -293,9 +300,56 @@ function applyCommandInner(state: GameState, command: Command): CommandResult {
       if (!me.contacts.includes(them.id)) return { ok: false, error: "noContact" };
       if (me.atWar.includes(them.id)) return { ok: false, error: "alreadyAtWar" };
       const draft = cloneState(state);
-      getPlayer(draft, me.id).atWar.push(them.id);
-      getPlayer(draft, them.id).atWar.push(me.id);
-      events.push({ type: "warDeclared", by: me.id, on: them.id });
+      const a = getPlayer(draft, me.id);
+      const b = getPlayer(draft, them.id);
+      a.atWar.push(them.id);
+      b.atWar.push(me.id);
+      a.warSince[String(them.id)] = draft.turn;
+      b.warSince[String(me.id)] = draft.turn;
+      b.declaredOnMe[String(me.id)] = (b.declaredOnMe[String(me.id)] ?? 0) + 1;
+      // Offers between the two lapse with the new war.
+      a.peaceOffers = a.peaceOffers.filter((p) => p !== them.id);
+      b.peaceOffers = b.peaceOffers.filter((p) => p !== me.id);
+      const since = a.peaceSince[String(them.id)];
+      const broke = since !== undefined && draft.turn - since < RULES.diplomacy.treatyTurns;
+      if (broke) a.treatiesBroken += 1;
+      events.push({ type: "warDeclared", by: me.id, on: them.id, brokeTreaty: broke });
+      return { ok: true, state: draft, events };
+    }
+
+    case "offerPeace": {
+      const me = getPlayer(state, state.currentPlayer);
+      const them = state.players[command.player];
+      if (!them || them.id === me.id || them.defeated) return { ok: false, error: "noContact" };
+      if (isBarbarian(them) || isBarbarian(me)) return { ok: false, error: "noPeaceWithBarbarians" };
+      if (!me.atWar.includes(them.id)) return { ok: false, error: "notAtWar" };
+      if (them.peaceOffers.includes(me.id)) return { ok: false, error: "peaceAlreadyOffered" };
+      const draft = cloneState(state);
+      getPlayer(draft, them.id).peaceOffers.push(me.id);
+      getPlayer(draft, me.id).offeredPeace[String(them.id)] = draft.turn;
+      events.push({ type: "peaceOffered", from: me.id, to: them.id });
+      return { ok: true, state: draft, events };
+    }
+
+    case "answerPeace": {
+      const me = getPlayer(state, state.currentPlayer);
+      if (!me.peaceOffers.includes(command.player)) return { ok: false, error: "noPeaceOffer" };
+      const draft = cloneState(state);
+      const a = getPlayer(draft, me.id);
+      const b = getPlayer(draft, command.player);
+      a.peaceOffers = a.peaceOffers.filter((p) => p !== b.id);
+      if (!command.accept) {
+        events.push({ type: "peaceRejected", by: me.id, from: b.id });
+        return { ok: true, state: draft, events };
+      }
+      a.atWar = a.atWar.filter((p) => p !== b.id);
+      b.atWar = b.atWar.filter((p) => p !== a.id);
+      b.peaceOffers = b.peaceOffers.filter((p) => p !== a.id);
+      delete a.warSince[String(b.id)];
+      delete b.warSince[String(a.id)];
+      a.peaceSince[String(b.id)] = draft.turn;
+      b.peaceSince[String(a.id)] = draft.turn;
+      events.push({ type: "peaceMade", a: b.id, b: a.id });
       return { ok: true, state: draft, events };
     }
 

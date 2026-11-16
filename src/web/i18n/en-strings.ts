@@ -1547,8 +1547,6 @@ export const EN_STRINGS: Record<string, string> = {
     "The {nation} lost their last city and their empire is gone.",
   "útok {attack}, obrana {defense}, pohyb {moves}, životy {hp}":
     "attack {attack}, defence {defense}, moves {moves}, hit points {hp}",
-  "soupeři ti budou nabízet mír (začne platit s diplomacií)":
-    "rivals will keep offering you peace (starts working with diplomacy)",
   "obrana proti lodím +{pct} %":
     "defence against ships +{pct}%",
   "obrana proti pozemním jednotkám +{pct} %":
@@ -1557,8 +1555,6 @@ export const EN_STRINGS: Record<string, string> = {
     "soldiers from the city are veterans, and wounded units heal here in one turn",
   "Vyhlásit válku?":
     "Declare war?",
-  "S národem {nation} žiješ v míru. Když zaútočíš, vyhlásíš mu válku. Jeho jednotky a města pak budou bojovat proti tobě a mír zatím uzavřít nejde.":
-    "You are at peace with the {nation}. If you attack, you declare war on them. Their units and cities will then fight against you, and peace cannot be made yet.",
   "Vyhlásit válku":
     "Declare war",
   "Rozumím":
@@ -2117,4 +2113,80 @@ export const EN_STRINGS: Record<string, string> = {
     "Difficulty",
   "obtížnost":
     "difficulty",
+  "S národem {nation} žiješ v míru. Když zaútočíš, vyhlásíš mu válku. Jeho jednotky a města pak budou bojovat proti tobě, dokud spolu neuzavřete mír.":
+    "You live at peace with the {nation}. If you attack, you declare war on them. Their units and cities will then fight against you until you make peace.",
+  "Mír jste uzavřeli teprve před jedním tahem. Porušíš smlouvu a všechny národy ti pak budou méně věřit.|Mír jste uzavřeli teprve před {n} tahy. Porušíš smlouvu a všechny národy ti pak budou méně věřit.|Mír jste uzavřeli teprve před {n} tahy. Porušíš smlouvu a všechny národy ti pak budou méně věřit.":
+    "You made peace only one turn ago. You will break the treaty and every nation will trust you less.|You made peace only {n} turns ago. You will break the treaty and every nation will trust you less.",
+  "chtějí mír":
+    "want peace",
+  "mír by přijali":
+    "would accept peace",
+  "o mír zatím nestojí":
+    "don't care for peace yet",
+  "chtějí bojovat dál":
+    "want to keep fighting",
+  "rádi zakládají nová města":
+    "love founding new cities",
+  "spoléhají na armádu":
+    "rely on their army",
+  "sázejí na vědu":
+    "bet on science",
+  "válka od tahu {turn}":
+    "war since turn {turn}",
+  "mír od tahu {turn}":
+    "peace since turn {turn}",
+  "porušili jednu smlouvu|porušili {n} smlouvy|porušili {n} smluv":
+    "broke one treaty|broke {n} treaties",
+  "Čeká se na odpověď":
+    "Waiting for an answer",
+  "Nabídnout mír":
+    "Offer peace",
+  "Opravdu porušit smlouvu?":
+    "Really break the treaty?",
+  "Opravdu vyhlásit válku?":
+    "Really declare war?",
+  "O vládci v encyklopedii":
+    "About the ruler in the encyclopedia",
+  "skóre {score}":
+    "score {score}",
+  "tvoje skóre {score}":
+    "your score {score}",
+  "Zatím jsi nepotkal žádný národ. Pošli jednotky na průzkum.":
+    "You haven't met any nation yet. Send units out to explore.",
+  "S barbary se válčí pořád a mír s nimi uzavřít nejde.":
+    "War with the barbarians never stops, and you can't make peace with them.",
+  "Mír, který uzavřeš, platí aspoň {n} tahů. Kdo ho poruší dřív, tomu ostatní národy přestanou věřit.":
+    "A peace you make holds for at least {n} turns. Whoever breaks it sooner loses the trust of the other nations.",
+  "{nation} nabízejí mír":
+    "The {nation} offer peace",
+  "{leader} posílá posly: válka trvá už {n} tah a je čas ji ukončit.|{leader} posílá posly: válka trvá už {n} tahy a je čas ji ukončit.|{leader} posílá posly: válka trvá už {n} tahů a je čas ji ukončit.":
+    "{leader} sends envoys: the war has lasted {n} turn and it is time to end it.|{leader} sends envoys: the war has lasted {n} turns and it is time to end it.",
+  "Když mír přijmeš, nesmíš na ně {n} tahů zaútočit, jinak porušíš smlouvu. Když odmítneš, válka pokračuje.":
+    "If you accept, you must not attack them for {n} turns, or you break the treaty. If you refuse, the war goes on.",
+  "Odmítnout":
+    "Refuse",
+  "Přijmout mír":
+    "Accept peace",
+  "S barbary mír uzavřít nejde.":
+    "You can't make peace with the barbarians.",
+  "Mír jsi jim už nabídl, počkej na odpověď.":
+    "You have already offered them peace; wait for their answer.",
+  "Tenhle národ ti mír nenabídl.":
+    "This nation hasn't offered you peace.",
+  "{nation} ti nabízejí mír.":
+    "The {nation} offer you peace.",
+  "Nabídl jsi mír národu {nation}. Odpoví ve svém tahu.":
+    "You offered peace to the {nation}. They will answer on their turn.",
+  "Uzavřel jsi mír s národem {nation}. Než na ně znovu zaútočíš, musí uplynout {n} tahů, jinak porušíš smlouvu.":
+    "You made peace with the {nation}. Before you attack them again, {n} turns must pass, or you break the treaty.",
+  "{a} a {b} uzavřeli mír.":
+    "The {a} and the {b} made peace.",
+  "{nation} tvou nabídku míru odmítli.":
+    "The {nation} turned down your peace offer.",
+  "{nation} porušili mírovou smlouvu a vyhlásili ti válku!":
+    "The {nation} broke the peace treaty and declared war on you!",
+  "soupeři ti budou ochotněji nabízet a přijímat mír":
+    "rivals will be keener to offer and accept peace",
+  "Národy, které znáš: válka a mír":
+    "The nations you know: war and peace",
 };

@@ -121,7 +121,7 @@
     "maxStructural": 12,
     "maxComponent": 6,
     "maxModule": 3,
-    "baseTurns": 16,
+    "baseTurns": 12,
     "turnsPerComponent": 2,
     "minTurns": 5,
     "successPerModule": 34
@@ -266,19 +266,21 @@
       "swordsmen"
     ],
     "settlersBeforeTurn": 60,
-    "barbariansFromTurn": 15,
+    "barbariansFromTurn": 30,
     "barbarianCityDistance": 3
   },
   "barbarians": {
-    "_comment": "Barbarians by level. From startTurn on, every barbarian turn they may rise up on land far from cities (uprisingPct) or land on a coast near a coastal city (landingPct), while they have fewer than maxUnits. Groups have groupMin to groupMax units of the era of the most advanced player. They attack with a win chance of at least attackChance.",
+    "_comment": "Barbarians by level. From startTurn on, every barbarian turn they may rise up on land far from cities (uprisingPct) or land on a coast near a coastal city (landingPct), while they have fewer than maxUnits. Groups have groupMin to groupMax units of the most advanced era that at least half of the nations have reached. They attack with a win chance of at least attackChance of their level. With cityBuilds off, a city the barbarians take builds nothing, so it is easy to take back.",
     "levels": {
       "few": {
-        "startTurn": 45,
-        "uprisingPct": 6,
-        "landingPct": 4,
-        "maxUnits": 6,
+        "startTurn": 50,
+        "uprisingPct": 4,
+        "landingPct": 2,
+        "maxUnits": 4,
         "groupMin": 2,
-        "groupMax": 2
+        "groupMax": 2,
+        "cityBuilds": false,
+        "attackChance": 0.55
       },
       "many": {
         "startTurn": 25,
@@ -286,7 +288,9 @@
         "landingPct": 12,
         "maxUnits": 18,
         "groupMin": 3,
-        "groupMax": 4
+        "groupMax": 4,
+        "cityBuilds": true,
+        "attackChance": 0.35
       }
     },
     "uprisingCityDistance": 6,
@@ -343,8 +347,7 @@
           "tank"
         ]
       }
-    ],
-    "attackChance": 0.35
+    ]
   },
   "score": {
     "_comment": "Points for the score: each citizen, each happy citizen once more, each technology, each wonder and a spaceship that landed. After maxTurns the nation with the highest score wins.",
@@ -355,7 +358,7 @@
     "spaceship": 100
   },
   "difficulty": {
-    "_comment": "Levels of difficulty. On the easy levels the computer players decide worse: warShift moves their war motivation (a big negative number means they never start a war), attackOddsAdd raises the win chance they need before attacking, cityLimit caps how many cities they found and armyPct scales the army they keep. On the hard levels they play as on normal but their cities get shieldsPct more shields and foodPct more food, and each starts with extraUnits. The human and the barbarians never get bonuses.",
+    "_comment": "Levels of difficulty. On the easy levels the computer players decide worse: warShift moves their war motivation (a big negative number means they never start a war), attackOddsAdd raises the win chance they need before attacking, cityLimit caps how many cities they found armyPct scales the army they keep, republic says whether they move on to the republic and manageRates whether they set the science rate by their income. On the hard levels they play as on normal but their cities get shieldsPct more shields and foodPct more food, and each starts with extraUnits. The human and the barbarians never get bonuses.",
     "levels": {
       "veryEasy": {
         "shieldsPct": 0,
@@ -365,7 +368,9 @@
           "warShift": -1000,
           "attackOddsAdd": 0.25,
           "cityLimit": 4,
-          "armyPct": 50
+          "armyPct": 50,
+          "republic": false,
+          "manageRates": false
         }
       },
       "easy": {
@@ -376,7 +381,9 @@
           "warShift": -40,
           "attackOddsAdd": 0.15,
           "cityLimit": 6,
-          "armyPct": 60
+          "armyPct": 60,
+          "republic": false,
+          "manageRates": true
         }
       },
       "normal": {
@@ -387,23 +394,27 @@
           "warShift": 0,
           "attackOddsAdd": 0,
           "cityLimit": 16,
-          "armyPct": 100
+          "armyPct": 100,
+          "republic": true,
+          "manageRates": true
         }
       },
       "hard": {
-        "shieldsPct": 25,
-        "foodPct": 25,
+        "shieldsPct": 20,
+        "foodPct": 20,
         "extraUnits": [],
         "ai": {
           "warShift": 0,
           "attackOddsAdd": 0,
           "cityLimit": 16,
-          "armyPct": 100
+          "armyPct": 100,
+          "republic": true,
+          "manageRates": true
         }
       },
       "veryHard": {
-        "shieldsPct": 50,
-        "foodPct": 50,
+        "shieldsPct": 45,
+        "foodPct": 45,
         "extraUnits": [
           "settlers"
         ],
@@ -411,9 +422,15 @@
           "warShift": 0,
           "attackOddsAdd": 0,
           "cityLimit": 16,
-          "armyPct": 100
+          "armyPct": 100,
+          "republic": true,
+          "manageRates": true
         }
       }
     }
+  },
+  "diplomacy": {
+    "_comment": "Peace. A nation that declares war within treatyTurns of making peace with that nation breaks the treaty, and every nation remembers it. A peace offer lasts until the end of the receiver's next turn.",
+    "treatyTurns": 15
   }
 }

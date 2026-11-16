@@ -90,6 +90,7 @@ import { loadCityArt } from "./cityView";
 import { createMenus } from "./menu";
 import { createAdvisor } from "./advisorPanel";
 import { createGuide } from "./guide";
+import { createNations } from "./nations";
 import { createCitiesOverview } from "./citiesOverview";
 import { createCelebration } from "./celebration";
 import { payloadOf, readAutosave, writeAutosave, type LogEntry, type SavePayload } from "./saves";
@@ -259,6 +260,8 @@ function run(command: Command): boolean {
   }
   addLog(events);
   if (advisor.mode() === "guide") guide.onEvents(events);
+  // Peace offers from computer players wait for an answer at the start of the turn.
+  if (command.type === "endTurn") nations.askOffers();
   // A declaration of war against the player must not slip by in the log.
   const war = events.find((e) => e.type === "warDeclared" && e.on === HUMAN);
   if (war && war.type === "warDeclared") {
@@ -703,6 +706,17 @@ const cityScreen = createCityScreen({
   openEntry: (key) => codex.show(key),
 });
 
+const nations = createNations($<HTMLDialogElement>("#nations-dialog"), $<HTMLDialogElement>("#peace-dialog"), {
+  state: () => state,
+  player: () => HUMAN,
+  run: (command) => {
+    const ok = run(command);
+    refresh();
+    return ok;
+  },
+  openEntry: (key) => codex.show(key),
+});
+$<HTMLButtonElement>("#nations-button").addEventListener("click", () => nations.open());
 const guide = createGuide({
   state: () => state,
   player: () => HUMAN,
@@ -1387,7 +1401,7 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || attackDialog.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen() || celebration.isOpen() || guide.isOpen()) return;
+  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || attackDialog.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen() || celebration.isOpen() || guide.isOpen() || nations.isOpen()) return;
   if (e.key.toLowerCase() === "o") {
     e.preventDefault();
     return citiesOverview.open();

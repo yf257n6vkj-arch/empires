@@ -117,8 +117,12 @@ export function newGame(options: NewGameOptions): GameState {
   placeRuins(map, starts, rng.fork("ruins"));
   if (state.barbarians !== "none") {
     const b = barbarianPlayer(players.length, map);
-    for (const p of players) p.atWar.push(b.id);
+    for (const p of players) {
+      p.atWar.push(b.id);
+      p.warSince[String(b.id)] = 1;
+    }
     b.atWar = players.map((p) => p.id);
+    b.warSince = Object.fromEntries(players.map((p) => [String(p.id), 1]));
     players.push(b);
   }
 
@@ -282,6 +286,17 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
   if (version <= 15) {
     // Version 16 adds difficulty; older games were played on normal.
     state.difficulty ??= "normal";
+  }
+  if (version <= 16) {
+    // Version 17 adds peace. Wars of older games count from the turn the game was loaded.
+    for (const p of state.players) {
+      p.peaceOffers ??= [];
+      p.warSince ??= Object.fromEntries(p.atWar.map((id) => [String(id), state.turn]));
+      p.peaceSince ??= {};
+      p.declaredOnMe ??= {};
+      p.offeredPeace ??= {};
+      p.treatiesBroken ??= 0;
+    }
   }
   state.version = STATE_VERSION;
   return state;

@@ -813,20 +813,26 @@ function drawNoise(x: number, y: number, k: number): number {
   return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
 }
 
+/** One drawn stream: points with the width of the water at each. */
+interface Stream {
+  pts: { x: number; y: number; w: number }[];
+}
+
 /**
- * Rivers drawn as real rivers. Each river tile knows which way the water
- * flows, towards the tile where the river meets the sea. A thin stream runs
- * on from the source up into the hills and mountains. The course is a
- * smooth curve that is then bent by a smooth noise field, so it meanders;
- * the same field bends every river, so a tributary still meets the main
- * stream. Rivers grow wider downstream and a big one opens into a small
- * delta at the coast.
+ * Rivers drawn as real river systems. Each river tile knows which way the
+ * water flows, towards the tile where the river meets the sea. The main
+ * course is a smooth curve; at the spring it splits into a fan of small
+ * streams that climb into the hills and mountains, side creeks join it
+ * along the way, and a big river spreads into a delta of channels at the
+ * coast. Everything is drawn first on straight lines and then bent by one
+ * smooth noise field, so the rivers meander and every creek still meets
+ * its river. Only the river tiles count for the rules; the creeks are
+ * just a picture.
  */
 function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height, terrain } = input;
   const n = width * height;
   const isRiver = (i: number) => terrain[i] === "river";
-  const highland = (i: number) => terrain[i] === "hills" || terrain[i] === "mountains";
   const near4 = (i: number): number[] => {
     const x = i % width;
     const y = Math.floor(i / width);
@@ -837,17 +843,18 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     if (x > 0) out.push(i - 1);
     return out;
   };
-  const near8 = (i: number): number[] => {
-    const x = i % width;
-    const y = Math.floor(i / width);
-    const out: number[] = [];
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if ((dx || dy) && x + dx >= 0 && y + dy >= 0 && x + dx < width && y + dy < height) out.push(i + dy * width + dx);
-      }
-    }
-    return out;
+  const tileAtPoint = (x: number, y: number): number => {
+    const tx = Math.floor(x / TILE);
+    const ty = Math.floor(y / TILE);
+    return tx < 0 || ty < 0 || tx >= width || ty >= height ? -1 : ty * width + tx;
   };
+  /** Dry land a creek may run over: known, not the sea. */
+  const dryLand = (x: number, y: number) => {
+    const i = tileAtPoint(x, y);
+    const t = i < 0 ? null : (terrain[i] ?? null);
+    return t !== null && t !== "ocean";
+  };
+
   // Where the water of each river tile goes: the next river tile, or the sea at the mouth.
   const down = new Int32Array(n).fill(-1);
   const order: number[] = [];
@@ -880,164 +887,284 @@ function drawRivers(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   for (const i of order) if (isRiver(down[i]!)) upstream[down[i]!] = 1;
 
   const centre = (i: number): [number, number] => [((i % width) + 0.5) * TILE, (Math.floor(i / width) + 0.5) * TILE];
-  const widthAt = (f: number) => Math.min(5, 1.2 + Math.sqrt(f) * 0.9);
+  const widthAt = (f: number) => Math.min(4.6, 1.1 + Math.sqrt(f) * 0.85);
+  const streams: Stream[] = [];
+  const deltas: { x: number; y: number; ux: number; uy: number; reach: number; spread: number }[] = [];
+  /** Where each river tile's course was drawn, so later courses join it there. */
+  const drawnAt = new Map<number, [number, number]>();
 
-  // The source lies higher up: a stream climbs from the first river tile into the hills and mountains.
-  const climb = (source: number): number[] => {
-    const path: number[] = [];
-    const used = new Set<number>([source]);
-    let at = source;
-    const away = down[source]!;
-    for (let step = 0; step < 3; step++) {
-      const options = near8(at).filter(
-        (j) => highland(j) && !used.has(j) && !near8(j).some((k) => isRiver(k) && k !== at && k !== source) && j !== away,
-      );
-      if (options.length === 0) break;
-      // Up towards the mountains, the same way the river came from where possible.
-      const [ax, ay] = centre(at);
-      const [bx, by] = away >= 0 ? centre(away) : [ax, ay];
-      const score = (j: number) => {
-        const [jx, jy] = centre(j);
-        const back = (jx - ax) * (ax - bx) + (jy - ay) * (ay - by);
-        return (terrain[j] === "mountains" ? 2 : 1) + back / (TILE * TILE) + hash(j % width, Math.floor(j / width), 77) * 0.3;
-      };
-      options.sort((a, b) => score(b) - score(a));
-      at = options[0]!;
-      used.add(at);
-      path.push(at);
-      if (terrain[at] === "mountains" && step >= 1) break;
+  /**
+   * A small stream that starts at (x, y) and runs away from it at `angle`,
+   * wandering a little, `len` long, `w0` wide at the start and `w1` at the
+   * end. It stops at the sea, at unknown land, or where `stop` says so.
+   */
+  const creek = (x: number, y: number, angle: number, len: number, w0: number, w1: number, seed: number, stop?: (x: number, y: number) => boolean) => {
+    const pts: Stream["pts"] = [{ x, y, w: w0 }];
+    const step = 1.4;
+    const count = Math.max(2, Math.round(len / step));
+    let a = angle;
+    let px = x;
+    let py = y;
+    for (let k = 1; k <= count; k++) {
+      a += (hash(seed, k, 131) - 0.5) * 0.7;
+      const nx = px + Math.cos(a) * step;
+      const ny = py + Math.sin(a) * step;
+      if (!dryLand(nx, ny) || (stop && stop(nx, ny))) break;
+      px = nx;
+      py = ny;
+      pts.push({ x: px, y: py, w: w0 + (w1 - w0) * (k / count) });
     }
-    return path.reverse();
+    if (pts.length >= 3) streams.push({ pts });
+    return pts;
   };
 
-  // Courses from the spring down to the sea or to the river they join.
-  const courses: { pts: [number, number][]; widths: number[]; mouth: boolean }[] = [];
-  const drawn = new Uint8Array(n);
+  /** A fan of small streams that join into one, like the springs of a river. */
+  const springs = (x: number, y: number, angle: number, len: number, w: number, depth: number, seed: number) => {
+    const pts = creek(x, y, angle, len, w, w * 0.75, seed);
+    if (depth <= 0 || pts.length < 3) return;
+    const tip = pts[pts.length - 1]!;
+    const mid = pts[Math.floor(pts.length * 0.5)]!;
+    const spread = 0.45 + hash(seed, 7, 133) * 0.35;
+    springs(tip.x, tip.y, angle - spread, len * 0.7, w * 0.7, depth - 1, seed * 3 + 1);
+    springs(tip.x, tip.y, angle + spread, len * 0.7, w * 0.7, depth - 1, seed * 3 + 2);
+    // Now and then one more little stream joins halfway.
+    if (hash(seed, 9, 137) > 0.45) {
+      const side = hash(seed, 11, 139) > 0.5 ? 1 : -1;
+      creek(mid.x, mid.y, angle + side * (0.9 + hash(seed, 13, 141) * 0.4), len * 0.55, w * 0.6, w * 0.4, seed * 7 + 5);
+    }
+  };
+
   for (const source of order) {
     if (upstream[source]) continue;
-    const pts: [number, number][] = [];
-    const widths: number[] = [];
-    const stream = climb(source);
-    stream.forEach((j, k) => {
-      pts.push(centre(j));
-      widths.push(0.5 + (k / Math.max(1, stream.length)) * 0.6);
-    });
+    // The main course from the spring down to the sea or to the river it joins.
+    const tiles: number[] = [];
     let i = source;
-    let mouth = false;
+    let mouth = -1;
     for (let guard = 0; guard < 200; guard++) {
-      pts.push(centre(i));
-      widths.push(widthAt(flow[i]!));
+      tiles.push(i);
       const d = down[i]!;
-      if (drawn[i] && pts.length > 1) break;
-      drawn[i] = 1;
       if (d < 0) break;
       if (!isRiver(d)) {
-        // The mouth: run on past the coast into the sea.
-        const [ax, ay] = centre(i);
-        const [sx, sy] = centre(d);
-        pts.push([ax + (sx - ax) * 0.85, ay + (sy - ay) * 0.85]);
-        widths.push(widthAt(flow[i]!) * 1.4);
-        mouth = true;
+        mouth = d;
         break;
       }
+      if (tiles.includes(d)) break;
       i = d;
     }
-    if (pts.length >= 2) courses.push({ pts, widths, mouth });
-  }
+    // Stop where this course reaches a river already drawn from another spring.
+    const pts: [number, number][] = [];
+    const widths: number[] = [];
+    const ptTiles: number[] = [];
+    let joined = false;
+    for (const t of tiles) {
+      pts.push(centre(t));
+      ptTiles.push(t);
+      widths.push(widthAt(flow[t]!));
+      if (seen[t] === 2) {
+        joined = true;
+        break;
+      }
+      seen[t] = 2;
+    }
+    const big = mouth >= 0 && flow[tiles[tiles.length - 1]!]! >= 6;
+    if (mouth >= 0 && !joined) {
+      const [ax, ay] = centre(tiles[tiles.length - 1]!);
+      const [sx, sy] = centre(mouth);
+      const ux = (sx - ax) / TILE;
+      const uy = (sy - ay) / TILE;
+      if (big) {
+        // The river ends near the coast and splits into a delta there.
+        const start = { x: ax + ux * TILE * 0.3, y: ay + uy * TILE * 0.3 };
+        pts.push([start.x, start.y]);
+        widths.push(widthAt(flow[tiles[tiles.length - 1]!]!));
+        deltas.push({ x: start.x, y: start.y, ux, uy, reach: TILE * 0.9, spread: 0.75 });
+      } else {
+        // A small river opens into a funnel-shaped mouth.
+        pts.push([ax + ux * TILE * 0.85, ay + uy * TILE * 0.85]);
+        widths.push(widthAt(flow[tiles[tiles.length - 1]!]!) * 1.8);
+      }
+    }
+    if (pts.length < 2) continue;
+    // Average each tile centre with its neighbours, so the square steps between tiles become bends.
+    const soft = pts.map((p0, k): [number, number] => {
+      if (k === 0 || k >= pts.length - 2) return p0;
+      let ax = 0;
+      let ay = 0;
+      let aw = 0;
+      for (let j = Math.max(0, k - 2); j <= Math.min(pts.length - 2, k + 2); j++) {
+        const wgt = j === k ? 2 : Math.abs(j - k) === 1 ? 1.5 : 0.7;
+        ax += pts[j]![0] * wgt;
+        ay += pts[j]![1] * wgt;
+        aw += wgt;
+      }
+      return [ax / aw, ay / aw];
+    });
+    pts.splice(0, pts.length, ...soft);
+    // A course that runs into a river drawn before ends exactly where that river passes.
+    ptTiles.forEach((t, k) => {
+      const there = drawnAt.get(t);
+      if (there) pts[k] = there;
+      else drawnAt.set(t, pts[k]!);
+    });
 
-  // Smooth curve through the tile centres, sampled densely, then bent by the noise field.
-  const curve = (c: { pts: [number, number][]; widths: number[] }) => {
-    const p = c.pts;
-    const out: { x: number; y: number; w: number }[] = [];
-    for (let k = 0; k < p.length - 1; k++) {
-      const a = p[Math.max(0, k - 1)]!;
-      const b = p[k]!;
-      const e = p[k + 1]!;
-      const f = p[Math.min(p.length - 1, k + 2)]!;
-      const c1 = [b[0] + (e[0] - a[0]) / 6, b[1] + (e[1] - a[1]) / 6];
-      const c2 = [e[0] - (f[0] - b[0]) / 6, e[1] - (f[1] - b[1]) / 6];
-      const steps = 16;
-      for (let s2 = 0; s2 < steps; s2++) {
-        const t = s2 / steps;
+    // A smooth curve through the tile centres, sampled densely.
+    const line: Stream["pts"] = [];
+    for (let k = 0; k < pts.length - 1; k++) {
+      const a = pts[Math.max(0, k - 1)]!;
+      const b = pts[k]!;
+      const e = pts[k + 1]!;
+      const f = pts[Math.min(pts.length - 1, k + 2)]!;
+      const c1 = [b[0] + (e[0] - a[0]) / 6, b[1] + (e[1] - a[1]) / 6] as const;
+      const c2 = [e[0] - (f[0] - b[0]) / 6, e[1] - (f[1] - b[1]) / 6] as const;
+      for (let s2 = 0; s2 < 16; s2++) {
+        const t = s2 / 16;
         const u = 1 - t;
-        out.push({
-          x: u * u * u * b[0] + 3 * u * u * t * c1[0]! + 3 * u * t * t * c2[0]! + t * t * t * e[0],
-          y: u * u * u * b[1] + 3 * u * u * t * c1[1]! + 3 * u * t * t * c2[1]! + t * t * t * e[1],
-          w: c.widths[k]! * u + c.widths[k + 1]! * t,
+        line.push({
+          x: u * u * u * b[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * e[0],
+          y: u * u * u * b[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * e[1],
+          w: widths[k]! * u + widths[k + 1]! * t,
         });
       }
     }
-    const last = p[p.length - 1]!;
-    out.push({ x: last[0], y: last[1], w: c.widths[c.widths.length - 1]! });
-    // Meanders: the same smooth field moves every point of every river, so junctions stay joined.
-    const AMP = TILE * 0.2;
-    for (const q of out) {
-      const fx = q.x / TILE;
-      const fy = q.y / TILE;
-      const dx = (drawNoise(fx * 1.6, fy * 1.6, 91) - 0.5) * 2 + (drawNoise(fx * 3.7, fy * 3.7, 93) - 0.5) * 0.8;
-      const dy = (drawNoise(fx * 1.6, fy * 1.6, 92) - 0.5) * 2 + (drawNoise(fx * 3.7, fy * 3.7, 94) - 0.5) * 0.8;
-      q.x += dx * AMP;
-      q.y += dy * AMP;
+    const last = pts[pts.length - 1]!;
+    line.push({ x: last[0], y: last[1], w: widths[widths.length - 1]! });
+    streams.push({ pts: line });
+
+    // Springs: the river is born from a fan of small streams up in the hills.
+    const head = line[0]!;
+    const next = line[Math.min(line.length - 1, 8)]!;
+    let back = Math.atan2(head.y - next.y, head.x - next.x);
+    const sx = source % width;
+    const sy = Math.floor(source / width);
+    // The springs reach towards the nearest hills or mountains.
+    let best = Infinity;
+    for (let dy = -3; dy <= 3; dy++) {
+      for (let dx = -3; dx <= 3; dx++) {
+        const x = sx + dx;
+        const y = sy + dy;
+        if (x < 0 || y < 0 || x >= width || y >= height || (dx === 0 && dy === 0)) continue;
+        const t = terrain[y * width + x];
+        if (t !== "hills" && t !== "mountains") continue;
+        const d2 = dx * dx + dy * dy - (t === "mountains" ? 0.5 : 0);
+        if (d2 < best) {
+          best = d2;
+          const toward = Math.atan2(dy, dx);
+          // Blend with the way the river came, so the springs never point downstream.
+          const diff = Math.atan2(Math.sin(toward - back), Math.cos(toward - back));
+          back += Math.max(-1.2, Math.min(1.2, diff));
+        }
+      }
     }
-    return out;
+    springs(head.x, head.y, back, TILE * 0.75, 0.95, 2, sx * 97 + sy * 13 + 1);
+
+    // Side creeks along the way, joining at a sharp angle from upstream.
+    const sideStart = 12;
+    for (let k = sideStart; k < line.length - 20; k += 10) {
+      const p = line[k]!;
+      const tile = tileAtPoint(p.x, p.y);
+      if (hash(k, tile, 151) > 0.42) continue;
+      const q = line[Math.max(0, k - 4)]!;
+      const along = Math.atan2(q.y - p.y, q.x - p.x);
+      const side = hash(k, tile, 153) > 0.5 ? 1 : -1;
+      const angle = along + side * (0.75 + hash(k, tile, 155) * 0.5);
+      const w0 = Math.min(1.3, p.w * 0.45);
+      const pts2 = creek(p.x, p.y, angle, TILE * (0.8 + hash(k, tile, 157) * 0.8), w0, 0.35, tile * 17 + k, (x, y) => {
+        const j = tileAtPoint(x, y);
+        return j !== tile && j >= 0 && isRiver(j);
+      });
+      // The longer creeks fork once near their end.
+      if (pts2.length > 10) {
+        const tip = pts2[pts2.length - 1]!;
+        creek(tip.x, tip.y, angle + 0.5, TILE * 0.4, tip.w, 0.3, tile * 19 + k);
+        creek(tip.x, tip.y, angle - 0.5, TILE * 0.4, tip.w, 0.3, tile * 23 + k);
+      }
+    }
+  }
+
+  // Deltas: a fan of channels and sandbanks where a big river meets the sea.
+  const deltaLand: { x: number; y: number }[][] = [];
+  for (const d of deltas) {
+    const base = Math.atan2(d.uy, d.ux);
+    const arms = 4;
+    const fan: { x: number; y: number }[] = [{ x: d.x - d.ux * 2, y: d.y - d.uy * 2 }];
+    for (let k = 0; k <= 12; k++) {
+      const a = base - d.spread + (2 * d.spread * k) / 12;
+      const r = d.reach * (1.05 + (hash(k, Math.round(d.x), 161) - 0.5) * 0.2);
+      fan.push({ x: d.x + Math.cos(a) * r, y: d.y + Math.sin(a) * r });
+    }
+    deltaLand.push(fan);
+    for (let k = 0; k < arms; k++) {
+      const a = base - d.spread * 0.8 + (1.6 * d.spread * k) / (arms - 1);
+      const pts: Stream["pts"] = [];
+      const steps = 8;
+      let px = d.x;
+      let py = d.y;
+      let ang = base;
+      for (let j = 0; j <= steps; j++) {
+        // Each channel bends from the river's direction out to its own.
+        const t = j / steps;
+        ang = base + (a - base) * Math.min(1, t * 1.6) + (hash(k, j, 163) - 0.5) * 0.3;
+        pts.push({ x: px, y: py, w: 2.2 - 1.4 * t });
+        px += Math.cos(ang) * ((d.reach * 1.1) / steps);
+        py += Math.sin(ang) * ((d.reach * 1.1) / steps);
+      }
+      streams.push({ pts });
+    }
+  }
+
+  // Meanders: the same smooth field moves every point of every stream, so junctions stay joined.
+  const AMP = TILE * 0.18;
+  const bend = (p: { x: number; y: number }) => {
+    const fx = p.x / TILE;
+    const fy = p.y / TILE;
+    p.x += ((drawNoise(fx * 1.6, fy * 1.6, 91) - 0.5) * 2 + (drawNoise(fx * 3.7, fy * 3.7, 93) - 0.5) * 0.8) * AMP;
+    p.y += ((drawNoise(fx * 1.6, fy * 1.6, 92) - 0.5) * 2 + (drawNoise(fx * 3.7, fy * 3.7, 94) - 0.5) * 0.8) * AMP;
   };
-  const lines = courses.map((c) => curve(c));
+  for (const st of streams) for (const p of st.pts) bend(p);
+  for (const fan of deltaLand) for (const p of fan) bend(p);
 
   ctx.save();
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  const stroke = (color: string, grow: number, scale: number) => {
+  // Sandy, reedy land of the deltas.
+  for (const fan of deltaLand) {
+    ctx.fillStyle = "rgba(170, 182, 112, 0.9)";
+    ctx.beginPath();
+    fan.forEach((p, k) => (k ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(240, 228, 180, 0.8)";
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+  const stroke = (color: string, grow: number, scale: number, minWidth = 0) => {
     ctx.strokeStyle = color;
-    for (const line of lines) {
+    for (const st of streams) {
+      const line = st.pts;
       // Pieces of about the same width share one path.
       let k = 0;
       while (k < line.length - 1) {
         const w = Math.round((line[k]!.w * scale + grow) * 4) / 4;
-        ctx.lineWidth = w;
-        ctx.beginPath();
-        ctx.moveTo(line[k]!.x, line[k]!.y);
         let j = k + 1;
-        for (; j < line.length; j++) {
-          ctx.lineTo(line[j]!.x, line[j]!.y);
-          if (Math.round((line[j]!.w * scale + grow) * 4) / 4 !== w) break;
+        if (line[k]!.w >= minWidth) {
+          ctx.lineWidth = w;
+          ctx.beginPath();
+          ctx.moveTo(line[k]!.x, line[k]!.y);
+          for (; j < line.length; j++) {
+            ctx.lineTo(line[j]!.x, line[j]!.y);
+            if (Math.round((line[j]!.w * scale + grow) * 4) / 4 !== w) break;
+          }
+          ctx.stroke();
         }
-        ctx.stroke();
         k = Math.max(k + 1, j);
       }
     }
   };
-  // Green banks, a dark edge, the water and a light sheen in the middle.
-  stroke("rgba(52, 96, 40, 0.3)", 2.6, 1);
-  stroke("#2c6188", 1.1, 1);
+  // Green banks, a dark edge, the water and a light sheen on the wider streams.
+  stroke("rgba(52, 96, 40, 0.28)", 2, 1);
+  stroke("#2c6188", 0.9, 1);
   stroke("#4a92c2", 0, 1);
-  stroke("rgba(196, 230, 246, 0.5)", 0, 0.28);
-  // A small delta of sand and channels where a big river meets the sea.
-  courses.forEach((c, k) => {
-    const line = lines[k]!;
-    if (!c.mouth || c.widths[c.widths.length - 1]! < 4 || line.length < 10) return;
-    const end = line[line.length - 1]!;
-    const before = line[line.length - 9]!;
-    const dx = end.x - before.x;
-    const dy = end.y - before.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const ux = dx / len;
-    const uy = dy / len;
-    ctx.fillStyle = "rgba(232, 214, 160, 0.7)";
-    ctx.beginPath();
-    ctx.moveTo(before.x, before.y);
-    ctx.lineTo(end.x - uy * 4.5 + ux * 2, end.y + ux * 4.5 + uy * 2);
-    ctx.lineTo(end.x + uy * 4.5 + ux * 2, end.y - ux * 4.5 + uy * 2);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#4a92c2";
-    ctx.lineWidth = 1.1;
-    for (const side of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(before.x, before.y);
-      ctx.quadraticCurveTo(end.x - uy * side * 1.5, end.y + ux * side * 1.5, end.x - uy * side * 4 + ux * 3, end.y + ux * side * 4 + uy * 3);
-      ctx.stroke();
-    }
-  });
+  stroke("rgba(196, 230, 246, 0.5)", 0, 0.28, 1.8);
   ctx.restore();
 }
 

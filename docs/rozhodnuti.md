@@ -2,6 +2,16 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Svět si hráč nastaví při založení hry
+
+Michal chtěl vybírat parametry mapy podobně jako v jiných hrách a schválil návrh podle Civilizace 1 a 6. V okně nové hry je tlačítko Nastavit svět. Kdo ho nepoužije, hraje na stejné mapě jako dřív.
+
+Nahoře se volí velikost světa a počet soupeřů. Malý svět má 34 × 24 políček a 2 soupeře, střední 40 × 28 a 3 soupeře, velký 50 × 34 a 4 soupeře. Počet soupeřů jde změnit od 1 do 3 na malém, do 4 na středním a do 5 na velkém světě. Malý svět měl být původně 32 × 22, jenže s nejvíc soupeři a málo pevninou se tam starty tlačily na 4 políčka od sebe, a tak jsme ho zvětšili. Tvar světa je kontinent, nebo kontinent s ostrovy. Ostrovy dostanou zhruba šestinu souše, leží v moři kolem kontinentu a od kontinentu je dělí aspoň jedno políčko moře. Všichni začínají na kontinentu a na ostrovy se dostanou jen lodí.
+
+V dalším nastavení je množství pevniny (34, 42 nebo 50 % mapy), teplota, srážky, stáří světa a suroviny. Teplota posune hranici tundry a mění podíl pouští a džunglí. Srážky mění podíl pouští a plání proti lesům, bažinám a džunglím a počet řek. Mladý svět má víc hor a jedno pohoří navíc, starý víc kopců a o pohoří méně. Suroviny leží na 6, 10 nebo 15 % políček. Každou volbu jde nechat náhodě a náhodu určí kód mapy. Kód mapy nese nastavení v osmi číslicích za lomítkem, třeba „hora-1234/25120220“. Standardní svět má kód beze změny. Čísla jsou v souboru world.json.
+
+Michal chtěl kontinent s ostrovy hned, i když jsme navrhovali počkat, až to zvládne AI. Ve fázi 3 se proto AI musí naučit dovézt osadníka lodí na ostrov a tam založit město. Dokud to neumí, ostrovy dávají hráči výhodu. Dva kontinenty a souostroví přidáme, až AI zvládne vylodit armádu. Tempo výzkumu automatického hráče je na všech třech velikostech skoro stejné.
+
 ## 16. 11. 2026: Řeky se u pramene ztrácejí a suroviny jsou nakreslené v krajině
 
 Michal chtěl, aby se řeky u pramene zužovaly do ztracena, a nechal na Claudovi, jak nakreslit vzácné suroviny. Pravidla se nemění.

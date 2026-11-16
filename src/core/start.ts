@@ -5,8 +5,11 @@
  * Then we greedily add the candidate that is farthest from the starts chosen
  * so far, with the score as a tie breaker, and try several first picks to keep
  * the layout with the largest minimum distance.
+ *
+ * Everybody starts on the main continent. Islands are land to settle later
+ * by ship, never a start.
  */
-import { cityRadiusTiles, distance, fromIndex, type GridSize, type Point } from "./geometry";
+import { cityRadiusTiles, distance, fromIndex, neighbors8, type GridSize, type Point } from "./geometry";
 import { TERRAINS } from "./rules";
 import type { Rng } from "./rng";
 import type { GameMap } from "./state";
@@ -37,10 +40,40 @@ export function siteScore(map: GameMap, center: Point): number {
   return score;
 }
 
+/** Tiles of the largest landmass, polar ice left out. */
+export function mainContinent(map: GameMap): Set<number> {
+  const size: GridSize = map;
+  const isLandTile = (i: number) => {
+    const t = map.terrain[i];
+    return !!t && TERRAINS[t].land && t !== "arctic";
+  };
+  const seen = new Uint8Array(map.terrain.length);
+  let best: number[] = [];
+  for (let start = 0; start < map.terrain.length; start++) {
+    if (seen[start] || !isLandTile(start)) continue;
+    const part: number[] = [];
+    const stack = [start];
+    seen[start] = 1;
+    while (stack.length > 0) {
+      const i = stack.pop()!;
+      part.push(i);
+      for (const n of neighbors8(size, i)) {
+        if (!seen[n] && isLandTile(n)) {
+          seen[n] = 1;
+          stack.push(n);
+        }
+      }
+    }
+    if (part.length > best.length) best = part;
+  }
+  return new Set(best);
+}
+
 export function chooseStartPositions(map: GameMap, count: number, rng: Rng): Point[] {
   const size: GridSize = map;
+  const continent = mainContinent(map);
   const scored = map.terrain
-    .map((_, i) => ({ i, score: siteScore(map, fromIndex(size, i)) }))
+    .map((_, i) => ({ i, score: continent.has(i) ? siteScore(map, fromIndex(size, i)) : -Infinity }))
     .filter((c) => Number.isFinite(c.score))
     .sort((a, b) => b.score - a.score);
 

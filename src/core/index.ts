@@ -12,6 +12,7 @@ export * from "./mapgen";
 export * from "./path";
 export * from "./rng";
 export * from "./rules";
+export * from "./setup";
 export * from "./start";
 export * from "./state";
 export { workTurns } from "./turn";

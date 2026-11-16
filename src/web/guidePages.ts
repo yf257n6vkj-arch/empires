@@ -78,7 +78,9 @@ Neváhej moc dlouho. Každý tah bez města je ztracený tah. Válečníka nech 
 
 V prvním městě postav nejdřív válečníka na obranu a potom osadníka. Osadník vezme městu jednoho obyvatele, ale založí nové město, a to se rychle vrátí. Víc měst znamená víc jídla, výroby i vědy.
 
-Hned na začátku vyber, co budou tví učenci zkoumat. Když nevíš, začni hrnčířstvím, bronzem nebo pohřebními obřady, které odemknou chrám.`,
+Hned na začátku vyber, co budou tví učenci zkoumat. Když nevíš, začni hrnčířstvím, bronzem nebo pohřebními obřady, které odemknou chrám.
+
+Než novou hru založíš, můžeš si v okně s národy nastavit svět. Vybereš velikost, počet soupeřů a jestli kolem kontinentu leží ostrovy. V dalším nastavení změníš množství pevniny, teplotu, srážky, stáří světa a suroviny. Kód mapy v sobě nese i nastavení světa, takže kdo zadá stejný kód, dostane stejný svět.`,
   },
   "how-growth": {
     title: "Jak nechat města růst",

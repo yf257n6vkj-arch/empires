@@ -19,6 +19,9 @@
  *     river that meets another one joins it.
  *  7. Polar ice along the top and bottom edges, as in Civilization 1.
  *  8. Special resources on some tiles, never two side by side.
+ *
+ * With `islandShare` above zero a part of the land becomes small islands in
+ * the sea around the continent, at least two sea tiles away from it.
  */
 import { neighbors8, toIndex, type GridSize } from "./geometry";
 import type { TerrainId } from "./rules";
@@ -30,8 +33,10 @@ export interface MapOptions {
   height: number;
   /** Target share of land on the whole map, 0..1. */
   landShare: number;
-  /** Sea tiles kept along every edge. */
+  /** Sea tiles kept along every edge around the continent. */
   seaBorder: number;
+  /** Share of the land that forms islands instead of the continent, 0..1. */
+  islandShare: number;
   /** Shares of land tiles per terrain type (forest is taken from grass/plains). */
   shares: {
     mountains: number;
@@ -57,6 +62,7 @@ export const DEFAULT_MAP_OPTIONS: MapOptions = {
   height: 28,
   landShare: 0.42,
   seaBorder: 2,
+  islandShare: 0,
   shares: { mountains: 0.07, hills: 0.12, desert: 0.07, forest: 0.16, plains: 0.22, jungle: 0.06, swamp: 0.05 },
   tundraLatitude: 0.7,
   rivers: 5,
@@ -70,12 +76,15 @@ const MAX_ATTEMPTS = 30;
 
 export function generateMap(rng: Rng, options: MapOptions = DEFAULT_MAP_OPTIONS): GameMap {
   const size: GridSize = { width: options.width, height: options.height };
-  const targetLand = Math.round(options.width * options.height * options.landShare);
+  const area = options.width * options.height;
+  const continentOptions = { ...options, landShare: options.landShare * (1 - options.islandShare) };
+  const targetLand = Math.round(area * continentOptions.landShare);
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const { land, elevation, ridge } = generateLandMask(rng, size, options);
+    const { land, elevation, ridge } = generateLandMask(rng, size, continentOptions);
     const landCount = land.reduce((n, v) => n + (v ? 1 : 0), 0);
     if (landCount >= targetLand * MIN_LAND_RATIO) {
+      addIslands(rng, size, land, elevation, Math.round(area * options.landShare * options.islandShare));
       const empty = () => new Array<number>(size.width * size.height).fill(0);
       const terrain = assignTerrain(rng, size, land, elevation, ridge, options);
       addRivers(rng, size, terrain, elevation, options.rivers);
@@ -153,6 +162,94 @@ function generateLandMask(rng: Rng, size: GridSize, options: MapOptions): { land
     elevation: shifted(size, above.map((e) => e / top), shift, 0),
     ridge: shifted(size, ridge, shift, 0),
   };
+}
+
+/** Islands are this far from the continent (Chebyshev distance), so at least one sea tile lies between. */
+const ISLAND_GAP = 2;
+const ISLAND_MIN = 3;
+const ISLAND_MAX = 12;
+
+/**
+ * Small islands in the sea around the continent, until about `target` tiles
+ * are land. Islands never touch each other and stay off the polar rows. Their
+ * land is low, so they get few hills (mutates `land` and `elevation`).
+ */
+function addIslands(rng: Rng, size: GridSize, land: boolean[], elevation: number[], target: number): void {
+  if (target <= 0) return;
+  const { width, height } = size;
+  // Distance from the continent in steps of 8 neighbours.
+  const dist = new Array<number>(width * height).fill(Infinity);
+  const queue: number[] = [];
+  land.forEach((v, i) => {
+    if (v) {
+      dist[i] = 0;
+      queue.push(i);
+    }
+  });
+  for (let q = 0; q < queue.length; q++) {
+    const i = queue[q]!;
+    for (const n of neighbors8(size, i)) {
+      if (dist[n]! > dist[i]! + 1) {
+        dist[n] = dist[i]! + 1;
+        queue.push(n);
+      }
+    }
+  }
+  const owner = new Array<number>(width * height).fill(0);
+  const fits = (i: number, id: number) => {
+    const x = i % width;
+    const y = Math.floor(i / width);
+    if (x < 1 || x > width - 2 || y < 2 || y > height - 3) return false;
+    if (dist[i]! < ISLAND_GAP || owner[i]) return false;
+    return neighbors8(size, i).every((n) => owner[n] === 0 || owner[n] === id);
+  };
+  let placed = 0;
+  let id = 0;
+  for (let tries = 0; placed < target && tries < 300; tries++) {
+    const start = rng.int(width * height);
+    const want = Math.min(ISLAND_MIN + rng.int(ISLAND_MAX - ISLAND_MIN + 1), target - placed + ISLAND_MIN);
+    if (!fits(start, id + 1)) continue;
+    id++;
+    const tiles = [start];
+    owner[start] = id;
+    while (tiles.length < want) {
+      // Grow where the island already surrounds a tile most, so it stays round.
+      const frontier = new Map<number, number>();
+      for (const from of tiles) {
+        const x = from % width;
+        const y = Math.floor(from / width);
+        for (const n of [x > 0 ? from - 1 : -1, x < width - 1 ? from + 1 : -1, y > 0 ? from - width : -1, y < height - 1 ? from + width : -1]) {
+          if (n < 0 || frontier.has(n) || owner[n] === id || !fits(n, id)) continue;
+          const around = neighbors8(size, n).filter((m) => owner[m] === id).length;
+          frontier.set(n, around * around);
+        }
+      }
+      const total = [...frontier.values()].reduce((a, b) => a + b, 0);
+      if (total === 0) break;
+      let r = rng.next() * total;
+      let next = -1;
+      for (const [n, w] of frontier) {
+        next = n;
+        r -= w;
+        if (r < 0) break;
+      }
+      owner[next] = id;
+      tiles.push(next);
+    }
+    // A thin strip of land looks like a reef, not an island.
+    const xs = tiles.map((i) => i % width);
+    const ys = tiles.map((i) => Math.floor(i / width));
+    const thin = tiles.length >= 4 && (Math.max(...xs) === Math.min(...xs) || Math.max(...ys) === Math.min(...ys));
+    if (tiles.length < ISLAND_MIN || thin) {
+      for (const i of tiles) owner[i] = 0;
+      continue;
+    }
+    for (const i of tiles) {
+      land[i] = true;
+      elevation[i] = 0.05 + rng.next() * 0.3;
+    }
+    placed += tiles.length;
+  }
 }
 
 /**

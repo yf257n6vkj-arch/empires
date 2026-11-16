@@ -33,6 +33,7 @@ import {
   UNIT_TYPES,
   type BuildingId,
   type City,
+  parseGameCode,
   type Command,
   type GameState,
   type Point,
@@ -40,6 +41,8 @@ import {
 } from "../src/core";
 
 const games = Number(process.argv[2] ?? 100);
+// Optional world settings as the eight digits of a map code, e.g. `npm run pace -- 100 24011111` for a large world.
+const worldDigits = process.argv[3];
 
 // Experiments without editing the data files:
 //   PACE_SET="growthFoodBase=6,researchCostBase=10" PACE_COST=0.6 npm run pace -- 50
@@ -302,7 +305,7 @@ function playOne(seed: string): Result {
   targets.clear();
   workers.clear();
   founders.clear();
-  let state = newGame({ seed, playerCount: 4 });
+  let state = newGame({ seed, playerCount: (parseGameCode(seed).world?.opponents ?? 3) + 1 });
   const eraTurn: Record<number, number | null> = { 2: null, 3: null, 4: null, 5: null };
   const techsAt: Record<number, number> = {};
   let allTechsTurn: number | null = null;
@@ -361,7 +364,7 @@ const governments = new Map<string, number>();
 const stuck: string[] = [];
 const started = performance.now();
 for (let i = 1; i <= games; i++) {
-  const r = playOne(process.env.PACE_SEED ?? `pace-${i}`);
+  const r = playOne(process.env.PACE_SEED ?? (worldDigits ? `pace-${i}/${worldDigits}` : `pace-${i}`));
   results.push(r);
   if (r.cities < 3) stuck.push(`pace-${i}`);
   governments.set(r.government, (governments.get(r.government) ?? 0) + 1);

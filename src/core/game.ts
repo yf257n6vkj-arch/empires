@@ -6,6 +6,7 @@ import { applyCommand } from "./commands";
 import type { GameEvent } from "./events";
 import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
+import { mapOptionsFor, parseGameCode, type WorldSettings } from "./setup";
 import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, type CivId, type TechId } from "./rules";
 import { chooseStartPositions } from "./start";
 import { canResearch, clampRate, fallbackProduction, fitRates, startingEconomy } from "./economy";
@@ -17,6 +18,8 @@ export interface NewGameOptions {
   /** Number of players including the human, who is always player 0. */
   playerCount: number;
   map?: MapOptions;
+  /** World settings; when omitted they are read from the map code in `seed`. */
+  world?: WorldSettings;
   /**
    * Whether computer players get starting units. Off until the AI exists,
    * so in phase 1 the human explores the continent alone.
@@ -44,7 +47,8 @@ export function chooseCivs(human: CivId | undefined, count: number, rng: Rng): C
 
 export function newGame(options: NewGameOptions): GameState {
   const rng = Rng.fromSeed(options.seed);
-  const map = generateMap(rng.fork("map"), options.map ?? DEFAULT_MAP_OPTIONS);
+  const world = options.world ?? parseGameCode(options.seed).world;
+  const map = generateMap(rng.fork("map"), options.map ?? (world ? mapOptionsFor(world) : DEFAULT_MAP_OPTIONS));
   const starts = chooseStartPositions(map, options.playerCount, rng.fork("starts"));
 
   const civs = chooseCivs(options.civ, starts.length, rng.fork("civs"));

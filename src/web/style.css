@@ -344,6 +344,24 @@ button.linklike { background: none; border: none; padding: 0; color: inherit; fo
 .ng-chosen { flex: 1 1 320px; font-size: 14px; }
 .ng-seed { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 .ng-seed input { width: 130px; }
+.ng-world { display: flex; align-items: center; gap: 8px; font-size: 14px; flex: 1 1 100%; }
+.ng-world .ng-shape { width: 40px; height: 28px; }
+.ng-row { display: grid; grid-template-columns: 220px 1fr; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid #332b23; }
+.ng-label { display: flex; flex-direction: column; gap: 2px; font-weight: 600; color: #f2d79a; }
+.ng-label .muted { font-weight: 400; color: #a8987f; }
+.ng-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.ng-opt { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 86px; padding: 6px 10px; background: #2a241e; border: 2px solid #3d342a; border-radius: 8px; cursor: pointer; }
+.ng-opt:hover { border-color: #7a6448; }
+.ng-opt.on { border-color: #d9a441; box-shadow: 0 0 0 1px #d9a441; background: #3a2f22; }
+.ng-opt.ng-num { min-width: 44px; }
+.ng-shape { width: 64px; height: 44px; display: block; }
+.ng-note { margin: 0 0 6px 232px; }
+.ng-more { margin-top: 6px; }
+.ng-more summary { cursor: pointer; padding: 8px 0; color: #d9a441; font-weight: 600; }
+@media (max-width: 720px) {
+  .ng-row { grid-template-columns: 1fr; }
+  .ng-note { margin-left: 0; }
+}
 .cx-color { display: inline-block; width: 46px; height: 14px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.35); vertical-align: middle; }
 
 /* ---------- full-window layout: the map fills the window, panels float over it ---------- */
@@ -525,3 +543,4 @@ label.rate input#lux { width: 60px; } .rate.tax { color: var(--muted); white-spa
 
 .warming { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: #f2c66b; white-space: nowrap; cursor: help; }
 .warming .sun { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #fff6c8, color-mix(in srgb, #f0d04a calc((1 - var(--heat)) * 100%), #e2452b)); box-shadow: 0 0 calc(4px + var(--heat) * 8px) color-mix(in srgb, #f0d04a calc((1 - var(--heat)) * 100%), #e2452b); }
+.ng-foot > .primary { margin-left: auto; }

@@ -11,7 +11,9 @@ Don't wait too long. Every turn without a city is a turn lost. Keep the warrior 
 
 In your first city, build a warrior for defence first and then a settler. A settler takes one citizen from the city, but it founds a new city, and that soon pays back. More cities mean more food, production and science.
 
-Choose what your scholars research right at the start. If you don't know, begin with Pottery, Bronze Working or Burial Rites, which unlocks the temple.`,
+Choose what your scholars research right at the start. If you don't know, begin with Pottery, Bronze Working or Burial Rites, which unlocks the temple.
+
+Before you start a new game, you can set up the world in the nation window. You choose its size, the number of rivals and whether islands lie around the continent. Under more settings you can change the amount of land, the temperature, rainfall, the age of the world and the resources. The map code carries the world settings too, so anyone who enters the same code gets the same world.`,
   },
   "how-growth": {
     title: "How to make cities grow",

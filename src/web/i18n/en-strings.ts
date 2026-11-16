@@ -1383,4 +1383,106 @@ export const EN_STRINGS: Record<string, string> = {
     "There is a polluted tile around {city} and it gives only half. Send a settler there and clean it with V, or turn on automatic work. Pollution also brings global warming closer.",
   "(uklidní nebo rozveselí {calm})":
     "(calms or cheers up {calm})",
+  "Malý":
+    "Small",
+  "Střední":
+    "Medium",
+  "Velký":
+    "Large",
+  "Kontinent":
+    "Continent",
+  "Kontinent s ostrovy":
+    "Continent and islands",
+  "Méně":
+    "Less",
+  "Normálně":
+    "Normal",
+  "Víc":
+    "More",
+  "Chladno":
+    "Cool",
+  "Mírně":
+    "Temperate",
+  "Teplo":
+    "Warm",
+  "Sucho":
+    "Dry",
+  "Vlhko":
+    "Wet",
+  "Mladý":
+    "Young",
+  "Starý":
+    "Old",
+  "Vzácné":
+    "Rare",
+  "Běžné":
+    "Normal",
+  "Hojné":
+    "Abundant",
+  "Velikost světa":
+    "World size",
+  "Tvar světa":
+    "World shape",
+  "Pevnina":
+    "Land",
+  "Teplota":
+    "Temperature",
+  "Srážky":
+    "Rainfall",
+  "Stáří světa":
+    "World age",
+  "Suroviny":
+    "Resources",
+  "Méně pevniny znamená při stejném počtu soupeřů větší tlačenici.":
+    "Less land with the same number of rivals means more crowding.",
+  "Chladný svět má víc tundry, teplý víc pouští a džunglí.":
+    "A cool world has more tundra, a warm one more desert and jungle.",
+  "Suchý svět má víc pouští a plání, vlhký víc lesů, bažin a řek.":
+    "A dry world has more desert and plains, a wet one more forest, swamp and rivers.",
+  "Mladý svět má delší pohoří a víc hor, starý víc kopců a rovin.":
+    "A young world has longer ranges and more mountains, an old one more hills and flat land.",
+  "Kolik políček nese vzácnou surovinu, třeba ryby, koně nebo zlato.":
+    "How many tiles carry a special resource, such as fish, horses or gold.",
+  "{n} soupeř|{n} soupeři|{n} soupeřů":
+    "{n} rival|{n} rivals",
+  "náhodně":
+    "random",
+  "náhodná velikost":
+    "random size",
+  "náhodný tvar":
+    "random shape",
+  "soupeři":
+    "rivals",
+  "soupeři podle velikosti":
+    "rivals by size",
+  "{n} další změna|{n} další změny|{n} dalších změn":
+    "{n} more change|{n} more changes",
+  "Náhodně":
+    "Random",
+  "Podle velikosti":
+    "By size",
+  "Nastav si svět":
+    "Set up the world",
+  "Výchozí svět odpovídá jedné partii na večer. Větší svět a víc soupeřů partii prodlouží.":
+    "The standard world fits one game in an evening. A larger world and more rivals make the game longer.",
+  "Počet soupeřů":
+    "Number of rivals",
+  "Na malý svět se vejdou nejvýš 3, na střední 4 a na velký 5.":
+    "A small world has room for at most 3, a medium one for 4 and a large one for 5.",
+  "Další nastavení":
+    "More settings",
+  "Překvap mě":
+    "Surprise me",
+  "Výchozí svět":
+    "Standard world",
+  "Hotovo":
+    "Done",
+  "Svět":
+    "World",
+  "Nastavit svět":
+    "Set up world",
+  "Kód mapy s nastavením světa, třeba z jiné partie, má přednost před nastavením.":
+    "A map code that carries world settings, for example from another game, takes precedence over these settings.",
+  "Všichni začínají na kontinentu. Na ostrovy se dostaneš jen lodí a první loď postavíš po objevení technologie {tech}.":
+    "Everyone starts on the continent. You can reach the islands only by ship, and you can build the first ship once you discover {tech}.",
 };

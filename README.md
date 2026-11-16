@@ -7,6 +7,7 @@ Hotová je fáze 1 a probíhá fáze 2. Hráč si vybere jeden z patnácti náro
 ## Jak se hra ovládá
 
 - Po spuštění se ukáže hlavní nabídka. Odtud pokračuješ v rozehrané hře, začneš novou, nahraješ uloženou nebo otevřeš encyklopedii. Kapitola Jak hrát v encyklopedii vysvětluje, jak nechat města růst, jak udržet obyvatele spokojené a jak rychle bádat.
+- V okně nové hry vybereš národ a tlačítkem Nastavit svět i velikost světa, počet soupeřů a jestli kolem kontinentu leží ostrovy. V dalším nastavení změníš množství pevniny, teplotu, srážky, stáří světa a suroviny. Každá volba jde nechat náhodě.
 - Tlačítko `Menu` vlevo nahoře nebo `Esc` bez vybrané jednotky otevře nabídku ve hře. Tam hru uložíš, nahraješ jinou nebo se vrátíš do hlavní nabídky.
 - Klikni na svou jednotku nebo město a vyber ho.
 - Klik na sousední políčko jednotku posune, klik dál ji tam pošle i na víc tahů. Cestu ukáže přerušovaná čára.
@@ -37,7 +38,7 @@ npm install
 npm run dev
 ```
 
-Poslední příkaz vypíše adresu, typicky `http://localhost:5173`. Otevři ji v prohlížeči. Kód mapy je v adrese za `#seed=`, takže konkrétní mapu jde poslat odkazem.
+Poslední příkaz vypíše adresu, typicky `http://localhost:5173`. Otevři ji v prohlížeči. Kód mapy rozehrané partie je vidět ve hře a nese i nastavení světa. Když ho zadáš v okně nové hry, dostaneš stejný svět.
 
 ## Příkazy
 
@@ -47,7 +48,9 @@ Poslední příkaz vypíše adresu, typicky `http://localhost:5173`. Otevři ji 
 | `npm test` | Pustí automatické testy |
 | `npm run typecheck` | Zkontroluje typy, zvlášť i to, že herní jádro nepoužívá nic z prohlížeče |
 | `npm run check-maps -- 500` | Vygeneruje 500 map bez obrazovky a vypíše statistiky |
+| `npm run check-maps -- 20 svety` | Vygeneruje 20 map pro každou kombinaci krajních nastavení světa a vypíše chyby, ostrovy a vzdálenosti startů |
 | `npm run pace -- 300` | Automatický hráč odehraje 120 tahů na 300 mapách a vypíše, jak rychle postupuje výzkum a růst |
+| `npm run pace -- 100 24011111` | Totéž ve světě podle osmi číslic z kódu mapy, tady velký svět se 4 soupeři |
 | `npm run build` | Připraví hotovou stránku do složky `dist` |
 | `npm run i18n -- en` | Vypíše texty, které v angličtině chybí nebo přebývají |
 
@@ -57,7 +60,7 @@ Poslední příkaz vypíše adresu, typicky `http://localhost:5173`. Otevři ji 
 src/core/        herní jádro, žádná vazba na prohlížeč
   rng.ts         generátor náhody se semenem, jeho stav jde uložit
   rules.ts       načtení pravidel z datových souborů
-  data/          čísla pravidel v JSON (terén, jednotky, budovy, vylepšení, vlády, národy, konstanty)
+  data/          čísla pravidel v JSON (terén, jednotky, budovy, vylepšení, vlády, národy, nastavení světa, konstanty)
   geometry.ts    mřížka, vzdálenosti, okruh města 21 políček
   mapgen.ts      generátor kontinentu
   start.ts       výběr startovních pozic

@@ -3,6 +3,11 @@
  * into the same commands the AI will use.
  */
 import {
+  DEFAULT_WORLD_CHOICE,
+  formatGameCode,
+  parseGameCode,
+  resolveWorld,
+  type WorldChoice,
   applyCommand,
   buildingUpkeep,
   canOpenTradeRoute,
@@ -102,7 +107,6 @@ import {
 translatePage(document);
 
 const HUMAN = 0;
-const PLAYER_COUNT = 4;
 const LOG_LIMIT = 60;
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
@@ -185,8 +189,12 @@ function randomSeed(): string {
   return `${w}-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
-function startNewGame(seed: string, civ?: CivId, persist = true): void {
-  state = newGame({ seed, playerCount: PLAYER_COUNT, civ });
+function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_WORLD_CHOICE, persist = true): void {
+  // A map code that carries settings wins over the choice in the dialog.
+  const parsed = parseGameCode(input);
+  const world = parsed.world ?? resolveWorld(choice, parsed.seed);
+  const seed = formatGameCode(parsed.seed, world);
+  state = newGame({ seed, playerCount: world.opponents + 1, civ, world });
   const civ0 = state.players[HUMAN]!.civ;
   const rivals = state.players.filter((p) => p.id !== HUMAN).map((p) => civName(p.civ)).join(", ");
   log = [
@@ -574,9 +582,9 @@ governmentButton.addEventListener("click", () => empire.openGovernment());
 const codex = createCodex($<HTMLDialogElement>("#codex-dialog"), { openTech: (t) => techTree.openPage(t) });
 $<HTMLButtonElement>("#codex").addEventListener("click", () => codex.open());
 const newGameDialog = createNewGameDialog($<HTMLDialogElement>("#new-game-dialog"), {
-  start: (seed, civ) => {
+  start: (seed, civ, world) => {
     menus.hideStart();
-    startNewGame(seed, civ);
+    startNewGame(seed, civ, world);
   },
   randomSeed,
   showNation: (civ) => codex.show(entryKey("civ", civ)),
@@ -1484,6 +1492,6 @@ updateZoomButtons();
 // random placeholder that is never saved.
 const saved = readAutosave();
 if (saved) useGame(saved);
-else startNewGame(randomSeed(), undefined, false);
+else startNewGame(randomSeed(), undefined, DEFAULT_WORLD_CHOICE, false);
 menus.showStart();
 loadSprites();

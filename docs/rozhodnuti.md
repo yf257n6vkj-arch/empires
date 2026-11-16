@@ -2,6 +2,10 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Boj má životy jako v Civilizaci 2
+
+Claude navrhoval boj na kola bez trvalých zranění, Michal zvolil životy jako v Civilizaci 2. Boj běží v kolech. V každém kole vyhraje útočník s pravděpodobností útok / (útok + obrana) a poraženému ubude tolik životů, kolik má vítěz palebné síly. Boj končí, když jedné jednotce dojdou životy. Silnější jednotka tak vyhrává mnohem jistěji než v Civilizaci 1, třeba tank proti opevněnému kopiníkovi v kopcích asi v 96 % případů. Životy a palebnou sílu převezmeme z Civilizace 2 a budou v datech jednotek. Zraněná jednotka bojuje dál se zbytkem životů a léčí se, v poli pomalu, ve městě rychleji a s kasárnami do plného zdraví za tah. Šance na výhru před útokem počítá jedna funkce, která zná i zbývající životy obou jednotek, a stejnou funkci použije AI. AI se kvůli tomu musí naučit stáhnout zraněné jednotky k léčení.
+
 ## 16. 11. 2026: Fáze 3 přinese boj rovnou se soupeři, hra dvou lidí odpadá
 
 Zadání počítalo s tím, že fáze 3 skončí hrou dvou lidí u jednoho počítače a pravidla boje vyzkoušíme na lidech dřív, než na ně postavíme AI. Claude to tak navrhl, ale Michal se rozhodl hru dvou lidí přeskočit a boj ladit rovnou proti počítačovým soupeřům.

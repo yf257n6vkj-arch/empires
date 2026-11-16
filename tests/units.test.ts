@@ -159,3 +159,21 @@ describe("planPath", () => {
     expect(turns).toBe(planned);
   });
 });
+
+describe("routes", () => {
+  it("lead a slow unit straight through woods it crosses in one turn anyway", () => {
+    const s = stateFromAscii([".........", "...ff....", "....f....", ".........", "........."]);
+    const u = addUnit(s, "warriors", 0, 0, 0);
+    const path = findPath(s, 0, u, { x: 8, y: 3 })!;
+    expect(path.length).toBe(8);
+    // Every step stays within a tile of the straight line from start to goal.
+    for (const p of path) expect(Math.abs(p.y - (p.x * 3) / 8)).toBeLessThanOrEqual(1);
+  });
+
+  it("go straight on open land", () => {
+    const s = stateFromAscii(["..........", "..........", "..........", "..........", ".........."]);
+    const u = addUnit(s, "warriors", 0, 0, 0);
+    const path = findPath(s, 0, u, { x: 9, y: 0 })!;
+    expect(path.every((p) => p.y === 0)).toBe(true);
+  });
+});

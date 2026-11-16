@@ -122,6 +122,8 @@ export interface DrawInput {
   highlight?: number[];
   /** Planned route of the selected unit. */
   path?: Point[];
+  /** Routes of the player's other units on their way somewhere, drawn faintly with a flag at the end. */
+  routes?: { unitId: number; path: Point[] }[];
   /** For each step of `path`, the turn in which the unit makes it (1 = this turn). */
   pathTurns?: number[];
   /** Tile under the mouse or goto target; turns = null when the unit cannot get there. */
@@ -298,6 +300,7 @@ export function draw(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     ctx.stroke();
   }
 
+  if (input.routes) drawRoutes(ctx, input);
   if (input.path && input.path.length > 0) drawPath(ctx, input);
   if (input.target) drawTarget(ctx, input.target, width, height);
   for (const s of input.starts) drawStart(ctx, s.point, s.playerId);
@@ -2041,6 +2044,41 @@ function drawFogEdge(ctx: CanvasRenderingContext2D, input: DrawInput): void {
 }
 
 // ---------- overlays ----------
+
+/** Faint routes of the units on their way, each with a small flag where it is going. */
+function drawRoutes(ctx: CanvasRenderingContext2D, input: DrawInput): void {
+  const center = (p: Point) => [p.x * TILE + TILE / 2, p.y * TILE + TILE / 2] as const;
+  for (const r of input.routes ?? []) {
+    if (r.unitId === input.selectedUnitId || r.path.length === 0) continue;
+    const unit = input.units.find((u) => u.id === r.unitId);
+    if (!unit) continue;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "rgba(120, 200, 255, 0.55)";
+    ctx.lineWidth = 1.3;
+    ctx.setLineDash([2.5, 3]);
+    ctx.beginPath();
+    ctx.moveTo(...center(unit));
+    for (const p of r.path) ctx.lineTo(...center(p));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // A small flag on the destination.
+    const [x, y] = center(r.path[r.path.length - 1]!);
+    ctx.strokeStyle = "rgba(20, 20, 20, 0.8)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x - 2, y + 5);
+    ctx.lineTo(x - 2, y - 6);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(120, 200, 255, 0.95)";
+    ctx.beginPath();
+    ctx.moveTo(x - 2, y - 6);
+    ctx.lineTo(x + 5, y - 3.5);
+    ctx.lineTo(x - 2, y - 1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+}
 
 function drawPath(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const unit = input.units.find((u) => u.id === input.selectedUnitId);

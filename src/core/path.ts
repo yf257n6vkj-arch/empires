@@ -9,6 +9,9 @@ import { RULES, TERRAINS, type UnitDomain } from "./rules";
 import type { GameState, PlayerId, Unit } from "./state";
 import { domainOf, fullMoves, getPlayer, idx, moveCost } from "./world";
 
+/** Tiny extra cost per tile of distance from the straight line, far below any real move cost. */
+const STRAIGHT_BIAS = 0.01;
+
 /** Returns the tiles to step on, excluding `from`, or null when there is no known route. */
 export function findPath(
   state: GameState,
@@ -23,10 +26,20 @@ export function findPath(
   const goal = idx(map, to);
   if (start === goal) return [];
 
+  // A unit with full moves always makes one step, so a step never costs more than a whole turn of moves.
+  // Without this cap a warrior would walk around a forest it crosses in the same single turn.
+  const cap = "type" in from ? fullMoves(from as Unit) : Infinity;
+  // Among routes that cost the same, the one closest to the straight line wins, so units walk straight.
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const len = Math.max(1, Math.hypot(dx, dy));
+  const offLine = (p: Point) => Math.abs((p.x - from.x) * dy - (p.y - from.y) * dx) / len;
+  const estimate = (p: Point) => distance(p, to) * RULES.roadMoveCost + offLine(p) * STRAIGHT_BIAS;
+
   const g = new Map<number, number>([[start, 0]]);
   const cameFrom = new Map<number, number>();
   const open = new Set<number>([start]);
-  const f = new Map<number, number>([[start, distance(from, to) * RULES.roadMoveCost]]);
+  const f = new Map<number, number>([[start, estimate(from)]]);
 
   while (open.size > 0) {
     let current = -1;
@@ -43,13 +56,14 @@ export function findPath(
     const currentPoint = fromIndex(map, current);
 
     for (const n of neighbors8(map, current)) {
-      const cost = knownMoveCost(state, explored, current, currentPoint, n, domain);
-      if (cost === null) continue;
+      const known = knownMoveCost(state, explored, current, currentPoint, n, domain);
+      if (known === null) continue;
+      const cost = Math.min(known, cap);
       const tentative = (g.get(current) ?? Infinity) + cost;
       if (tentative < (g.get(n) ?? Infinity)) {
         cameFrom.set(n, current);
         g.set(n, tentative);
-        f.set(n, tentative + distance(fromIndex(map, n), to) * RULES.roadMoveCost);
+        f.set(n, tentative + estimate(fromIndex(map, n)));
         open.add(n);
       }
     }

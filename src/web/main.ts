@@ -248,6 +248,7 @@ function addLog(events: GameEvent[]): void {
 }
 
 function run(command: Command): boolean {
+  const before = visiblePositions();
   const result = applyCommand(state, command);
   if (!result.ok) {
     say(ERROR_TEXT[result.error]);
@@ -261,6 +262,7 @@ function run(command: Command): boolean {
     state = passed.state;
     events.push(...passed.events);
   }
+  animateMoves(before);
   addLog(events);
   if (advisor.mode() === "guide") guide.onEvents(events);
   // Peace offers from computer players wait for an answer at the start of the turn.
@@ -407,6 +409,65 @@ function routeText(route: Route): string {
   return t("Cesta sem zabere {turns}.", { turns: turnsText(route.turns) });
 }
 
+/** Routes of the player's units that are on their way somewhere: a goto or a road being built along a route. */
+function ownRoutes(): { unitId: number; path: Point[] }[] {
+  const out: { unitId: number; path: Point[] }[] = [];
+  for (const u of state.units) {
+    if (u.owner !== HUMAN || u.carriedBy !== null) continue;
+    const to = u.goto ?? (u.orders?.kind === "route" ? u.orders.to : null);
+    if (!to) continue;
+    const path = findPath(state, HUMAN, u, to);
+    if (path && path.length > 0) out.push({ unitId: u.id, path });
+  }
+  return out;
+}
+
+/** Units the player sees and where they stand, to animate their moves. */
+function visiblePositions(): Map<number, Point> {
+  const view = playerView(state, HUMAN);
+  return new Map([...view.units, ...view.foreignUnits].filter((u) => u.carriedBy === null).map((u) => [u.id, { x: u.x, y: u.y }]));
+}
+
+/** Units sliding from their old tile to the new one after a move or the computer players' turns. */
+let animation: { moves: Map<number, { from: Point; to: Point }>; start: number; duration: number } | null = null;
+let animationFrame = 0;
+const reduceMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function animateMoves(before: Map<number, Point>): void {
+  if (reduceMotion) return;
+  const after = visiblePositions();
+  const moves = new Map<number, { from: Point; to: Point }>();
+  let longest = 0;
+  for (const [id, to] of after) {
+    const from = before.get(id);
+    if (!from || (from.x === to.x && from.y === to.y)) continue;
+    moves.set(id, { from, to });
+    longest = Math.max(longest, distance(from, to));
+  }
+  if (moves.size === 0) return;
+  animation = { moves, start: performance.now(), duration: Math.min(700, 160 + 90 * longest) };
+}
+
+/** Draws the map, with moving units part of the way while an animation runs. */
+function drawMap(): void {
+  const input = buildDrawInput();
+  if (animation) {
+    const t = Math.min(1, (performance.now() - animation.start) / animation.duration);
+    const ease = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+    if (t < 1) {
+      input.units = input.units.map((u) => {
+        const m = animation!.moves.get(u.id);
+        return m ? { ...u, x: m.from.x + (m.to.x - m.from.x) * ease, y: m.from.y + (m.to.y - m.from.y) * ease } : u;
+      });
+      if (!animationFrame) animationFrame = requestAnimationFrame(() => {
+        animationFrame = 0;
+        drawMap();
+      });
+    } else animation = null;
+  }
+  draw(ctx, input);
+}
+
 function buildDrawInput(): DrawInput {
   const unit = selectedUnit();
   const city = selectedCity();
@@ -456,6 +517,7 @@ function buildDrawInput(): DrawInput {
     territory: territoryOf(view.cities),
     highlight: city ? city.worked : [],
     path: route?.path ?? undefined,
+    routes: ownRoutes(),
     pathTurns: route?.stepTurns,
     target: route ? { point: route.target, turns: route.turns } : null,
     camera,
@@ -532,7 +594,7 @@ function refresh(): void {
     const unit = selectedUnit();
     hoverRouteText = unit && clickWouldMove(unit, hoverTile) ? routeText(routeTo(unit, hoverTile)) : "";
   }
-  draw(ctx, buildDrawInput());
+  drawMap();
   turnLabel.textContent = t("Tah {turn} z {maxTurns}", { turn: state.turn, maxTurns: RULES.maxTurns });
   seedLabel.textContent = state.seed;
   const waiting = state.units.some(needsOrders);
@@ -1174,7 +1236,7 @@ function setCamera(next: Camera): void {
   hoverTile = null;
   tooltip.hidden = true;
   updateZoomButtons();
-  draw(ctx, buildDrawInput());
+  drawMap();
 }
 
 /** Zooms around a point given in CSS pixels on the canvas; the map centre when omitted. */
@@ -1371,7 +1433,7 @@ canvas.addEventListener("mousemove", (e) => {
     const enemy = unit && distance(unit, p) === 1 ? attackHint(state, unit, p) : null;
     if (enemy) hoverRouteText = enemy;
     else if (unit && clickWouldMove(unit, p)) hoverRouteText = routeText(routeTo(unit, p));
-    draw(ctx, buildDrawInput());
+    drawMap();
   }
   if (hoverRouteText) tooltip.insertAdjacentHTML("beforeend", `<br><span class="route">${hoverRouteText}</span>`);
 
@@ -1385,7 +1447,7 @@ canvas.addEventListener("mouseleave", () => {
   tooltip.hidden = true;
   if (hoverTile) {
     hoverTile = null;
-    draw(ctx, buildDrawInput());
+    drawMap();
   }
 });
 

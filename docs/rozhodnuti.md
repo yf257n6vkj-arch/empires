@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Jednotky chodí rovně a je vidět, kam jdou
+
+Michal si všiml, že jednotka na cestě k cíli málokdy jde rovně. Hledání cesty mělo dvě chyby. Mezi stejně dlouhými cestami vybíralo tu, která vedla po políčkách s nejmenším číslem, tedy nahoru a doleva. A les nebo kopec počítalo jako dvojnásobnou cestu, i když pomalá jednotka s jedním pohybem do nich vstoupí za jeden tah stejně jako na louku, takže zbytečně obcházela. Teď krok nikdy nestojí víc než celý tah jednotky a mezi stejně dlouhými cestami vyhraje ta nejblíž přímce k cíli. Platí to pro hráče i pro soupeře.
+
+Každá vlastní jednotka na cestě má na mapě slabou modrou přerušovanou čáru až k cíli a na konci praporek. Vybraná jednotka má cestu jako dřív žlutou s tečkami, kde skončí každý tah. Když se jednotky pohnou, ať hráčovy, nebo soupeřů po konci tahu, na mapě se plynule přesunou z políčka na políčko a nepřeskočí. Kdo má v systému zapnuté omezení pohybu, animaci neuvidí.
+
 ## 16. 11. 2026: Soupeři zakládají města u jídla a dělníci zavlažují hladová města
 
 Soupeř teď při výběru místa pro město počítá, kolik políček v okolí může dát dvě jídla, když je zavlaží. Za každé, které chybí do šesti, dá místu tři body dolů. Zkusili jsme taky přecenit jídlo u každého políčka, ale soupeři pak přestali osidlovat ostrovy, protože jim na pevnině vycházelo víc slabých míst. Tuhle cestu jsme proto zahodili.

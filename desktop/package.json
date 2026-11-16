@@ -1,0 +1,15 @@
+{
+  "name": "empires",
+  "productName": "Empires",
+  "version": "0.4.0",
+  "description": "Tahová strategie ve stylu Civilizace 1",
+  "main": "main.cjs",
+  "private": true,
+  "scripts": {
+    "package": "electron-packager . Empires --platform=darwin --arch=arm64 --out=out --overwrite --icon=icon.icns --app-bundle-id=io.itch.sigmanek67.empires --ignore=^/out --prune=true"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^45.3.3"
+  }
+}

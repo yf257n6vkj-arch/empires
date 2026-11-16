@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Hra se spouští jako aplikace Empires na Macu
+
+Michal vybral pro finální verzi aplikaci pro Mac místo vlastní webové adresy nebo stránky na claude.ai. Hru balíme do Electronu. Je to okno s prohlížečem Chromium, ve kterém běží stejná hra jako na webu, jen se načítá ze souborů v aplikaci, takže funguje bez internetu a bez přihlášení. Aplikace má ikonu se středověkým městem, standardní menu Macu a odkazy do Wikipedie otevírá v normálním prohlížeči. Má asi 280 MB, protože si Chromium nese s sebou.
+
+Aplikaci staví Claude skriptem tools/build-mac-app.sh a výsledný Empires-mac.zip nahraje do Michalovy složky. Michal ji nainstaluje skriptem instalace.sh. Ten ji rozbalí do složky Aplikace a podepíše ji jen pro tenhle počítač, protože bez placeného účtu u Applu by ji macOS jinak nespustil. Stejný postup slouží i pro každou novou verzi. Rozehrané hry se ukládají uvnitř aplikace, ne v prohlížeči, takže partii ze stránky na claude.ai je potřeba uložit do souboru a v aplikaci nahrát. Stránka na claude.ai dál zůstává pro rychlé zkoušení novinek.
+
 ## 16. 11. 2026: Šestnáct druhů hor a každé pohoří má svůj ráz
 
 Michal chtěl členitější mapu, a tak Gemini namaloval dalších deset hor. Přibyl alpský štít s ledovcem, zubatý hřeben, dvojvrchol s jezírkem, žulová kupole, stolová hora z červeného pískovce, hora s lesem na úbočí, vápencové skály, velký trojvrcholový masiv, nízké předhůří a tmavá skalnatá hora.

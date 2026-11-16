@@ -8,6 +8,8 @@ Michal vybral dva nápady z toho, jak grafiku řeší Civilizace 6 a Freeciv. Ne
 
 Hory a kopce na šikmé mapě namaluje Gemini, šest obrázků hor a čtyři kopců na purpurovém pozadí, stejně jako jednotky a města. Zadání je v souboru hory.tsv a Michal ho spustí skriptem hory.sh. Pozadí vyřízne skript tools/cut-sprites.py, který zároveň spodek obrázku nechá vyblednout do země. Každé políčko si podle své polohy vybere jeden obrázek, takže se při každém překreslení nemění. Dokud obrázky nejsou, kreslí hra hory a kopce kódem jako dosud.
 
+Gemini obrázky nakreslil. Hory se povedly hned, pod kopce ale namaloval kvádr hlíny jako u výřezu z diorámatu. Skript ho teď odřízne: změří, jak je kvádr silný, a obrázek usekne podél jeho dolního obrysu posunutého o tuto tloušťku. Pata hor i kopců pak vybledne do země.
+
 ## 16. 11. 2026: Mapa se dívá šikmo a hory, stromy, města i jednotky na ní stojí
 
 Michal chtěl hru víc do 3D. Vybrali jsme šikmý pohled místo plného 3D přes WebGL, protože se dál kreslí do Canvasu a nic ze stávající hry se nerozbije. Plné 3D by znamenalo přepsat kreslení i klikání a v Safari na starším Macu by mohlo zpomalit. Krok šest z fáze 4, grafiku mapy, jsme tím vzali dřív, než bylo v plánu.

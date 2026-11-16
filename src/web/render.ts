@@ -2359,6 +2359,151 @@ function palm(ctx: CanvasRenderingContext2D, x: number, y: number, lean: number,
   }
 }
 
+type Path = [number, number][];
+const DIRS: [number, number][] = [
+  [-1, -1], [0, -1], [1, -1],
+  [-1, 0], [1, 0],
+  [-1, 1], [0, 1], [1, 1],
+];
+
+/**
+ * Neighbours a road or railroad on (x, y) links to. A diagonal link is left out when the two
+ * tiles are already joined through a shared orthogonal neighbour, so three tiles in an L do not
+ * draw a triangle.
+ */
+function links(x: number, y: number, has: (x: number, y: number) => boolean): [number, number][] {
+  return DIRS.filter(([dx, dy]) => {
+    if (!has(x + dx, y + dy)) return false;
+    if (dx !== 0 && dy !== 0 && (has(x + dx, y) || has(x, y + dy))) return false;
+    return true;
+  });
+}
+
+/**
+ * The lines a road or railroad follows inside one tile, from the edge towards each linked
+ * neighbour. Two links make one smooth bend through the middle of the tile; a junction joins
+ * every link in the middle. `wobble` bends a straight run a little, so roads are not ruler-straight.
+ */
+function linkPaths(px: number, py: number, dirs: [number, number][], r: (k: number) => number, wobble: number): Path[] {
+  const cx = px + TILE / 2;
+  const cy = py + TILE / 2;
+  const end = ([dx, dy]: [number, number]): [number, number] => [cx + (dx * TILE) / 2, cy + (dy * TILE) / 2];
+  const curve = (a: [number, number], ctrl: [number, number], b: [number, number]): Path => {
+    const pts: Path = [];
+    for (let k = 0; k <= 12; k++) {
+      const t = k / 12;
+      const u = 1 - t;
+      pts.push([u * u * a[0] + 2 * u * t * ctrl[0] + t * t * b[0], u * u * a[1] + 2 * u * t * ctrl[1] + t * t * b[1]]);
+    }
+    return pts;
+  };
+  if (dirs.length === 0) return [[[cx - 4, cy + 0.5], [cx + 4, cy - 0.5]]];
+  if (dirs.length === 2) {
+    const a = end(dirs[0]!);
+    const b = end(dirs[1]!);
+    // The bow goes sideways to the line between the two ends.
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const off = (r(0) - 0.5) * wobble * 2;
+    return [curve(a, [cx + ((a[1] - b[1]) / len) * off, cy + ((b[0] - a[0]) / len) * off], b)];
+  }
+  // A dead end stops a little short of the middle; a junction meets in it.
+  return dirs.map((d) => {
+    const e = end(d);
+    const stop: [number, number] = dirs.length === 1 ? [cx + (e[0] - cx) * 0.25, cy + (e[1] - cy) * 0.25] : [cx, cy];
+    return curve(e, [(e[0] + stop[0]) / 2, (e[1] + stop[1]) / 2], stop);
+  });
+}
+
+function strokePath(ctx: CanvasRenderingContext2D, path: Path): void {
+  ctx.beginPath();
+  ctx.moveTo(path[0]![0], path[0]![1]);
+  for (const [x, y] of path.slice(1)) ctx.lineTo(x, y);
+  ctx.stroke();
+}
+
+/** The same line moved sideways by `d` (positive to the left of the direction of travel). */
+function offsetPath(path: Path, d: number): Path {
+  return path.map(([x, y], k) => {
+    const [ax, ay] = path[Math.max(0, k - 1)]!;
+    const [bx, by] = path[Math.min(path.length - 1, k + 1)]!;
+    const len = Math.hypot(bx - ax, by - ay) || 1;
+    return [x + ((ay - by) / len) * d, y + ((bx - ax) / len) * d];
+  });
+}
+
+/** A dirt road: a soft verge, a packed sandy track and two wheel ruts along it. */
+function drawRoad(ctx: CanvasRenderingContext2D, paths: Path[]): void {
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  // Solid colours, so the pieces of two neighbouring tiles do not darken where they overlap.
+  ctx.strokeStyle = "#8f7a55";
+  ctx.lineWidth = 4.2;
+  for (const p of paths) strokePath(ctx, p);
+  ctx.strokeStyle = "#b39466";
+  ctx.lineWidth = 3;
+  for (const p of paths) strokePath(ctx, p);
+  ctx.strokeStyle = "#c9ae80";
+  ctx.lineWidth = 1.5;
+  for (const p of paths) strokePath(ctx, p);
+  ctx.lineCap = "butt";
+  ctx.strokeStyle = "rgba(104, 76, 44, 0.5)";
+  ctx.lineWidth = 0.32;
+  for (const p of paths) {
+    strokePath(ctx, offsetPath(p, 0.75));
+    strokePath(ctx, offsetPath(p, -0.75));
+  }
+  ctx.restore();
+}
+
+/** A railroad: a gravel bed, wooden sleepers across it and two steel rails with a shine on top. */
+function drawRailroad(ctx: CanvasRenderingContext2D, paths: Path[]): void {
+  ctx.save();
+  ctx.lineCap = "butt";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#6c6455";
+  ctx.lineWidth = 5.2;
+  for (const p of paths) strokePath(ctx, p);
+  ctx.strokeStyle = "#958c7b";
+  ctx.lineWidth = 4.2;
+  for (const p of paths) strokePath(ctx, p);
+  // Sleepers at an even spacing along the line.
+  ctx.strokeStyle = "#5b4330";
+  ctx.lineWidth = 0.95;
+  for (const p of paths) {
+    let next = 0.8;
+    let walked = 0;
+    for (let k = 1; k < p.length; k++) {
+      const [ax, ay] = p[k - 1]!;
+      const [bx, by] = p[k]!;
+      const seg = Math.hypot(bx - ax, by - ay);
+      while (walked + seg >= next) {
+        const t = (next - walked) / seg;
+        const x = ax + (bx - ax) * t;
+        const y = ay + (by - ay) * t;
+        const nx = (ay - by) / seg;
+        const ny = (bx - ax) / seg;
+        ctx.beginPath();
+        ctx.moveTo(x - nx * 1.9, y - ny * 1.9);
+        ctx.lineTo(x + nx * 1.9, y + ny * 1.9);
+        ctx.stroke();
+        next += 2.3;
+      }
+      walked += seg;
+    }
+  }
+  for (const side of [-1.05, 1.05]) {
+    const rails = paths.map((p) => offsetPath(p, side));
+    ctx.strokeStyle = "#383c42";
+    ctx.lineWidth = 0.75;
+    for (const p of rails) strokePath(ctx, p);
+    ctx.strokeStyle = "rgba(214, 218, 224, 0.85)";
+    ctx.lineWidth = 0.3;
+    for (const p of rails) strokePath(ctx, offsetPath(p, 0.12));
+  }
+  ctx.restore();
+}
+
 function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   const { width, height } = input;
   const cityTiles = new Set(input.cities.map((c) => c.y * width + c.x));
@@ -2398,67 +2543,15 @@ function drawImprovements(ctx: CanvasRenderingContext2D, input: DrawInput): void
         ctx.fillStyle = "#0d0b09";
         ctx.fillRect(px + 9.5, py + 15, 5, 6);
       }
+      const railAt = (nx: number, ny: number) =>
+        nx >= 0 && ny >= 0 && nx < width && ny < height && (input.railroad?.[ny * width + nx] === 1 || cityTiles.has(ny * width + nx));
       if (input.road[i] && !cityTiles.has(i)) {
-        const c = TILE / 2;
-        const ends: [number, number][] = [];
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if ((dx || dy) && roadAt(x + dx, y + dy)) ends.push([px + c + (dx * TILE) / 2, py + c + (dy * TILE) / 2]);
-          }
-        }
-        ctx.lineCap = "round";
-        for (const [color, w] of [["#5e4129", 3.6], ["#b89466", 2.2]] as const) {
-          ctx.strokeStyle = color;
-          ctx.lineWidth = w;
-          ctx.beginPath();
-          if (ends.length === 0) {
-            ctx.moveTo(px + c - 3, py + c);
-            ctx.lineTo(px + c + 3, py + c);
-          }
-          for (const [ex, ey] of ends) {
-            ctx.moveTo(px + c, py + c);
-            ctx.lineTo(ex, ey);
-          }
-          ctx.stroke();
-        }
+        // Where the railroad runs, the road beside it is not drawn; it still leads off to tiles with only a road.
+        const onRail = input.railroad?.[i] === 1;
+        const dirs = links(x, y, roadAt).filter(([dx, dy]) => !onRail || !railAt(x + dx, y + dy));
+        if (!onRail || dirs.length > 0) drawRoad(ctx, linkPaths(px, py, dirs, (k) => hash(x, y, 500 + k), 2.2));
       }
-      if (input.railroad?.[i]) {
-        // Two steel rails with sleepers, joined to neighbouring railroads and cities.
-        const c = TILE / 2;
-        const railAt = (nx: number, ny: number) =>
-          nx >= 0 && ny >= 0 && nx < width && ny < height && (input.railroad?.[ny * width + nx] === 1 || cityTiles.has(ny * width + nx));
-        const ends: [number, number][] = [];
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if ((dx || dy) && railAt(x + dx, y + dy)) ends.push([dx, dy]);
-          }
-        }
-        if (ends.length === 0) ends.push([1, 0], [-1, 0]);
-        for (const [dx, dy] of ends) {
-          const len = Math.hypot(dx, dy);
-          const nx = (-dy / len) * 1.6;
-          const ny = (dx / len) * 1.6;
-          ctx.strokeStyle = "#6b5a48";
-          ctx.lineWidth = 1;
-          for (let k = 1; k <= 3; k++) {
-            const t = k / 3.5;
-            const mx = px + c + (dx * TILE * t) / 2;
-            const my = py + c + (dy * TILE * t) / 2;
-            ctx.beginPath();
-            ctx.moveTo(mx - nx * 1.6, my - ny * 1.6);
-            ctx.lineTo(mx + nx * 1.6, my + ny * 1.6);
-            ctx.stroke();
-          }
-          ctx.strokeStyle = "#2f3236";
-          ctx.lineWidth = 0.9;
-          for (const side of [-1, 1]) {
-            ctx.beginPath();
-            ctx.moveTo(px + c + nx * side, py + c + ny * side);
-            ctx.lineTo(px + c + (dx * TILE) / 2 + nx * side, py + c + (dy * TILE) / 2 + ny * side);
-            ctx.stroke();
-          }
-        }
-      }
+      if (input.railroad?.[i] && !cityTiles.has(i)) drawRailroad(ctx, linkPaths(px, py, links(x, y, railAt), (k) => hash(x, y, 520 + k), 0.6));
       if (input.pollution?.[i]) drawPollution(ctx, px, py);
       if (input.fortress?.[i]) {
         ctx.strokeStyle = "#8a7f6a";

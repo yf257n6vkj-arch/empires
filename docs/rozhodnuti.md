@@ -2,6 +2,10 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Cesty a železnice vypadají jako skutečné
+
+Michal chtěl cesty a železnici realističtější. Dřív vedla z každého políčka k sousedům rovná čára a tři políčka do L udělala trojúhelník. Teď se cesta na políčku, kterým jen prochází, plynule ohne, rovný úsek se lehce vlní a šikmá spojka chybí tam, kde se dvě políčka potkají přes společného souseda. Cesta je udusaná písčitá polní cesta s tmavší krajnicí a dvěma vyjetými kolejemi od vozů. Železnice má štěrkové lože, dřevěné pražce v pravidelných rozestupech a dvě ocelové kolejnice s odleskem. Kde vede železnice, cesta se vedle ní nekreslí a odbočuje jen k políčkům, kde železnice není.
+
 ## 16. 11. 2026: Neprozkoumaný svět je stará mapa a hory nakreslí Gemini
 
 Michal vybral dva nápady z toho, jak grafiku řeší Civilizace 6 a Freeciv. Neprozkoumaný svět už není černý. Vypadá jako starý pergamen se skvrnami, čárkovanými poledníky a rovnoběžkami, silnějším rovníkem a větrnou růžicí v rohu. K okrajům je papír tmavší. Prozkoumaná krajina na kraji přechází do papíru a za ní má papír hnědý okraj, jako by ji někdo vmaloval do staré mapy. Platí to v šikmém pohledu i v pohledu shora, v okně města i na malé mapě.

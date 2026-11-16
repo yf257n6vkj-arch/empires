@@ -397,7 +397,18 @@ function drawBackground(ctx: CanvasRenderingContext2D, input: DrawInput): void {
   ctx.restore();
   for (let y = view.y0; y <= view.y1; y++) {
     for (let x = view.x0; x <= view.x1; x++) {
-      if (terrain[y * width + x]) drawSpeckles(ctx, field, x, y);
+      const here = terrain[y * width + x];
+      if (here) drawSpeckles(ctx, field, x, y);
+      // On the tilted map the mountains stand up, so the ground between them is plain rock and scree.
+      if (here === "mountains" && activeTilt < 1) {
+        const cx = (x + 0.5) * TILE;
+        const cy = (y + 0.55) * TILE;
+        const rock = ctx.createRadialGradient(cx, cy, 2, cx, cy, TILE * 0.85);
+        rock.addColorStop(0, "rgba(126, 116, 98, 0.85)");
+        rock.addColorStop(1, "rgba(126, 116, 98, 0)");
+        ctx.fillStyle = rock;
+        ctx.fillRect(cx - TILE, cy - TILE, TILE * 2, TILE * 2);
+      }
     }
   }
   for (let y = view.y0; y <= view.y1; y++) {
@@ -620,15 +631,13 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
     // Seen from above the relief of the ground shows hills and mountains; on the tilted map they rise.
     case "mountains":
       if (activeTilt < 1) {
-        drawPeak(ctx, px + 7 + r(5) * 3, py + 15, 10 + r(6) * 2, 15 + r(7) * 4, r(8) > 0.35);
-        drawPeak(ctx, px + 15 + r(9) * 3, py + 21, 9 + r(10) * 2, 11 + r(11) * 3, r(12) > 0.6);
+        drawMassif(ctx, px + 12 + (r(5) - 0.5) * 5, py + 18 + r(6) * 2, 14 + r(7) * 3, 14 + r(8) * 5, (k) => r(40 + k));
+        // Now and then a lower spur in front, so a range does not look like a row of the same mountain.
+        if (r(9) > 0.6) drawMassif(ctx, px + 5 + r(10) * 14, py + 24, 9 + r(11) * 2, 7 + r(12) * 3, (k) => r(80 + k));
       }
       break;
     case "hills":
-      if (activeTilt < 1) {
-        drawMound(ctx, px + 8 + r(5) * 2, py + 14, 8 + r(6) * 2, 5 + r(7) * 1.5);
-        drawMound(ctx, px + 15 + r(8) * 2, py + 21, 9 + r(9) * 2, 5.5 + r(10) * 1.5);
-      }
+      if (activeTilt < 1) drawHills(ctx, px, py, (k) => r(40 + k));
       break;
     case "desert": {
       drawDune(ctx, px + 2 + r(1) * 3, py + 9 + r(2) * 2, 13);
@@ -640,92 +649,186 @@ function drawTerrainDetail(ctx: CanvasRenderingContext2D, field: Field, t: Terra
   }
 }
 
-/** A mountain standing on the tilted map: foot centre (x, y), half width w, height h, maybe a snow cap. */
-function drawPeak(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, snow: boolean): void {
-  // The shadow lies on the ground, so it is drawn before the mountain stands up.
-  ctx.fillStyle = "rgba(20, 16, 10, 0.25)";
+/**
+ * A mountain massif standing on the tilted map: foot centre (x, y), half width w, height h.
+ * Two or three summits share one jagged ridge; the west faces catch the light like the
+ * relief of the ground, the east faces lie in shadow, and the foot fades into the ground.
+ */
+function drawMassif(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: (k: number) => number): void {
+  // Scree and shadow on the ground first.
+  const scree = ctx.createRadialGradient(x + w * 0.2, y, 1, x + w * 0.2, y, w * 1.25);
+  scree.addColorStop(0, "rgba(60, 52, 42, 0.32)");
+  scree.addColorStop(1, "rgba(60, 52, 42, 0)");
+  ctx.fillStyle = scree;
   ctx.beginPath();
-  ctx.ellipse(x + w * 0.35, y, w * 1.05, w * 0.42, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + w * 0.2, y, w * 1.25, w * 0.5, 0, 0, Math.PI * 2);
   ctx.fill();
+
   upright(ctx, x, y, () => {
-    const top = y - h;
-    const tx = x - w * 0.12;
-    // Lit west face, shaded east face, a ridge between them.
-    ctx.fillStyle = "#a29a8c";
-    ctx.beginPath();
-    ctx.moveTo(x - w, y);
-    ctx.lineTo(tx, top);
-    ctx.lineTo(x + w * 0.1, y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#6b6358";
-    ctx.beginPath();
-    ctx.moveTo(tx, top);
-    ctx.lineTo(x + w, y);
-    ctx.lineTo(x + w * 0.1, y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(60, 52, 44, 0.55)";
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    ctx.moveTo(tx, top);
-    ctx.lineTo(x + w * 0.1, y);
-    ctx.moveTo(x - w * 0.55, y - h * 0.32);
-    ctx.lineTo(x - w * 0.3, y - h * 0.12);
-    ctx.stroke();
-    if (snow) {
-      const f = 0.32;
-      ctx.fillStyle = "#f4f6f7";
-      ctx.beginPath();
-      ctx.moveTo(tx, top);
-      ctx.lineTo(tx - w * f, top + h * f);
-      ctx.lineTo(tx - w * f * 0.4, top + h * f * 0.8);
-      ctx.lineTo(tx, top + h * f * 1.05);
-      ctx.lineTo(tx + w * f * 0.5, top + h * f * 0.75);
-      ctx.lineTo(tx + w * f * 1.1, top + h * f);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "rgba(170, 190, 205, 0.7)";
-      ctx.beginPath();
-      ctx.moveTo(tx, top);
-      ctx.lineTo(tx + w * f * 1.1, top + h * f);
-      ctx.lineTo(tx + w * f * 0.5, top + h * f * 0.75);
-      ctx.lineTo(tx, top + h * f * 1.05);
-      ctx.closePath();
-      ctx.fill();
+    const n = r(0) > 0.45 ? 3 : 2;
+    const main = Math.floor(r(1) * n);
+    const peaks: { x: number; top: number; h: number }[] = [];
+    for (let i = 0; i < n; i++) {
+      const px = x - w * 0.62 + ((i + 0.5) / n) * w * 1.24 + (r(2 + i) - 0.5) * w * 0.18;
+      const ph = h * (i === main ? 1 : 0.58 + r(5 + i) * 0.28);
+      peaks.push({ x: px, top: y - ph, h: ph });
     }
+    // The ridge: foot, then for every summit a jagged climb and descent to a saddle.
+    const ridge: [number, number][] = [[x - w, y]];
+    peaks.forEach((p, i) => {
+      const prev = ridge[ridge.length - 1]!;
+      const mx = (prev[0] + p.x) / 2;
+      const my = (prev[1] + p.top) / 2;
+      ridge.push([mx - 0.6, my + (r(10 + i) - 0.5) * 1.6]);
+      ridge.push([p.x, p.top]);
+      const next = peaks[i + 1];
+      if (next) {
+        const sx = (p.x + next.x) / 2 + (r(14 + i) - 0.5) * 2;
+        const sy = y - Math.min(p.h, next.h) * (0.55 + r(18 + i) * 0.15);
+        ridge.push([(p.x + sx) / 2 + 0.6, (p.top + sy) / 2 + (r(22 + i) - 0.5) * 1.4]);
+        ridge.push([sx, sy]);
+      }
+    });
+    const last = peaks[peaks.length - 1]!;
+    ridge.push([(last.x + x + w) / 2 + 1, (last.top + y) / 2 + (r(26) - 0.3) * 1.6]);
+    ridge.push([x + w, y]);
+    const outline = () => {
+      ctx.beginPath();
+      ctx.moveTo(ridge[0]![0], ridge[0]![1]);
+      for (const [rx, ry] of ridge.slice(1)) ctx.lineTo(rx, ry);
+      // The foot curves slightly forward instead of ending on a ruler-straight line.
+      ctx.quadraticCurveTo(x, y + 2.2, x - w, y);
+      ctx.closePath();
+    };
+    const top = y - h;
+    // Shadowed rock everywhere, fading into the ground at the foot.
+    const dark = ctx.createLinearGradient(0, top, 0, y + 2);
+    dark.addColorStop(0, "#6c6359");
+    dark.addColorStop(0.7, "#5a5248");
+    dark.addColorStop(1, "rgba(110, 102, 90, 0)");
+    ctx.fillStyle = dark;
+    outline();
+    ctx.fill();
+
+    ctx.save();
+    outline();
+    ctx.clip();
+    // Lit west face of every summit: from its ridge down to a spur that runs to the foot.
+    const lit = ctx.createLinearGradient(0, top, 0, y + 2);
+    lit.addColorStop(0, "#d2c9b8");
+    lit.addColorStop(0.55, "#a99f8d");
+    lit.addColorStop(1, "rgba(150, 140, 122, 0)");
+    peaks.forEach((p, i) => {
+      const spurX = p.x + p.h * (0.18 + r(30 + i) * 0.12);
+      ctx.fillStyle = lit;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.top);
+      ctx.lineTo(p.x + (spurX - p.x) * 0.45, p.top + p.h * 0.38 + (r(34 + i) - 0.5) * 2);
+      ctx.lineTo(spurX, y + 3);
+      ctx.lineTo(p.x - w * 1.2, y + 3);
+      ctx.closePath();
+      ctx.fill();
+      // A second, slightly darker facet lower on the lit face, so the rock is not one flat plane.
+      ctx.fillStyle = "rgba(96, 84, 68, 0.2)";
+      ctx.beginPath();
+      ctx.moveTo(p.x - p.h * 0.22, p.top + p.h * 0.45);
+      ctx.lineTo(p.x - p.h * 0.05 + r(44 + i) * 2, y + 3);
+      ctx.lineTo(p.x - p.h * 0.85, y + 3);
+      ctx.closePath();
+      ctx.fill();
+      // A sunlit edge along the spur.
+      ctx.strokeStyle = "rgba(235, 228, 212, 0.45)";
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.top);
+      ctx.lineTo(p.x + (spurX - p.x) * 0.45, p.top + p.h * 0.38);
+      ctx.stroke();
+      // Snow on the high summits: white in the sun, blue-grey in the shade, ragged at the bottom.
+      if (p.h > 12) {
+        const d = p.h * (0.26 + r(60 + i) * 0.1);
+        ctx.fillStyle = "#f6f7f5";
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.top - 0.5);
+        ctx.lineTo(p.x - d * 0.95, p.top + d * 1.05);
+        ctx.lineTo(p.x - d * 0.6, p.top + d * 0.8);
+        ctx.lineTo(p.x - d * 0.35, p.top + d * 1.3);
+        ctx.lineTo(p.x - d * 0.05, p.top + d * 0.9);
+        ctx.lineTo(p.x + d * 0.3, p.top + d * 1.2);
+        ctx.lineTo(p.x + d * 0.55, p.top + d * 0.75);
+        ctx.lineTo(p.x + d * 0.95, p.top + d * 0.95);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "rgba(120, 140, 165, 0.55)";
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.top - 0.5);
+        ctx.lineTo(p.x + (spurX - p.x) * 0.45 * (d / (p.h * 0.38)), p.top + d * 1.05);
+        ctx.lineTo(p.x + d * 0.3, p.top + d * 1.2);
+        ctx.lineTo(p.x + d * 0.55, p.top + d * 0.75);
+        ctx.lineTo(p.x + d * 0.95, p.top + d * 0.95);
+        ctx.closePath();
+        ctx.fill();
+      }
+    });
+    ctx.restore();
+    // A thin dark line along the ridge against the sky.
+    ctx.strokeStyle = "rgba(45, 38, 30, 0.28)";
+    ctx.lineWidth = 0.35;
+    ctx.beginPath();
+    ctx.moveTo(ridge[1]![0], ridge[1]![1]);
+    for (const [rx, ry] of ridge.slice(2, -1)) ctx.lineTo(rx, ry);
+    ctx.stroke();
   });
 }
 
-/** A grassy hill standing on the tilted map: foot centre (x, y), half width w, height h. */
-function drawMound(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
-  ctx.fillStyle = "rgba(20, 16, 10, 0.2)";
-  ctx.beginPath();
-  ctx.ellipse(x + w * 0.3, y, w * 1.05, w * 0.38, 0, 0, Math.PI * 2);
-  ctx.fill();
-  upright(ctx, x, y, () => {
-    ctx.fillStyle = "#7d8846";
+/** Rolling grassy hills on the tilted map: two or three rounded tops of different sizes, fading into the ground. */
+function drawHills(ctx: CanvasRenderingContext2D, px: number, py: number, r: (k: number) => number): void {
+  const n = 2 + (r(0) > 0.6 ? 1 : 0);
+  const hills = Array.from({ length: n }, (_, i) => ({
+    x: px + 4 + r(1 + i) * 16,
+    y: py + 11 + (i / Math.max(1, n - 1)) * 11 + r(5 + i) * 2,
+    w: 7.5 + r(9 + i) * 4,
+    h: 4 + r(13 + i) * 2.8,
+  })).sort((a, b) => a.y - b.y);
+  for (const m of hills) {
+    const { x, y, w, h } = m;
+    ctx.fillStyle = "rgba(30, 36, 14, 0.1)";
     ctx.beginPath();
-    ctx.moveTo(x - w, y);
-    ctx.bezierCurveTo(x - w * 0.6, y - h * 1.3, x + w * 0.5, y - h * 1.3, x + w, y);
-    ctx.closePath();
+    ctx.ellipse(x + w * 0.35, y, w * 1.1, w * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
-    // Light from the west on the left flank.
-    ctx.fillStyle = "rgba(214, 220, 140, 0.45)";
-    ctx.beginPath();
-    ctx.moveTo(x - w, y);
-    ctx.bezierCurveTo(x - w * 0.65, y - h * 1.25, x - w * 0.1, y - h * 1.05, x - w * 0.05, y - h * 0.95);
-    ctx.quadraticCurveTo(x - w * 0.45, y - h * 0.4, x - w * 0.5, y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "rgba(40, 46, 20, 0.28)";
-    ctx.beginPath();
-    ctx.moveTo(x + w, y);
-    ctx.bezierCurveTo(x + w * 0.7, y - h * 0.8, x + w * 0.35, y - h * 0.95, x + w * 0.15, y - h * 0.98);
-    ctx.quadraticCurveTo(x + w * 0.5, y - h * 0.4, x + w * 0.45, y);
-    ctx.closePath();
-    ctx.fill();
-  });
+    upright(ctx, x, y, () => {
+      const lean = (r(20) - 0.5) * w * 0.3;
+      const shape = () => {
+        ctx.beginPath();
+        ctx.moveTo(x - w, y + 0.5);
+        ctx.bezierCurveTo(x - w * 0.55, y - h * 1.15, x + lean - w * 0.15, y - h * 1.32, x + lean + w * 0.25, y - h * 1.05);
+        ctx.bezierCurveTo(x + w * 0.65, y - h * 0.8, x + w * 0.85, y - h * 0.3, x + w, y + 0.5);
+        ctx.quadraticCurveTo(x, y + 1.6, x - w, y + 0.5);
+        ctx.closePath();
+      };
+      const body = ctx.createLinearGradient(x - w, y - h, x + w, y);
+      body.addColorStop(0, "#a7b264");
+      body.addColorStop(0.5, "#848f48");
+      body.addColorStop(1, "#5f6a30");
+      ctx.fillStyle = body;
+      shape();
+      ctx.fill();
+      ctx.save();
+      shape();
+      ctx.clip();
+      // The foot melts into the hillside around it.
+      const foot = ctx.createLinearGradient(0, y - h * 0.4, 0, y + 1.6);
+      foot.addColorStop(0, "rgba(138, 148, 80, 0)");
+      foot.addColorStop(1, "rgba(138, 148, 80, 0.95)");
+      ctx.fillStyle = foot;
+      ctx.fillRect(x - w, y - h * 0.4, w * 2, h * 0.4 + 2);
+      // Sun on the top.
+      ctx.fillStyle = "rgba(226, 232, 160, 0.35)";
+      ctx.beginPath();
+      ctx.ellipse(x + lean - w * 0.25, y - h * 0.95, w * 0.42, h * 0.28, -0.25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
 }
 
 /** A low bush on the plains. */
@@ -1414,7 +1517,7 @@ function drawRuins(ctx: CanvasRenderingContext2D, input: DrawInput): void {
     for (let x = view.x0; x <= view.x1; x++) {
       const i = y * width + x;
       if (!terrain[i] || !ruins[i]) continue;
-      upright(ctx, x * TILE + TILE / 2, y * TILE + TILE * 0.75, () => drawRuin(ctx, x * TILE, y * TILE, x, y));
+      drawRuin(ctx, x * TILE, y * TILE, x, y);
     }
   }
   ctx.restore();
@@ -1422,60 +1525,186 @@ function drawRuins(ctx: CanvasRenderingContext2D, input: DrawInput): void {
 
 export function drawRuin(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx: number, ty: number): void {
   const r = (k: number) => hash(tx, ty, 700 + k);
-  const cx = ox + TILE * (0.48 + (r(0) - 0.5) * 0.1);
-  const base = oy + TILE * 0.72;
-  // Trodden ground.
-  const ground = ctx.createRadialGradient(cx, base, 1, cx, base, TILE * 0.42);
-  ground.addColorStop(0, "rgba(196, 170, 120, 0.75)");
-  ground.addColorStop(1, "rgba(196, 170, 120, 0)");
-  ctx.fillStyle = ground;
+  const cx = ox + TILE * (0.5 + (r(0) - 0.5) * 0.08);
+  const cy = oy + TILE * 0.6;
+  const flip = r(1) > 0.5 ? -1 : 1;
+  const light = "#ece2c8";
+  const mid = "#c8ba98";
+  const dark = "#8e8063";
+  const line = "rgba(70, 56, 36, 0.75)";
+
+  // Trodden earth and the cracked stone floor of the old temple, lying on the ground.
+  const earth = ctx.createRadialGradient(cx, cy, 1, cx, cy, TILE * 0.5);
+  earth.addColorStop(0, "rgba(190, 166, 118, 0.7)");
+  earth.addColorStop(1, "rgba(190, 166, 118, 0)");
+  ctx.fillStyle = earth;
   ctx.beginPath();
-  ctx.ellipse(cx, base, TILE * 0.42, TILE * 0.17, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy, TILE * 0.5, TILE * 0.36, 0, 0, Math.PI * 2);
   ctx.fill();
-  const stone = "#d9cfb8";
-  const shade = "#8f846c";
-  ctx.lineWidth = 0.7;
-  ctx.strokeStyle = "rgba(50, 40, 28, 0.85)";
-  // Columns of different heights, the last one broken off.
-  const cols = [
-    { x: cx - TILE * 0.22, h: TILE * 0.42 },
-    { x: cx - TILE * 0.04, h: TILE * 0.3 },
-    { x: cx + TILE * 0.15, h: TILE * (0.14 + r(1) * 0.08) },
-  ];
-  const w = TILE * 0.1;
-  for (const c of cols) {
-    ctx.fillStyle = stone;
-    ctx.beginPath();
-    ctx.moveTo(c.x - w / 2, base);
-    ctx.lineTo(c.x - w / 2, base - c.h);
-    ctx.lineTo(c.x - w / 6, base - c.h - w * 0.35);
-    ctx.lineTo(c.x + w / 2, base - c.h + w * 0.15);
-    ctx.lineTo(c.x + w / 2, base);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = shade;
-    ctx.fillRect(c.x + w * 0.12, base - c.h + w * 0.2, w * 0.38, c.h - w * 0.2);
-  }
-  // The lintel still lies on the two tall columns, tilted.
-  ctx.fillStyle = stone;
+  const fw = TILE * 0.8;
+  const fh = TILE * 0.42;
+  ctx.fillStyle = mid;
+  ctx.strokeStyle = line;
+  ctx.lineWidth = 0.5;
   ctx.beginPath();
-  ctx.moveTo(cols[0]!.x - w * 0.8, base - cols[0]!.h - w * 0.1);
-  ctx.lineTo(cols[1]!.x + w * 0.8, base - cols[1]!.h - w * 0.2);
-  ctx.lineTo(cols[1]!.x + w * 0.8, base - cols[1]!.h - w * 0.85);
-  ctx.lineTo(cols[0]!.x - w * 0.8, base - cols[0]!.h - w * 0.75);
+  ctx.moveTo(cx - fw / 2, cy - fh / 2);
+  ctx.lineTo(cx + fw / 2 - 2, cy - fh / 2);
+  ctx.lineTo(cx + fw / 2, cy - fh / 2 + 3);
+  ctx.lineTo(cx + fw / 2 - 1, cy + fh / 2);
+  ctx.lineTo(cx - fw / 2 + 3, cy + fh / 2);
+  ctx.lineTo(cx - fw / 2, cy + fh / 2 - 2.5);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
-  // Fallen stones.
-  for (let k = 0; k < 3; k++) {
-    const sx = cx + TILE * (0.18 + r(10 + k) * 0.18) * (k === 1 ? -1.6 : 1);
-    const sy = base + TILE * (0.02 + r(20 + k) * 0.06);
-    ctx.fillStyle = k === 2 ? shade : stone;
+  // Slabs of the floor and a crack through them.
+  ctx.strokeStyle = "rgba(90, 76, 52, 0.45)";
+  ctx.lineWidth = 0.35;
+  ctx.beginPath();
+  for (let k = 1; k < 4; k++) {
+    ctx.moveTo(cx - fw / 2 + (fw * k) / 4, cy - fh / 2);
+    ctx.lineTo(cx - fw / 2 + (fw * k) / 4, cy + fh / 2);
+  }
+  ctx.moveTo(cx - fw / 2, cy);
+  ctx.lineTo(cx + fw / 2, cy);
+  ctx.moveTo(cx - fw * 0.1, cy - fh / 2);
+  ctx.lineTo(cx + fw * 0.02, cy - fh * 0.1);
+  ctx.lineTo(cx - fw * 0.06, cy + fh * 0.2);
+  ctx.stroke();
+  // Grass breaking through.
+  ctx.fillStyle = "rgba(96, 140, 60, 0.7)";
+  for (let k = 0; k < 4; k++) {
     ctx.beginPath();
-    ctx.ellipse(sx, sy, TILE * 0.05, TILE * 0.03, r(30 + k), 0, Math.PI * 2);
+    ctx.ellipse(cx - fw / 2 + r(10 + k) * fw, cy - fh / 2 + r(14 + k) * fh, 1.4, 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /** A column standing on the floor at (x, foot): fluted shaft, base and capital, or broken off. */
+  const column = (x: number, foot: number, h: number, broken: boolean) => {
+    const w = 2.6;
+    upright(ctx, x, foot, () => {
+      ctx.fillStyle = "rgba(40, 30, 18, 0.25)";
+      ctx.beginPath();
+      ctx.ellipse(x + 1.6, foot, 2.4, 0.9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const shaft = ctx.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
+      shaft.addColorStop(0, light);
+      shaft.addColorStop(0.55, mid);
+      shaft.addColorStop(1, dark);
+      ctx.fillStyle = shaft;
+      ctx.strokeStyle = line;
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(x - w / 2, foot - 1);
+      if (broken) {
+        ctx.lineTo(x - w / 2, foot - h);
+        ctx.lineTo(x - w * 0.1, foot - h - 1.2);
+        ctx.lineTo(x + w * 0.15, foot - h + 0.3);
+        ctx.lineTo(x + w / 2, foot - h - 0.6);
+      } else {
+        ctx.lineTo(x - w / 2, foot - h + 1);
+        ctx.lineTo(x + w / 2, foot - h + 1);
+      }
+      ctx.lineTo(x + w / 2, foot - 1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(110, 96, 70, 0.5)";
+      ctx.lineWidth = 0.25;
+      ctx.beginPath();
+      for (const f of [-0.2, 0.15]) {
+        ctx.moveTo(x + w * f, foot - 1.4);
+        ctx.lineTo(x + w * f, foot - h + 1.6);
+      }
+      ctx.stroke();
+      // Base block.
+      ctx.fillStyle = mid;
+      ctx.strokeStyle = line;
+      ctx.lineWidth = 0.4;
+      ctx.fillRect(x - w * 0.75, foot - 1.2, w * 1.5, 1.2);
+      ctx.strokeRect(x - w * 0.75, foot - 1.2, w * 1.5, 1.2);
+      if (!broken) {
+        // Capital: a wider block with a lit top.
+        ctx.fillStyle = light;
+        ctx.fillRect(x - w * 0.8, foot - h - 0.4, w * 1.6, 1.5);
+        ctx.strokeRect(x - w * 0.8, foot - h - 0.4, w * 1.6, 1.5);
+      }
+      // Moss low on the shaft.
+      ctx.fillStyle = "rgba(92, 130, 58, 0.6)";
+      ctx.beginPath();
+      ctx.ellipse(x + w * 0.2, foot - 2 - r(40 + x) * 2, 0.9, 1.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  };
+
+  // Back row: two columns still carrying a piece of the beam.
+  const back = cy - fh * 0.3;
+  const bx1 = cx - flip * fw * 0.36;
+  const bx2 = cx - flip * fw * 0.08;
+  const bh = 11 + r(2) * 2;
+  column(bx1, back, bh, false);
+  column(bx2, back, bh, false);
+  column(cx + flip * fw * 0.22, back, 4 + r(4) * 3, true);
+  upright(ctx, (bx1 + bx2) / 2, back, () => {
+    const l = Math.min(bx1, bx2) - 2.2;
+    const rr = Math.max(bx1, bx2) + 2.2 + (flip > 0 ? 1.5 : 0);
+    const t = back - bh - 2.6;
+    const beam = ctx.createLinearGradient(0, t, 0, t + 2.4);
+    beam.addColorStop(0, light);
+    beam.addColorStop(1, mid);
+    ctx.fillStyle = beam;
+    ctx.strokeStyle = line;
+    ctx.lineWidth = 0.4;
+    ctx.beginPath();
+    ctx.moveTo(l, t);
+    ctx.lineTo(rr - 1, t - 0.3);
+    ctx.lineTo(rr, t + 1.2);
+    ctx.lineTo(rr - 0.6, t + 2.3);
+    ctx.lineTo(l, t + 2.3);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
+  });
+  // Front row: a broken column and a drum that fell and lies on the floor.
+  const front = cy + fh * 0.25;
+  column(cx + flip * fw * 0.36, front, 6 + r(3) * 3, true);
+  const dx = cx - flip * fw * 0.05;
+  upright(ctx, dx, front + 1.5, () => {
+    const len = 7;
+    const x0 = dx - len / 2;
+    const yTop = front + 1.5 - 2.6;
+    const drum = ctx.createLinearGradient(0, yTop, 0, yTop + 2.6);
+    drum.addColorStop(0, light);
+    drum.addColorStop(1, dark);
+    ctx.fillStyle = "rgba(40, 30, 18, 0.25)";
+    ctx.beginPath();
+    ctx.ellipse(dx + 0.8, front + 1.6, len * 0.6, 1, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = drum;
+    ctx.strokeStyle = line;
+    ctx.lineWidth = 0.4;
+    ctx.beginPath();
+    ctx.rect(x0, yTop, len, 2.6);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = mid;
+    ctx.beginPath();
+    ctx.ellipse(x0 + (flip > 0 ? len : 0), yTop + 1.3, 0.8, 1.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  });
+  // Loose blocks.
+  for (let k = 0; k < 2; k++) {
+    const sx = cx + (r(20 + k) - 0.5) * fw * 1.1;
+    const sy = cy + fh * (0.45 + r(24 + k) * 0.15);
+    upright(ctx, sx, sy, () => {
+      ctx.fillStyle = k ? mid : light;
+      ctx.strokeStyle = line;
+      ctx.lineWidth = 0.35;
+      ctx.beginPath();
+      ctx.rect(sx - 1.2, sy - 1.3, 2.4, 1.3);
+      ctx.fill();
+      ctx.stroke();
+    });
   }
 }
 

@@ -550,11 +550,11 @@ function paintRegion(
         r = cr[a]! * k;
         g = cg[a]! * k;
         b = cb[a]! * k;
-        // Light from the north-west: slopes facing it are brighter.
-        const left = sx - 1 >= ax0 && sy - 1 >= ay0 ? relief[a - aw - 1]! : relief[a]!;
-        const right = sx + 1 < ax1 && sy + 1 < ay1 ? relief[a + aw + 1]! : relief[a]!;
-        const slope = (left - right) * FIELD_RES * 0.5;
-        const light = Math.max(0.5, Math.min(1.4, 1 + slope * 0.9));
+        // Light from the north-west: a slope that rises towards the south-east faces the light and is brighter.
+        const nw = sx - 1 >= ax0 && sy - 1 >= ay0 ? relief[a - aw - 1]! : relief[a]!;
+        const se = sx + 1 < ax1 && sy + 1 < ay1 ? relief[a + aw + 1]! : relief[a]!;
+        const slope = (se - nw) * FIELD_RES * 0.5;
+        const light = Math.max(0.62, Math.min(1.3, 1 + slope * 0.55));
         r *= light;
         g *= light;
         b *= light;

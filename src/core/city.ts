@@ -286,11 +286,19 @@ export function assignWorkersDraft(draft: GameState, city: City): void {
   let food = cityTileYield(draft, city, idx(draft.map, city), effects).food - city.size * RULES.foodPerCitizen - settlerUpkeep;
   const worked: number[] = [];
   const goal = city.governor;
-  const target = goal ? governorFoodTarget(goal) : TARGET_FOOD_SURPLUS;
+  // A city that cannot grow any more has no use for extra food: enough to eat, then shields and trade.
+  const capped = city.size >= effects.maxSize;
+  const target = goal ? governorFoodTarget(goal) : capped ? 0 : TARGET_FOOD_SURPLUS;
   for (let n = 0; n < workers && candidates.length > 0; n++) {
     const hungry = food < target;
     const score = (y: Yield) =>
-      goal ? governorTileScore(goal, y, hungry) : hungry ? y.food * 10 + y.shields * 3 + y.trade * 2 : y.food * 4 + y.shields * 4 + y.trade * 2;
+      goal
+        ? governorTileScore(goal, y, hungry)
+        : hungry
+          ? y.food * 10 + y.shields * 3 + y.trade * 2
+          : capped
+            ? y.food + y.shields * 4 + y.trade * 2
+            : y.food * 4 + y.shields * 4 + y.trade * 2;
     candidates.sort((a, b) => score(b.y) - score(a.y) || a.i - b.i);
     const pick = candidates.shift()!;
     worked.push(pick.i);

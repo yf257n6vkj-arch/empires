@@ -121,3 +121,23 @@ describe("caravans and diplomats", () => {
     ]);
   });
 });
+
+describe("foreign cities in the player view", () => {
+  it("show only what is seen from outside until there is an embassy", () => {
+    const s = atWar();
+    const theirs = s.cities.find((c) => c.owner === 1)!;
+    theirs.buildings.push("walls", "granary", "pyramids");
+    theirs.production = { kind: "building", id: "temple" };
+    s.players[0]!.explored = s.players[0]!.explored.map(() => 1);
+    let seen = playerView(s, 0).foreignCities.find((c) => c.id === theirs.id)!;
+    expect(seen.buildings).toEqual(expect.arrayContaining(["palace", "walls", "pyramids"]));
+    expect(seen.buildings).not.toContain("granary");
+    expect(seen.productionKnown).toBe(false);
+    expect(seen.production).toEqual({ kind: "wealth" });
+    s.players[0]!.embassies = [1];
+    seen = playerView(s, 0).foreignCities.find((c) => c.id === theirs.id)!;
+    expect(seen.buildings).toContain("granary");
+    expect(seen.productionKnown).toBe(true);
+    expect(seen.production).toEqual({ kind: "building", id: "temple" });
+  });
+});

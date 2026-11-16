@@ -91,6 +91,8 @@ import { createMenus } from "./menu";
 import { createAdvisor } from "./advisorPanel";
 import { createGuide } from "./guide";
 import { createNations } from "./nations";
+import { createForeignCity } from "./foreignCity";
+import { createEndScreen } from "./endScreen";
 import { createCitiesOverview } from "./citiesOverview";
 import { createCelebration } from "./celebration";
 import { payloadOf, readAutosave, writeAutosave, type LogEntry, type SavePayload } from "./saves";
@@ -181,7 +183,7 @@ function useGame(payload: SavePayload): void {
   selectedUnitId = null;
   targetingUnitId = null;
   disbandConfirmUnitId = null;
-  empire.resetVictory();
+  endScreen.reset();
   camera = DEFAULT_CAMERA;
   updateZoomButtons();
   ctx = setupCanvas(canvas, state.map.width, state.map.height, fitTileSize());
@@ -218,7 +220,7 @@ function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_
   selectedCityId = null;
   selectedUnitId = null;
   targetingUnitId = null;
-  empire.resetVictory();
+  endScreen.reset();
   camera = DEFAULT_CAMERA;
   updateZoomButtons();
   selectNextUnit();
@@ -613,7 +615,7 @@ function renderEconomy(): void {
   warmingLabel.hidden = polluted === 0 && warming === 0;
   warmingLabel.innerHTML = `<span class="sun" style="--heat:${warming / 100}"></span>${warming} %`;
   warmingLabel.title = t("Globální oteplování je na {pct} %. Na světě je {n} znečištěných políček. Až počítadlo dojde na 100 %, změní se krajina: u moře vzniknou bažiny a džungle, ve vnitrozemí poušť. Pomůže vyčistit znečištění osadníky.", { pct: warming, n: polluted });
-  empire.checkVictory();
+  endScreen.check();
 }
 
 const empire = createEmpireDialogs($<HTMLDialogElement>("#empire-dialog"), {
@@ -717,6 +719,27 @@ const nations = createNations($<HTMLDialogElement>("#nations-dialog"), $<HTMLDia
   openEntry: (key) => codex.show(key),
 });
 $<HTMLButtonElement>("#nations-button").addEventListener("click", () => nations.open());
+const endScreen = createEndScreen($<HTMLDialogElement>("#end-dialog"), {
+  state: () => state,
+  player: () => HUMAN,
+  newGame: () => newGameDialog.open(),
+});
+const foreignCity = createForeignCity($<HTMLDialogElement>("#foreign-city-dialog"), {
+  state: () => state,
+  player: () => HUMAN,
+  openEntry: (key) => codex.show(key),
+  openNations: () => nations.open(),
+  selectedUnitName: () => {
+    const u = selectedUnit();
+    return u ? unitName(u.type) : null;
+  },
+  sendTo: (p) => moveSelected(p),
+});
+
+/** A foreign city the player knows of on the tile, or undefined. */
+function knownForeignCity(p: Point): { id: number } | undefined {
+  return playerView(state, HUMAN).foreignCities.find((c) => c.x === p.x && c.y === p.y);
+}
 const guide = createGuide({
   state: () => state,
   player: () => HUMAN,
@@ -1245,7 +1268,9 @@ canvas.addEventListener("dblclick", (e) => {
   const p = tileFromEvent(e);
   if (!p) return;
   const city = state.cities.find((c) => c.x === p.x && c.y === p.y && c.owner === HUMAN);
-  if (city) cityScreen.open(city.id);
+  if (city) return cityScreen.open(city.id);
+  const foreign = knownForeignCity(p);
+  if (foreign) foreignCity.open(foreign.id);
 });
 
 // A right click (two-finger click on a trackpad) sends the selected unit anywhere, cities included.
@@ -1284,6 +1309,9 @@ canvas.addEventListener("click", (e) => {
 
   // A selected unit steps onto any neighbouring tile, including own cities.
   if (unit && distance(unit, p) === 1) return moveSelected(p);
+  // A foreign city further away opens its window; a right click or G sends the unit there.
+  const foreignHere = knownForeignCity(p);
+  if (foreignHere) return foreignCity.open(foreignHere.id);
   if (myCity) {
     selectedCityId = myCity.id;
     selectedUnitId = null;
@@ -1401,7 +1429,7 @@ document.addEventListener("keydown", (e) => {
   const target = e.target as HTMLElement;
   if (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA") return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || attackDialog.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen() || celebration.isOpen() || guide.isOpen() || nations.isOpen()) return;
+  if (techTree.isOpen() || cityScreenOpen() || empire.isOpen() || codex.isOpen() || attackDialog.isOpen() || newGameDialog.isOpen() || menus.isOpen() || citiesOverview.isOpen() || celebration.isOpen() || guide.isOpen() || nations.isOpen() || endScreen.isOpen() || foreignCity.isOpen()) return;
   if (e.key.toLowerCase() === "o") {
     e.preventDefault();
     return citiesOverview.open();
@@ -1481,7 +1509,7 @@ const menus = createMenus($<HTMLElement>("#start-screen"), $<HTMLDialogElement>(
   },
   openCodex: () => codex.open(),
   openAdvisor: () => advisor.show(),
-  openScores: () => guide.openScores(),
+  openScores: () => endScreen.open(),
   openCities: () => citiesOverview.open(),
   player: HUMAN,
 });

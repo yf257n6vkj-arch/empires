@@ -58,8 +58,10 @@ export function agentProduction(view: PlayerView, city: City, land: Int32Array):
   if (city.size < 3) return null;
   const caravanOk = knows(view, UNIT_TYPES.caravan.requires);
   const building = view.cities.find((c) => isWonder(c));
-  // Up to two caravans help a wonder another city is building.
-  if (caravanOk && building && building.id !== city.id && land[at(view, building)] === land[at(view, city)] && agents(view, isCaravan) < 2) return { kind: "unit", id: "caravan" };
+  // Caravans help a wonder another city is building: two at a time, or one from every
+  // city for the Apollo Program, which opens the space race.
+  const helpers = building && building.production.kind === "building" && building.production.id === "apolloProgram" ? Math.max(2, view.cities.length - 1) : 2;
+  if (caravanOk && building && building.id !== city.id && land[at(view, building)] === land[at(view, city)] && agents(view, isCaravan) < helpers) return { kind: "unit", id: "caravan" };
   // A trade route from a city that has none yet, one caravan at a time.
   if (caravanOk && city.tradeRoutes.length === 0 && agents(view, isCaravan) === 0 && routeTargets(view, city, land).length > 0) return { kind: "unit", id: "caravan" };
   if (knows(view, UNIT_TYPES.diplomat.requires) && agents(view, isDiplomat) < diplomatsWanted(view) && city.buildings.includes("palace")) return { kind: "unit", id: "diplomat" };

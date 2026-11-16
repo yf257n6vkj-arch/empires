@@ -2189,4 +2189,120 @@ export const EN_STRINGS: Record<string, string> = {
     "rivals will be keener to offer and accept peace",
   "Národy, které znáš: válka a mír":
     "The nations you know: war and peace",
+  "Město drží barbaři.":
+    "The barbarians hold this city.",
+  "{nation}, vládce {leader}":
+    "{nation}, ruled by {leader}",
+  "obrana {d} · životy {hp} z {max}":
+    "defence {d} · health {hp} of {max}",
+  "Ve městě nevidíš žádné jednotky. Ve válce ho dobude první voják, který do něj vejde.":
+    "You see no units in the city. At war, the first soldier to walk in takes it.",
+  "Město teď nevidíš, takže nevíš, kdo ho brání. Pošli k němu jednotku.":
+    "The city is out of sight, so you don't know who defends it. Send a unit there.",
+  "Ve městě žije jeden obyvatel.|Ve městě žijí {n} obyvatelé.|Ve městě žije {n} obyvatel.":
+    "One citizen lives in the city.|{n} citizens live in the city.",
+  "Je to hlavní město říše.":
+    "It is the capital of the empire.",
+  "Chrání ho {list}.":
+    "It is protected by {list}.",
+  "Hradby nemá.":
+    "It has no walls.",
+  "Stojí v něm {list}.":
+    "It has {list}.",
+  "Co víš od velvyslanectví":
+    "What your embassy tells you",
+  "Staví: {item}.":
+    "Building: {item}.",
+  "Další budovy: {list}.":
+    "Other buildings: {list}.",
+  "Jiné budovy nemá.":
+    "It has no other buildings.",
+  "Co město staví a jaké má další budovy, prozradí velvyslanectví. Otevře ho diplomat, který dojde do kteréhokoli města tohoto národa.":
+    "An embassy tells you what the city builds and which other buildings it has. A diplomat opens one by reaching any city of this nation.",
+  "Kdo město brání":
+    "Who defends the city",
+  "Skrýt historii":
+    "Hide history",
+  "první":
+    "first",
+  "druhý":
+    "second",
+  "třetí":
+    "third",
+  "čtvrtý":
+    "fourth",
+  "pátý":
+    "fifth",
+  "šestý":
+    "sixth",
+  "sedmý":
+    "seventh",
+  "osmý":
+    "eighth",
+  "Poražený vládce":
+    "Defeated ruler",
+  "Vládce, na kterého se nezapomene":
+    "A ruler the world will never forget",
+  "Velký vládce":
+    "Great ruler",
+  "Moudrý vládce":
+    "Wise ruler",
+  "Schopný vládce":
+    "Able ruler",
+  "Vládce malé říše":
+    "Ruler of a small realm",
+  "Náčelník kmene":
+    "Tribal chief",
+  "Prohrál jsi":
+    "You lost",
+  "Padlo tvoje poslední město a tvoje říše zanikla.":
+    "Your last city fell and your empire is gone.",
+  "Tah {turn} z {max}. Graf a tabulka ukazují národy, které znáš. Po posledním tahu vyhraje ten, kdo má nejvyšší skóre.":
+    "Turn {turn} of {max}. The chart and the table show the nations you know. After the last turn the highest score wins.",
+  "v počtu měst":
+    "in the number of cities",
+  "v počtu obyvatel":
+    "in population",
+  "ve vědě":
+    "in science",
+  "v divech světa":
+    "in wonders of the world",
+  "Ve skóre jsi {place}.":
+    "In score you are {place}.",
+  "Nejlíp ti to jde {area}, tam jsi {place}.":
+    "You do best {area}, where you are {place}.",
+  "Nejvíc ztrácíš {area}, tam jsi {place}.":
+    "You fall behind most {area}, where you are {place}.",
+  "odehrané tahy":
+    "turns played",
+  "založená města":
+    "cities founded",
+  "dobytá města":
+    "cities captured",
+  "nejvyšší skóre":
+    "highest score",
+  "{score} v tahu {turn}":
+    "{score} in turn {turn}",
+  "poprvé v čele":
+    "first in the lead",
+  "v tahu {turn}":
+    "in turn {turn}",
+  "Jak jsi hrál":
+    "How you played",
+  "Jak si zatím vedeš":
+    "How you are doing so far",
+  "skóre":
+    "score",
+  "města":
+    "cities",
+  "Průběh hry se začal zapisovat až v nové verzi hry, graf se ukáže po dalším tahu.":
+    "The game only started recording its course in this version; the chart appears after the next turn.",
+  "divy":
+    "wonders",
+  "poraženi":
+    "defeated",
+  "Hrát dál":
+    "Keep playing",
+  "Poslat sem: {unit}":
+    "Send here: {unit}",
 };

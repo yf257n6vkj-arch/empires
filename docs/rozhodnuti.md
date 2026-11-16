@@ -2,6 +2,32 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Soupeři berou barbarům města zpátky
+
+Na nastavení málo vzali soupeři barbarům zpátky jen jedno město ze třinácti. Rozbor ukázal tři chyby v armádě. Děla a katapulty zůstávaly ve městech jako posádka, takže armáda nikdy nebyla pohromadě. Armáda čekala na tři jednotky i proti jednomu barbarovi. A soupeř hádal obranu města podle jeho velikosti, i když na posádku viděl. Teď drží města nejdřív obránci, obléhací jednotky ve válce posádku nedělají a menší skupina zaútočí, když je aspoň dvakrát silnější než obrana. Město, na které soupeř vidí, posuzuje podle jednotek, které v něm opravdu stojí. Barbarské město do šesti políček od vlastního města je pro armádu první cíl, i když soupeř zrovna válčí jinde.
+
+Na 50 automatických partiích dobyli barbaři 38 měst a soupeři z nich 18 vzali zpátky. Oprava zlepšila armádu i ve válkách mezi národy. Na 20 partiích dobyli soupeři před opravou 32 měst, po ní 67. Silnější armáda i vesmírné lodě změnily měření obtížnosti. Místo, které hraje jako člověk, vyhrálo na normální obtížnosti 5 z 20 partií a mělo v mediánu 72 % skóre nejlepšího soupeře, na těžké vyhrálo 3 partie a mělo 70 %. Rozdíl mezi úrovněmi je teď vidět spíš na výhrách než na skóre a přeměříme ho, až AI dostane lodě a letadla.
+
+## 16. 11. 2026: Soupeři staví vesmírnou loď a někdy s ní vyhrají
+
+Žádný soupeř dřív neodstartoval, protože program Apollo stavělo jedno město s pár štíty a zbytek říše dělal jiné věci. Teď soupeři po svém seznamu objevů míří na železnici, vesmírné lety, plasty a robotiku. Apollo staví nejproduktivnější město a ostatní města mu posílají karavany, které soupeř dokupuje za zlato. Díly lodi staví pět nejproduktivnějších měst a každé vezme jiný díl, takže loď má brzy motor i modul. Za zlato soupeř kupuje nejdřív ten díl, který lodi chybí nejvíc. Když zná všechny objevy pro loď, sníží vědu na minimum a daněmi platí díly. Města pro vesmírný program přepne na správce s cílem výroba.
+
+Okno každého vlastního města ukazuje, kolik štítů dává, a teď to ví i AI. Města, která už nemůžou růst, protože jim chybí akvadukt, obsazují políčka se štíty místo políček s jídlem navíc, které by propadlo. Tohle platí i pro hráčova města bez ručního výběru. Tempo hráče se tím podle měřicího skriptu nezměnilo.
+
+Na 50 automatických partiích odstartovalo 48 lodí a soupeř vyhrál vesmírnou lodí v 9 partiích, ve zbylých 41 rozhodlo skóre.
+
+## 16. 11. 2026: Závěrečná obrazovka hodnotí partii
+
+Když někdo vyhraje nebo hráč přijde o poslední město, otevře se závěrečné okno. Ukáže, kdo a jak vyhrál, graf skóre, počtu měst a objevů všech národů po tazích a tabulku s pořadím. Pod ní hodnotí hráčovu hru. Dá mu titul podle skóre proti nejlepšímu soupeři, od náčelníka kmene po vládce, na kterého se nezapomene, a výhra je vždycky aspoň moudrý vládce. Napíše, v čem byl nejlepší a kde nejvíc ztrácel, a přidá pár čísel: založená a dobytá města, nejvyšší skóre a tah, kdy se hráč poprvé dostal do čela. Odtud jde hrát dál, nebo začít novou hru. Hra si kvůli tomu na konci každého tahu zapisuje skóre, města a objevy všech národů. Uložené hry z dřívějška graf mají až od dalšího tahu.
+
+Stejné okno otevře během hry Žebříček v menu. Ukazuje jen národy, které hráč zná.
+
+## 16. 11. 2026: Klik na cizí město ukáže, co o něm víš
+
+Okno cizího města ukáže národ a vládce, velikost města, jestli je hlavní, hradby a další opevnění, divy a obránce, pokud město právě vidíš. S velvyslanectvím u toho národa ukáže i to, co město staví, a ostatní budovy. Má tlačítka na historii města, okno Národy a poslání vybrané jednotky k městu. Otevře se klikem na cizí město, které nesousedí s vybranou jednotkou. Klik na sousední město dál znamená útok.
+
+Kvůli tomu dostává AI o cizích městech stejně informací jako hráč. Dřív viděla všechny jejich budovy i výrobu, teď bez velvyslanectví jen to, co je vidět zvenku.
+
 ## 16. 11. 2026: Válka jde ukončit mírem, který platí 15 tahů
 
 Tímhle je hotový krok 4 fáze 3. Tlačítko Národy nahoře otevře okno se všemi národy, které hráč zná. U každého ukazuje, jestli s ním válčí nebo má mír a od kterého tahu, jakou má soupeř povahu, jeho skóre a jestli chce mír. Odtud jde nabídnout mír nebo vyhlásit válku. Válku je potřeba potvrdit druhým klikem. Když soupeř nabídne mír hráči, hra se na začátku tahu zeptá oknem s portrétem vládce a hráč nabídku přijme nebo odmítne. Nabídka platí do konce tahu toho, komu přišla.

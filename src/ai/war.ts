@@ -50,9 +50,9 @@ export function isAttacker(u: Pick<Unit, "type">): boolean {
 }
 
 /**
- * How hard a known enemy city is to take: the defenders the AI sees there,
- * or as many as a city of that size usually has, of the best kind the AI
- * itself can build; walls triple it.
+ * How hard a known enemy city is to take: the defenders the AI sees there
+ * when the city is in sight, otherwise at least as many as a city of that
+ * size usually has, of the best kind the AI itself can build; walls triple it.
  */
 export function cityDefense(view: PlayerView, city: City): number {
   const seen = view.foreignUnits.filter((u) => u.x === city.x && u.y === city.y && UNIT_TYPES[u.type].defense > 0);
@@ -61,7 +61,9 @@ export function cityDefense(view: PlayerView, city: City): number {
   const ground = terrain ? 1 + TERRAINS[terrain].defenseBonus / 100 : 1;
   const visible = seen.reduce((n, u) => n + UNIT_TYPES[u.type].defense * (u.hp / UNIT_TYPES[u.type].hp), 0);
   const guessed = (1 + Math.floor(city.size / 3)) * UNIT_TYPES[bestDefender(view)].defense;
-  return Math.max(visible, guessed) * 1.5 * ground * walls;
+  // A city in sight shows its whole garrison; only one out of sight needs a guess.
+  const inSight = view.visible[at(view, city)] === 1;
+  return (inSight ? visible : Math.max(visible, guessed)) * 1.5 * ground * walls;
 }
 
 /** The enemy city the army goes for: the nearest to the capital that can be reached on foot. */
@@ -160,7 +162,10 @@ export function armyCommands(view: PlayerView, army: Unit[], target: City): Comm
   const defenders = view.foreignUnits.filter((u) => u.x === target.x && u.y === target.y).length;
   const needed = Math.max(3, defenders * 2 + 1);
   const close = army.filter((u) => distance(u, target) <= 2).length;
-  const ready = army.filter((u) => distance(u, target) <= 2 || (staging && distance(u, staging) <= 1)).length >= needed || close >= needed - 1;
+  const gathered = army.filter((u) => distance(u, target) <= 2 || (staging && distance(u, staging) <= 1));
+  // Enough units, or fewer that are clearly stronger than the defence (a lone barbarian garrison, say).
+  const strongEnough = gathered.reduce((n, u) => n + punch(u), 0) >= 2 * cityDefense(view, target);
+  const ready = gathered.length >= needed || close >= needed - 1 || strongEnough;
 
   // Free land tiles next to the target, the best ground for defence first.
   const around = neighbors8(view, at(view, target))

@@ -22,9 +22,21 @@ function knows(view: PlayerView, tech: TechId): boolean {
   return view.economy.techs.includes(tech);
 }
 
+/**
+ * After its own list every nature heads for the space race: the railroad for
+ * production, then space flight, plastics and robotics, which open the
+ * Apollo Program and every kind of spaceship part.
+ */
+const SPACE_GOALS: TechId[] = ["railroad", "spaceFlight", "plastics", "robotics"];
+
+/** True once the AI knows every technology the spaceship needs. */
+export function knowsSpaceTechs(view: PlayerView): boolean {
+  return SPACE_GOALS.every((t) => knows(view, t));
+}
+
 export function researchCommands(view: PlayerView): Command[] {
   if (view.economy.researching !== null) return [];
-  const goal = GOALS[nature(view)].find((t) => t in TECHS && !knows(view, t));
+  const goal = [...GOALS[nature(view)], ...SPACE_GOALS].find((t) => t in TECHS && !knows(view, t));
   if (goal) return [{ type: "setResearchGoal", tech: goal }];
   const open = (Object.keys(TECHS) as TechId[]).find((t) => !knows(view, t) && TECHS[t].requires.every((r) => knows(view, r)));
   return open ? [{ type: "setResearch", tech: open }] : [];
@@ -63,6 +75,13 @@ export function rateCommands(view: PlayerView): Command[] {
   if (!skill(view).manageRates) return [];
   const { scienceRate, income, gold, government } = view.economy;
   const step = RULES.rateStep;
+  // Nothing left to research, or the spaceship is all that matters: taxes buy the parts.
+  const nothingLeft = Object.keys(TECHS).every((t) => knows(view, t as TechId));
+  const racing = knowsSpaceTechs(view) && view.builtWonders.includes("apolloProgram") && view.economy.spaceship.launchedTurn === null;
+  if (nothingLeft || racing) {
+    const low = clampRate(0, government);
+    return low !== scienceRate ? [{ type: "setScienceRate", rate: low }] : [];
+  }
   if (income < 0 && gold + income * 5 < RESERVE) {
     const down = clampRate(scienceRate - step, government);
     return down !== scienceRate ? [{ type: "setScienceRate", rate: down }] : [];

@@ -159,9 +159,14 @@ export function soldierCommands(ctx: Context, soldiers: Unit[], target: City | n
   const stays = new Map<number, number>();
   const free: Unit[] = [];
 
-  for (const u of soldiers) {
+  // Defenders hold the cities first, so the units built for attack stay free for the army.
+  // With a target, siege units that can hardly defend never stay behind as a garrison.
+  const striker = (u: Unit) => UNIT_TYPES[u.type].defense < UNIT_TYPES[u.type].attack * 0.75;
+  const siege = (u: Unit) => UNIT_TYPES[u.type].defense * 2 <= UNIT_TYPES[u.type].attack;
+  const ordered = [...soldiers].sort((a, b) => Number(striker(a)) - Number(striker(b)));
+  for (const u of ordered) {
     const city = view.cities.find((c) => c.x === u.x && c.y === u.y);
-    if (city && (stays.get(city.id) ?? 0) < (need.get(city.id) ?? 1)) {
+    if (city && !(target && siege(u)) && (stays.get(city.id) ?? 0) < (need.get(city.id) ?? 1)) {
       stays.set(city.id, (stays.get(city.id) ?? 0) + 1);
       // A defender strikes at an enemy next to its city when it is very likely to win and others hold the city.
       const strike = garrison(view, city) >= 2 ? attackNow(view, u, 0.75) : null;

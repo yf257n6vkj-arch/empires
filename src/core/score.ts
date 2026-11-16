@@ -39,6 +39,16 @@ export function scoreOf(state: GameState, player: PlayerId): Score {
   return { ...parts, total: parts.citizens + parts.happy + parts.techs + parts.wonders + parts.spaceship };
 }
 
+/** Records where every player stands at the end of the turn (mutates the draft). */
+export function recordTurnDraft(draft: GameState): void {
+  draft.history.push({
+    turn: draft.turn,
+    score: draft.players.map((p) => (isBarbarian(p) ? 0 : scoreOf(draft, p.id).total)),
+    cities: draft.players.map((p) => draft.cities.filter((c) => c.owner === p.id).length),
+    techs: draft.players.map((p) => p.techs.length),
+  });
+}
+
 /** Nations still in the game, barbarians aside. */
 export function nationsAlive(state: GameState): PlayerId[] {
   return state.players.filter((p) => !p.defeated && !isBarbarian(p)).map((p) => p.id);

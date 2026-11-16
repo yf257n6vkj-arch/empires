@@ -7,7 +7,7 @@ import type { GovernorGoal } from "./governor";
 import type { BarbarianLevel, BuildingId, Difficulty, CivId, GovernmentId, ImprovementId, NationId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 17;
+export const STATE_VERSION = 18;
 
 export interface GameMap {
   width: number;
@@ -218,6 +218,16 @@ export interface GameState {
   barbarians: BarbarianLevel;
   /** How strong the computer players are. */
   difficulty: Difficulty;
+  /** One record per finished turn, for the charts at the end of the game. */
+  history: TurnRecord[];
+}
+
+/** Where every player stood at the end of a turn; arrays are indexed by player id. */
+export interface TurnRecord {
+  turn: number;
+  score: number[];
+  cities: number[];
+  techs: number[];
 }
 
 /** True for the barbarian player. */

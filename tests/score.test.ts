@@ -62,3 +62,20 @@ describe("score", () => {
     expect(s.victory).toMatchObject({ player: 1, kind: "score", turn: RULES.maxTurns });
   });
 });
+
+describe("history of the game", () => {
+  it("records score, cities and techs of every player when a turn ends", () => {
+    let s = twoNations();
+    s.players[1]!.isHuman = true;
+    expect(s.history).toEqual([]);
+    s = apply(s, { type: "endTurn" });
+    expect(s.history).toEqual([]);
+    s = apply(s, { type: "endTurn" });
+    expect(s.history.length).toBe(1);
+    const r = s.history[0]!;
+    expect(r.turn).toBe(s.turn - 1);
+    expect(r.cities).toEqual([1, 1]);
+    expect(r.score).toEqual([scoreOf(s, 0).total, scoreOf(s, 1).total]);
+    expect(r.techs).toEqual([s.players[0]!.techs.length, s.players[1]!.techs.length]);
+  });
+});

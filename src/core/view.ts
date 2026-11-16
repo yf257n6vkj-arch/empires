@@ -11,8 +11,14 @@ import { tilesInRadius, type Point } from "./geometry";
 import { scoreOf, type Score } from "./score";
 import { buildingUpkeep, builtWonders, researchCost, wonderFlag } from "./economy";
 import { cityReport } from "./city";
-import { RULES, UNIT_TYPES, type BarbarianLevel, type BuildingId, type Difficulty, type GovernmentId, type NationId, type TechId, type TerrainId } from "./rules";
+import { BUILDINGS, RULES, UNIT_TYPES, type BarbarianLevel, type BuildingId, type Difficulty, type GovernmentId, type NationId, type TechId, type TerrainId } from "./rules";
 import { isBarbarian, type City, type GameState, type PlayerId, type Spaceship, type Unit } from "./state";
+
+/** Buildings anybody can see from outside a city: fortifications, the palace and wonders. */
+export function seenFromOutside(id: BuildingId): boolean {
+  const b = BUILDINGS[id];
+  return b.wonder || id === "palace" || (b.effects.defenseVsLandPct ?? 0) > 0 || (b.effects.defenseVsSeaPct ?? 0) > 0;
+}
 
 /** What a player knows about another empire. */
 export interface RivalView {
@@ -87,8 +93,15 @@ export interface PlayerView {
   /** Tiles the player sees right now; elsewhere the map shows what was last seen. */
   visible: number[];
   cities: City[];
-  /** Other players' cities the player has seen on explored land, or all of them with the space program. */
-  foreignCities: City[];
+  /** Shields each own city adds to its production per turn, as its city screen shows; keyed by city id. */
+  cityShields: Record<number, number>;
+  /**
+   * Other players' cities the player has seen on explored land, or all of them
+   * with the space program. Without an embassy with the owner only buildings
+   * seen from outside are listed (walls and other fortifications, the palace,
+   * wonders) and `production` is wealth; `productionKnown` says which it is.
+   */
+  foreignCities: (City & { productionKnown: boolean })[];
   rivals: RivalView[];
   /** The player's own economy, as shown in the top bar. */
   economy: {
@@ -165,9 +178,29 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
       .map((u) => ({ ...u, goto: null, orders: null, work: null, homeCity: null })),
     visible,
     cities: state.cities.filter((c) => c.owner === playerId).map((c) => ({ ...c })),
+    cityShields: Object.fromEntries(state.cities.filter((c) => c.owner === playerId).map((c) => [c.id, cityReport(state, c).shieldSurplus])),
     foreignCities: state.cities
       .filter((c) => c.owner !== playerId && (seesAll || player.explored[c.y * state.map.width + c.x]))
-      .map((c) => ({ ...c, worked: [], food: 0, shields: 0, queue: [], tradeRoutes: [], stolenBy: c.stolenBy.filter((p) => p === playerId), taxmen: 0, scientists: 0, disorderTurns: 0, soldTurn: null, governor: null })),
+      .map((c) => {
+        const embassy = player.embassies.includes(c.owner);
+        return {
+          ...c,
+          buildings: embassy ? [...c.buildings] : c.buildings.filter(seenFromOutside),
+          production: embassy ? { ...c.production } : { kind: "wealth" as const },
+          productionKnown: embassy,
+          worked: [],
+          food: 0,
+          shields: 0,
+          queue: [],
+          tradeRoutes: [],
+          stolenBy: c.stolenBy.filter((p) => p === playerId),
+          taxmen: 0,
+          scientists: 0,
+          disorderTurns: 0,
+          soldTurn: null,
+          governor: null,
+        };
+      }),
     rivals: state.players
       .filter((p) => p.id !== playerId)
       .map((p) => ({

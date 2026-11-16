@@ -113,6 +113,7 @@ export function newGame(options: NewGameOptions): GameState {
     victory: null,
     barbarians: options.barbarians ?? "none",
     difficulty: options.difficulty ?? "normal",
+    history: [],
   };
   placeRuins(map, starts, rng.fork("ruins"));
   if (state.barbarians !== "none") {
@@ -297,6 +298,10 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
       p.offeredPeace ??= {};
       p.treatiesBroken ??= 0;
     }
+  }
+  if (version <= 17) {
+    // Version 18 records every turn for the end of the game; older turns are not known.
+    state.history ??= [];
   }
   state.version = STATE_VERSION;
   return state;

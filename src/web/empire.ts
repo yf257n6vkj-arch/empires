@@ -30,8 +30,6 @@ export interface EmpireHost {
 }
 
 export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost) {
-  let shownVictory = false;
-
   function close(): void {
     if (dialog.open) dialog.close();
   }
@@ -132,34 +130,5 @@ export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost)
     });
   }
 
-  /** Shows the result once, the first time somebody wins. */
-  function checkVictory(): void {
-    const v = host.state().victory;
-    if (!v || shownVictory) return;
-    shownVictory = true;
-    const mine = v.player === host.player();
-    const realm = escapeHtml(realmName(host.state(), v.player));
-    const more = `<p class="small">${t("Můžeš hrát dál, výsledek už zůstane.")}</p>`;
-    if (v.kind !== "space") {
-      const text =
-        v.kind === "conquest"
-          ? mine
-            ? t("V tahu {turn} padl poslední soupeř. Celý svět teď patří tvé říši.", { turn: v.turn })
-            : t("{realm} v tahu {turn} porazila všechny soupeře a ovládla svět.", { realm, turn: v.turn })
-          : mine
-            ? t("Po {turn} tazích má tvoje říše nejvyšší skóre: {score} bodů.", { turn: v.turn, score: scoreOf(host.state(), v.player).total })
-            : t("Po {turn} tazích má nejvyšší skóre {realm}.", { realm, turn: v.turn });
-      frame(mine ? t("Vyhrál jsi!") : t("Konec hry"), `<p>${text}</p>${more}`);
-      return;
-    }
-    frame(
-      mine ? t("Vyhrál jsi!") : t("Konec závodu"),
-      mine
-        ? `<div class="ss-picture"></div><p>${t("Tvoje vesmírná loď přistála u cizí hvězdy v tahu {turn}. Lidé z tvé říše založili první osadu mimo Zemi.", { turn: v.turn })}</p>${more}`
-        : `<div class="ss-picture"></div><p>${t("{realm} přistála u cizí hvězdy v tahu {turn} a vyhrála.", { realm, turn: v.turn })}</p>`,
-    );
-    dialog.querySelector(".ss-picture")?.append(spaceshipCanvas(shipPicture(v.player), 592, 444));
-  }
-
-  return { openGovernment, openSpaceship, checkVictory, isOpen: () => dialog.open, resetVictory: () => (shownVictory = false) };
+  return { openGovernment, openSpaceship, isOpen: () => dialog.open };
 }

@@ -7,14 +7,14 @@
  * defenders at home, improves the land and builds and researches by its
  * nature. Armies, war and diplomacy come in the next steps of phase 3.
  */
-import { applyCommand, BUILDINGS, buyCost, CIVS, distance, playerView, sameItem, UNIT_TYPES, type Command, type GameEvent, type GameState, type PlayerView } from "../core";
+import { applyCommand, BUILDINGS, buyCost, CIVS, distance, playerView, sameItem, UNIT_TYPES, type BuildingId, type City, type Command, type GameEvent, type GameState, type PlayerView } from "../core";
 import { barbarianCommands } from "./barbarians";
 import { chooseProduction } from "./build";
 import { caravanCommands, diplomatCommands, isCaravan, isDiplomat } from "./agents";
 import { peaceCommands, underTreaty } from "./diplomacy";
-import { launchCommands, spaceBuilders } from "./space";
+import { launchCommands, partUrgency, spaceBuilders } from "./space";
 import { upkeepCommands } from "./upkeep";
-import { isMilitary, isSettler, landmasses } from "./knowledge";
+import { at, isMilitary, isSettler, landmasses } from "./knowledge";
 import { governmentCommands, rateCommands, researchCommands } from "./research";
 import { averageKnownValue, roomToExpand } from "./settle";
 import { skill, targetCity, total, warMotivation } from "./war";
@@ -65,6 +65,23 @@ export function playTurn(state: GameState): { state: GameState; events: GameEven
   return { state: current, events };
 }
 
+/** Barbarian cities closer than this to an own city are taken back before any other target. */
+const LIBERATE_RANGE = 6;
+
+/** The barbarian city nearest to own cities on the same land, if one is within LIBERATE_RANGE. */
+export function barbarianCityNearby(view: PlayerView, land: Int32Array, barbarians: number): City | null {
+  let best: { c: City; d: number } | null = null;
+  for (const c of view.foreignCities) {
+    if (c.owner !== barbarians) continue;
+    for (const own of view.cities) {
+      const d = distance(own, c);
+      if (d > LIBERATE_RANGE || land[at(view, own)] !== land[at(view, c)]) continue;
+      if (!best || d < best.d) best = { c, d };
+    }
+  }
+  return best?.c ?? null;
+}
+
 export function decide(view: PlayerView): Command[] {
   if (view.civ === "barbarians") return barbarianCommands(view);
   const commands: Command[] = [...researchCommands(view), ...rateCommands(view), ...peaceCommands(view)];
@@ -89,7 +106,9 @@ export function decide(view: PlayerView): Command[] {
   const nearBarbarians =
     barbarians && view.foreignCities.some((c) => c.owner === barbarians.id && view.cities.some((own) => distance(own, c) <= BARBARIAN_CITY_RANGE));
   const targets = nearBarbarians ? [...enemies, barbarians.id] : enemies;
-  const target = targets.length > 0 ? targetCity(view, land, targets) : null;
+  // A barbarian city right next to own land comes first: it is weakly held and often was ours.
+  const liberate = barbarians ? barbarianCityNearby(view, land, barbarians.id) : null;
+  const target = liberate ?? (targets.length > 0 ? targetCity(view, land, targets) : null);
   const n = CIVS[view.civ].personality;
   const peaceArmy = n === "war" ? Math.max(2, Math.ceil(view.cities.length / 2)) : n === "expansion" && room === 0 ? 2 : 0;
   const ctx = makeContext(view, land, {
@@ -116,6 +135,10 @@ export function decide(view: PlayerView): Command[] {
   for (const city of view.cities) {
     const wanted = chooseProduction(view, city, ctx.plan);
     if (!sameItem(city.production, wanted)) commands.push({ type: "setProduction", cityId: city.id, item: wanted });
+    // Cities working for the space race put their citizens on shields through the governor.
+    const space = wanted.kind === "building" && (wanted.id === "apolloProgram" || BUILDINGS[wanted.id].spaceship !== undefined);
+    const goal = space ? "production" : null;
+    if (city.governor !== goal) commands.push({ type: "setGovernor", cityId: city.id, goal });
   }
   commands.push(...buyCommands(view), ...launchCommands(view), ...upkeepCommands(view, ctx.plan));
   return commands;
@@ -131,6 +154,25 @@ const BUY_RESERVE_PER_CITY = 10;
  * A city in danger hurries its defender first.
  */
 export function buyCommands(view: PlayerView): Command[] {
+  // Spaceship parts come first and need only a small reserve: the race is won with gold at the end.
+  const partSpare = view.economy.gold - BUY_RESERVE / 2;
+  const parts = view.cities
+    .filter((c) => c.production.kind === "building" && BUILDINGS[c.production.id].spaceship && c.shields > 0)
+    .map((c) => ({ c, cost: buyCost(c) }))
+    .filter((o) => o.cost > 0)
+    .sort((a, b) => partUrgency(view, (a.c.production as { id: BuildingId }).id) - partUrgency(view, (b.c.production as { id: BuildingId }).id) || a.cost - b.cost);
+  // The most urgent part first; the AI saves up for it rather than buying a cheaper one it needs less.
+  if (parts[0]) return parts[0].cost <= partSpare ? [{ type: "buy", cityId: parts[0].c.id }] : [];
+  // Caravans for the Apollo Program carry gold into the wonder far cheaper than buying the wonder itself.
+  const apollo = view.cities.some((c) => c.production.kind === "building" && c.production.id === "apolloProgram");
+  const caravans = apollo
+    ? view.cities
+        .filter((c) => c.production.kind === "unit" && c.production.id === "caravan" && c.shields > 0)
+        .map((c) => ({ c, cost: buyCost(c) }))
+        .filter((o) => o.cost > 0 && o.cost <= partSpare)
+        .sort((a, b) => a.cost - b.cost)
+    : [];
+  if (caravans[0]) return [{ type: "buy", cityId: caravans[0].c.id }];
   const reserve = BUY_RESERVE + BUY_RESERVE_PER_CITY * view.cities.length;
   const spare = view.economy.gold - reserve;
   if (spare <= 0) return [];

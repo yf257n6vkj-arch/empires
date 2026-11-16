@@ -8,7 +8,7 @@ import { BUILDINGS, RULES, UNIT_TYPES, type BuildingId, type City, type PlayerVi
 import { coastal, isMilitary, isSettler } from "./knowledge";
 import { nature } from "./research";
 import { bestAttacker, isAttacker, skill } from "./war";
-import { spacePart } from "./space";
+import { spacePart, type SpaceClaims } from "./space";
 import { agentProduction } from "./agents";
 
 export interface Plan {
@@ -26,6 +26,8 @@ export interface Plan {
   armyWanted: number;
   /** Cities that build spaceship parts. */
   spaceBuilders: number[];
+  /** Spaceship parts cities chose earlier this turn; filled while choosing. */
+  spaceClaims?: SpaceClaims;
   /** Landmass of every tile, to keep caravans on reachable roads. */
   land: Int32Array;
 }
@@ -157,8 +159,9 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
 
   if (garrison(view, city) < garrisonNeed(view, city, plan)) return { kind: "unit", id: defender };
 
-  // The space race starts with the Apollo Program, built in the biggest city as soon as it is known.
-  const biggest = view.cities.every((c) => c.size < city.size || (c.size === city.size && c.id >= city.id));
+  // The space race starts with the Apollo Program, built in the most productive city as soon as it is known.
+  const shields = (c: City) => view.cityShields[c.id] ?? 0;
+  const biggest = view.cities.every((c) => shields(c) < shields(city) || (shields(c) === shields(city) && c.id >= city.id));
   const onApollo = city.production.kind === "building" && city.production.id === "apolloProgram";
   if ((onApollo || biggest) && canBuild(view, city, "apolloProgram") && !view.cities.some((c) => c.id !== city.id && c.production.kind === "building" && c.production.id === "apolloProgram")) {
     return { kind: "building", id: "apolloProgram" };
@@ -166,7 +169,8 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
 
   // Spaceship parts in the biggest cities once the Apollo Program stands.
   if (plan.spaceBuilders.includes(city.id)) {
-    const part = spacePart(view, city);
+    plan.spaceClaims ??= { structural: 0, component: 0, module: 0 };
+    const part = spacePart(view, city, plan.spaceClaims);
     if (part) return part;
   }
 
@@ -189,6 +193,15 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
 
   // Settlers who improve the land: about one for every two cities.
   if (city.size >= 3 && workers + (building ? 1 : 0) < Math.ceil(cityCount / 2) && underway === 0) return { kind: "unit", id: "settlers" };
+
+  // While the Apollo Program is being built, caravans for it come before a bigger army,
+  // unless enemies stand near this city.
+  const apollo = view.cities.some((c) => c.production.kind === "building" && c.production.id === "apolloProgram");
+  const nearEnemy = plan.threats.some((t) => Math.max(Math.abs(t.x - city.x), Math.abs(t.y - city.y)) <= 4);
+  if (apollo && !nearEnemy) {
+    const agent = agentProduction(view, city, plan.land);
+    if (agent) return agent;
+  }
 
   // An army for the war, from cities big enough to spare the shields.
   // Units as strong in defence as in attack end up guarding cities, so only true attackers count as the army.

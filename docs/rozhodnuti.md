@@ -2,6 +2,19 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Fáze 4 dotáhne první verzi
+
+Michal schválil obsah fáze 4. Nepřidává nové funkce, má z hry udělat partii na jeden večer bez zádrhelů pro Michala i pro syna. Kroky jdou v tomhle pořadí:
+
+1. Opravit, co Michal najde ve zkušební partii na normální obtížnost. Ta je zároveň poslední podmínkou brány fáze 3 a má přednost před vším ostatním.
+2. Změřit a zrychlit pozdní hru. Konec tahu ve 100. tahu má na Macu M1 trvat nejvýš dvě sekundy.
+3. Ověřit hru v Safari: ukládání, okna, myš, trackpad a obrázky.
+4. Doladit soupeře podle automatických partií a Michalovy hry: hráče, kteří uvíznou s jedním městem, hledání nepřítele za mořem, projekt Manhattan a obtížnost.
+5. Dát hru synovi. Zahraje si se Sovou na velmi snadnou obtížnost a vybere jí jméno. Jména jednotek a divů, která vymyslí, dostane jako vlastní národ vedle skutečných, aby se nepřepisovala encyklopedie.
+6. Doladit grafiku mapy, ke které jsme se po fázi 0 chtěli vrátit.
+
+Fáze projde, když Michal i syn dohrají každý jednu partii bez chyby, která by hru zastavila, Michalova partie se vejde do 45 až 60 minut, konec tahu ve 100. tahu trvá do dvou sekund a stovky automatických partií proběhnou bez chyby.
+
 ## 16. 11. 2026: Automatické partie pro bránu fáze 3
 
 Pro bránu fáze 3 odehrála AI 600 partií bez chyby. Na 300 partiích standardního světa měl soupeř ve 120. tahu v mediánu 9 měst, desetina soupeřů 3 až 4 města a nejlepší desetina 15 až 16. Jen s jedním městem zůstalo po 60. tahu 36 z 1200 hráčů, tedy 3 %, a 15 hráčů prohrálo úplně. Válka byla v 297 partiích a první začala v mediánu ve 54. tahu. Do měst útočili soupeři ve dvou třetinách případů ve skupině aspoň tří vojáků. Vesmírnou lodí vyhrál soupeř ve 24 partiích, ostatní rozhodlo skóre. Barbaři dobyli 235 měst a soupeři z nich 103 vzali zpátky.

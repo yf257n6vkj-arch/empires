@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Soupeři létají s bombardéry a stíhačkami
+
+Michal schválil letadla bez letadlových lodí. Bombardéry staví soupeř z rozpočtu armády, jeden místo každého čtvrtého útočníka, takže letectvo nebere štíty jiným stavbám. První pokus se samostatným rozpočtem pro letadla stál soupeře výrazně víc výher vesmírnou lodí. Bombardér letí jen na cíl, ze kterého se ještě týž tah vrátí do města: na nepřátelské jednotky v poli, které soupeř vidí, a na obránce města, na které jde jeho armáda. Zaútočí, když má šanci aspoň 65 %. Stíhačky staví soupeř až ve chvíli, kdy uvidí nepřátelské letadlo. Čekají ve městě nejblíž nepříteli a sestřelují letadla v dosahu.
+
+Na 50 automatických partiích postavili soupeři 8 letadel a zaútočili s nimi desetkrát. Žádné letadlo nespadlo pro nedostatek paliva. Letadla přicházejí až v posledních třiceti tazích a soupeři je moc nestaví, protože v té době míří k vesmírné lodi. Na stejných 50 partiích vyhrál soupeř vesmírnou lodí pětkrát, před diplomatem, loděmi a letadly devětkrát. Rozdíl může být i náhoda, ale budeme ho hlídat.
+
 ## 16. 11. 2026: Soupeři mají válečné lodě a umějí se vylodit
 
 Claude navrhl válečné lodě bez výsadků, Michal chtěl i výsadky. Za války si soupeř staví v přímořských městech pár válečných lodí, nejvýš tři. Válečná loď je loď s útokem, která neveze vojáky, tedy od pancéřové lodi dál. Útočí na nepřátelské lodě a jednotky u pobřeží, když má šanci na výhru aspoň 60 %. Pluje k pobřežnímu městu, o které se válčí, nebo k nejbližší nepřátelské lodi a město ostřeluje, když má šanci aspoň 50 %. Zraněná loď se vrací do přístavu a v míru tam čeká.

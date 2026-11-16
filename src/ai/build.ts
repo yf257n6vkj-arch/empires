@@ -9,6 +9,7 @@ import { coastal, isMilitary, isSettler } from "./knowledge";
 import { nature } from "./research";
 import { bestAttacker, isAttacker, skill } from "./war";
 import { spacePart, type SpaceClaims } from "./space";
+import { aircraftProduction } from "./air";
 import { invasionShipType, isTransport, isWarship, warshipType, type Invasion } from "./navy";
 import { agentProduction } from "./agents";
 
@@ -35,6 +36,8 @@ export interface Plan {
   invasion?: Invasion | null;
   /** Warships the AI wants for the war at sea. */
   warshipsWanted?: number;
+  /** Nations the AI is at war with, barbarians aside. */
+  enemies?: number[];
 }
 
 function knows(view: PlayerView, tech: string | null): boolean {
@@ -218,12 +221,20 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
     if (plan.invasion && ship && plan.invasion.port.id === city.id && building(isTransport) === 0) return { kind: "unit", id: ship };
   }
 
+  // Fighters when enemy aircraft show up.
+  const fighter = aircraftProduction(view, city, plan.enemies ?? [], "fighters");
+  if (fighter) return { kind: "unit", id: fighter };
+
   // An army for the war, from cities big enough to spare the shields.
   // Units as strong in defence as in attack end up guarding cities, so only true attackers count as the army.
   const striker = (type: UnitTypeId) => isAttacker({ type }) && UNIT_TYPES[type].attack > UNIT_TYPES[type].defense;
   const army = view.units.filter((u) => striker(u.type)).length + view.cities.filter((c) => c.production.kind === "unit" && striker(c.production.id) && c.id !== city.id).length;
   const attacker = bestAttacker(view);
-  if (army < plan.armyWanted && city.size >= 3 && striker(attacker)) return { kind: "unit", id: attacker };
+  if (army < plan.armyWanted && city.size >= 3 && striker(attacker)) {
+    // Part of the army flies: a bomber in place of every fourth attacker.
+    const bomber = aircraftProduction(view, city, plan.enemies ?? [], "bombers", Math.floor(plan.armyWanted / 4));
+    return { kind: "unit", id: bomber ?? attacker };
+  }
 
   // Caravans for a wonder or a trade route, a diplomat for embassies.
   const agent = agentProduction(view, city, plan.land);

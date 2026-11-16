@@ -182,3 +182,42 @@ describe("a landing across the sea", () => {
     expect(s.units.some((u) => u.owner === 0 && u.x >= 9 && UNIT_TYPES[u.type].domain === "land")).toBe(true);
   });
 });
+
+describe("the computer's aircraft", () => {
+  function atWarWithBomber(): { s: GameState; bomber: number } {
+    let s = stateFromAscii(["..........", "..........", "..........", ".........."], 2);
+    s = found(s, 1, 1);
+    s = found(s, 8, 2, 1);
+    s.players[0]!.isHuman = false;
+    s.players[1]!.isHuman = true;
+    s.players[0]!.contacts = [1];
+    s.players[1]!.contacts = [0];
+    s.players[0]!.atWar = [1];
+    s.players[1]!.atWar = [0];
+    s.players[0]!.explored = s.players[0]!.explored.map(() => 1);
+    addUnit(s, "musketeers", 1, 1, 0);
+    const bomber = addUnit(s, "bomber", 1, 1, 0).id;
+    return { s, bomber };
+  }
+
+  it("bomb an enemy in the open and fly home the same turn", () => {
+    const { s, bomber } = atWarWithBomber();
+    const enemy = addUnit(s, "warriors", 3, 3, 1);
+    const after = playTurn(s).state;
+    const b = after.units.find((u) => u.id === bomber)!;
+    expect(b).toBeDefined();
+    expect({ x: b.x, y: b.y }).toEqual({ x: 1, y: 1 });
+    expect(after.units.some((u) => u.id === enemy.id)).toBe(false);
+  });
+
+  it("leave targets they could not come back from alone", () => {
+    const { s, bomber } = atWarWithBomber();
+    // A scout sees the enemy, but it stands too far away for a strike and a flight home.
+    const far = addUnit(s, "warriors", 9, 0, 1);
+    addUnit(s, "musketeers", 8, 0, 0);
+    expect(playerView(s, 0).foreignUnits.some((u) => u.id === far.id)).toBe(true);
+    const after = playTurn(s).state;
+    const b = after.units.find((u) => u.id === bomber)!;
+    expect({ x: b.x, y: b.y }).toEqual({ x: 1, y: 1 });
+  });
+});

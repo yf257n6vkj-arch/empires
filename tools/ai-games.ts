@@ -14,6 +14,7 @@
 import { isBarbarian, mainContinent, scoreOf, newGame, parseGameCode, type BarbarianLevel, type Difficulty, type GameState } from "../src/core";
 import { playTurn } from "../src/ai";
 import { isWarship } from "../src/ai/navy";
+import { isAircraft } from "../src/ai/air";
 import { landmasses } from "../src/ai/knowledge";
 import { playerView, UNIT_TYPES } from "../src/core";
 
@@ -48,6 +49,9 @@ let helped = 0;
 let embassies = 0;
 let stolen = 0;
 let warshipsBuilt = 0;
+let aircraftBuilt = 0;
+let airAttacks = 0;
+let aircraftLost = 0;
 let seaAttacks = 0;
 let overseas = 0;
 let incited = 0;
@@ -102,6 +106,8 @@ for (let g = 0; g < games; g++) {
           wars++;
           warTurn ??= s.turn;
         } else if (e.type === "unitBuilt" && isWarship({ type: e.unitType })) warshipsBuilt++;
+        else if (e.type === "unitBuilt" && isAircraft({ type: e.unitType })) aircraftBuilt++;
+        else if (e.type === "unitLost" && e.reason === "fuel") aircraftLost++;
         else if (e.type === "cityCaptured") {
           // A city taken on other land than the captor's capital was taken by a landing.
           const v = playerView(played.state, e.to);
@@ -121,6 +127,7 @@ for (let g = 0; g < games; g++) {
         else if (e.type === "combat") {
           battles++;
           if (UNIT_TYPES[e.attacker.unitType].domain === "sea") seaAttacks++;
+          if (UNIT_TYPES[e.attacker.unitType].domain === "air") airAttacks++;
           if (e.attackerWon) attackerWins++;
         }
       }
@@ -185,4 +192,5 @@ if (difficultyArg) {
 }
 console.log(`mír: nabídek ${offers}, odmítnutých ${rejected}, uzavřených mírů ${peaces} · válka do míru trvala medián ${med(warLengths)} tahů · porušených smluv ${broken}`);
 console.log(`moře: postavených válečných lodí ${warshipsBuilt}, útoků lodí ${seaAttacks}, měst dobytých za mořem ${overseas}`);
+console.log(`vzduch: postavených letadel ${aircraftBuilt}, útoků letadel ${airAttacks}, letadel bez paliva ${aircraftLost}`);
 console.log(`karavany: obchodních cest ${routes}, pomoc s divy ${helped}× · diplomati: velvyslanectví ${embassies}, ukradených objevů ${stolen}, podplacených měst ${incited} (barbarských ${incitedBarbarian}), sabotáží ${sabotaged} · vypuštěných lodí ${launches}`);

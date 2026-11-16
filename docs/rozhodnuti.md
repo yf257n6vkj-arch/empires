@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 16. 11. 2026: Fáze 3 přinese boj rovnou se soupeři, hra dvou lidí odpadá
+
+Zadání počítalo s tím, že fáze 3 skončí hrou dvou lidí u jednoho počítače a pravidla boje vyzkoušíme na lidech dřív, než na ně postavíme AI. Claude to tak navrhl, ale Michal se rozhodl hru dvou lidí přeskočit a boj ladit rovnou proti počítačovým soupeřům.
+
+Fáze 3 proto spojí boj a AI. Patří do ní boj včetně dobývání měst a šance na výhru ukázané před útokem, válka a mír, diplomat a karavana proti soupeři, vítězství a skóre, soupeři na mapě a počítačoví soupeři podle poznámek z Unciv a Freeciv: zakládání měst, výroba, výzkum, armáda, diplomacie a povahy. AI se musí naučit i osidlovat ostrovy lodí. Pravidla boje bez lidského soupeře ověříme testy a automatickými partiemi AI proti AI. Fáze projde, když Michal dohraje partii proti třem soupeřům na normální obtížnost a stovky partií AI proti AI ukážou, že se soupeři rozšiřují, válčí ve skupinách a nikde se nezaseknou.
+
 ## 16. 11. 2026: Při výběru národa jde číst o národu i vládci a města mají svou historii
 
 Okno nové hry ukazuje vedle národů text z encyklopedie o vybraném národu i o jeho vládci s obrázky. Odkazy pod texty otevřou celé stránky v encyklopedii.

@@ -1,39 +1,37 @@
-# Empires
+# Empires Reloaded
 
-Tahová strategie do prohlížeče ve stylu Civilizace 1. Jedna partie má trvat 45 až 60 minut proti třem počítačovým soupeřům, kteří hrají rozumně a nepodvádějí. Celé zadání je v projektu Empires v Claudovi.
+A turn-based strategy game for the browser and the Mac, in the spirit of the empire-building classics of the early 1990s. You lead one of fifteen nations from the first village to a flight to the stars against computer rivals who play by the same rules as you and never cheat. A normal game lasts 120 turns, about one evening; a quick game lasts 60 turns, about 25 minutes.
 
-Hotové jsou fáze 1 a 2. Hráč si vybere jeden z patnácti národů (čtrnáct z Civilizace 1 a Češi), zakládá a rozvíjí města, staví cesty, doly a zavlažování, zkoumá 68 technologií v 5 érách (strom podle Civilizace 1, každá technologie má stránku s vyprávěním) a dělí obchod mezi vědu, daně a zábavu. Za zlato platí údržbu budov, může dokoupit výrobu a budovy jde i prodat. Města mají vlastní obrazovku s pohledem na město, šťastné, spokojené a nespokojené obyvatele, oslavy, specialisty, korupci a znečištění, 27 budov a 24 divů světa a jde vyrábět 29 typů jednotek včetně lodí a letadel. Starší jednotky jde ve městě za zlato povýšit na novější typ a každou jednotku jde rozpustit. Říše si volí ze šesti vlád a může vyhrát vesmírnou lodí. Probíhá fáze 3: jednotky bojují se životy jako v Civilizaci 2, před útokem hra ukáže šanci na výhru a města jde dobývat. Soupeři zakládají města, i na ostrovech, stavějí a bádají. Národy se poznají, když se uvidí, a útočit jde jen na národ, se kterým válčíš. Soupeři sami vyhlašují válku, když mají převahu, a útočí ve skupině. Válku jde ukončit mírem, který platí aspoň 15 tahů, a soupeři mír sami nabízejí i přijímají. Posílají také karavany a diplomaty, kteří umějí podplatit město i sabotovat. Za války staví válečné lodě, umějí se vylodit za mořem, létají s bombardéry a stíhačkami a když má někdo projekt Manhattan, použijí i jadernou raketu. Na mapě leží ruiny s poklady a hru můžou ohrožovat barbaři, kterých si hráč v nové hře nastaví žádné, málo, nebo hodně. Města jde svěřit správci s cílem, rádce vysvětluje, proč co radí, a u každé stavby jde ve městě otevřít kartu s podrobnostmi. Vyhrát jde dobytím, vesmírnou lodí, nebo skóre po posledním tahu. Na konci hry ukáže závěrečná obrazovka graf skóre všech národů, pořadí a hodnocení toho, jak hráč hrál. Klik na cizí město ukáže, co o něm hráč ví. Obtížnost má pět úrovní od velmi snadné po velmi těžkou. Hra má zvuky boje a důležitých chvil a tichou středověkou hudbu, obojí vzniká kódem a v menu jde ztlumit. Kromě normální hry na 120 tahů jde zvolit rychlou na 60 tahů s malým světem a dvěma soupeři, ve které jde výzkum i stavění rychleji všem stejně. Pro děti je tu průvodkyně Sova, která vypráví o národech, objevech a jednotkách a vede dítě plánem k výhře. Hra se sama ukládá do prohlížeče a navíc jde uložit pod jménem nebo do souboru. Mapa vzniká podle přírody s pohořími, srážkovým stínem a řekami tekoucími z hor k moři a kreslí se jako fyzická mapa s reliéfem. Má dvanáct terénů z Civilizace 1 včetně řek a polárního ledu a na části políček leží suroviny jako ryby, koně nebo zlato. Osadníci umí terén měnit, přidat se k městu a čistit znečištění. Města můžou postihnout katastrofy a příliš mnoho znečištění vede ke globálnímu oteplování.
+The game is in Czech, Slovak, English, German and French. It was made by a dad and his son together with Claude (Anthropic).
 
-## Jak se hra ovládá
+## What is in version 1.0
 
-- Po spuštění se ukáže hlavní nabídka. Odtud pokračuješ v rozehrané hře, začneš novou, nahraješ uloženou nebo otevřeš encyklopedii. Kapitola Jak hrát v encyklopedii vysvětluje, jak nechat města růst, jak udržet obyvatele spokojené a jak rychle bádat.
-- V okně nové hry vybereš národ a tlačítkem Nastavit svět i velikost světa, počet soupeřů a jestli kolem kontinentu leží ostrovy. V dalším nastavení změníš množství pevniny, teplotu, srážky, stáří světa a suroviny. Každá volba jde nechat náhodě.
-- Tlačítko `Menu` vlevo nahoře nebo `Esc` bez vybrané jednotky otevře nabídku ve hře. Tam hru uložíš, nahraješ jinou nebo se vrátíš do hlavní nabídky.
-- Klikni na svou jednotku nebo město a vyber ho.
-- Klik na sousední políčko jednotku posune, klik dál ji tam pošle i na víc tahů. Cestu ukáže přerušovaná čára.
-- Do města nebo k jiné jednotce ji pošleš pravým klikem (na trackpadu dvěma prsty) nebo klávesou `G` a klikem na cíl. Jednotka na cestě má u sebe modrou šipku. Když ji vybereš, cestu zrušíš klávesou `C`.
-- Klik na cizí město, které nesousedí s vybranou jednotkou, otevře jeho okno: velikost, hradby, divy, obránce, které vidíš, a s velvyslanectvím i to, co město staví. Odtud do něj můžeš poslat vybranou jednotku.
-- Klik na sousední políčko s nepřítelem otevře okno útoku se šancí na výhru. Útok potvrdíš klávesou `Enter`. Do města bez obránců vojenská jednotka vejde a dobude ho.
-- Šipky nebo číslice 1 až 9 posouvají vybranou jednotku.
-- `B` založí město, ve vlastním městě k němu osadníka přidá. `R` postaví cestu, `I` zavlažování, `M` důl, `V` vyčistí znečištění, `F` opevní jednotku, mezerník ji nechá do příštího tahu, `N` vybere další jednotku, `U` ji povýší a `D` rozpustí. Zavlažování v lese, džungli a bažině a důl na louce a pláních mění terén.
-- `K` a klik na cíl pošle osadníka stavět cestu po celé trase, `A` mu zapne automatickou práci kolem měst. Obojí zastaví `C`.
-- `Enter` ukončí tah, `Esc` zruší výběr. Druhé `Esc` otevře nabídku.
-- `T` otevře strom technologií. Na výzkum klikneš i v hlavičce. Posuvníky Věda a Zábava vedle nastavíš, kolik obchodu jde do výzkumu a kolik na zábavu, zbytek jsou daně. Zábava dělá obyvatele spokojenými a šťastnými a šťastná města slaví.
-- Klik na technologii ve stromu otevře její stránku. Vzdálenou technologii jde nastavit jako cíl a hra k ní bude zkoumat sama.
-- Dvojklik na město nebo tlačítko `Otevřít město` ukáže obrazovku města. Klikem na políčko v okolí města přesuneš obyvatele. Tlačítkem + u stavby ji přidáš do plánu. Pořadí v plánu změníš šipkami nebo přetažením a hranici mezi obrázkem a panely jde táhnout myší.
-- Tlačítko `Národy` nahoře ukáže národy, které znáš. Odtud nabídneš mír nebo vyhlásíš válku. Když ti soupeř nabídne mír, hra se zeptá na začátku tahu.
-- Žebříček v menu ukáže graf skóre a pořadí národů, které znáš, a to, jak si zatím vedeš. Po konci hry se sám otevře se všemi národy.
-- `O` nebo tlačítko `Města` nahoře otevře přehled všech měst. U každého města je vidět velikost, růst, výroba, obchod a nálada a v seznamu jde rovnou změnit, co staví.
-- Jazyk hry přepneš na úvodní obrazovce nebo v menu. Hra umí česky a anglicky.
-- Rádce vlevo nahoře radí začátečníkům, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře nebo v menu ho zase ukážeš. Vybraná jednotka nebo město mají panel dole uprostřed.
-- Ve městě můžeš místo stavby zvolit Vydělávat zlato. Otazník u stavby nebo klik na budovu v obrázku města otevře encyklopedii. Tlačítkem Prodat u budovy ji prodáš, jednu za tah. Klik na obyvatele mimo pole z něj udělá výběrčího daní nebo vědce.
-- Mapu přiblížíš roztažením prstů na trackpadu, `Ctrl` a kolečkem myši, tlačítky v rohu mapy nebo klávesami `+` a `−`. Nula vrátí celou mapu.
-- Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením. Klik do malé mapy vpravo dole tě přenese na to místo.
-- Záznam událostí vpravo nahoře rozbalíš šipkou.
+- **Fifteen nations** (fourteen historical empires and the Czechs), each with a leader, colour and its own city names. No nation has special advantages.
+- **Cities** that grow, build and trade, with happy, content and unhappy citizens, celebrations, specialists, corruption and pollution, 27 buildings and 24 wonders of the world. A city screen shows the city itself, and a governor can run a city towards a goal.
+- **68 technologies in five eras**, each with an encyclopedia page that tells the real history behind it.
+- **29 unit types** including ships and aircraft. Fights run round by round with hit points and firepower, the odds are shown before every attack, and every fight the player is in is replayed on the map with sound.
+- **Six governments**, peace and war with rival nations, caravans and diplomats, ruins with treasure and barbarians.
+- **Three ways to win:** conquest, a spaceship that lands at a distant star, or the highest score after the last turn.
+- **A natural-looking map** with mountain ranges, rain shadows and rivers that flow from the mountains to the sea, drawn as a tilted relief map with fog of war like old parchment.
+- **Five difficulty levels**, a world you can set up (size, rivals, islands, climate and more) and a map code that reproduces the same world.
+- **Help for every player:** an advisor that explains why it suggests what it suggests, and for children an owl guide that tells stories about nations and discoveries and leads them along a plan to victory.
+- **Sound effects and generated medieval music**, both synthesised in code.
+- **Automatic saving** in the browser, plus named saves and saving to a file.
 
-## Jak hru spustit na Macu
+## How to play
 
-Potřebuješ Node.js 22 nebo novější. Nejjednodušší je stáhnout instalátor z nodejs.org, nebo přes Homebrew `brew install node`.
+The start screen has a short guide. In short:
+
+1. Click **New game** and pick a nation. Below the nations you can set up the world, including a quick 60-turn game.
+2. Find a good spot by a river or the sea with your settler and found your first city with **B**.
+3. Click the city and choose what it builds. At the top left, choose what your scientists research.
+4. Move units by clicking on the map. End the turn with **End turn** or the Enter key.
+
+The encyclopedia has a whole "How to play" chapter, and **Controls** in the menu lists every key. The most useful ones: `B` found a city, `R` road, `I` irrigation, `M` mine, `F` fortify, space to wait, `N` next unit, `A` automatic work for a settler, `T` technology tree, `O` cities overview, `E` encyclopedia, `Esc` menu.
+
+## Running it
+
+You need Node.js 22 or newer.
 
 ```sh
 git clone https://github.com/yf257n6vkj-arch/empires.git
@@ -42,84 +40,60 @@ npm install
 npm run dev
 ```
 
-Poslední příkaz vypíše adresu, typicky `http://localhost:5173`. Otevři ji v prohlížeči. Kód mapy rozehrané partie je vidět ve hře a nese i nastavení světa. Když ho zadáš v okně nové hry, dostaneš stejný svět.
+The last command prints an address, usually `http://localhost:5173`. Open it in a browser.
 
-## Příkazy
+The Mac app is built with `bash tools/build-mac-app.sh`, which packs the game into an Electron app for Apple Silicon. The app is not signed with an Apple developer account; `tools/mac/instalace.sh` installs it and signs it for the local machine only.
 
-| Příkaz | Co dělá |
+## Commands
+
+| Command | What it does |
 | --- | --- |
-| `npm run dev` | Spustí hru v prohlížeči a po každé změně kódu ji obnoví |
-| `npm test` | Pustí automatické testy |
-| `npm run typecheck` | Zkontroluje typy, zvlášť i to, že herní jádro nepoužívá nic z prohlížeče |
-| `npm run check-maps -- 500` | Vygeneruje 500 map bez obrazovky a vypíše statistiky |
-| `npm run check-maps -- 20 svety` | Vygeneruje 20 map pro každou kombinaci krajních nastavení světa a vypíše chyby, ostrovy a vzdálenosti startů |
-| `npm run pace -- 300` | Automatický hráč odehraje 120 tahů na 300 mapách a vypíše, jak rychle postupuje výzkum a růst |
-| `npm run pace -- 300 --speed=quick` | Totéž pro rychlou hru na 60 tahů, stejný přepínač zná i `npm run ai-games` |
-| `npm run pace -- 100 24011111` | Totéž ve světě podle osmi číslic z kódu mapy, tady velký svět se 4 soupeři |
-| `npm run ai-games -- 50` | Odehraje 50 partií jen počítačových hráčů a vypíše, kolik mají měst a technologií v čase, kolik vedli válek a bojů a co udělali barbaři; `--barbarians=none` nebo `many` změní počet barbarů a `--difficulty=hard` obtížnost (místo 0 pak hraje jako člověk) |
-| `npm run build` | Připraví hotovou stránku do složky `dist` |
-| `npm run i18n -- en` | Vypíše texty, které v angličtině chybí nebo přebývají |
+| `npm run dev` | Runs the game in the browser and reloads it after every change |
+| `npm test` | Runs the automated tests |
+| `npm run typecheck` | Checks types, and separately that the game core uses nothing from the browser |
+| `npm run check-maps -- 500` | Generates 500 maps without a screen and prints statistics |
+| `npm run pace -- 300` | A scripted player plays 120 turns on 300 maps and reports the pace of research and growth; add `--speed=quick` for the quick game |
+| `npm run ai-games -- 50` | Plays 50 games of computer players only and reports cities, technologies, wars, battles and barbarians over time; takes `--speed=quick`, `--barbarians=none\|many` and `--difficulty=hard` |
+| `npm run build` | Builds the finished page into `dist` |
+| `npm run i18n -- de` | Lists texts a language is missing or no longer needs |
 
-## Jak je kód rozdělený
+## How the code is organised
 
 ```
-src/core/        herní jádro, žádná vazba na prohlížeč
-  rng.ts         generátor náhody se semenem, jeho stav jde uložit
-  rules.ts       načtení pravidel z datových souborů
-  data/          čísla pravidel v JSON (terén, jednotky, budovy, vylepšení, vlády, národy, nastavení světa, konstanty)
-  geometry.ts    mřížka, vzdálenosti, okruh města 21 políček
-  mapgen.ts      generátor kontinentu
-  start.ts       výběr startovních pozic
-  state.ts       stav hry jako jeden datový objekt
-  game.ts        nová hra
-  commands.ts    všechno, co hráč i AI smí udělat, a kontroly, jestli to jde
-  units.ts       pohyb jednotek a rozkazy na víc tahů
-  path.ts        hledání cesty jen přes to, co hráč zná
-  city.ts        obsazení políček, růst, hladovění, výroba
-  turn.ts        konec tahu a začátek dalšího
-  world.ts       pomocné funkce pro čtení mapy a výnosů
-  events.ts      události pro záznam a pro AI
-  view.ts        pohled hráče, jediný vstup pro AI
-  diplomacy.ts   setkání národů, které se uvidí
-  barbarians.ts  barbaři a ruiny
-  governor.ts    správce města
-  score.ts       skóre a výhra dobytím nebo na skóre
-  coach.ts       plány průvodkyně Sovy na výhru
-  workers.ts     osadník staví cestu po celé trase nebo sám vylepšuje okolí měst
-  advisor.ts     rady pro začínajícího hráče
-  economy.ts     technologie, cíl výzkumu, zlato, co jde stavět
-src/web/         vykreslení do Canvasu, ovládání a texty
-  i18n/          překlady: index.ts (t, tn, výběr jazyka), names.ts (jména z pravidel),
-                 en*.ts (anglické texty, jména a encyklopedie)
-  citiesOverview.ts přehled všech měst
-  render.ts      mapa, terén, města
-  unitArt.ts     figurky jednotek
-  newGame.ts     výběr národa pro novou hru
-  terrainField.ts terén jako souvislá plocha s přírodními hranicemi
-  cityView.ts    pohled do města z obrázků od Gemini
-  menu.ts        hlavní nabídka, nabídka ve hře a dialog uložených her
-  saves.ts       automatické ukládání, pojmenované uložené hry a soubory
-  buildingArt.ts budovy a divy pro obrazovku města a encyklopedii
-  cityScreen.ts  obrazovka města
-  empire.ts      dialogy vlády, vesmírné lodi a vítězství
-  techTree.ts    plakát se stromem technologií a stránky technologií
-  techIcons.ts   ikony technologií
-  encyclopedia.ts texty ke každé technologii
-tests/           automatické testy
-tools/           skripty, které běží v Node bez prohlížeče
-tools/preview/   náhledy figurek, budov a uložená hra pro snímky obrazovky
+src/core/        the game itself, with no tie to the browser
+  data/          rule numbers in JSON (terrain, units, buildings, governments, nations, world, constants)
+  state.ts       the whole game state as one plain object
+  commands.ts    everything a player or the AI may do, with the same checks for both
+  turn.ts        end of a turn and start of the next
+  view.ts        what one player can see; the only input of the AI
+  mapgen.ts      the map generator
+  ...            cities, units, combat, diplomacy, barbarians, score, advisor and more
+src/ai/          the computer players: expansion, production, research, war, diplomacy
+src/web/         drawing on canvas, the screens, sound and texts
+  i18n/          translations (see below)
+tests/           automated tests
+tools/           scripts that run in Node without a browser
+desktop/         the Electron wrapper for the Mac app
+docs/            the decision log and the picture prompts
 ```
 
-## Pravidla, která v kódu držíme
+## Rules the code keeps
 
-- Do hry přidáváme jen to, co umí používat i AI soupeřů.
-- AI nikdy nedostane celý stav hry. Dostane jen `playerView(stav, hráč)`, tedy to, co by na jejím místě viděl člověk.
-- Veškerá náhoda jde přes `Rng`. Stejné semeno dá stejnou mapu, stejné boje a stejná rozhodnutí AI.
-- Stav hry je obyčejný objekt, který jde uložit do JSON a zase načíst. Tah stav nemění, vrací nový.
-- Čísla pravidel patří do `src/core/data`, ne do kódu.
-- Hráč i AI dělají všechno přes stejné příkazy v `commands.ts` se stejnými kontrolami.
-- `src/core` nesmí používat nic z prohlížeče, jinak by nešly pouštět turnaje AI v Node.
+- Only features the AI rivals can use as well go into the game.
+- The AI never gets the whole game state, only `playerView(state, player)`: what a human in its seat could see.
+- All randomness goes through `Rng`. The same seed gives the same map, the same fights and the same AI decisions.
+- The game state is a plain object that can be saved as JSON. A turn does not change the state, it returns a new one.
+- Rule numbers live in `src/core/data`, not in code.
+- `src/core` uses nothing from the browser, so AI tournaments run in Node.
 
-## Jak přidat další jazyk
+## Languages
 
-Texty píšeme česky přímo v kódu a obalujeme je funkcí `t("...")`, texty s číslem funkcí `tn("1 tvar|2 až 4|5 a víc", n)`. Česká věta slouží jako klíč. Další jazyk vznikne tak, že zkopíruješ `src/web/i18n/en.ts` a soubory `en-*.ts`, přeložíš hodnoty a jazyk přidáš do seznamu `LANGUAGES` v `src/web/i18n/index.ts`. Příkaz `npm run i18n -- kód` vypíše, co v novém jazyce ještě chybí, a test `tests/i18n.test.ts` neprojde, dokud chybí cokoli z textů rozhraní. Encyklopedie se bez překladu ukáže česky.
+Texts are written in Czech in the code, wrapped in `t("...")`, and texts with a number in `tn("1|2 to 4|5 and more", n)`. The Czech sentence is the key. Each language in `src/web/i18n` maps those keys to its own texts and has its own names of units, buildings, technologies, nations and cities. English also translates the whole encyclopedia; German and French show the English encyclopedia and Slovak the Czech one until theirs are translated. `tests/i18n.test.ts` fails while any interface text is missing in any language.
+
+## Pictures and sounds
+
+Terrain, rivers, roads, borders and the fog are drawn in code. Unit and city sprites, buildings, encyclopedia pictures, mountains, ruins and resources were painted for the game with Google Gemini (three leader portraits with Grok) from prompts written for this project; the prompts are in `docs/` and `tools/`. Sound effects and music are synthesised by code with the Web Audio API.
+
+## Not affiliated
+
+Empires Reloaded is an independent fan project. It borrows game mechanics from the turn-based strategy games of the early 1990s, but no names, graphics, texts or code from them. It is not affiliated with or endorsed by the owners of any of those games.

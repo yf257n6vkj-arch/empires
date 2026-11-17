@@ -1,6 +1,6 @@
-# Empires
+# Empires Reloaded
 
-Browser turn-based strategy in the style of Civilization 1, built by Michal with Claude. The full brief lives in the claude.ai project "Empires"; AI design notes are in the project doc `claude/ai-poznamky-unciv-freeciv.md`. Decisions agreed with Michal are logged in `docs/rozhodnuti.md` (newest first); add every new one there.
+Browser and Mac turn-based strategy in the spirit of the 1991 empire-building classic, built by Michal with Claude. The full brief lives in the claude.ai project "Empires"; AI design notes are in the project doc `claude/ai-poznamky-unciv-freeciv.md`. Decisions agreed with Michal are logged in `docs/decisions.md` (newest first, in English); add every new one there.
 
 ## Commands
 
@@ -24,8 +24,8 @@ Browser turn-based strategy in the style of Civilization 1, built by Michal with
 
 ## Conventions
 
-- Code, identifiers and code comments in English. UI texts, README and documents for Michal in Czech.
-- The game is bilingual (Czech and English). Every UI text is written in Czech inside `t("...")` or `tn("...|...|...", n)` from `src/web/i18n`; the Czech sentence is the key. Names of rule data go through `src/web/i18n/names.ts`, never `UNIT_TYPES[x].name` and friends. Each new key needs its English text in `src/web/i18n/en-strings.ts`; `npm run i18n -- en` lists what is missing and `tests/i18n.test.ts` fails until it is complete.
-- Czech texts for Michal: plain spoken Czech, verbs rather than nouns, headings that contain a verb. Avoid "není X, ale Y" antitheses, dash punchlines, groups of exactly three parallel items and sentences about the document itself. Bold only where it really helps. Never use the word "páka" in any form.
+- Code, identifiers, code comments, README, the decision log and other repository docs in English. UI texts are written in Czech as the source language. Messages and documents for Michal outside the repository are in Czech.
+- The game speaks Czech, Slovak, English, German and French. Every UI text is written in Czech inside `t("...")` or `tn("...|...|...", n)` from `src/web/i18n`; the Czech sentence is the key. Names of rule data go through `src/web/i18n/names.ts`, never `UNIT_TYPES[x].name` and friends. Each new key needs its text in every language file (`src/web/i18n/{sk,en,de,fr}-strings.ts`); `npm run i18n -- de` lists what a language is missing and `tests/i18n.test.ts` fails until all are complete. German and French borrow the encyclopedia from English, Slovak from Czech (`fallback` in the language definition).
+- Czech texts for Michal (chat and documents outside the repo): plain spoken Czech, verbs rather than nouns, headings that contain a verb. Avoid "není X, ale Y" antitheses, dash punchlines, groups of exactly three parallel items and sentences about the document itself. Bold only where it really helps. Never use the word "páka" in any form.
 - Every rule change gets a test. Map or AI changes are judged on hundreds of seeds, not single screenshots.
 - Commit messages in English, imperative mood.

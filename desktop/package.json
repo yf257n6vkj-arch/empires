@@ -2,6 +2,7 @@
   "name": "empires-reloaded",
   "productName": "Empires Reloaded",
   "version": "1.0.0",
+  "license": "GPL-3.0-or-later",
   "description": "A turn-based strategy game in the spirit of the 1991 classic",
   "main": "main.cjs",
   "private": true,

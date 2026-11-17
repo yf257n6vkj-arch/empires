@@ -97,3 +97,9 @@ Terrain, rivers, roads, borders and the fog are drawn in code. Unit and city spr
 ## Not affiliated
 
 Empires Reloaded is an independent fan project. It borrows game mechanics from the turn-based strategy games of the early 1990s, but no names, graphics, texts or code from them. It is not affiliated with or endorsed by the owners of any of those games.
+
+## License
+
+The code is free software under the GNU General Public License, version 3 or (at your option) any later version; see [LICENSE](LICENSE). The pictures in `src/web/sprites`, `src/web/techs`, `src/web/codex`, `src/web/cityview` and `src/web/guide` were generated with AI tools and are dedicated to the public domain under CC0 1.0; see [LICENSE-ASSETS.md](LICENSE-ASSETS.md). The sounds and music are produced by the code and fall under the code's license.
+
+The game comes with no warranty.

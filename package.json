@@ -22,7 +22,7 @@
     "type": "git",
     "url": "git+https://github.com/yf257n6vkj-arch/empires.git"
   },
-  "license": "UNLICENSED",
+  "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/yf257n6vkj-arch/empires/issues"
   },

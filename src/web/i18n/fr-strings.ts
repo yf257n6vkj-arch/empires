@@ -1304,6 +1304,8 @@ export const FR_STRINGS: Record<string, string> = {
     "Commandes",
   "verze {version} · hra se průběžně ukládá sama":
     "version {version} · la partie s'enregistre toute seule",
+  "Svobodný software pod licencí GPL-3.0, bez jakékoli záruky.":
+    "Logiciel libre sous licence GPL-3.0, sans aucune garantie.",
   "Jak začít hrát":
     "Pour commencer à jouer",
   "Klikni na <b>Nová hra</b> a vyber si národ. Pod volbou národa si nastavíš svět, třeba rychlou hru na 60 tahů.":

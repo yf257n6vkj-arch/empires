@@ -2419,6 +2419,8 @@ export const EN_STRINGS: Record<string, string> = {
     "Quiet medieval music. Between pieces nothing plays for a while. All the way to the left turns music off.",
   "verze {version} · hra se průběžně ukládá sama":
     "version {version} · the game saves itself as you play",
+  "Svobodný software pod licencí GPL-3.0, bez jakékoli záruky.":
+    "Free software under the GPL-3.0 license, with no warranty.",
   "Jak začít hrát":
     "How to start playing",
   "Klikni na <b>Nová hra</b> a vyber si národ. Pod volbou národa si nastavíš svět, třeba rychlou hru na 60 tahů.":

@@ -476,6 +476,7 @@ main.playfield { flex: 1 1 auto; min-height: 0; display: block; gap: 0; }
 .st-menu button span { font-size: 13px; color: #b8aa88; }
 .st-menu button:hover:not(:disabled), .st-menu button:focus-visible { background: rgba(138, 106, 36, 0.85); border-color: #e0b75a; }
 .st-foot { margin-top: 26px; color: #8e8470; font-size: 12px; }
+.st-license { margin-top: 4px; color: #8e8470; font-size: 11px; }
 .st-howto { position: absolute; right: 5vw; bottom: 7vh; width: min(400px, 34vw); background: rgba(14, 12, 10, 0.82); border: 1px solid #5a4a36; border-radius: 10px; padding: 16px 20px 12px; color: #e3d8bd; font-size: 14px; line-height: 1.45; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); }
 .st-howto h2 { margin: 0 0 8px; font-family: Georgia, "Times New Roman", serif; font-size: 20px; letter-spacing: 0.05em; color: #f0cf7d; text-transform: none; }
 .st-howto ol { margin: 0 0 8px; padding-left: 20px; }

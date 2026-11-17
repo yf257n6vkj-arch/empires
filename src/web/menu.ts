@@ -99,6 +99,7 @@ export function createMenus(
         </nav>
         <div class="st-langs">${languageButtons()}</div>
         <p class="st-foot">${t("verze {version} · hra se průběžně ukládá sama", { version: GAME_VERSION })}</p>
+        <p class="st-license">${t("Svobodný software pod licencí GPL-3.0, bez jakékoli záruky.")}</p>
       </div>
       <aside class="st-howto">
         <h2>${t("Jak začít hrát")}</h2>

@@ -9,6 +9,7 @@ ZIP="${1:-$PWD/desktop/out/Empires-mac.zip}"
 npm run build
 rm -rf desktop/game
 cp -r dist desktop/game
+cp LICENSE LICENSE-ASSETS.md desktop/game/
 cd desktop
 [ -d node_modules/@electron/packager ] || npm install --no-audit --no-fund
 npm run package

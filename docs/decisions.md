@@ -2,6 +2,10 @@
 
 What we decided with Michal, so we don't have to go back over it. Newest first. Entries before version 1.0 were written in Czech and translated to English when the repository switched to English.
 
+## 17 Nov 2026: itch.io gets only the browser version, launched in fullscreen
+
+Michal chose to publish only the browser version on itch.io. It runs on Mac, Windows, Linux and Chromebooks without installing anything and fits itch.io's limits (344 files and 24 MB against 1000 files and 500 MB). The Mac app is not signed with a paid Apple developer account, so macOS on Apple Silicon would call a downloaded copy damaged and a child could not open it without the Terminal; the Windows build could not be tested and would also show a warning. `tools/build-web-zip.sh` builds the zip with index.html at its root plus both license files. On the project page the game uses "Click to launch in fullscreen", because in a 1280 × 720 frame the panels cover up to half of the map. The itch.io page discloses AI-generated graphics, text and code; the sounds are synthesised by the game.
+
 ## 17 Nov 2026: The game starts in English
 
 Before publishing on itch.io Michal asked for English as the default language. A player who has not picked a language yet starts in English; a language picked before is kept, so existing players, including Michal's own Czech setup, see no change. Czech stays the source language of the code, and tests and tools without a browser still run in Czech.

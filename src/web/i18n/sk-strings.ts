@@ -2474,4 +2474,6 @@ export const SK_STRINGS: Record<string, string> = {
     "obchod navyše",
   "roste každý tah":
     "rastie každý ťah",
+  "Zavřít (Esc)":
+    "Zavrieť (Esc)",
 };

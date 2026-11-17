@@ -78,7 +78,7 @@ export function createNations(dialog: HTMLDialogElement, offers: HTMLDialogEleme
     const out = view.rivals.filter((r) => r.defeated && !r.barbarian);
     const mine = scoreOf(s, host.player()).total;
     dialog.innerHTML = `
-      <div class="dialog-head"><h2>${t("Národy")}</h2><span class="muted small">${t("tvoje skóre {score}", { score: mine })}</span><button type="button" class="tp-close" data-close aria-label="${t("Zavřít")}">×</button></div>
+      <div class="dialog-head"><h2>${t("Národy")}</h2><span class="muted small">${t("tvoje skóre {score}", { score: mine })}</span><button type="button" class="tp-close" data-close aria-label="${t("Zavřít")}" title="${t("Zavřít (Esc)")}">×</button></div>
       ${known.length ? known.map((r) => row(s, view, r)).join("") : `<p>${t("Zatím jsi nepotkal žádný národ. Pošli jednotky na průzkum.")}</p>`}
       ${unknown ? `<p class="small muted">${tn("Jeden národ ještě neznáš.|Ještě neznáš {n} národy.|Ještě neznáš {n} národů.", unknown)}</p>` : ""}
       ${out.length ? `<p class="small muted">${t("Už prohráli: {list}", { list: escapeHtml(out.map((r) => civName(r.civ)).join(", ")) })}</p>` : ""}

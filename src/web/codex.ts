@@ -283,7 +283,7 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
       <div class="tp">
         <div class="tp-picture cx-guide"><div class="cx-guide-icon">${page.icon}</div><div class="tp-era">${escapeHtml(t("Jak hrát"))}</div></div>
         <div class="tp-main">
-          <div class="tp-head"><h2>${escapeHtml(page.title)}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button></div>
+          <div class="tp-head"><h2>${escapeHtml(page.title)}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}" title="${t("Zavřít (Esc)")}">×</button></div>
           ${paragraphs}
         </div>
       </div>`;
@@ -306,7 +306,7 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
           <div class="tp-era">${escapeHtml(CATEGORIES.find((c) => c.kind === e.kind)!.title)}</div>
         </div>
         <div class="tp-main">
-          <div class="tp-head"><h2>${escapeHtml(e.name)}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button></div>
+          <div class="tp-head"><h2>${escapeHtml(e.name)}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}" title="${t("Zavřít (Esc)")}">×</button></div>
           ${page ? `<p class="tp-text">${escapeHtml(page.text)}</p>${moreParagraph(e.key)}${factBox(e.key, page.fact)}` : ""}
           <h3>${t("Ve hře")}</h3>
           <div class="cx-rules">${rules(e)}</div>

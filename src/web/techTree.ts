@@ -342,7 +342,7 @@ export function createTechTree(host: TreeHost) {
           <div class="tp-era">${ERA_NAMES[rule.era]}</div>
         </div>
         <div class="tp-main">
-          <div class="tp-head"><h2>${escapeHtml(techName(tech))}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button></div>
+          <div class="tp-head"><h2>${escapeHtml(techName(tech))}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}" title="${t("Zavřít (Esc)")}">×</button></div>
           <p class="tp-text">${escapeHtml(info.text)}</p>
           ${moreParagraph(`tech-${tech}`)}
           ${factBox(`tech-${tech}`, info.fact)}

@@ -183,6 +183,8 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .tp-head { display: flex; align-items: center; }
 .tp-head h2 { flex: 1; margin: 0; font: 700 30px Georgia, "Times New Roman", serif; color: #3a2614; text-transform: none; letter-spacing: 0; }
 .tp-close { background: transparent; border: none; color: #6b5136; font-size: 28px; line-height: 1; padding: 0 6px; }
+.dialog-head .tp-close, .cs-head .tp-close, .tt-dialog .dialog-head .tp-close { color: #c9a85e; margin-left: auto; }
+.tp-close:hover { color: #f2d79a; }
 .tp-text { font: 17px/1.6 Georgia, "Times New Roman", serif; margin: 0; }
 .tp-fact { background: #fff8e6; border-left: 4px solid #d9a441; padding: 10px 14px; border-radius: 4px; font: 15.5px/1.5 Georgia, serif; }
 .tp-fact b { color: #8a5a14; }
@@ -212,7 +214,6 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .cs-head h2 { margin: 0; font: 700 28px Georgia, "Times New Roman", serif; color: #f1d796; text-transform: none; letter-spacing: 0.01em; }
 .cs-sub { color: var(--muted); font-size: 13px; }
 .cs-nav { font-size: 22px; line-height: 1; padding: 2px 10px; }
-.cs-close { font-size: 13px; }
 .cs-top { position: relative; flex: 1 1 auto; min-height: 200px; border-radius: 10px; overflow: hidden; border: 1px solid #5a4a36; background: #6f9a4a; }
 .cs-view { position: absolute; inset: 0; line-height: 0; }
 .cs-view canvas { width: 100%; height: 100%; display: block; }

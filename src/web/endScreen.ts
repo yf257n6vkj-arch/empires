@@ -218,7 +218,7 @@ export function createEndScreen(dialog: HTMLDialogElement, host: EndScreenHost) 
       : `<button type="button" data-close>${t("Zavřít")}</button>`;
 
     dialog.innerHTML = `
-      <div class="dialog-head"><h2>${escapeHtml(head.title)}</h2><button type="button" class="tp-close" data-close aria-label="${t("Zavřít")}">×</button></div>
+      <div class="dialog-head"><h2>${escapeHtml(head.title)}</h2><button type="button" class="tp-close" data-close aria-label="${t("Zavřít")}" title="${t("Zavřít (Esc)")}">×</button></div>
       ${s.victory?.kind === "space" ? `<div class="ec-ship"></div>` : ""}
       <p>${head.text}</p>
       ${history}

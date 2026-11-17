@@ -97,7 +97,7 @@ export function createForeignCity(dialog: HTMLDialogElement, host: ForeignCityHo
         : "";
 
     dialog.innerHTML = `
-      <div class="dialog-head"><h2>${escapeHtml(cityLabel(c.name))}</h2><span class="muted small">${relation}</span><button type="button" class="tp-close" data-close aria-label="${t("Zavřít")}">×</button></div>
+      <div class="dialog-head"><h2>${escapeHtml(cityLabel(c.name))}</h2><span class="muted small">${relation}</span><button type="button" class="tp-close" data-close aria-label="${t("Zavřít")}" title="${t("Zavřít (Esc)")}">×</button></div>
       <div class="fc-top">
         ${picture ? `<img class="fc-city" src="${picture}" alt="" style="--owner:${playerColor(c.owner)}">` : ""}
         <div class="fc-facts">

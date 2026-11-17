@@ -2,6 +2,10 @@
 
 What we decided with Michal, so we don't have to go back over it. Newest first. Entries before version 1.0 were written in Czech and translated to English when the repository switched to English.
 
+## 17 Nov 2026: Every window closes with the same cross
+
+Five windows (technology tree, city overview, city, government and spaceship) had a "Close Esc" text button in the top right corner, the others a cross. Michal chose the cross everywhere, in the same place, with the tooltip "Close (Esc)". The Esc key works as before and stays described in the controls help. The small cross panels inside the city screen (city history, production detail) keep their own cross without the Esc tooltip, because Esc closes the whole city.
+
 ## 17 Nov 2026: Governments are compared in a table
 
 The government window described each government in one long sentence of comma-separated rules, so choosing between monarchy and republic meant reading and comparing sentences in your head. Michal approved a comparison table: one row per government and columns for the highest rate, corruption (compared with despotism, or the same everywhere under communism), units each city supports for free, what soldiers do, what a celebrating city gains, and the remaining rules (tile penalty, trade bonus, settlers eating two food, collapse in long disorder), each on its own line. The column headings explain themselves on hover. The revolution button stays at the end of the row, the ruling government is highlighted and unknown ones are dimmed. The encyclopedia and the technology tree keep the one-line description.

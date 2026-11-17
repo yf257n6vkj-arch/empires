@@ -35,7 +35,7 @@ export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost)
   }
 
   function frame(title: string, body: string): void {
-    dialog.innerHTML = `<div class="dialog-head"><h2>${escapeHtml(title)}</h2><span class="spacer"></span><button type="button" data-close>${t("Zavřít")} <kbd>Esc</kbd></button></div><div class="empire-body">${body}</div>`;
+    dialog.innerHTML = `<div class="dialog-head"><h2>${escapeHtml(title)}</h2><span class="spacer"></span><button type="button" class="tp-close" data-close aria-label="${t("Zavřít")}" title="${t("Zavřít (Esc)")}">×</button></div><div class="empire-body">${body}</div>`;
     dialog.querySelector("[data-close]")?.addEventListener("click", close);
     if (!dialog.open) dialog.showModal();
   }

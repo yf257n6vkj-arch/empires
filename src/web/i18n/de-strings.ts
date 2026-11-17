@@ -2474,4 +2474,6 @@ export const DE_STRINGS: Record<string, string> = {
     "mehr Handel",
   "roste každý tah":
     "wächst jede Runde",
+  "Zavřít (Esc)":
+    "Schließen (Esc)",
 };

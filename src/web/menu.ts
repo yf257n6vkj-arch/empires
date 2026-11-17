@@ -180,7 +180,7 @@ export function createMenus(
       : `<li class="muted sv-empty">${t("Zatím tu nic uloženého není.")}</li>`;
     savesDialog.innerHTML = `
       <div class="sv">
-        <div class="dialog-head"><h2>${mode === "save" ? t("Uložit hru") : t("Nahrát hru")}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button></div>
+        <div class="dialog-head"><h2>${mode === "save" ? t("Uložit hru") : t("Nahrát hru")}</h2><button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}" title="${t("Zavřít (Esc)")}">×</button></div>
         ${
           mode === "save"
             ? `<form class="sv-new"><input type="text" maxlength="60" value="${escapeHtml(suggested)}" aria-label="${t("Jméno uložené hry")}"><button type="submit" class="primary">${t("Uložit")}</button></form>`

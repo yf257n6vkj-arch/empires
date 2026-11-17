@@ -842,7 +842,7 @@ export function createCityScreen(host: CityHost) {
           <span class="cs-sub">${t("velikost {size} · založeno v tahu {turn} · {n}. město z {all}", { size: c.size, turn: c.foundedTurn, n: index + 1, all: cities.length })}</span>
           ${history ? `<button type="button" class="cs-about-btn ${aboutOpen ? "on" : ""}" data-about title="${t("Co víme o skutečném městě tohoto jména")}">${t("Historie města")}</button>` : ""}
           <span class="spacer"></span>
-          <button type="button" class="cs-close" data-close>${t("Zavřít")} <kbd>Esc</kbd></button>
+          <button type="button" class="tp-close" data-close aria-label="${t("Zavřít")}" title="${t("Zavřít (Esc)")}">×</button>
         </div>
         <div class="cs-top">
           <div class="cs-view"></div>

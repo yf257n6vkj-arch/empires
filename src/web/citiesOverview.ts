@@ -140,7 +140,7 @@ export function createCitiesOverview(dialog: HTMLDialogElement, host: CitiesHost
         </table>`
       : `<p class="muted">${t("Zatím nemáš žádné město. Založ ho osadníkem klávesou B.")}</p>`;
     dialog.innerHTML = `
-      <div class="dialog-head"><h2>${t("Přehled měst")}</h2><span class="spacer"></span><button type="button" data-close>${t("Zavřít")} <kbd>Esc</kbd></button></div>
+      <div class="dialog-head"><h2>${t("Přehled měst")}</h2><span class="spacer"></span><button type="button" class="tp-close" data-close aria-label="${t("Zavřít")}" title="${t("Zavřít (Esc)")}">×</button></div>
       <div class="co-body">${body}
         <p class="hint">${t("Klikni na jméno města a otevře se celé. V seznamu Vyrábí změníš, co město staví.")}</p>
       </div>`;

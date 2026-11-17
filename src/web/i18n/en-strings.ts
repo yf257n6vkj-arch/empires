@@ -2477,4 +2477,6 @@ export const EN_STRINGS: Record<string, string> = {
     "extra trade",
   "roste každý tah":
     "grows every turn",
+  "Zavřít (Esc)":
+    "Close (Esc)",
 };

@@ -2474,4 +2474,6 @@ export const FR_STRINGS: Record<string, string> = {
     "commerce en plus",
   "roste každý tah":
     "grandit à chaque tour",
+  "Zavřít (Esc)":
+    "Fermer (Échap)",
 };

@@ -67,7 +67,11 @@ describe("translations", () => {
     const wanted = CIV_IDS.flatMap((civ) => CIVS[civ].cities.map((_, i) => `${civ}-${i}`));
     expect(wanted.filter((k) => !CITY_PAGES[k])).toEqual([]);
     expect(Object.keys(CITY_PAGES).filter((k) => !wanted.includes(k))).toEqual([]);
-    for (const lang of others) expect(wanted.filter((k) => !lang.cities?.[k]), lang.id).toEqual([]);
+    // A language without its own histories borrows them from its fallback, or shows the Czech ones.
+    for (const lang of others) {
+      const own = lang.cities ?? lang.fallback?.cities;
+      if (own) expect(wanted.filter((k) => !own[k]), lang.id).toEqual([]);
+    }
   });
 
   it("finds the history of a city by its name, preferring the owner's nation", () => {
@@ -132,6 +136,32 @@ describe("switching the language", () => {
     expect(unitName("settlers")).toBe("Osadník");
     expect(realmLabel("czechs")).toBe("Česká říše");
     expect(cityLabel("Praha")).toBe("Praha");
+  });
+
+  it("offers Slovak, German and French with their own plural forms and names", () => {
+    useLanguageForTest("sk");
+    expect(t("Konec tahu")).toBe("Koniec ťahu");
+    expect(tn("{n} tah|{n} tahy|{n} tahů", 3)).toBe("3 ťahy");
+    expect(tn("{n} tah|{n} tahy|{n} tahů", 5)).toBe("5 ťahov");
+    expect(realmLabel("czechs")).toBe("Česká ríša");
+    useLanguageForTest("de");
+    expect(t("Konec tahu")).toBe("Runde beenden");
+    expect(tn("{n} tah|{n} tahy|{n} tahů", 1)).toBe("1 Runde");
+    expect(cityLabel("Praha")).toBe("Prag");
+    expect(realmLabel("romans")).toBe("Römisches Reich");
+    useLanguageForTest("fr");
+    expect(tn("{n} tah|{n} tahy|{n} tahů", 0)).toBe("0 tour");
+    expect(tn("{n} tah|{n} tahy|{n} tahů", 2)).toBe("2 tours");
+    expect(realmLabel("czechs")).toBe("Empire tchèque");
+    expect(unitName("settlers")).toBe("Colon");
+  });
+
+  it("borrows encyclopedia pages from the fallback language with that language's Wikipedia", () => {
+    useLanguageForTest("de");
+    expect(techPage("pottery").page.text).toMatch(/^When clay is fired/);
+    expect(techPage("pottery").url).toBe("https://en.wikipedia.org/w/index.php?search=Pottery");
+    useLanguageForTest("sk");
+    expect(techPage("pottery").url).toBe("https://cs.wikipedia.org/wiki/Keramika");
   });
 
   it("shows encyclopedia pages in the chosen language with links to its Wikipedia", () => {

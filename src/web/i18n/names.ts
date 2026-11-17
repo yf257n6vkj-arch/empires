@@ -76,6 +76,7 @@ export function realmObject(id: NationId): string {
 }
 
 let cityMap: Map<string, string> | null = null;
+let cityMapLanguage = "";
 
 /**
  * A city keeps the name it got when it was founded, which is Czech. In other
@@ -84,8 +85,9 @@ let cityMap: Map<string, string> | null = null;
 export function cityLabel(name: string): string {
   const names = language().names;
   if (!names) return name;
-  if (!cityMap) {
+  if (!cityMap || cityMapLanguage !== language().id) {
     cityMap = new Map();
+    cityMapLanguage = language().id;
     for (const civ of CIV_IDS) {
       const own = names.civs[civ]?.cities ?? [];
       CIVS[civ].cities.forEach((cs, i) => {

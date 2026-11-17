@@ -5,7 +5,7 @@
  * Wikipedia articles (downloaded with tools/mac/wiki.sh) on 15 November 2026.
  */
 import type { TechId } from "../core";
-import { language, t } from "./i18n";
+import { localPage, t } from "./i18n";
 
 export interface TechPage {
   /** Rough time, as a reader would say it. */
@@ -443,8 +443,8 @@ export function wikiUrl(title: string, wikipedia = "cs"): string {
 
 /** The page of a technology in the current language, with the link to its article. */
 export function techPage(tech: TechId): { page: TechPage; url: string } {
-  const own = language().techPages?.[tech];
-  if (own) return { page: own, url: wikiUrl(own.wiki, language().wikipedia ?? "cs") };
+  const own = localPage((l) => l.techPages, tech);
+  if (own) return { page: own.page, url: wikiUrl(own.page.wiki, own.wikipedia) };
   const page = TECH_PAGES[tech];
   return { page, url: wikiUrl(page.wiki) };
 }

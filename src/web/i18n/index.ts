@@ -8,7 +8,10 @@
  * LANGUAGES below. The language is chosen once when the page loads; switching
  * saves the choice and reloads the page, so module-level t() calls are fine.
  */
+import { DE } from "./de";
 import { EN } from "./en";
+import { FR } from "./fr";
+import { SK } from "./sk";
 import type { Language } from "./types";
 
 export type { Language, Names } from "./types";
@@ -35,7 +38,7 @@ const CS: Language = {
 };
 
 /** Every language the game offers, in the order the picker shows them. */
-export const LANGUAGES: readonly Language[] = [CS, EN];
+export const LANGUAGES: readonly Language[] = [CS, SK, EN, DE, FR];
 
 const STORAGE_KEY = "empires.lang";
 
@@ -74,6 +77,18 @@ export function switchLanguage(id: string): void {
 /** For tests: run with a given language without touching storage. */
 export function useLanguageForTest(id: string): void {
   current = LANGUAGES.find((l) => l.id === id) ?? CS;
+}
+
+/**
+ * A page in the current language, or in the language it falls back to, with
+ * the Wikipedia its article lives on; null when no language has it.
+ */
+export function localPage<T>(pick: (l: Language) => Partial<Record<string, T>> | null, key: string): { page: T; wikipedia: string } | null {
+  for (let l: Language | undefined = current; l; l = l.fallback) {
+    const own = pick(l)?.[key];
+    if (own) return { page: own, wikipedia: l.wikipedia ?? "cs" };
+  }
+  return null;
 }
 
 /** Values for {name} placeholders; any object with string or number fields will do. */

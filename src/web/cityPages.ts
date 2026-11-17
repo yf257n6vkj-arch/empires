@@ -5,7 +5,7 @@
  * The texts follow Wikipedia; `wiki` is the article title to search for.
  */
 import { CIV_IDS, CIVS, type CivId, type NationId } from "../core";
-import { language } from "./i18n";
+import { localPage } from "./i18n";
 
 export interface CityPage {
   /** Rough time, as a reader would say it. */
@@ -268,10 +268,10 @@ export function cityPage(name: string, ownerCiv: NationId): { page: CityPage; ur
     const index = CIVS[civ].cities.indexOf(name);
     if (index < 0) continue;
     const key = `${civ}-${index}`;
-    const own = language().cities?.[key];
-    const page = own ?? CITY_PAGES[key];
+    const own = localPage((l) => l.cities, key);
+    const page = own?.page ?? CITY_PAGES[key];
     if (!page) return null;
-    const wikipedia = own ? (language().wikipedia ?? "cs") : "cs";
+    const wikipedia = own?.wikipedia ?? "cs";
     // A search finds the article even when the title is written a little differently.
     return { page, url: `https://${wikipedia}.wikipedia.org/w/index.php?search=${encodeURIComponent(page.wiki)}` };
   }

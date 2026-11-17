@@ -24,7 +24,7 @@ import {
 import { buildingPortraitCanvas } from "./buildingArt";
 import { CODEX_PAGES, type CodexPage } from "./codexPages";
 import { wikiUrl } from "./encyclopedia";
-import { language, t, tn } from "./i18n";
+import { localPage, t, tn } from "./i18n";
 import { GUIDE_KEYS, GUIDE_PAGES, guideNumbers, type GuideKey, type GuidePage } from "./guidePages";
 import { factBox, moreParagraph, wireFacts } from "./pageExtras";
 import {
@@ -79,7 +79,7 @@ export function entryKey(kind: "civ" | "unit" | "building" | "government" | "ter
 
 /** A page of the "How to play" chapter in the current language. */
 export function guidePage(key: GuideKey): GuidePage {
-  return language().guide?.[key] ?? GUIDE_PAGES[key];
+  return localPage((l) => l.guide, key)?.page ?? GUIDE_PAGES[key];
 }
 
 const CATEGORIES: { kind: EntryKind; title: string; entries: Entry[] }[] = [
@@ -139,8 +139,8 @@ export function codexEntryCount(): number {
 
 /** The page of an entry in the current language, falling back to Czech, with the link to its article. */
 export function codexPage(key: string): { page: CodexPage; url: string } | null {
-  const own = language().codex?.[key];
-  if (own) return { page: own, url: wikiUrl(own.wiki, language().wikipedia ?? "cs") };
+  const own = localPage((l) => l.codex, key);
+  if (own) return { page: own.page, url: wikiUrl(own.page.wiki, own.wikipedia) };
   const page = CODEX_PAGES[key];
   return page ? { page, url: wikiUrl(page.wiki) } : null;
 }

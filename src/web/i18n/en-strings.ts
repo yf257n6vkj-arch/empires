@@ -661,7 +661,7 @@ export const EN_STRINGS: Record<string, string> = {
     "leave it to fate",
   "Vyber si národ":
     "Choose your nation",
-  "Národy se liší jménem, vládcem, barvou a jmény měst. Žádný nemá zvláštní výhody, stejně jako v Civilizaci 1. Soupeři dostanou národy v jiných barvách.":
+  "Národy se liší jménem, vládcem, barvou a jmény měst. Žádný nemá zvláštní výhody, stejně jako v klasické hře, ze které tahle vychází. Soupeři dostanou národy v jiných barvách.":
     "Nations differ in name, leader, colour and city names. None has special advantages, just like in the classic game this one follows. Rivals get nations in other colours.",
   "Hraješ za národ <b>{civ}</b> a vládne {leader}, první město bude {capital}.":
     "You play the <b>{civ}</b>, led by {leader}, and your first city will be {capital}.",

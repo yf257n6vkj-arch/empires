@@ -390,7 +390,10 @@ header.topbar {
 }
 header.topbar h1 { font-size: 17px; }
 header.topbar button { white-space: nowrap; }
-header.topbar .economy { margin-left: 4px; gap: 10px; }
+header.topbar .economy { margin-left: 4px; gap: 6px 10px; flex: 1 1 auto; min-width: 0; flex-wrap: wrap; }
+/* Longer languages wrap the controls onto a second row rather than push the end-turn button off the screen. */
+header.topbar .spacer { flex: 0 0 0; }
+header.topbar #turn, header.topbar #end-turn { flex: 0 0 auto; }
 button.menu-button { font-size: 13px; padding: 5px 12px; background: #3a3127; border-color: #6b5a44; font-weight: 600; }
 main.playfield { flex: 1 1 auto; min-height: 0; display: block; gap: 0; }
 .map-wrap {

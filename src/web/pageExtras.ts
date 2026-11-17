@@ -2,13 +2,12 @@
  * The second paragraph and the changing "Did you know?" box of encyclopedia
  * pages, in the current language with Czech as the fallback.
  */
-import { language, t } from "./i18n";
+import { localPage, t } from "./i18n";
 import { PAGE_MORE } from "./pageMore";
 import { escapeHtml } from "./texts";
 
 export function pageMore(key: string): { more: string | null; facts: string[] } {
-  const own = language().more?.[key];
-  const extra = own ?? PAGE_MORE[key];
+  const extra = localPage((l) => l.more, key)?.page ?? PAGE_MORE[key];
   return { more: extra?.more ?? null, facts: extra?.facts ?? [] };
 }
 

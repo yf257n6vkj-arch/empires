@@ -60,4 +60,9 @@ export interface Language {
   cities: Record<string, CityPage> | null;
   /** Wikipedia the encyclopedia links to, e.g. "en" for en.wikipedia.org. */
   wikipedia?: string;
+  /**
+   * Where pages this language does not have yet come from: German and French
+   * show the English encyclopedia, Slovak the Czech one. UI texts never fall back here.
+   */
+  fallback?: Language;
 }

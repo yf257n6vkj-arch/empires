@@ -375,7 +375,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
     dialog.innerHTML = `
       <div class="ng">
         <div class="dialog-head"><h2>${firstGame ? t("Vyber si národ") : t("Nová hra")}</h2>${firstGame ? "" : `<button type="button" class="tp-close" data-act="close" aria-label="${t("Zavřít")}">×</button>`}</div>
-        <p class="muted">${t("Národy se liší jménem, vládcem, barvou a jmény měst. Žádný nemá zvláštní výhody, stejně jako v Civilizaci 1. Soupeři dostanou národy v jiných barvách.")}</p>
+        <p class="muted">${t("Národy se liší jménem, vládcem, barvou a jmény měst. Žádný nemá zvláštní výhody, stejně jako v klasické hře, ze které tahle vychází. Soupeři dostanou národy v jiných barvách.")}</p>
         <div class="ng-body">
           <div class="ng-grid">${[...CIV_IDS, "random" as const].map(card).join("")}</div>
           <aside class="ng-info">${info}</aside>

@@ -5,6 +5,7 @@
 import "./polyfills";
 import {
   DEFAULT_WORLD_CHOICE,
+  isBarbarian,
   formatGameCode,
   parseGameCode,
   resolveWorld,
@@ -100,6 +101,8 @@ import { createForeignCity } from "./foreignCity";
 import { createEndScreen } from "./endScreen";
 import { createCitiesOverview } from "./citiesOverview";
 import { createCelebration } from "./celebration";
+import { createSound } from "./sound";
+import { cuesFor, strikeOf, type Cue } from "./soundCues";
 import { payloadOf, readAutosave, writeAutosave, type LogEntry, type SavePayload } from "./saves";
 import { t, tn, translatePage } from "./i18n";
 import {
@@ -139,6 +142,15 @@ const showAllBox = $<HTMLInputElement>("#show-all");
 /** The map seen at an angle: a tile is this much shorter than wide, and mountains, trees, cities and units stand up. */
 const MAP_TILT = 0.72;
 const MAP_VIEW_KEY = "empires.mapView";
+const sound = createSound();
+const effectsVolume = $<HTMLInputElement>("#sound-effects");
+const musicVolume = $<HTMLInputElement>("#sound-music");
+effectsVolume.value = String(sound.settings().effects);
+musicVolume.value = String(sound.settings().music);
+effectsVolume.addEventListener("input", () => sound.set({ effects: Number(effectsVolume.value) }));
+// A test blow lets the player hear how loud the effects are.
+effectsVolume.addEventListener("change", () => sound.hit("blade", false));
+musicVolume.addEventListener("input", () => sound.set({ music: Number(musicVolume.value) }));
 const mapViewSelect = $<HTMLSelectElement>("#map-view");
 mapViewSelect.value = localStorage.getItem(MAP_VIEW_KEY) === "flat" ? "flat" : "tilted";
 setTilt(mapViewSelect.value === "flat" ? 1 : MAP_TILT);
@@ -279,6 +291,7 @@ function run(command: Command): boolean {
   }
   animateMoves(before);
   queueBattles(events, animation ? animation.duration : 0);
+  playCues(events);
   addLog(events);
   if (advisor.mode() === "guide") guide.onEvents(events);
   // Peace offers from computer players wait for an answer at the start of the turn.
@@ -459,7 +472,7 @@ const reduceMotion = typeof matchMedia === "function" && matchMedia("(prefers-re
  */
 type CombatEvent = Extract<GameEvent, { type: "combat" }>;
 const battleQueue: CombatEvent[] = [];
-let battle: { e: CombatEvent; start: number; lunge: number; round: number; fall: number; hold: number } | null = null;
+let battle: { e: CombatEvent; start: number; lunge: number; round: number; fall: number; hold: number; heard: number } | null = null;
 let battleBannerTimer = 0;
 const battleBanner = document.createElement("div");
 battleBanner.className = "battle-banner";
@@ -480,11 +493,12 @@ function startBattle(at: number): void {
   const e = battleQueue.shift();
   if (!e) {
     battle = null;
+    flushCues();
     return;
   }
   const n = e.rounds!.length;
   const round = reduceMotion ? 0 : Math.max(70, Math.min(150, 1500 / Math.max(1, n)));
-  battle = { e, start: at, lunge: reduceMotion ? 0 : 260, round, fall: reduceMotion ? 0 : 450, hold: reduceMotion ? 1600 : 900 };
+  battle = { e, start: at, lunge: reduceMotion ? 0 : 260, round, fall: reduceMotion ? 0 : 450, hold: reduceMotion ? 1600 : 900, heard: -1 };
   camera = keepInView(camera, e.at, state.map);
   drawMap();
 }
@@ -550,8 +564,44 @@ function showBattleBanner(e: CombatEvent): void {
   battleBanner.className = `battle-banner ${iWon ? "won" : "lost"}`;
   battleBanner.innerHTML = `<b>${title}</b><span>${eventText(state, e) ?? ""} ${t("Šance na výhru byla {pct} %.", { pct })}</span>`;
   battleBanner.hidden = false;
+  sound.cue(iWon ? "victory" : "defeat");
+  if (e.promoted && iWon) sound.cue("promote", 0.9);
   window.clearTimeout(battleBannerTimer);
   battleBannerTimer = window.setTimeout(() => (battleBanner.hidden = true), 3200);
+}
+
+/** Sounds of the fight up to `now`: the charge, then each blow as it lands (only the latest if frames were skipped). */
+function battleSounds(b: NonNullable<typeof battle>, now: number): void {
+  if (b.heard < 0) {
+    b.heard = 0;
+    sound.cue("charge");
+  }
+  const rounds = b.e.rounds!;
+  const inRounds = now - b.start - b.lunge;
+  if (inRounds < 0) return;
+  const landed = b.round === 0 ? rounds.length : Math.min(rounds.length, Math.floor(inRounds / b.round) + 1);
+  if (landed <= b.heard) return;
+  b.heard = landed;
+  const byAttacker = rounds[landed - 1] === "a";
+  const striker = byAttacker ? b.e.attacker : b.e.defender;
+  const struck = byAttacker ? b.e.defender : b.e.attacker;
+  sound.hit(strikeOf(striker.unitType), struck.owner === HUMAN);
+}
+
+/** Sounds for what happened, played after the fights so a captured city is heard once it falls. */
+let pendingCues: Cue[] = [];
+function playCues(events: GameEvent[]): void {
+  sound.setMood(state.players[HUMAN]!.atWar.some((id) => !isBarbarian(state.players[id])) ? "war" : "peace");
+  const found = cuesFor(events, HUMAN, (id) => state.cities.find((c) => c.id === id)?.owner);
+  if (found.length === 0) return;
+  pendingCues = found;
+  if (!battle && battleQueue.length === 0) window.setTimeout(flushCues, animation ? animation.duration : 0);
+}
+
+function flushCues(): void {
+  const now = pendingCues;
+  pendingCues = [];
+  sound.cues(now);
 }
 
 /** Skips the fight being shown and all that wait. */
@@ -559,6 +609,7 @@ function skipBattles(): boolean {
   if (!battle) return false;
   battleQueue.length = 0;
   battle = null;
+  flushCues();
   battleBanner.hidden = true;
   drawMap();
   return true;
@@ -636,6 +687,7 @@ function drawMap(): void {
     if (now >= b.start) input.units = input.units.filter((u) => u.id !== b.e.attacker.id && u.id !== b.e.defender.id);
     draw(ctx, input);
     const frame = battleFrame(b, now);
+    if (frame) battleSounds(b, now);
     if (frame) {
       drawBattle(ctx, frame);
       if (now - b.start >= b.lunge + b.round * b.e.rounds!.length && battleBanner.dataset.for !== `${b.start}`) {

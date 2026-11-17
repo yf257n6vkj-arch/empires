@@ -95,6 +95,7 @@ button.research.attention { border-color: var(--accent); box-shadow: 0 0 0 2px r
 .gold b { color: #f2cf6b; }
 label.rate { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); white-space: nowrap; }
 label.rate input { width: 90px; padding: 0; accent-color: var(--accent); }
+.gm-row input[type="range"] { accent-color: var(--accent); width: 150px; padding: 0; }
 
 /* ---------- research pick ---------- */
 .tech-picks { display: flex; flex-direction: column; gap: 6px; }

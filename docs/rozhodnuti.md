@@ -2,6 +2,16 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 17. 11. 2026: Hra má zvuky a tichou hudbu
+
+Zadání zvuk z první verze vynechalo kvůli rozsahu. Teď už boje přehráváme na mapě a bez zvuku jim chyběla polovina odezvy, a právě odezva, kterou dítě vidí a slyší, ho podle výzkumu nejvíc baví. Michal schválil zvuky i hudbu.
+
+Všechno vzniká kódem přímo v prohlížeči přes Web Audio, nepoužíváme žádné nahrávky. V boji zazní krátký bubnový nástup a potom každá rána tak, jak ji hra hodila. Meče cinkají, šípy svištějí, muškety a pušky práskají, děla a letadla duní a tank burácí. Když rána dopadne na hráčovu jednotku, přidá se tupý úder, aby šlo poznat po sluchu, kdo dostává. Vítězství zahraje fanfára, prohru sestupný motiv a nový veterán dostane zvonkohru. Svůj zvuk má i založení města, dobytí a ztráta města, objev, dokončená stavba, nová jednotka, div světa a vyhlášení války. Po jednom tahu zazní nejvýš tři zvuky, každý druh jednou, a ty nejdůležitější přijdou první. Zvuk dobytého města počká, až doběhne přehrávání boje.
+
+Hudba je středověká v dórském modu na D a skládá se pokaždé nová. Má melodii na flétnu nebo loutnu ve formě AABA, basu, prodlevu na D a A a rámový buben. Každou skladbu hra zahraje dvakrát a potom 25 až 60 sekund mlčí, aby hudba neomrzela. Za války má rychlejší tempo a buben na každou dobu. Když okno se hrou není vidět, zvuk se zastaví.
+
+V menu jsou dva posuvníky, Zvuky a Hudba, a úplně vlevo je zvuk vypnutý. Hra si je pamatuje. Prohlížeč pustí zvuk až po prvním kliknutí nebo klávese, proto hra do té chvíle mlčí. Na pravidla ani na soupeře to vliv nemá.
+
 ## 17. 11. 2026: Soupeři v rychlé hře válčí dřív
 
 V rychlé hře bylo na minutu hraní méně bojů než v normální a Michal chtěl, abych to dotáhl. Rozebral jsem, co soupeře od války drží. Většina z nich v míru nestaví útočné jednotky, takže když se rozhodnou bojovat, musí armádu teprve postavit, a to v 60 tazích nestihnou. K tomu mír platil 15 tahů, což je v rychlé hře čtvrtina partie.

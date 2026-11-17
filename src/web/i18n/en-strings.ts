@@ -2413,4 +2413,12 @@ export const EN_STRINGS: Record<string, string> = {
     "The game ends after {turns} turns and lasts a whole evening.",
   "Délka hry":
     "Game length",
+  "Zvuky":
+    "Sounds",
+  "Hudba":
+    "Music",
+  "Bitvy, nová města, objevy a stavby. Úplně vlevo je zvuk vypnutý.":
+    "Battles, new cities, discoveries and buildings. All the way to the left turns sound off.",
+  "Tichá středověká hudba. Mezi skladbami chvíli nehraje nic. Úplně vlevo je hudba vypnutá.":
+    "Quiet medieval music. Between pieces nothing plays for a while. All the way to the left turns music off.",
 };

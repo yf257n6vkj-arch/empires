@@ -342,6 +342,24 @@ export interface CityReport {
 }
 
 /** Extra food and shields a city gets from the difficulty, in percent: only computer players on the hard levels. */
+/*
+ * A quick game runs history at double speed: cities make, discover and grow faster, for everybody alike.
+ * Only gains are sped up; a city that loses food or shields loses them at the normal rate.
+ */
+/** A positive surplus grown by the game speed; shortages stay as they are. */
+function sped(n: number, pct: number): number {
+  return n > 0 && pct !== 100 ? Math.floor((n * pct) / 100) : n;
+}
+function fastShields(state: GameState, n: number): number {
+  return sped(n, RULES.speeds[state.speed ?? "normal"].productionPct);
+}
+function fastScience(state: GameState, n: number): number {
+  return sped(n, RULES.speeds[state.speed ?? "normal"].sciencePct);
+}
+function fastFood(state: GameState, n: number): number {
+  return sped(n, RULES.speeds[state.speed ?? "normal"].foodPct);
+}
+
 export function difficultyBonus(state: GameState, owner: number): { foodPct: number; shieldsPct: number } {
   const p = state.players[owner];
   if (!p || p.isHuman || isBarbarian(p)) return { foodPct: 0, shieldsPct: 0 };
@@ -359,7 +377,7 @@ export function cityReport(state: GameState, city: City): CityReport {
   production.trade += routes;
   const settlerUpkeep = settlerFood(state, city);
   const foodUpkeep = city.size * RULES.foodPerCitizen + settlerUpkeep;
-  const foodSurplus = production.food - foodUpkeep;
+  const foodSurplus = fastFood(state, production.food - foodUpkeep);
   const happiness = cityHappiness(state, city, effects);
 
   const gov = governmentOf(state, city);
@@ -370,13 +388,13 @@ export function cityReport(state: GameState, city: City): CityReport {
   const baseGold = trade - baseScience - baseLuxury;
   const calm = !happiness.disorder;
   const unitUpkeep = unitShieldUpkeep(state, city);
-  const shieldSurplus = calm ? Math.max(0, Math.floor((production.shields * (100 + effects.shieldsPct)) / 100) - unitUpkeep) : 0;
+  const shieldSurplus = fastShields(state, calm ? Math.max(0, Math.floor((production.shields * (100 + effects.shieldsPct)) / 100) - unitUpkeep) : 0);
   // In anarchy trade only keeps people busy: no science and no gold.
   const paid = calm && gov.maxRate > 0;
   // Taxmen and scientists add to the base, before libraries and marketplaces.
   const extraScience = happiness.scientists * RULES.specialistYield;
   const extraGold = happiness.taxmen * RULES.specialistYield;
-  const science = paid ? Math.floor(((baseScience + extraScience) * (100 + effects.sciencePct)) / 100) : 0;
+  const science = fastScience(state, paid ? Math.floor(((baseScience + extraScience) * (100 + effects.sciencePct)) / 100) : 0);
   const gold = paid ? Math.floor(((baseGold + extraGold) * (100 + effects.goldPct)) / 100) : 0;
 
   const threshold = growthThreshold(city.size);

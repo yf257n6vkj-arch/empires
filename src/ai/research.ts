@@ -54,15 +54,15 @@ export function governmentCommands(view: PlayerView, sitesLeft = 0): Command[] {
   // The republic pays for science; only the nation that lives for war keeps its monarchy while it fights.
   // Settlers eat more under the republic and every unit costs a shield, so the AI first fills its land.
   // The expanding nation keeps settling islands with its monarchy's cheap settlers until late in the game.
-  const settled = view.turn >= REPUBLIC_BY || (sitesLeft <= 1 && nature(view) !== "expansion");
+  const settled = view.turn >= view.maxTurns * REPUBLIC_BY || (sitesLeft <= 1 && nature(view) !== "expansion");
   const republicOk = skill(view).republic && settled && (nature(view) !== "war" || !atWar);
   if (gov !== "republic" && knows(view, "republic") && republicOk) return [{ type: "revolution", government: "republic" }];
   if (gov === "despotism" && knows(view, "monarchy")) return [{ type: "revolution", government: "monarchy" as GovernmentId }];
   return [];
 }
 
-/** Turn by which the AI moves to the republic even with land left to settle. */
-const REPUBLIC_BY = 80;
+/** Share of the game after which the AI moves to the republic even with land left to settle. */
+const REPUBLIC_BY = 2 / 3;
 
 /** Gold the AI keeps in the treasury before it puts more into science. */
 const RESERVE = 50;

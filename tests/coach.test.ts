@@ -23,8 +23,18 @@ describe("guide plans", () => {
           if ("tech" in task) expect(TECHS[task.tech]).toBeDefined();
         }
       }
-      expect(last).toBeLessThanOrEqual(RULES.maxTurns);
+      expect(last).toBeLessThanOrEqual(RULES.speeds.normal.maxTurns);
     }
+  });
+
+  it("moves the target turns to the same point of a quick game", () => {
+    const s = withCity();
+    const normal = planProgress(playerView(s, 0), "conquest");
+    s.speed = "quick";
+    const quick = planProgress(playerView(s, 0), "conquest");
+    const share = RULES.speeds.quick.maxTurns / RULES.speeds.normal.maxTurns;
+    quick.forEach((q, k) => expect(q.stage.by).toBe(Math.round(normal[k]!.stage.by * share)));
+    expect(quick.at(-1)!.stage.by).toBeLessThanOrEqual(RULES.speeds.quick.maxTurns);
   });
 
   it("tick off tasks the player has done and say when the plan is late", () => {

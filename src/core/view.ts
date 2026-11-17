@@ -12,7 +12,7 @@ import { inciteCost } from "./bribe";
 import { scoreOf, type Score } from "./score";
 import { buildingUpkeep, builtWonders, researchCost, wonderFlag } from "./economy";
 import { cityReport } from "./city";
-import { BUILDINGS, RULES, UNIT_TYPES, type BarbarianLevel, type BuildingId, type Difficulty, type GovernmentId, type NationId, type TechId, type TerrainId } from "./rules";
+import { BUILDINGS, maxTurns, RULES, UNIT_TYPES, type BarbarianLevel, type BuildingId, type Difficulty, type GameSpeed, type GovernmentId, type NationId, type TechId, type TerrainId } from "./rules";
 import { isBarbarian, type City, type GameState, type PlayerId, type Spaceship, type Unit } from "./state";
 
 /** Buildings anybody can see from outside a city: fortifications, the palace and wonders. */
@@ -139,6 +139,9 @@ export interface PlayerView {
   isHuman: boolean;
   /** How many barbarians the game has; everybody knows it. */
   barbarians: BarbarianLevel;
+  /** Length of the game and its last turn; everybody knows them. */
+  speed: GameSpeed;
+  maxTurns: number;
   /** Wonders already standing somewhere; every player hears when one is finished. */
   builtWonders: BuildingId[];
 }
@@ -262,6 +265,8 @@ export function playerView(state: GameState, playerId: PlayerId): PlayerView {
     difficulty: state.difficulty,
     isHuman: player.isHuman,
     barbarians: state.barbarians,
+    speed: state.speed ?? "normal",
+    maxTurns: maxTurns(state),
     builtWonders: builtWonders(state),
   };
 }

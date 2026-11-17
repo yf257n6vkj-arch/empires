@@ -19,7 +19,7 @@ import {
 import { aircraftSafe, continueGotoDraft, turnMoves } from "./units";
 import { healAmount } from "./combat";
 import type { GameEvent } from "./events";
-import { BUILDINGS, GOVERNMENTS, IMPROVEMENTS, RULES, TECH_IDS, UNIT_TYPES, type BuildingId, type ImprovementId, type TerrainId } from "./rules";
+import { BUILDINGS, gameTurn, GOVERNMENTS, IMPROVEMENTS, RULES, TECH_IDS, UNIT_TYPES, type BuildingId, type ImprovementId, type TerrainId } from "./rules";
 import { Rng } from "./rng";
 import { isBarbarian, type City, type GameState, type PlayerId, type Unit, type WorkKind } from "./state";
 import { workerStepDraft } from "./workers";
@@ -261,7 +261,7 @@ function cityNear(draft: GameState, city: City, terrain: TerrainId): boolean {
  * building or technology keeps it away, and the player hears that it did.
  */
 function disasterDraft(draft: GameState, playerId: PlayerId, events: GameEvent[]): void {
-  if (draft.turn < RULES.disasterStartTurn) return;
+  if (draft.turn < gameTurn(draft, RULES.disasterStartTurn)) return;
   const cities = draft.cities.filter((c) => c.owner === playerId);
   if (cities.length === 0) return;
   const rng = Rng.fromState(draft.rng);

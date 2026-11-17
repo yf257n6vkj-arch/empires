@@ -34,6 +34,7 @@ import {
   type TechId,
   type UnitTypeId,
   type VictoryPath,
+  maxTurns,
 } from "../core";
 import { unlocks } from "./advisorPanel";
 import { codexPage, entryKey, pictureOf } from "./codex";
@@ -123,12 +124,12 @@ export function pathName(path: VictoryPath): string {
   return path === "conquest" ? t("Dobyvatel") : path === "space" ? t("Vědec") : t("Budovatel");
 }
 
-function pathText(path: VictoryPath): string {
+function pathText(path: VictoryPath, turns: number): string {
   switch (path) {
     case "conquest":
       return t("Postavíš silnou armádu a dobudeš města soupeřů. Vyhraješ, až zůstaneš jediný. Soupeři se ale budou bránit.");
     case "space":
-      return t("Postavíš knihovny a univerzity a jako první pošleš loď k cizí hvězdě. Je to nejtěžší cesta, do {turns} tahů ji stihneš jen s hodně rychlou vědou.", { turns: RULES.maxTurns });
+      return t("Postavíš knihovny a univerzity a jako první pošleš loď k cizí hvězdě. Je to nejtěžší cesta, do {turns} tahů ji stihneš jen s hodně rychlou vědou.", { turns });
     case "score":
       return t("Postavíš velká spokojená města a divy světa a poznáš hodně objevů. Vyhraješ, když budeš mít po posledním tahu nejvyšší skóre.");
   }
@@ -300,7 +301,7 @@ export function createGuide(host: GuideHost) {
     const left = queue.length;
     const paths = card.choosePath
       ? `<div class="gc-paths">${VICTORY_PATHS.map(
-          (p) => `<button type="button" class="gc-path" data-path="${p}"><b>${escapeHtml(pathName(p))}</b><span>${escapeHtml(pathText(p))}</span></button>`,
+          (p) => `<button type="button" class="gc-path" data-path="${p}"><b>${escapeHtml(pathName(p))}</b><span>${escapeHtml(pathText(p, maxTurns(host.state())))}</span></button>`,
         ).join("")}</div>`
       : "";
     dialog.innerHTML = `
@@ -796,7 +797,7 @@ export function createGuide(host: GuideHost) {
     const out = v.rivals.filter((r) => r.defeated && !r.barbarian).map((r) => civName(r.civ));
     scores.innerHTML = `
       <div class="dialog-head"><h2>${t("Žebříček")}</h2><button type="button" class="tp-close" data-close aria-label="${t("Zavřít")}">×</button></div>
-      <p class="muted small">${t("Skóre národů, které znáš. Po tahu {turn} vyhraje ten, kdo má nejvíc.", { turn: RULES.maxTurns })}</p>
+      <p class="muted small">${t("Skóre národů, které znáš. Po tahu {turn} vyhraje ten, kdo má nejvíc.", { turn: maxTurns(s) })}</p>
       <ol class="gs-list">${rows.map((r) => `<li class="${r.me ? "me" : ""}"><span>${escapeHtml(r.name)}</span><b>${r.score}</b></li>`).join("")}</ol>
       ${unknown ? `<p class="small">${tn("Jeden národ ještě neznáš.|Ještě neznáš {n} národy.|Ještě neznáš {n} národů.", unknown)}</p>` : ""}
       ${out.length ? `<p class="small">${t("Už prohráli: {list}", { list: escapeHtml(out.join(", ")) })}</p>` : ""}

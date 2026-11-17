@@ -196,7 +196,7 @@ export function chooseProduction(view: PlayerView, city: City, plan: Plan): Prod
   }
 
   // An explorer from the capital early on.
-  if (!plan.exploring && city.buildings.includes("palace") && view.turn < 60) return { kind: "unit", id: "warriors" };
+  if (!plan.exploring && city.buildings.includes("palace") && view.turn < view.maxTurns / 2) return { kind: "unit", id: "warriors" };
 
   const maxSettlers = n === "expansion" ? 3 : 2;
   const underway = settlersUnderway(view);

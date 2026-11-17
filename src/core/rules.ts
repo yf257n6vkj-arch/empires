@@ -498,6 +498,30 @@ export interface GovernorConstants {
   later: Record<string, Record<string, number>>;
 }
 
+export interface GameSpeedRules {
+  maxTurns: number;
+  /** Multiply each city's shield surplus, science and food surplus. */
+  productionPct: number;
+  sciencePct: number;
+  foodPct: number;
+}
+
+/** Length of a game: normal has 120 turns, quick 60 with faster cities. */
+export type GameSpeed = "normal" | "quick";
+
+/** The last turn of a game; after it the highest score wins. Old saves have no speed and are normal. */
+/**
+ * A turn of the normal game moved to the same point of this game: rule numbers
+ * such as the turn barbarians start are written for the normal length.
+ */
+export function gameTurn(state: { speed?: GameSpeed }, turn: number): number {
+  return Math.round((turn * maxTurns(state)) / RULES.speeds.normal.maxTurns);
+}
+
+export function maxTurns(state: { speed?: GameSpeed }): number {
+  return RULES.speeds[state.speed ?? "normal"].maxTurns;
+}
+
 export interface GameConstants {
   combat: CombatConstants;
   governor: GovernorConstants;
@@ -506,7 +530,8 @@ export interface GameConstants {
   difficulty: { levels: Record<Difficulty, DifficultyLevel> };
   diplomacy: { treatyTurns: number };
   barbarians: BarbarianConstants;
-  maxTurns: number;
+  /** How long a game is and how fast cities work in it. */
+  speeds: Record<GameSpeed, GameSpeedRules>;
   movesFraction: number;
   roadMoveCost: number;
   unitSight: number;

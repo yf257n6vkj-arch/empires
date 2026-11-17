@@ -65,6 +65,8 @@ import {
   type ProductionItem,
   type TechId,
   type Unit,
+  maxTurns,
+  type GameSpeed,
 } from "../core";
 import {
   clampCamera,
@@ -213,12 +215,12 @@ function randomSeed(): string {
   return `${w}-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
-function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_WORLD_CHOICE, persist = true, barbarians: BarbarianLevel = "few", difficulty: Difficulty = "normal"): void {
+function startNewGame(input: string, civ?: CivId, choice: WorldChoice = DEFAULT_WORLD_CHOICE, persist = true, barbarians: BarbarianLevel = "few", difficulty: Difficulty = "normal", speed: GameSpeed = "normal"): void {
   // A map code that carries settings wins over the choice in the dialog.
   const parsed = parseGameCode(input);
   const world = parsed.world ?? resolveWorld(choice, parsed.seed);
   const seed = formatGameCode(parsed.seed, world);
-  state = newGame({ seed, playerCount: world.opponents + 1, civ, world, opponentUnits: true, barbarians, difficulty });
+  state = newGame({ seed, playerCount: world.opponents + 1, civ, world, opponentUnits: true, barbarians, difficulty, speed });
   const civ0 = state.players[HUMAN]!.civ;
   // The rivals stay unnamed: the player meets them while exploring.
   log = [
@@ -779,7 +781,7 @@ function refresh(): void {
     hoverRouteText = unit && clickWouldMove(unit, hoverTile) ? routeText(routeTo(unit, hoverTile)) : "";
   }
   drawMap();
-  turnLabel.textContent = t("Tah {turn} z {maxTurns}", { turn: state.turn, maxTurns: RULES.maxTurns });
+  turnLabel.textContent = t("Tah {turn} z {maxTurns}", { turn: state.turn, maxTurns: maxTurns(state) });
   seedLabel.textContent = state.seed;
   const waiting = state.units.some(needsOrders);
   const choose = needsResearchChoice();
@@ -874,7 +876,7 @@ const empire = createEmpireDialogs($<HTMLDialogElement>("#empire-dialog"), {
   openEntry: (key) => codex.show(key),
 });
 governmentButton.addEventListener("click", () => empire.openGovernment());
-const codex = createCodex($<HTMLDialogElement>("#codex-dialog"), { openTech: (t) => techTree.openPage(t) });
+const codex = createCodex($<HTMLDialogElement>("#codex-dialog"), { openTech: (t) => techTree.openPage(t), maxTurns: () => maxTurns(state) });
 $<HTMLButtonElement>("#codex").addEventListener("click", () => codex.open());
 const attackDialog = createAttackDialog($<HTMLDialogElement>("#attack-dialog"), {
   state: () => state,
@@ -886,9 +888,9 @@ const attackDialog = createAttackDialog($<HTMLDialogElement>("#attack-dialog"), 
   },
 });
 const newGameDialog = createNewGameDialog($<HTMLDialogElement>("#new-game-dialog"), {
-  start: (seed, civ, world, barbarians, difficulty) => {
+  start: (seed, civ, world, barbarians, difficulty, speed) => {
     menus.hideStart();
-    startNewGame(seed, civ, world, true, barbarians, difficulty);
+    startNewGame(seed, civ, world, true, barbarians, difficulty, speed);
   },
   randomSeed,
   showEntry: (key) => codex.show(key),

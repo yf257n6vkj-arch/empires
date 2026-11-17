@@ -99,6 +99,6 @@ export function launchCommands(view: PlayerView): Command[] {
   if (ship.launchedTurn !== null || ship.component < 1 || ship.module < 1 || ship.structural < ship.component + ship.module) return [];
   const complete = ship.module >= WANTED.module && ship.component >= WANTED.component;
   const flight = spaceshipFlight(ship).turns;
-  const lastChance = view.turn + flight >= RULES.maxTurns - 1;
+  const lastChance = view.turn + flight >= view.maxTurns - 1;
   return complete || lastChance ? [{ type: "launchSpaceship" }] : [];
 }

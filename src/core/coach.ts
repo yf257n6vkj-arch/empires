@@ -4,7 +4,7 @@
  * player's view, so it knows exactly what the player could see on screen.
  */
 import coachData from "./data/coach.json";
-import { BUILDINGS, UNIT_TYPES, type BuildingId, type TechId } from "./rules";
+import { BUILDINGS, gameTurn, UNIT_TYPES, type BuildingId, type TechId } from "./rules";
 import type { PlayerView } from "./view";
 
 export const VICTORY_PATHS = ["conquest", "space", "score"] as const;
@@ -107,10 +107,12 @@ export function taskProgress(view: PlayerView, task: CoachTask): TaskProgress {
 
 /** Every stage of the plan with its progress. */
 export function planProgress(view: PlayerView, path: VictoryPath): StageProgress[] {
-  return coachPlan(path).map((stage, index) => {
+  // The target turns are written for the normal game; a quick game moves them to the same point.
+  return coachPlan(path).map((planned, index) => {
+    const stage = { ...planned, by: gameTurn(view, planned.by) };
     const tasks = stage.tasks.map((t) => taskProgress(view, t));
     const done = tasks.every((t) => t.done);
-    const pace = done || view.turn < stage.by - DATA.tightTurns ? "ok" : view.turn <= stage.by ? "tight" : "late";
+    const pace = done || view.turn < stage.by - gameTurn(view, DATA.tightTurns) ? "ok" : view.turn <= stage.by ? "tight" : "late";
     return { stage, index, tasks, done, pace };
   });
 }

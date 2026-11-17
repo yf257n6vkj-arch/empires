@@ -4,7 +4,7 @@
  * game the same window works as the leaderboard and shows only the nations
  * the player knows.
  */
-import { BUILDINGS, isBarbarian, RULES, scoreOf, type CivId, type GameState, type TurnRecord } from "../core";
+import { BUILDINGS, isBarbarian, maxTurns, RULES, scoreOf, type CivId, type GameState, type TurnRecord } from "../core";
 import { t, tn } from "./i18n";
 import { civName, leaderName } from "./i18n/names";
 import { difficultyLabel } from "./newGame";
@@ -65,13 +65,13 @@ export function firstLead(history: TurnRecord[], me: number, others: number[]): 
 }
 
 /** Line chart of one value for the given players, as SVG. */
-function chart(history: TurnRecord[], players: number[], me: number, metric: Metric): string {
+function chart(history: TurnRecord[], players: number[], me: number, metric: Metric, turns: number): string {
   const W = 640;
   const H = 240;
   const L = 40;
   const B = 24;
   const top = 10;
-  const lastTurn = Math.max(RULES.maxTurns, history.at(-1)?.turn ?? 1);
+  const lastTurn = Math.max(turns, history.at(-1)?.turn ?? 1);
   const max = Math.max(1, ...history.flatMap((r) => players.map((p) => r[metric][p] ?? 0)));
   const step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000].find((s) => max / s <= 5) ?? 2000;
   const yMax = Math.ceil(max / step) * step;
@@ -139,7 +139,7 @@ export function createEndScreen(dialog: HTMLDialogElement, host: EndScreenHost) 
     if (s.players[me]!.defeated) return { title: t("Prohrál jsi"), text: t("Padlo tvoje poslední město a tvoje říše zanikla.") };
     return {
       title: t("Žebříček"),
-      text: t("Tah {turn} z {max}. Graf a tabulka ukazují národy, které znáš. Po posledním tahu vyhraje ten, kdo má nejvyšší skóre.", { turn: s.turn, max: RULES.maxTurns }),
+      text: t("Tah {turn} z {max}. Graf a tabulka ukazují národy, které znáš. Po posledním tahu vyhraje ten, kdo má nejvyšší skóre.", { turn: s.turn, max: maxTurns(s) }),
     };
   }
 
@@ -171,7 +171,7 @@ export function createEndScreen(dialog: HTMLDialogElement, host: EndScreenHost) 
     const peak = s.history.reduce<TurnRecord | null>((a, r) => ((r.score[me] ?? 0) > (a?.score[me] ?? -1) ? r : a), null);
     const lead = firstLead(s.history, me, others.map((r) => r.id));
     const facts: [string, string][] = [
-      [t("odehrané tahy"), String(Math.min(s.turn, RULES.maxTurns))],
+      [t("odehrané tahy"), String(Math.min(s.turn, maxTurns(s)))],
       [t("obtížnost"), difficultyLabel(s.difficulty)],
       [t("založená města"), String(p.citiesFounded)],
       [t("dobytá města"), String(p.captured)],
@@ -199,7 +199,7 @@ export function createEndScreen(dialog: HTMLDialogElement, host: EndScreenHost) 
 
     const tab = (m: Metric, label: string) => `<button type="button" class="${metric === m ? "on" : ""}" data-metric="${m}">${label}</button>`;
     const history = s.history.length
-      ? `<div class="ec-tabs">${tab("score", t("skóre"))}${tab("cities", t("města"))}${tab("techs", t("objevy"))}</div>${chart(s.history, ids, me, metric)}`
+      ? `<div class="ec-tabs">${tab("score", t("skóre"))}${tab("cities", t("města"))}${tab("techs", t("objevy"))}</div>${chart(s.history, ids, me, metric, maxTurns(s))}`
       : `<p class="small muted">${t("Průběh hry se začal zapisovat až v nové verzi hry, graf se ukáže po dalším tahu.")}</p>`;
     const table = `<table class="ec-table">
       <thead><tr><th></th><th>${t("národ")}</th><th>${t("skóre")}</th><th>${t("města")}</th><th>${t("obyvatelé")}</th><th>${t("objevy")}</th><th>${t("divy")}</th></tr></thead>

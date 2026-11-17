@@ -12,7 +12,7 @@ import { distance, neighbors8, type Point } from "./geometry";
 import type { GameEvent } from "./events";
 import { canBuildUnitType, freeTechChoice, knowsTech, learnTechDraft } from "./economy";
 import { Rng } from "./rng";
-import { RULES, TERRAINS, UNIT_TYPES, type RuinOutcome, type UnitTypeId } from "./rules";
+import { gameTurn, RULES, TERRAINS, UNIT_TYPES, type RuinOutcome, type UnitTypeId } from "./rules";
 import { barbarianId, isBarbarian, type GameState, type Unit } from "./state";
 import { idx, makeUnit, reveal } from "./world";
 
@@ -108,7 +108,7 @@ function landingTile(state: GameState, rng: Rng): Point | null {
 export function barbarianTurnDraft(draft: GameState, events: GameEvent[]): void {
   if (draft.barbarians === "none") return;
   const level = RULES.barbarians.levels[draft.barbarians];
-  if (draft.turn < level.startTurn) return;
+  if (draft.turn < gameTurn(draft, level.startTurn)) return;
   const rng = Rng.fromState(draft.rng);
   const size = () => level.groupMin + rng.int(level.groupMax - level.groupMin + 1);
   if (barbarianUnits(draft).length < level.maxUnits && rng.int(100) < level.uprisingPct) {
@@ -128,9 +128,9 @@ function ruinOutcomes(draft: GameState, unit: Unit): RuinOutcome[] {
   const player = draft.players[unit.owner]!;
   const out: RuinOutcome[] = ["gold", "mercenaries", "empty"];
   if (freeTechChoice(player)) out.push("tech");
-  if (draft.turn < r.settlersBeforeTurn) out.push("settlers");
+  if (draft.turn < gameTurn(draft, r.settlersBeforeTurn)) out.push("settlers");
   const lonely = !draft.cities.some((c) => distance(c, unit) <= r.barbarianCityDistance);
-  if (draft.barbarians !== "none" && draft.turn >= r.barbariansFromTurn && lonely) out.push("barbarians");
+  if (draft.barbarians !== "none" && draft.turn >= gameTurn(draft, r.barbariansFromTurn) && lonely) out.push("barbarians");
   return out;
 }
 

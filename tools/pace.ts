@@ -38,11 +38,18 @@ import {
   type GameState,
   type Point,
   type ProductionItem,
+  maxTurns,
+  QUICK_WORLD,
+  type GameSpeed,
 } from "../src/core";
 
-const games = Number(process.argv[2] ?? 100);
+const positional = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+const games = Number(positional[0] ?? 100);
+// `--speed=quick` plays the quick game: 60 turns on a small world with two opponents.
+const speed = (process.argv.find((a) => a.startsWith("--speed="))?.split("=")[1] ?? "normal") as GameSpeed;
 // Optional world settings as the eight digits of a map code, e.g. `npm run pace -- 100 24011111` for a large world.
-const worldDigits = process.argv[3];
+const worldDigits = positional[1] ?? (speed === "quick" ? QUICK_WORLD : undefined);
+const TECH_CHECKS = speed === "quick" ? [20, 30, 40, 50, 60] : [40, 60, 80, 100, 120];
 
 // Experiments without editing the data files:
 //   PACE_SET="growthFoodBase=6,researchCostBase=10" PACE_COST=0.6 npm run pace -- 50
@@ -55,6 +62,11 @@ for (const pair of (process.env.PACE_GOV ?? "").split(",").filter(Boolean)) {
   const [key, value] = pair.split("=");
   const [gov, field] = key!.split(".");
   (GOVERNMENTS as unknown as Record<string, Record<string, unknown>>)[gov!]![field!] = field === "tilePenalty" || field === "tradeBonus" ? value === "1" : Number(value);
+}
+//   PACE_SPEED="sciencePct=250,productionPct=200" npm run pace -- 50 --speed=quick
+for (const pair of (process.env.PACE_SPEED ?? "").split(",").filter(Boolean)) {
+  const [key, value] = pair.split("=");
+  (RULES.speeds[speed] as unknown as Record<string, number>)[key!] = Number(value);
 }
 const costScale = Number(process.env.PACE_COST ?? 1);
 if (costScale !== 1) {
@@ -305,14 +317,14 @@ function playOne(seed: string): Result {
   targets.clear();
   workers.clear();
   founders.clear();
-  let state = newGame({ seed, playerCount: (parseGameCode(seed).world?.opponents ?? 3) + 1 });
+  let state = newGame({ seed, playerCount: (parseGameCode(seed).world?.opponents ?? 3) + 1, speed });
   const eraTurn: Record<number, number | null> = { 2: null, 3: null, 4: null, 5: null };
   const techsAt: Record<number, number> = {};
   let allTechsTurn: number | null = null;
   let warmings = 0;
   const disasters: [number, number] = [0, 0];
   const total = Object.keys(TECHS).length;
-  while (state.turn <= RULES.maxTurns) {
+  while (state.turn <= maxTurns(state)) {
     state = manageEconomy(state);
     state = moveUnits(state);
     state = manageCities(state);
@@ -329,7 +341,7 @@ function playOne(seed: string): Result {
     const era = currentEra(me);
     for (const e of [2, 3, 4, 5]) if (era >= e && eraTurn[e] === null) eraTurn[e] = state.turn;
     if (allTechsTurn === null && me.techs.length === total) allTechsTurn = state.turn;
-    if ([40, 60, 80, 100, 120].includes(state.turn - 1)) techsAt[state.turn - 1] = me.techs.length;
+    if (TECH_CHECKS.includes(state.turn - 1)) techsAt[state.turn - 1] = me.techs.length;
     if (process.env.PACE_DEBUG && state.turn % 10 === 0) {
       const mine = state.cities.filter((c) => c.owner === ME);
       const rs = mine.map((c) => cityReport(state, c));
@@ -381,7 +393,7 @@ function quantiles(values: (number | null)[]): string {
 
 console.log(`${games} partií za ${seconds} s, cena výzkumu ${RULES.researchCostBase} + ${RULES.researchCostPerTech} × počet technologií`);
 for (const e of [2, 3, 4, 5]) console.log(`éra ${e} v tahu: ${quantiles(results.map((r) => r.eraTurn[e] ?? null))}`);
-for (const t of [40, 60, 80, 100, 120]) console.log(`technologie v tahu ${t}: ${quantiles(results.map((r) => r.techsAt[t] ?? null))}`);
+for (const t of TECH_CHECKS) console.log(`technologie v tahu ${t}: ${quantiles(results.map((r) => r.techsAt[t] ?? null))}`);
 console.log(`celý strom v tahu: ${quantiles(results.map((r) => r.allTechsTurn))}`);
 console.log(`města v tahu 120: ${quantiles(results.map((r) => r.cities))}`);
 console.log(`obyvatel v tahu 120: ${quantiles(results.map((r) => r.population))}`);

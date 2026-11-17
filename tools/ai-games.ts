@@ -11,7 +11,7 @@
  * Prints how many cities and technologies the players have over time, how
  * often someone gets stuck with one city, and how many cities stand on islands.
  */
-import { isBarbarian, mainContinent, scoreOf, newGame, parseGameCode, type BarbarianLevel, type Difficulty, type GameState } from "../src/core";
+import { isBarbarian, mainContinent, scoreOf, newGame, parseGameCode, QUICK_WORLD, type BarbarianLevel, type Difficulty, type GameSpeed, type GameState } from "../src/core";
 import { playTurn } from "../src/ai";
 import { isWarship } from "../src/ai/navy";
 import { isAircraft } from "../src/ai/air";
@@ -27,10 +27,12 @@ const seatCities = { reference: [] as number[], others: [] as number[] };
 /** Score of seat 0 in percent of the best rival's score at the end. */
 const scoreShare: number[] = [];
 const games = Number(args[0] ?? 20);
+/** `--speed=quick` plays the quick game: 60 turns on a small world with two opponents. */
+const speed = (process.argv.find((a) => a.startsWith("--speed="))?.split("=")[1] ?? "normal") as GameSpeed;
 /** First seed number, so several runs can share the work without playing the same maps. */
 const from = Number(process.argv.find((a) => a.startsWith("--from="))?.split("=")[1] ?? 0);
-const digits = args[1];
-const CHECKS = [20, 40, 60, 80, 100, 120];
+const digits = args[1] ?? (speed === "quick" ? QUICK_WORLD : undefined);
+const CHECKS = speed === "quick" ? [10, 20, 30, 40, 50, 60] : [20, 40, 60, 80, 100, 120];
 
 type Row = { cities: number[]; techs: number[]; units: number[] };
 const rows = new Map<number, Row>(CHECKS.map((t) => [t, { cities: [], techs: [], units: [] }]));
@@ -80,7 +82,7 @@ for (let g = from; g < from + games; g++) {
   const seed = digits ? `ai-${g}/${digits}` : `ai-${g}`;
   try {
     const world = parseGameCode(seed).world;
-    let s: GameState = newGame({ seed, playerCount: (world?.opponents ?? 3) + 1, opponentUnits: true, barbarians: level, difficulty });
+    let s: GameState = newGame({ seed, playerCount: (world?.opponents ?? 3) + 1, opponentUnits: true, barbarians: level, difficulty, speed });
     // With a difficulty set, seat 0 stands in for the person: normal skill and no bonus.
     s.players[0]!.isHuman = difficultyArg !== undefined;
     for (const p of s.players) {

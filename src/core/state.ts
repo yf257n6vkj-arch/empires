@@ -4,10 +4,10 @@
  */
 import type { Point } from "./geometry";
 import type { GovernorGoal } from "./governor";
-import type { BarbarianLevel, BuildingId, Difficulty, CivId, GovernmentId, ImprovementId, NationId, TechId, TerrainId, UnitTypeId } from "./rules";
+import type { BarbarianLevel, BuildingId, Difficulty, CivId, GameSpeed, GovernmentId, ImprovementId, NationId, TechId, TerrainId, UnitTypeId } from "./rules";
 import type { RngState } from "./rng";
 
-export const STATE_VERSION = 18;
+export const STATE_VERSION = 19;
 
 export interface GameMap {
   width: number;
@@ -218,6 +218,8 @@ export interface GameState {
   barbarians: BarbarianLevel;
   /** How strong the computer players are. */
   difficulty: Difficulty;
+  /** How long the game is; quick games have half the turns and faster cities. */
+  speed: GameSpeed;
   /** One record per finished turn, for the charts at the end of the game. */
   history: TurnRecord[];
 }

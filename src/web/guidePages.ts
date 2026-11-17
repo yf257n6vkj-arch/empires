@@ -34,7 +34,7 @@ export const GUIDE_KEYS = [
 export type GuideKey = (typeof GUIDE_KEYS)[number];
 
 /** Rule numbers the guide texts may mention as {name}. */
-export function guideNumbers(): Record<string, number> {
+export function guideNumbers(turns: number = RULES.speeds.normal.maxTurns): Record<string, number> {
   return {
     contentBase: RULES.contentBase,
     maxCitySize: RULES.maxCitySize,
@@ -52,7 +52,7 @@ export function guideNumbers(): Record<string, number> {
     corruptionMaxPct: RULES.corruptionMaxPct,
     pollutionFree: RULES.pollutionFree,
     queueLength: RULES.queueLength,
-    maxTurns: RULES.maxTurns,
+    maxTurns: turns,
     scoreTech: RULES.score.tech,
     treatyTurns: RULES.diplomacy.treatyTurns,
     scoreWonder: RULES.score.wonder,
@@ -76,7 +76,7 @@ export function guideNumbers(): Record<string, number> {
     pollutionCleanTurns: RULES.pollutionCleanTurns,
     pollutionPctPerPoint: RULES.pollutionPctPerPoint,
     disasterPct: RULES.disasterPct,
-    disasterStart: RULES.disasterStartTurn,
+    disasterStart: Math.round((RULES.disasterStartTurn * turns) / RULES.speeds.normal.maxTurns),
   };
 }
 

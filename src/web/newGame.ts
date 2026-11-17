@@ -15,6 +15,7 @@ import {
   WORLD_RULES,
   RULES,
   type CivId,
+  type GameSpeed,
   type WorldChoice,
 } from "../core";
 import { codexPage, pictureOf } from "./codex";
@@ -23,7 +24,7 @@ import { t, tn } from "./i18n";
 import { cityLabel, civName, leaderName, techName } from "./i18n/names";
 
 export interface NewGameHost {
-  start(seed: string, civ: CivId | undefined, world: WorldChoice, barbarians: BarbarianLevel, difficulty: Difficulty): void;
+  start(seed: string, civ: CivId | undefined, world: WorldChoice, barbarians: BarbarianLevel, difficulty: Difficulty, speed: GameSpeed): void;
   randomSeed(): string;
   /** Opens an encyclopedia page, e.g. "civ-czechs" or "lead-czechs". */
   showEntry(key: string): void;
@@ -111,6 +112,29 @@ function loadBarbarians(): BarbarianLevel {
   }
 }
 
+const SPEED_KEY = "empires.speed";
+const SPEEDS: GameSpeed[] = ["quick", "normal"];
+
+function loadSpeed(): GameSpeed {
+  try {
+    const v = localStorage.getItem(SPEED_KEY) as GameSpeed | null;
+    return v && SPEEDS.includes(v) ? v : "normal";
+  } catch {
+    return "normal";
+  }
+}
+
+export function speedLabel(speed: GameSpeed): string {
+  return speed === "quick" ? t("Rychlá") : t("Normální");
+}
+
+function speedHint(speed: GameSpeed): string {
+  const turns = RULES.speeds[speed].maxTurns;
+  return speed === "quick"
+    ? t("Hra skončí po {turns} tazích a zabere asi 25 minut. Svět je malý a soupeři dva, výzkum i stavby jdou rychleji všem stejně.", { turns })
+    : t("Hra skončí po {turns} tazích a vydrží na celý večer.", { turns });
+}
+
 const DIFFICULTY_KEY = "empires.difficulty";
 
 function loadDifficulty(): Difficulty {
@@ -187,6 +211,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
   let world: WorldChoice = loadChoice();
   let barbarians: BarbarianLevel = loadBarbarians();
   let difficulty: Difficulty = loadDifficulty();
+  let speed: GameSpeed = loadSpeed();
   let view: "nations" | "world" = "nations";
 
   function setWorld(next: WorldChoice, firstGame: boolean): void {
@@ -227,6 +252,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
       <div class="ng">
         <div class="dialog-head"><h2>${t("Nastav si svět")}</h2></div>
         <p class="muted">${t("Výchozí svět odpovídá jedné partii na večer. Větší svět a víc soupeřů partii prodlouží.")}</p>
+        <div class="ng-row"><div class="ng-label">${t("Délka hry")}<span class="muted small">${escapeHtml(speedHint(speed))}</span></div><div class="ng-opts">${SPEEDS.map((s) => `<button type="button" class="ng-opt ${speed === s ? "on" : ""}" data-speed="${s}"><span>${speedLabel(s)}</span><span class="muted small">${tn("{n} tah|{n} tahy|{n} tahů", RULES.speeds[s].maxTurns)}</span></button>`).join("")}</div></div>
         ${row("size")}
         <div class="ng-row"><div class="ng-label">${t("Počet soupeřů")}<span class="muted small">${t("Na malý svět se vejdou nejvýš 3, na střední 4 a na velký 5.")}</span></div><div class="ng-opts">${opponentButtons}</div></div>
         ${row("shape")}
@@ -262,9 +288,29 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
     dialog.querySelector('[data-act="surprise"]')!.addEventListener("click", () => {
       setWorld({ size: "random", opponents: "random", shape: "random", land: "random", temperature: "random", rainfall: "random", age: "random", resources: "random" }, firstGame);
     });
+    dialog.querySelectorAll<HTMLButtonElement>("[data-speed]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const next = b.dataset.speed as GameSpeed;
+        if (next === speed) return;
+        speed = next;
+        try {
+          localStorage.setItem(SPEED_KEY, speed);
+        } catch {
+          // Not remembered without storage.
+        }
+        // A quick game wants a small world, a normal one the standard size.
+        setWorld({ ...world, size: speed === "quick" ? "small" : DEFAULT_WORLD_CHOICE.size, opponents: "auto" }, firstGame);
+      }),
+    );
     dialog.querySelector('[data-act="default"]')!.addEventListener("click", () => {
       barbarians = "few";
       difficulty = "normal";
+      speed = "normal";
+      try {
+        localStorage.setItem(SPEED_KEY, speed);
+      } catch {
+        // Not remembered without storage.
+      }
       setWorld({ ...DEFAULT_WORLD_CHOICE }, firstGame);
     });
     dialog.querySelectorAll<HTMLButtonElement>("[data-difficulty]").forEach((b) =>
@@ -340,7 +386,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
               ? `${t("Hraješ za národ <b>{civ}</b> a vládne {leader}, první město bude {capital}.", { civ: escapeHtml(civName(c)), leader: escapeHtml(leaderName(c)), capital: escapeHtml(cityLabel(CIVS[c].cities[0]!)) })}`
               : t("Národ hra vybere náhodně.")
           }</div>
-          <div class="ng-world">${shapePicture(world.shape === "random" ? "continent" : world.shape)}<span>${t("Svět")}: <b>${escapeHtml(worldSummary(world))}</b> · ${t("obtížnost")} <b>${escapeHtml(difficultyLabel(difficulty))}</b></span> <button type="button" data-act="world">${t("Nastavit svět")}</button></div>
+          <div class="ng-world">${shapePicture(world.shape === "random" ? "continent" : world.shape)}<span>${t("Svět")}: <b>${escapeHtml(worldSummary(world))}</b> · ${t("obtížnost")} <b>${escapeHtml(difficultyLabel(difficulty))}</b> · <b>${tn("{n} tah|{n} tahy|{n} tahů", RULES.speeds[speed].maxTurns)}</b></span> <button type="button" data-act="world">${t("Nastavit svět")}</button></div>
           <label class="ng-seed" title="${t("Kód mapy s nastavením světa, třeba z jiné partie, má přednost před nastavením.")}">${t("Kód mapy")} <input type="text" spellcheck="false" placeholder="${t("náhodný")}" data-seed></label>
           <button type="button" class="primary" data-act="start">${t("Začít hru")}</button>
         </div>
@@ -362,7 +408,7 @@ export function createNewGameDialog(dialog: HTMLDialogElement, host: NewGameHost
       const typed = dialog.querySelector<HTMLInputElement>("[data-seed]")!.value.trim();
       const seed = typed && parseGameCode(typed).seed ? typed : host.randomSeed();
       dialog.close();
-      host.start(seed, chosen === "random" ? undefined : chosen, world, barbarians, difficulty);
+      host.start(seed, chosen === "random" ? undefined : chosen, world, barbarians, difficulty, speed);
     });
   }
 

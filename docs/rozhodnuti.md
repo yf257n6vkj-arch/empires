@@ -2,6 +2,18 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 17. 11. 2026: Rychlá hra na 60 tahů
+
+Druhý návrh pro syna. Hodina u obrazovky denně nestačí na partii, která trvá celý večer, a průzkum ukázal, že krátké partie fungují. Polytopia má režim na 30 tahů a Sid Meier radil zmenšovat hru, dokud zábava nezačne mizet. Michal schválil volbu délky v nastavení světa.
+
+Rychlá hra skončí po 60 tazích a měla by zabrat asi 25 minut. Svět je malý (34 × 24) a soupeři dva, obojí jde ručně změnit. Všem stejně se násobí přebytek štítů 2,2krát, výzkumu 3,2krát a jídla 2krát. Nedostatek jídla se nenásobí. Čísla jsou v game.json pod speeds a hra si volbu pamatuje. Hry uložené dřív se nahrají jako normální.
+
+Všechno, co bylo psané na tah normální hry, se v rychlé hře posune na stejné místo partie. Barbaři se objevují od 25. tahu místo od 50., z ruin vylézají od 15. tahu, katastrofy začínají v 10. tahu a termíny etap u Sovy se zkrátí na polovinu. Soupeři podle toho počítají i začátek her, kdy ještě neválčí, a přechod na republiku.
+
+Tempo jsem ladil měřicím skriptem na stovkách map. Pomalejší násobky (1,7 a 1,9) nestačily, rychlá hra skončila zhruba tam, kde je normální v 62. tahu. S novými čísly skončí tam, kde je normální kolem 80. tahu, tedy v pozdních érách před tanky a vesmírnou lodí. Další zrychlování už skoro nepomáhalo, protože brzdou je zakládání měst a cesta osadníků po mapě. Vesmírný závod v rychlé hře proto prakticky vyhrát nejde a rozhoduje dobytí nebo skóre.
+
+V 50 partiích počítačů neselhala žádná, válka byla v 47 z nich a první začala v mediánu ve 34. tahu. Na partii připadá asi 11 bitev, v normální hře 34. Na minutu hraní je to v rychlé hře méně bojů než v normální, protože soupeři pořád dlouho staví armádu, než si troufnou zaútočit. Tohle zůstává otevřené.
+
 ## 17. 11. 2026: Boje se přehrávají na mapě
 
 Michal chtěl hru zábavnější pro syna, kterého baví hlavně hry, kde bojují armády. Z průzkumu vyšlo, že nejhorší odpověď hry na hráčovo rozhodnutí je, když se nic nestane (Sid Meier na GDC 2012), a že děti baví zpětná vazba a to, co je vidět a slyšet (Malone 1981). U nás boj končil textovou zprávou.

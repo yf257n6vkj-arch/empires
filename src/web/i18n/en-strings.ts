@@ -2403,4 +2403,14 @@ export const EN_STRINGS: Record<string, string> = {
     "Defeat",
   "Šance na výhru byla {pct} %.":
     "The chance of winning was {pct} %.",
+  "Rychlá":
+    "Quick",
+  "Normální":
+    "Normal",
+  "Hra skončí po {turns} tazích a zabere asi 25 minut. Svět je malý a soupeři dva, výzkum i stavby jdou rychleji všem stejně.":
+    "The game ends after {turns} turns and takes about 25 minutes. The world is small with two opponents, and research and building go faster for everyone alike.",
+  "Hra skončí po {turns} tazích a vydrží na celý večer.":
+    "The game ends after {turns} turns and lasts a whole evening.",
+  "Délka hry":
+    "Game length",
 };

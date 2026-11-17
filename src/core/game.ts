@@ -7,7 +7,7 @@ import type { GameEvent } from "./events";
 import { DEFAULT_MAP_OPTIONS, generateMap, type MapOptions } from "./mapgen";
 import { Rng } from "./rng";
 import { mapOptionsFor, parseGameCode, type WorldSettings } from "./setup";
-import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, TERRAINS, UNIT_TYPES, type BarbarianLevel, type CivId, type Difficulty, type TechId } from "./rules";
+import { BUILDING_IDS, CIV_IDS, CIVS, RULES, TECH_IDS, TERRAINS, UNIT_TYPES, type BarbarianLevel, type CivId, type Difficulty, type GameSpeed, type TechId } from "./rules";
 import { distance, type Point } from "./geometry";
 import { chooseStartPositions } from "./start";
 import { canResearch, clampRate, fallbackProduction, fitRates, startingEconomy } from "./economy";
@@ -30,6 +30,8 @@ export interface NewGameOptions {
   civ?: CivId;
   /** How many barbarians; none when omitted. */
   barbarians?: BarbarianLevel;
+  /** Length of the game; normal when omitted. */
+  speed?: GameSpeed;
   /** How strong the computer players are; normal when omitted. */
   difficulty?: Difficulty;
 }
@@ -113,6 +115,7 @@ export function newGame(options: NewGameOptions): GameState {
     victory: null,
     barbarians: options.barbarians ?? "none",
     difficulty: options.difficulty ?? "normal",
+    speed: options.speed ?? "normal",
     history: [],
   };
   placeRuins(map, starts, rng.fork("ruins"));
@@ -302,6 +305,10 @@ export function migrateState(saved: { version?: number } & Record<string, unknow
   if (version <= 17) {
     // Version 18 records every turn for the end of the game; older turns are not known.
     state.history ??= [];
+  }
+  if (version <= 18) {
+    // Version 19 adds the quick game; every older game is a normal one.
+    state.speed ??= "normal";
   }
   state.version = STATE_VERSION;
   return state;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apply, applyCommand, playerView, RULES, scoreOf, type GameState } from "../src/core";
+import { apply, applyCommand, maxTurns, playerView, RULES, scoreOf, type GameState } from "../src/core";
 import { addUnit, stateFromAscii } from "./helpers";
 
 /** Two nations at war, each with one city. */
@@ -55,11 +55,11 @@ describe("score", () => {
   it("gives the win to the highest score after the last turn", () => {
     let s = twoNations();
     s.cities[1]!.size = 5;
-    s.turn = RULES.maxTurns;
+    s.turn = maxTurns(s);
     s = apply(s, { type: "endTurn" });
     expect(s.victory).toBeNull();
     s = apply(s, { type: "endTurn" });
-    expect(s.victory).toMatchObject({ player: 1, kind: "score", turn: RULES.maxTurns });
+    expect(s.victory).toMatchObject({ player: 1, kind: "score", turn: maxTurns(s) });
   });
 });
 

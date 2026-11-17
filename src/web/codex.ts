@@ -157,6 +157,8 @@ export function codexMissingPages(): string[] {
 
 export interface CodexHost {
   openTech(tech: TechId): void;
+  /** Length of the current game in turns. */
+  maxTurns(): number;
 }
 
 export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
@@ -271,7 +273,7 @@ export function createCodex(dialog: HTMLDialogElement, host: CodexHost) {
 
   function renderGuide(e: Entry): void {
     const page = guidePage(e.id as GuideKey);
-    const numbers = guideNumbers();
+    const numbers = guideNumbers(host.maxTurns());
     const paragraphs = page.text
       .split(/\n\s*\n/)
       .map((p) => `<p class="tp-text">${escapeHtml(p.trim()).replace(/\{(\w+)\}/g, (m, k: string) => (k in numbers ? String(numbers[k]) : m))}</p>`)

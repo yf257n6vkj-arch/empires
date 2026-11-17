@@ -190,3 +190,13 @@ export function parseGameCode(code: string): { seed: string; world: WorldSetting
 export function worldOfGame(code: string): WorldSettings {
   return parseGameCode(code).world ?? DEFAULT_WORLD;
 }
+
+/** The world of a quick game: the standard world made small, with the opponents that size suggests. */
+export const QUICK_WORLD_SETTINGS: Readonly<WorldSettings> = {
+  ...DEFAULT_WORLD,
+  size: "small",
+  opponents: WORLD_RULES.sizes.small.opponents,
+};
+
+/** The eight digits of the quick world, as they follow the seed in a map code. */
+export const QUICK_WORLD = SETTING_KEYS.map((k) => digitOf(QUICK_WORLD_SETTINGS, k)).join("");

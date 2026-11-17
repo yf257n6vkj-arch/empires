@@ -86,7 +86,7 @@ export function warMotivation(view: PlayerView, rival: RivalView, land: Int32Arr
   const add = (item: string, value: number) => reasons.push({ item, value });
   const nature = CIVS[view.civ].personality;
   add("nature", nature === "war" ? 10 : nature === "expansion" ? -10 : -25);
-  if (view.turn < 30) add("early game", -100);
+  if (view.turn < view.maxTurns / 4) add("early game", -100);
   const footTarget = targetCity(view, land, [rival.id]);
   // A city across the sea can be fought for too, with a landing, but that is harder.
   const sea = footTarget ? null : seaInvasion(view, land, [rival.id]);

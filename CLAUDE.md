@@ -7,8 +7,8 @@ Browser turn-based strategy in the style of Civilization 1, built by Michal with
 - `npm test` – vitest, must pass before every commit
 - `npm run typecheck` – checks the whole repo and separately that `src/core` compiles without DOM types
 - `npm run check-maps -- 500` – headless map statistics; run after any change to mapgen or start positions
-- `npm run pace -- 300` – a scripted player plays 120 turns on many maps and reports the pace of research and growth; run after any change to economy numbers (it is a measuring tool, not the AI)
-- `npm run ai-games -- 50` – headless games of computer players only; run after any change to the AI and judge it on dozens of games
+- `npm run pace -- 300` – a scripted player plays 120 turns on many maps and reports the pace of research and growth; run after any change to economy numbers (it is a measuring tool, not the AI); add `--speed=quick` for the 60-turn quick game
+- `npm run ai-games -- 50` – headless games of computer players only; run after any change to the AI and judge it on dozens of games (also `--speed=quick`)
 - `npm run build` – production build into `dist/`
 - `npm run dev` – local dev server
 

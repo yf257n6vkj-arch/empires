@@ -5,7 +5,7 @@
  */
 import { cityHappiness } from "./city";
 import type { GameEvent } from "./events";
-import { BUILDINGS, RULES } from "./rules";
+import { BUILDINGS, maxTurns, RULES } from "./rules";
 import { isBarbarian, type GameState, type PlayerId } from "./state";
 
 export interface Score {
@@ -66,13 +66,13 @@ export function conquestDraft(draft: GameState, events: GameEvent[]): void {
 
 /** After the last turn the nation with the highest score wins (mutates the draft). */
 export function scoreVictoryDraft(draft: GameState, events: GameEvent[]): void {
-  if (draft.victory || draft.turn <= RULES.maxTurns) return;
+  if (draft.victory || draft.turn <= maxTurns(draft)) return;
   let best: { id: PlayerId; total: number } | null = null;
   for (const id of nationsAlive(draft)) {
     const total = scoreOf(draft, id).total;
     if (!best || total > best.total) best = { id, total };
   }
   if (!best) return;
-  draft.victory = { player: best.id, kind: "score", turn: RULES.maxTurns };
+  draft.victory = { player: best.id, kind: "score", turn: maxTurns(draft) };
   events.push({ type: "gameWon", player: best.id, kind: "score" });
 }

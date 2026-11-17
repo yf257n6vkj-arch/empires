@@ -2395,4 +2395,12 @@ export const EN_STRINGS: Record<string, string> = {
     "Guide",
   "{n} rada|{n} rady|{n} rad":
     "{n} tip|{n} tips",
+  "Vítězství!":
+    "Victory!",
+  "Ubránil ses!":
+    "You held out!",
+  "Prohra":
+    "Defeat",
+  "Šance na výhru byla {pct} %.":
+    "The chance of winning was {pct} %.",
 };

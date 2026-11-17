@@ -82,6 +82,13 @@ export type GameEvent =
       alsoLost: number;
       promoted: boolean;
       winChance: number;
+      /** Where the attacker struck from, for showing the fight. Missing in games saved before. */
+      from?: Point;
+      /** Hit points of both at the start of the fight. */
+      attackerHp?: number;
+      defenderHp?: number;
+      /** The rounds in order: "a" when the attacker hit, "d" when the defender hit. */
+      rounds?: string;
     }
   | { type: "cityCaptured"; cityId: CityId; from: PlayerId; to: PlayerId; gold: number; tech: TechId | null; lostBuildings: BuildingId[] }
   | { type: "cityDestroyed"; cityId: CityId; name: string; owner: PlayerId; by: PlayerId; gold: number; tech: TechId | null }

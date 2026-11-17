@@ -3703,3 +3703,117 @@ function drawFortifiedBadge(ctx: CanvasRenderingContext2D, x: number, y: number,
 function drawUnitFigure(ctx: CanvasRenderingContext2D, u: DrawUnit, color: string): void {
   drawUnitArt(ctx, u.type, color, u.working);
 }
+
+// ---------- battles ----------
+
+/** One moment of a fight being shown on the map; both fighters are drawn here, not with the other units. */
+export interface BattleFrame {
+  attacker: DrawUnit;
+  defender: DrawUnit;
+  /** How far the attacker has stepped towards the defender, 0..1 of the way to the contact point. */
+  lunge: number;
+  attackerHealth: number;
+  defenderHealth: number;
+  /** Who took the last blow and how long ago, 0 = just now, 1 = long gone. */
+  hit: "attacker" | "defender" | null;
+  hitAge: number;
+  /** The loser falls at the end: 0 = still standing, 1 = gone. */
+  fallen: "attacker" | "defender" | null;
+  fall: number;
+  /** A golden burst over a new veteran, 0..1 while it plays. */
+  star: number;
+  starOn: "attacker" | "defender" | null;
+}
+
+/** Draws a fight over the map drawn by `draw`, in the same camera. */
+export function drawBattle(ctx: CanvasRenderingContext2D, f: BattleFrame): void {
+  ctx.save();
+  activeTilt = tiltSetting;
+  applyScale(ctx);
+  const base = (u: DrawUnit) => ({ x: u.x * TILE + TILE / 2, y: u.y * TILE + 21 });
+  const a0 = base(f.attacker);
+  const d0 = base(f.defender);
+  // The attacker steps up about a third of the way; the blows land between them.
+  const ax = a0.x + (d0.x - a0.x) * 0.3 * f.lunge;
+  const ay = a0.y + (d0.y - a0.y) * 0.3 * f.lunge;
+  const contact = { x: (ax + d0.x) / 2, y: (ay + d0.y) / 2 - 9 };
+  const side = (who: "attacker" | "defender", u: DrawUnit, x: number, y: number, health: number) => {
+    let fx = x;
+    let fy = y;
+    let alpha = 1;
+    if (f.hit === who && f.hitAge < 1) fx += Math.sin(f.hitAge * 34) * 1.8 * (1 - f.hitAge);
+    if (f.fallen === who) {
+      alpha = 1 - f.fall;
+      fy += f.fall * 5;
+    }
+    if (alpha <= 0.02) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    upright(ctx, fx, fy, () => {
+      drawMiniature(ctx, { ...u, health: undefined }, fx, fy, 1, false, 1);
+      // A big health bar over each fighter, green to red.
+      const w = 16;
+      const bx = fx - w / 2;
+      const by = fy - 24;
+      ctx.fillStyle = "rgba(20, 16, 12, 0.9)";
+      ctx.fillRect(bx - 0.7, by - 0.7, w + 1.4, 3.4);
+      ctx.fillStyle = health > 0.6 ? "#5fbf3f" : health > 0.3 ? "#e3b62c" : "#d9452b";
+      ctx.fillRect(bx, by, Math.max(0, w * health), 2);
+      if (f.hit === who && f.hitAge < 0.5) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.7 * (1 - f.hitAge * 2)})`;
+        ctx.fillRect(bx, by, w, 2);
+      }
+    });
+    ctx.restore();
+  };
+  side("defender", f.defender, d0.x, d0.y, f.defenderHealth);
+  side("attacker", f.attacker, ax, ay, f.attackerHealth);
+  // Sparks where the blow lands.
+  if (f.hit && f.hitAge < 0.6) {
+    const k = 1 - f.hitAge / 0.6;
+    upright(ctx, contact.x, contact.y + 9, () => {
+      ctx.lineCap = "round";
+      for (let i = 0; i < 9; i++) {
+        const ang = (i / 9) * Math.PI * 2 + f.hitAge * 2;
+        const r0 = 1.5 + (1 - k) * 3;
+        const r1 = r0 + 3 + k * 4;
+        ctx.strokeStyle = i % 2 ? `rgba(255, 236, 140, ${k})` : `rgba(255, 255, 255, ${k})`;
+        ctx.lineWidth = 0.9;
+        ctx.beginPath();
+        ctx.moveTo(contact.x + Math.cos(ang) * r0, contact.y + Math.sin(ang) * r0);
+        ctx.lineTo(contact.x + Math.cos(ang) * r1, contact.y + Math.sin(ang) * r1);
+        ctx.stroke();
+      }
+      const glow = ctx.createRadialGradient(contact.x, contact.y, 0, contact.x, contact.y, 6);
+      glow.addColorStop(0, `rgba(255, 245, 200, ${0.9 * k})`);
+      glow.addColorStop(1, "rgba(255, 200, 80, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(contact.x, contact.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+  // A golden star bursting over a fighter that just became a veteran.
+  if (f.starOn && f.star > 0) {
+    const u = f.starOn === "attacker" ? { x: ax, y: ay } : d0;
+    const k = f.star;
+    upright(ctx, u.x, u.y, () => {
+      const cy = u.y - 30 - k * 4;
+      ctx.globalAlpha = Math.min(1, (1 - k) * 3);
+      ctx.fillStyle = "#f2c53a";
+      ctx.strokeStyle = "rgba(60, 40, 5, 0.9)";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 ? 2.6 : 6 + k * 2;
+        const ang = -Math.PI / 2 + (i * Math.PI) / 5;
+        ctx.lineTo(u.x + Math.cos(ang) * r, cy + Math.sin(ang) * r);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+  }
+  ctx.restore();
+}

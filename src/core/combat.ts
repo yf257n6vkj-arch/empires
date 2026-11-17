@@ -245,9 +245,18 @@ export function attackDraft(draft: GameState, attacker: Unit, to: Point, rng: Rn
   const defender = odds.defender;
   const attackerFp = UNIT_TYPES[attacker.type].firepower;
   const defenderFp = UNIT_TYPES[defender.type].firepower;
+  const from = { x: attacker.x, y: attacker.y };
+  const attackerHp = attacker.hp;
+  const defenderHp = defender.hp;
+  let rounds = "";
   while (attacker.hp > 0 && defender.hp > 0) {
-    if (rng.next() < odds.roundChance) defender.hp = Math.max(0, defender.hp - attackerFp);
-    else attacker.hp = Math.max(0, attacker.hp - defenderFp);
+    if (rng.next() < odds.roundChance) {
+      defender.hp = Math.max(0, defender.hp - attackerFp);
+      rounds += "a";
+    } else {
+      attacker.hp = Math.max(0, attacker.hp - defenderFp);
+      rounds += "d";
+    }
   }
   attacker.movesLeft = Math.max(0, attacker.movesLeft - RULES.movesFraction);
   attacker.fortified = false;
@@ -276,6 +285,10 @@ export function attackDraft(draft: GameState, attacker: Unit, to: Point, rng: Rn
     alsoLost,
     promoted,
     winChance: odds.winChance,
+    from,
+    attackerHp,
+    defenderHp,
+    rounds,
   });
 }
 

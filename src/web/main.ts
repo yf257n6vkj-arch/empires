@@ -79,7 +79,7 @@ import {
   ZOOM_STEP,
   type Camera,
 } from "./camera";
-import { PARCHMENT, draw, mapTilt, setPlayerColors, setSprites, setTilt, setupCanvas, tileSize, type DrawInput } from "./render";
+import { PARCHMENT, draw, drawBattle, mapTilt, setPlayerColors, setSprites, setTilt, setupCanvas, tileSize, type BattleFrame, type DrawInput } from "./render";
 import { ERROR_TEXT, escapeHtml, eventConcerns, eventText, moodLine } from "./texts";
 import { attackHint, createAttackDialog } from "./attack";
 import { playComputerTurns } from "../ai";
@@ -276,6 +276,7 @@ function run(command: Command): boolean {
     events.push(...passed.events);
   }
   animateMoves(before);
+  queueBattles(events, animation ? animation.duration : 0);
   addLog(events);
   if (advisor.mode() === "guide") guide.onEvents(events);
   // Peace offers from computer players wait for an answer at the start of the turn.
@@ -446,6 +447,155 @@ let animation: { moves: Map<number, { from: Point; to: Point }>; start: number; 
 let animationFrame = 0;
 const reduceMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+// ---------- battles ----------
+
+/*
+ * Every fight the player takes part in is played on the map: the attacker steps up, blows land
+ * round by round as they were rolled, the loser falls and a banner says who won and what the odds
+ * were. Fights of the computer players' turns against the player's units follow after their moves.
+ * A click or a key skips the rest.
+ */
+type CombatEvent = Extract<GameEvent, { type: "combat" }>;
+const battleQueue: CombatEvent[] = [];
+let battle: { e: CombatEvent; start: number; lunge: number; round: number; fall: number; hold: number } | null = null;
+let battleBannerTimer = 0;
+const battleBanner = document.createElement("div");
+battleBanner.className = "battle-banner";
+battleBanner.hidden = true;
+battleBanner.setAttribute("aria-live", "polite");
+mapWrap.appendChild(battleBanner);
+
+function queueBattles(events: GameEvent[], delay: number): void {
+  for (const e of events) {
+    if (e.type !== "combat" || e.rounds === undefined || !e.from) continue;
+    if (e.attacker.owner !== HUMAN && e.defender.owner !== HUMAN) continue;
+    battleQueue.push(e);
+  }
+  if (!battle && battleQueue.length) startBattle(performance.now() + delay);
+}
+
+function startBattle(at: number): void {
+  const e = battleQueue.shift();
+  if (!e) {
+    battle = null;
+    return;
+  }
+  const n = e.rounds!.length;
+  const round = reduceMotion ? 0 : Math.max(70, Math.min(150, 1500 / Math.max(1, n)));
+  battle = { e, start: at, lunge: reduceMotion ? 0 : 260, round, fall: reduceMotion ? 0 : 450, hold: reduceMotion ? 1600 : 900 };
+  camera = keepInView(camera, e.at, state.map);
+  drawMap();
+}
+
+function battleEnd(b: NonNullable<typeof battle>): number {
+  return b.start + b.lunge + b.round * b.e.rounds!.length + b.fall + b.hold;
+}
+
+/** What the fight looks like at time `now`; null before it starts. */
+function battleFrame(b: NonNullable<typeof battle>, now: number): BattleFrame | null {
+  const t = now - b.start;
+  if (t < 0) return null;
+  const e = b.e;
+  const rounds = e.rounds!;
+  const fighter = (side: CombatEvent["attacker"], at: Point) => ({
+    id: side.id,
+    owner: side.owner,
+    type: side.unitType,
+    x: at.x,
+    y: at.y,
+    fortified: false,
+    working: false,
+    hasMoves: true,
+  });
+  const aFp = UNIT_TYPES[e.attacker.unitType].firepower;
+  const dFp = UNIT_TYPES[e.defender.unitType].firepower;
+  const aMax = UNIT_TYPES[e.attacker.unitType].hp;
+  const dMax = UNIT_TYPES[e.defender.unitType].hp;
+  const inRounds = t - b.lunge;
+  const landed = b.round === 0 ? rounds.length : Math.max(0, Math.min(rounds.length, Math.floor(inRounds / b.round) + 1));
+  let ahp = e.attackerHp ?? aMax;
+  let dhp = e.defenderHp ?? dMax;
+  for (const r of rounds.slice(0, inRounds < 0 ? 0 : landed)) {
+    if (r === "a") dhp = Math.max(0, dhp - aFp);
+    else ahp = Math.max(0, ahp - dFp);
+  }
+  const last = inRounds >= 0 && landed > 0 ? rounds[landed - 1] : undefined;
+  const roundsEnd = b.lunge + b.round * rounds.length;
+  const after = t - roundsEnd;
+  const ease = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : 1 - (1 - x) ** 2);
+  const lunge = t < b.lunge ? ease(t / b.lunge) : after < 0 ? 1 : b.fall ? 1 - ease(after / b.fall) : 0;
+  const winner = e.attackerWon ? "attacker" : "defender";
+  return {
+    attacker: fighter(e.attacker, e.from!),
+    defender: fighter(e.defender, e.at),
+    lunge,
+    attackerHealth: ahp / aMax,
+    defenderHealth: dhp / dMax,
+    hit: last === undefined || after >= b.round ? null : last === "a" ? "defender" : "attacker",
+    hitAge: last === undefined ? 1 : Math.min(1, (inRounds - (landed - 1) * b.round) / (b.round * 2 || 1)),
+    fallen: after >= 0 ? (e.attackerWon ? "defender" : "attacker") : null,
+    fall: b.fall ? Math.max(0, Math.min(1, after / b.fall)) : after >= 0 ? 1 : 0,
+    star: e.promoted && after >= 0 ? Math.min(1, after / (b.fall + b.hold)) : 0,
+    starOn: e.promoted ? winner : null,
+  };
+}
+
+function showBattleBanner(e: CombatEvent): void {
+  const mine = e.attacker.owner === HUMAN;
+  const iWon = mine === e.attackerWon;
+  const pct = Math.round((mine ? e.winChance : 1 - e.winChance) * 100);
+  const title = iWon ? (mine ? t("Vítězství!") : t("Ubránil ses!")) : t("Prohra");
+  battleBanner.className = `battle-banner ${iWon ? "won" : "lost"}`;
+  battleBanner.innerHTML = `<b>${title}</b><span>${eventText(state, e) ?? ""} ${t("Šance na výhru byla {pct} %.", { pct })}</span>`;
+  battleBanner.hidden = false;
+  window.clearTimeout(battleBannerTimer);
+  battleBannerTimer = window.setTimeout(() => (battleBanner.hidden = true), 3200);
+}
+
+/** Skips the fight being shown and all that wait. */
+function skipBattles(): boolean {
+  if (!battle) return false;
+  battleQueue.length = 0;
+  battle = null;
+  battleBanner.hidden = true;
+  drawMap();
+  return true;
+}
+
+// A click or key during a fight only skips it, so it cannot give an order by accident.
+let swallowClick = false;
+document.addEventListener(
+  "pointerdown",
+  (ev) => {
+    if (battle && performance.now() >= battle.start && skipBattles()) {
+      swallowClick = true;
+      ev.stopPropagation();
+      ev.preventDefault();
+    }
+  },
+  true,
+);
+document.addEventListener(
+  "click",
+  (ev) => {
+    if (!swallowClick) return;
+    swallowClick = false;
+    ev.stopPropagation();
+    ev.preventDefault();
+  },
+  true,
+);
+document.addEventListener(
+  "keydown",
+  (ev) => {
+    if (battle && performance.now() >= battle.start && skipBattles()) {
+      ev.stopPropagation();
+      ev.preventDefault();
+    }
+  },
+  true,
+);
+
 function animateMoves(before: Map<number, Point>): void {
   if (reduceMotion) return;
   const after = visiblePositions();
@@ -478,7 +628,26 @@ function drawMap(): void {
       });
     } else animation = null;
   }
-  draw(ctx, input);
+  if (battle) {
+    const now = performance.now();
+    const b = battle;
+    if (now >= b.start) input.units = input.units.filter((u) => u.id !== b.e.attacker.id && u.id !== b.e.defender.id);
+    draw(ctx, input);
+    const frame = battleFrame(b, now);
+    if (frame) {
+      drawBattle(ctx, frame);
+      if (now - b.start >= b.lunge + b.round * b.e.rounds!.length && battleBanner.dataset.for !== `${b.start}`) {
+        battleBanner.dataset.for = `${b.start}`;
+        showBattleBanner(b.e);
+      }
+    }
+    if (now >= battleEnd(b)) startBattle(now);
+    if (battle && !animationFrame)
+      animationFrame = requestAnimationFrame(() => {
+        animationFrame = 0;
+        drawMap();
+      });
+  } else draw(ctx, input);
   afterDraw();
 }
 

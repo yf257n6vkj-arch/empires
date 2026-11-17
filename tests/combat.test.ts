@@ -140,6 +140,30 @@ describe("attack", () => {
     }
   });
 
+  it("records the fight round by round, so it can be shown", () => {
+    for (let seed = 0; seed < 30; seed++) {
+      const s = stateFromAscii(FIELD, 2);
+      s.rng = Rng.fromSeed(`rounds-${seed}`).getState();
+      const a = addUnit(s, "knights", 0, 3);
+      addUnit(s, "spearmen", 1, 3, 1);
+      const r = applyCommand(s, { type: "attack", unitId: a.id, to: { x: 1, y: 3 } });
+      expect(r.ok).toBe(true);
+      if (!r.ok) return;
+      const e = r.events.find((x) => x.type === "combat");
+      if (!e || e.type !== "combat") throw new Error("no fight");
+      expect(e.from).toEqual({ x: 0, y: 3 });
+      // Replaying the rounds from the starting hit points ends exactly where the fight ended.
+      let ahp = e.attackerHp!;
+      let dhp = e.defenderHp!;
+      for (const round of e.rounds!) {
+        if (round === "a") dhp = Math.max(0, dhp - UNIT_TYPES.knights.firepower);
+        else ahp = Math.max(0, ahp - UNIT_TYPES.spearmen.firepower);
+      }
+      expect(e.attackerWon).toBe(dhp === 0);
+      expect(e.winnerHp).toBe(e.attackerWon ? ahp : dhp);
+    }
+  });
+
   it("wipes out a beaten stack in the open but not in a fortress", () => {
     for (const fortress of [false, true]) {
       let won = 0;

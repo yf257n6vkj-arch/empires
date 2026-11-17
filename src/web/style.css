@@ -762,3 +762,14 @@ label.rate input#lux { width: 60px; } .rate.tax { color: var(--muted); white-spa
 /* On the tilted map the land is a board on the table: a dark edge of earth below its front side. */
 body.map-tilted #map { box-shadow: 0 10px 0 #4a3a28, 0 11px 0 #2c2218, 0 22px 30px rgba(0, 0, 0, 0.55); }
 .advisor.guide .gd-say { margin-right: 26px; }
+/* The result of a fight, over the map at the top. */
+.battle-banner { position: absolute; top: 58px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 2px; max-width: min(620px, 70%); padding: 8px 18px 10px; border-radius: 12px; line-height: 1.35; text-align: center; background: rgba(26, 22, 16, 0.95); border: 2px solid #d9b25f; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55); pointer-events: none; animation: battle-in 0.25s ease-out; }
+.battle-banner[hidden] { display: none; }
+.battle-banner b { font-size: 24px; letter-spacing: 0.02em; }
+.battle-banner span { font-size: 13.5px; color: #e9dfcc; }
+.battle-banner.won { border-color: #e2b84a; }
+.battle-banner.won b { color: #ffd560; }
+.battle-banner.lost { border-color: #c4543f; }
+.battle-banner.lost b { color: #ff8a72; }
+@keyframes battle-in { from { opacity: 0; transform: translate(-50%, -8px) scale(0.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .battle-banner { animation: none; } }

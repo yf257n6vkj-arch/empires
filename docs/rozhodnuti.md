@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 17. 11. 2026: Boje se přehrávají na mapě
+
+Michal chtěl hru zábavnější pro syna, kterého baví hlavně hry, kde bojují armády. Z průzkumu vyšlo, že nejhorší odpověď hry na hráčovo rozhodnutí je, když se nic nestane (Sid Meier na GDC 2012), a že děti baví zpětná vazba a to, co je vidět a slyšet (Malone 1981). U nás boj končil textovou zprávou.
+
+Každý boj, ve kterém je hráčova jednotka, se teď přehraje na mapě. Útočník vyrazí k obránci, rány padají kolo po kole tak, jak je hra opravdu hodila, jiskří to a oběma ubývají životy na velkých ukazatelích. Poražený padne a nahoře se ukáže Vítězství, Ubránil ses nebo Prohra, k tomu co se stalo a jakou šanci boj měl. Nový veterán dostane nad hlavu zlatou hvězdu. Útoky soupeřů na hráčovy jednotky se přehrají po jejich tahu, až doběhnou pohyby, a mapa se k boji posune. Klik nebo klávesa zbytek přeskočí a nic dalšího přitom neudělá. Kdo má v systému omezený pohyb, uvidí jen výsledek. Jádro proto u každého boje zapisuje, odkud útočník útočil, životy na začátku a pořadí kol. Na pravidlech ani na soupeřích se nic nemění.
+
 ## 17. 11. 2026: Panely se stáhly do rohů a k dolnímu okraji
 
 Michalovi vadilo, že levý sloupec panelů zakrývá mapu, a napadlo ho, že by si je mohl posouvat. Podívali jsme se, jak to řeší podobné hry. Civilizace 6 má výzkum jako malý sbalitelný ukazatel nahoře vlevo a panel jednotky dole. Freeciv21 má ovládání jednotky v pruhu dole uprostřed a malou mapu vpravo dole a jako jediný dovoluje panely přetahovat, k čemuž potřebuje i tlačítko na zamknutí rozhraní. Vývojáři Freecivu radí panely v rozích šetřit, protože zakrývají mapu, a u Humankind si hráči stěžují právě na obří panel jednotky.

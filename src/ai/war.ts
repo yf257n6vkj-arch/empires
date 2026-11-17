@@ -80,6 +80,9 @@ export function targetCity(view: PlayerView, land: Int32Array, enemies: number[]
   return best;
 }
 
+/** Extra will to go to war in a quick game. */
+const QUICK_GAME_WAR = 15;
+
 /** Why the AI would or would not go to war with a rival; positive total means war. */
 export function warMotivation(view: PlayerView, rival: RivalView, land: Int32Array, room: number): Reason[] {
   const reasons: Reason[] = [];
@@ -87,6 +90,8 @@ export function warMotivation(view: PlayerView, rival: RivalView, land: Int32Arr
   const nature = CIVS[view.civ].personality;
   add("nature", nature === "war" ? 10 : nature === "expansion" ? -10 : -25);
   if (view.turn < view.maxTurns / 4) add("early game", -100);
+  // In a quick game a war has to start sooner to matter before the last turn.
+  if (view.speed === "quick") add("quick game", QUICK_GAME_WAR);
   const footTarget = targetCity(view, land, [rival.id]);
   // A city across the sea can be fought for too, with a landing, but that is harder.
   const sea = footTarget ? null : seaInvasion(view, land, [rival.id]);

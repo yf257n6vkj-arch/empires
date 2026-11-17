@@ -2,7 +2,7 @@
  * The attack window: before a unit attacks, the player sees both sides'
  * strength, what makes it up and the chance of winning, and confirms.
  */
-import { combatOdds, RULES, UNIT_TYPES, type GameState, type Point, type Strength, type StrengthFactor, type Unit } from "../core";
+import { combatOdds, RULES, treatyTurns, UNIT_TYPES, type GameState, type Point, type Strength, type StrengthFactor, type Unit } from "../core";
 import { t, tn } from "./i18n";
 import { civName, unitName } from "./i18n/names";
 import { unitPortraitCanvas } from "./render";
@@ -94,7 +94,7 @@ export function createAttackDialog(dialog: HTMLDialogElement, host: AttackHost) 
     if (!enemy) return false;
     const nation = civName(state.players[enemy.owner]!.civ);
     const since = state.players[unit.owner]!.peaceSince[String(enemy.owner)];
-    const young = since !== undefined && state.turn - since < RULES.diplomacy.treatyTurns;
+    const young = since !== undefined && state.turn - since < treatyTurns(state);
     dialog.innerHTML = `
       <div class="at">
         <h2>${t("Vyhlásit válku?")}</h2>

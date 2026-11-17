@@ -5,7 +5,7 @@
  * and wonders that make peace easier. A positive mood accepts an offer; a
  * clearly positive one makes an offer itself. The AI keeps the treaties it makes.
  */
-import { CIVS, distance, RULES, UNIT_TYPES, type Command, type PlayerView, type RivalView } from "../core";
+import { CIVS, distance, RULES, treatyTurns, UNIT_TYPES, type Command, type PlayerView, type RivalView } from "../core";
 import { cityDefense, isAttacker, punch, total, type Reason } from "./war";
 
 /** Turns of war before the AI thinks of peace at all. */
@@ -60,5 +60,5 @@ export function peaceCommands(view: PlayerView): Command[] {
 
 /** True while a peace treaty with the rival still binds the AI. */
 export function underTreaty(view: PlayerView, rival: RivalView): boolean {
-  return rival.peaceSince !== null && view.turn - rival.peaceSince < RULES.diplomacy.treatyTurns;
+  return rival.peaceSince !== null && view.turn - rival.peaceSince < treatyTurns(view);
 }

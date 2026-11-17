@@ -2,6 +2,14 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 17. 11. 2026: Soupeři v rychlé hře válčí dřív
+
+V rychlé hře bylo na minutu hraní méně bojů než v normální a Michal chtěl, abych to dotáhl. Rozebral jsem, co soupeře od války drží. Většina z nich v míru nestaví útočné jednotky, takže když se rozhodnou bojovat, musí armádu teprve postavit, a to v 60 tazích nestihnou. K tomu mír platil 15 tahů, což je v rychlé hře čtvrtina partie.
+
+Teď si v rychlé hře každý soupeř od 15. tahu drží v míru aspoň tři útočné jednotky a o válce uvažuje o něco ochotněji. Mír platí 8 tahů, tedy stejný kus partie jako 15 tahů v normální hře, a platí to i pro hráče. Normální hra se nemění.
+
+Ve 100 partiích počítačů začala válka v každé, první v mediánu ve 27. tahu místo ve 34. Na partii připadá asi 16 bitev místo 11, takže na minutu hraní je bojů zhruba stejně jako v normální hře. Ze zhruba 300 soupeřů prohráli do konce rychlé hry tři. Kdo chce klid, nastaví velmi snadnou obtížnost, tam soupeři válku nevyhlašují vůbec.
+
 ## 17. 11. 2026: Rychlá hra na 60 tahů
 
 Druhý návrh pro syna. Hodina u obrazovky denně nestačí na partii, která trvá celý večer, a průzkum ukázal, že krátké partie fungují. Polytopia má režim na 30 tahů a Sid Meier radil zmenšovat hru, dokud zábava nezačne mizet. Michal schválil volbu délky v nastavení světa.

@@ -54,7 +54,7 @@ export function guideNumbers(turns: number = RULES.speeds.normal.maxTurns): Reco
     queueLength: RULES.queueLength,
     maxTurns: turns,
     scoreTech: RULES.score.tech,
-    treatyTurns: RULES.diplomacy.treatyTurns,
+    treatyTurns: Math.round((RULES.diplomacy.treatyTurns * turns) / RULES.speeds.normal.maxTurns),
     scoreWonder: RULES.score.wonder,
     tradeRouteMinDistance: RULES.tradeRouteMinDistance,
     successPerModule: RULES.spaceship.successPerModule,

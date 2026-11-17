@@ -518,6 +518,11 @@ export function gameTurn(state: { speed?: GameSpeed }, turn: number): number {
   return Math.round((turn * maxTurns(state)) / RULES.speeds.normal.maxTurns);
 }
 
+/** How long a peace holds before breaking it costs trust, moved to the length of this game. */
+export function treatyTurns(state: { speed?: GameSpeed }): number {
+  return gameTurn(state, RULES.diplomacy.treatyTurns);
+}
+
 export function maxTurns(state: { speed?: GameSpeed }): number {
   return RULES.speeds[state.speed ?? "normal"].maxTurns;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { apply, mainContinent, newGame, playerView, UNIT_TYPES, type GameState } from "../src/core";
-import { decide, playComputerTurns, playTurn } from "../src/ai";
+import { apply, CIVS, mainContinent, maxTurns, newGame, playerView, UNIT_TYPES, type CivId, type GameState } from "../src/core";
+import { decide, peaceArmySize, playComputerTurns, playTurn } from "../src/ai";
 import { isLand, landmasses } from "../src/ai/knowledge";
 import { averageKnownValue, bestSite, siteValue } from "../src/ai/settle";
 import { total, warMotivation } from "../src/ai/war";
@@ -94,6 +94,30 @@ describe("war", () => {
     expect(total(reasons)).toBeLessThan(0);
     expect(reasons.map((r) => r.item)).toContain("early game");
   });
+
+  it("is keener on war in a quick game, though not in its early game", () => {
+    const s = newGame({ seed: "calm", playerCount: 4, opponentUnits: true, speed: "quick" });
+    const view = playerView(s, 1);
+    const reasons = warMotivation(view, view.rivals[0]!, landmasses(view), 3);
+    expect(reasons.find((r) => r.item === "quick game")?.value).toBeGreaterThan(0);
+    expect(total(reasons)).toBeLessThan(0);
+    const normal = playerView(newGame({ seed: "calm", playerCount: 4, opponentUnits: true }), 1);
+    expect(warMotivation(normal, normal.rivals[0]!, landmasses(normal), 3).map((r) => r.item)).not.toContain("quick game");
+  });
+
+  it("keeps an army ready in peace in a quick game", () => {
+    const s = newGame({ seed: "calm", playerCount: 4, opponentUnits: true, speed: "quick" });
+    const seat = 1;
+    s.players[seat]!.civ = (Object.keys(CIVS) as CivId[]).find((c) => CIVS[c].personality === "science")!;
+    const early = playerView(s, seat);
+    expect(peaceArmySize(early, 3)).toBe(0);
+    s.turn = maxTurns(s) / 2;
+    expect(peaceArmySize(playerView(s, seat), 3)).toBeGreaterThan(0);
+    s.speed = "normal";
+    s.turn = maxTurns(s) / 2;
+    expect(peaceArmySize(playerView(s, seat), 3)).toBe(0);
+  });
+
 });
 
 describe("city sites", () => {

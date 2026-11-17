@@ -68,6 +68,18 @@ export function playTurn(state: GameState): { state: GameState; events: GameEven
   return { state: current, events };
 }
 
+/** Attackers every computer player keeps in peace in a quick game once the early game is over. */
+const QUICK_PEACE_ARMY = 3;
+
+/** Attackers kept in peace: the warlike nature always has some, the expanding one once its land is full. */
+export function peaceArmySize(view: PlayerView, room: number): number {
+  const n = CIVS[view.civ].personality;
+  const usual = n === "war" ? Math.max(2, Math.ceil(view.cities.length / 2)) : n === "expansion" && room === 0 ? 2 : 0;
+  // A quick game is too short to build an army only after deciding on war, so every nature keeps one ready.
+  const quick = view.speed === "quick" && view.turn >= view.maxTurns / 4 ? QUICK_PEACE_ARMY : 0;
+  return Math.max(usual, quick);
+}
+
 /** Barbarian cities closer than this to an own city are taken back before any other target. */
 const LIBERATE_RANGE = 6;
 
@@ -115,8 +127,7 @@ export function decide(view: PlayerView): Command[] {
   // No enemy city within marching reach: the army sails to one on the coast.
   const invasion = !footTarget && enemies.length > 0 ? seaInvasion(view, land, enemies) : null;
   const target = footTarget ?? invasion?.target ?? null;
-  const n = CIVS[view.civ].personality;
-  const peaceArmy = n === "war" ? Math.max(2, Math.ceil(view.cities.length / 2)) : n === "expansion" && room === 0 ? 2 : 0;
+  const peaceArmy = peaceArmySize(view, room);
   const ctx = makeContext(view, land, {
     room,
     ships,

@@ -3,7 +3,7 @@
  * peace, score, and buttons to offer peace or declare war. Peace offers from
  * computer players come up here as a question at the start of the turn.
  */
-import { CIVS, isBarbarian, playerView, RULES, scoreOf, type CivId, type Command, type GameState, type PlayerView, type RivalView } from "../core";
+import { CIVS, isBarbarian, playerView, RULES, treatyTurns, scoreOf, type CivId, type Command, type GameState, type PlayerView, type RivalView } from "../core";
 import { peaceMood } from "../ai/diplomacy";
 import { total } from "../ai/war";
 import { pictureOf } from "./codex";
@@ -44,7 +44,7 @@ export function createNations(dialog: HTMLDialogElement, offers: HTMLDialogEleme
       : r.peaceSince !== null
         ? t("mír od tahu {turn}", { turn: r.peaceSince })
         : t("mír");
-    const treaty = !r.atWar && r.peaceSince !== null && s.turn - r.peaceSince < RULES.diplomacy.treatyTurns;
+    const treaty = !r.atWar && r.peaceSince !== null && s.turn - r.peaceSince < treatyTurns(s);
     const human = s.players[r.id]?.isHuman;
     const mood = r.atWar && !human ? ` · ${keenness(s, r, view.playerId)}` : "";
     const broken = r.treatiesBroken ? ` · <span class="neg">${tn("porušili jednu smlouvu|porušili {n} smlouvy|porušili {n} smluv", r.treatiesBroken)}</span>` : "";
@@ -83,7 +83,7 @@ export function createNations(dialog: HTMLDialogElement, offers: HTMLDialogEleme
       ${unknown ? `<p class="small muted">${tn("Jeden národ ještě neznáš.|Ještě neznáš {n} národy.|Ještě neznáš {n} národů.", unknown)}</p>` : ""}
       ${out.length ? `<p class="small muted">${t("Už prohráli: {list}", { list: escapeHtml(out.map((r) => civName(r.civ)).join(", ")) })}</p>` : ""}
       ${s.barbarians !== "none" ? `<p class="small muted">${t("S barbary se válčí pořád a mír s nimi uzavřít nejde.")}</p>` : ""}
-      <p class="small muted">${t("Mír, který uzavřeš, platí aspoň {n} tahů. Kdo ho poruší dřív, tomu ostatní národy přestanou věřit.", { n: RULES.diplomacy.treatyTurns })}</p>`;
+      <p class="small muted">${t("Mír, který uzavřeš, platí aspoň {n} tahů. Kdo ho poruší dřív, tomu ostatní národy přestanou věřit.", { n: treatyTurns(s) })}</p>`;
     dialog.querySelector("[data-close]")?.addEventListener("click", () => dialog.close());
     dialog.querySelectorAll<HTMLButtonElement>("[data-entry]").forEach((b) => b.addEventListener("click", () => host.openEntry(b.dataset.entry!)));
     dialog.querySelectorAll<HTMLButtonElement>("[data-peace]").forEach((b) =>
@@ -131,7 +131,7 @@ export function createNations(dialog: HTMLDialogElement, offers: HTMLDialogEleme
         <div>
           <h2>${t("{nation} nabízejí mír", { nation: escapeHtml(civName(civ)) })}</h2>
           <p>${tn("{leader} posílá posly: válka trvá už {n} tah a je čas ji ukončit.|{leader} posílá posly: válka trvá už {n} tahy a je čas ji ukončit.|{leader} posílá posly: válka trvá už {n} tahů a je čas ji ukončit.", since === undefined ? 0 : s.turn - since, { leader: escapeHtml(leaderName(civ)) })}</p>
-          <p class="small muted">${t("Když mír přijmeš, nesmíš na ně {n} tahů zaútočit, jinak porušíš smlouvu. Když odmítneš, válka pokračuje.", { n: RULES.diplomacy.treatyTurns })}</p>
+          <p class="small muted">${t("Když mír přijmeš, nesmíš na ně {n} tahů zaútočit, jinak porušíš smlouvu. Když odmítneš, válka pokračuje.", { n: treatyTurns(s) })}</p>
           <div class="at-buttons">
             <button type="button" data-answer="no">${t("Odmítnout")}</button>
             <button type="button" class="primary" data-answer="yes">${t("Přijmout mír")}</button>

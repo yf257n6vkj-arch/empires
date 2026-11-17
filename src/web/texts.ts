@@ -12,6 +12,7 @@ import {
   type Happiness,
   type TechId,
   type UnitRule,
+  treatyTurns,
 } from "../core";
 import { t, tn } from "./i18n";
 import {
@@ -438,7 +439,7 @@ export function eventText(state: GameState, e: GameEvent, viewer = 0): string | 
           : null;
     case "peaceMade": {
       const other = e.a === viewer ? e.b : e.b === viewer ? e.a : null;
-      if (other !== null) return t("Uzavřel jsi mír s národem {nation}. Než na ně znovu zaútočíš, musí uplynout {n} tahů, jinak porušíš smlouvu.", { nation: nationOf(state, other), n: RULES.diplomacy.treatyTurns });
+      if (other !== null) return t("Uzavřel jsi mír s národem {nation}. Než na ně znovu zaútočíš, musí uplynout {n} tahů, jinak porušíš smlouvu.", { nation: nationOf(state, other), n: treatyTurns(state) });
       return t("{a} a {b} uzavřeli mír.", { a: nationOf(state, e.a), b: nationOf(state, e.b) });
     }
     case "peaceRejected":

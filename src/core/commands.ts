@@ -52,6 +52,7 @@ import {
   type GovernmentId,
   type ImprovementId,
   type TechId,
+  treatyTurns,
 } from "./rules";
 import { isBarbarian, type City, type CityId, type GameState, type ProductionItem, type Unit, type UnitId } from "./state";
 import { endTurnDraft } from "./turn";
@@ -312,7 +313,7 @@ function applyCommandInner(state: GameState, command: Command): CommandResult {
       a.peaceOffers = a.peaceOffers.filter((p) => p !== them.id);
       b.peaceOffers = b.peaceOffers.filter((p) => p !== me.id);
       const since = a.peaceSince[String(them.id)];
-      const broke = since !== undefined && draft.turn - since < RULES.diplomacy.treatyTurns;
+      const broke = since !== undefined && draft.turn - since < treatyTurns(draft);
       if (broke) a.treatiesBroken += 1;
       events.push({ type: "warDeclared", by: me.id, on: them.id, brokeTreaty: broke });
       return { ok: true, state: draft, events };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apply, applyCommand, playerView, RULES, type GameState } from "../src/core";
+import { apply, applyCommand, playerView, RULES, treatyTurns, type GameState } from "../src/core";
 import { decide } from "../src/ai";
 import { peaceMood } from "../src/ai/diplomacy";
 import { total } from "../src/ai/war";
@@ -60,6 +60,24 @@ describe("peace", () => {
     const r = applyCommand(s, { type: "declareWar", player: 1 });
     expect(r.ok && r.state.players[0]!.treatiesBroken).toBe(1);
     expect(r.ok && r.events).toContainEqual({ type: "warDeclared", by: 0, on: 1, brokeTreaty: true });
+    s.turn += 1;
+    const later = applyCommand(s, { type: "declareWar", player: 1 });
+    expect(later.ok && later.state.players[0]!.treatiesBroken).toBe(0);
+  });
+
+  it("keeps a peace in a quick game for the same share of the game", () => {
+    let s = atWar();
+    s.speed = "quick";
+    s = apply(s, { type: "offerPeace", player: 1 });
+    s.currentPlayer = 1;
+    s = apply(s, { type: "answerPeace", player: 0, accept: true });
+    s.currentPlayer = 0;
+    const turns = treatyTurns(s);
+    expect(turns).toBe(Math.round((RULES.diplomacy.treatyTurns * RULES.speeds.quick.maxTurns) / RULES.speeds.normal.maxTurns));
+    expect(turns).toBeLessThan(RULES.diplomacy.treatyTurns);
+    s.turn += turns - 1;
+    const soon = applyCommand(s, { type: "declareWar", player: 1 });
+    expect(soon.ok && soon.state.players[0]!.treatiesBroken).toBe(1);
     s.turn += 1;
     const later = applyCommand(s, { type: "declareWar", player: 1 });
     expect(later.ok && later.state.players[0]!.treatiesBroken).toBe(0);

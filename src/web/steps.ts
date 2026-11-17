@@ -97,7 +97,7 @@ function select(ctx: StepContext, u: Unit, then: () => Step): Step {
     if (ctx.selectedCityId === city.id) {
       return {
         id: `select-${u.id}`,
-        text: t("V panelu vlevo klikni na Vybrat u jednotky {unit}.", { unit: unitName(u.type) }),
+        text: t("V panelu dole klikni na Vybrat u jednotky {unit}.", { unit: unitName(u.type) }),
         target: { kind: "button", selector: `[data-unit="${u.id}"]` },
         entry: `unit-${u.type}`,
       };
@@ -328,7 +328,7 @@ export function nextStep(ctx: StepContext): Step | null {
     const tech = ctx.wantedTech;
     return {
       id: "research",
-      text: tech ? t("Vyber, co budou vědci zkoumat. Doporučuju {tech}, klikni na něj vlevo.", { tech: techName(tech) }) : t("Vyber, co budou vědci zkoumat. Klikni na jeden z objevů vlevo."),
+      text: tech ? t("Vyber, co budou vědci zkoumat. Doporučuju {tech}, klikni na něj vlevo nahoře.", { tech: techName(tech) }) : t("Vyber, co budou vědci zkoumat. Klikni na jeden z objevů vlevo nahoře."),
       target: { kind: "button", selector: tech ? `#research-pick [data-tech="${tech}"]||#research-pick [data-tech]` : "#research-pick [data-tech]" },
       entry: tech ? `tech:${tech}` : undefined,
     };

@@ -53,6 +53,8 @@ export function unlocks(tech: TechId): string {
 }
 
 const STORAGE_KEY = "empires.advisor";
+/** The panel folded into one line, remembered between games. */
+const FOLD_KEY = "empires.advisorFolded";
 const SHOWN = 3;
 /** Under the guide's plan fewer tips fit. */
 const GUIDE_SHOWN = 2;
@@ -69,6 +71,21 @@ export function createAdvisor(panel: HTMLElement, picker: HTMLSelectElement, hos
   }
   /** Turn in which the player closed the panel; it comes back next turn. */
   let hiddenInTurn = -1;
+  let folded = false;
+  try {
+    folded = localStorage.getItem(FOLD_KEY) === "1";
+  } catch {
+    folded = false;
+  }
+  function setFolded(next: boolean): void {
+    folded = next;
+    try {
+      localStorage.setItem(FOLD_KEY, next ? "1" : "0");
+    } catch {
+      // Without storage the panel simply forgets.
+    }
+    render();
+  }
   picker.value = mode;
   picker.addEventListener("change", () => setMode(picker.value as HelperMode));
 
@@ -299,7 +316,14 @@ export function createAdvisor(panel: HTMLElement, picker: HTMLSelectElement, hos
     const hiddenCount = all.length - tips.length;
     panel.hidden = false;
     panel.classList.toggle("guide", guide);
+    panel.classList.toggle("folded", folded);
+    if (folded) {
+      panel.innerHTML = `<button type="button" class="adv-unfold" data-fold title="${t("Rozbalit rady")}"><span class="adv-owl" aria-hidden="true">🦉</span><b>${guide ? t("Průvodce") : t("Rádce")}</b><span class="adv-count">${tn("{n} rada|{n} rady|{n} rad", all.length)}</span><span class="spacer"></span><span aria-hidden="true">▸</span></button>`;
+      panel.querySelector("[data-fold]")?.addEventListener("click", () => setFolded(false));
+      return;
+    }
     panel.innerHTML =
+      `<button type="button" class="adv-fold" data-fold title="${t("Sbalit do jednoho řádku")}" aria-label="${t("Sbalit do jednoho řádku")}">▾</button>` +
       (guide
         ? host.guide.panelHead() + `<div class="gd-now">${t("Co udělat teď")}</div>`
         : `<div class="adv-head"><span class="adv-owl" aria-hidden="true">🦉</span><b>${t("Rádce")}</b><span class="spacer"></span>` +
@@ -317,6 +341,7 @@ export function createAdvisor(panel: HTMLElement, picker: HTMLSelectElement, hos
           : "") +
       (guide ? host.guide.panelFoot() : "");
     if (guide) host.guide.wirePanel(panel, render);
+    panel.querySelector("[data-fold]")?.addEventListener("click", () => setFolded(true));
     panel.querySelector("[data-all]")?.addEventListener("click", () => {
       showAll = !showAll;
       render();

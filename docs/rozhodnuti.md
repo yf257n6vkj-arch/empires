@@ -2,6 +2,12 @@
 
 Sem zapisujeme, co jsme s Michalem rozhodli, ať se k tomu nemusíme vracet. Nejnovější je nahoře.
 
+## 17. 11. 2026: Panely se stáhly do rohů a k dolnímu okraji
+
+Michalovi vadilo, že levý sloupec panelů zakrývá mapu, a napadlo ho, že by si je mohl posouvat. Podívali jsme se, jak to řeší podobné hry. Civilizace 6 má výzkum jako malý sbalitelný ukazatel nahoře vlevo a panel jednotky dole. Freeciv21 má ovládání jednotky v pruhu dole uprostřed a malou mapu vpravo dole a jako jediný dovoluje panely přetahovat, k čemuž potřebuje i tlačítko na zamknutí rozhraní. Vývojáři Freecivu radí panely v rozích šetřit, protože zakrývají mapu, a u Humankind si hráči stěžují právě na obří panel jednotky.
+
+Michal schválil sloupec rozpustit a přetahování nedělat. Výběr výzkumu a Rádce jsou teď vlevo nahoře. Výběr výzkumu se ukáže, jen když je potřeba vybrat. Rádce jde šipkou sbalit do jednoho řádku s počtem rad a hra si to pamatuje. Vybraná jednotka má nízký pruh dole uprostřed s popisem vlevo a tlačítky akcí v řadě vpravo. Město má v pruhu tři sloupce: růst a výrobu, spokojenost a obchod, jednotky ve městě s tlačítky. Když není nic vybrané, zůstane dole jen jeden řádek s počtem jednotek, které čekají. Mapa visí od horního okraje, takže volné místo zbývá dole pod pruhem. Bublina Sovy se drží nad pruhem.
+
 ## 16. 11. 2026: Hra se spouští jako aplikace Empires na Macu
 
 Michal vybral pro finální verzi aplikaci pro Mac místo vlastní webové adresy nebo stránky na claude.ai. Hru balíme do Electronu. Je to okno s prohlížečem Chromium, ve kterém běží stejná hra jako na webu, jen se načítá ze souborů v aplikaci, takže funguje bez internetu a bez přihlášení. Aplikace má ikonu se středověkým městem, standardní menu Macu a odkazy do Wikipedie otevírá v normálním prohlížeči. Má asi 280 MB, protože si Chromium nese s sebou.

@@ -34,11 +34,11 @@
         <canvas id="map"></canvas>
         <div id="tooltip" hidden></div>
         <div id="status" class="status" aria-live="polite"></div>
-        <div class="hud hud-left">
-          <section id="advisor" class="hud-panel advisor" hidden></section>
+        <div class="hud hud-topleft">
           <section id="research-pick" class="hud-panel" hidden></section>
-          <section id="selection" class="hud-panel"></section>
+          <section id="advisor" class="hud-panel advisor" hidden></section>
         </div>
+        <section id="selection" class="hud hud-bottom hud-panel"></section>
         <section class="hud hud-log hud-panel" id="log-panel">
           <button type="button" class="hud-head" id="log-toggle" title="Rozbalit nebo sbalit"><span data-i18n>Co se stalo</span> <span class="chev">▾</span></button>
           <ol id="log" class="log"></ol>
@@ -114,7 +114,7 @@
         <li data-i18n><kbd>Esc</kbd> zruší výběr. Když není nic vybrané, otevře menu, kde hru uložíš nebo nahraješ.</li>
         <li data-i18n>Dvojklik na město nebo tlačítko <b>Otevřít město</b> ukáže celé město. Klikem na políčko v okolí města přesuneš obyvatele. Tlačítkem + u stavby ji přidáš do plánu a město ji postaví, až dokončí tu předchozí. Hranici mezi obrázkem města a panely můžeš táhnout myší.</li>
         <li data-i18n>Přehled měst otevřeš klávesou <kbd>O</kbd> nebo tlačítkem Města nahoře. U každého města tam vybereš, co má stavět.</li>
-        <li data-i18n>Rádce vlevo radí, co dělat dál. Křížkem ho schováš, tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.</li>
+        <li data-i18n>Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.</li>
         <li data-i18n>Přiblížení: roztažení dvěma prsty na trackpadu, <kbd>Ctrl</kbd> + kolečko myši nebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Klávesa <kbd>0</kbd> vrátí celou mapu.</li>
         <li data-i18n>Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši, tažením nebo klikem do malé mapy vpravo dole.</li>
       </ul>

@@ -433,8 +433,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Show the whole technology tree",
   "Osadník teď sám vylepšuje okolí tvých měst.":
     "The settler now improves the land around your cities by himself.",
-  "Výběr":
-    "Selection",
   "Na rozkaz čeká {n} jednotka. Stiskni <kbd>N</kbd> nebo klikni na jednotku.|Na rozkaz čekají {n} jednotky. Stiskni <kbd>N</kbd> nebo klikni na jednotku.|Na rozkaz čeká {n} jednotek. Stiskni <kbd>N</kbd> nebo klikni na jednotku.":
     "{n} unit is waiting for orders. Press <kbd>N</kbd> or click a unit.|{n} units are waiting for orders. Press <kbd>N</kbd> or click a unit.",
   "Všechny jednotky mají rozkazy. Ukonči tah klávesou <kbd>Enter</kbd>.":
@@ -1073,8 +1071,8 @@ export const EN_STRINGS: Record<string, string> = {
     "Double-click a city or press <b>Open city</b> to see the whole city. Click a tile around the city to move citizens. Use + next to an item to add it to the plan, and the city builds it after the current one. You can drag the border between the city picture and the panels with the mouse.",
   "Přehled měst otevřeš klávesou <kbd>O</kbd> nebo tlačítkem Města nahoře. U každého města tam vybereš, co má stavět.":
     "Open the cities overview with <kbd>O</kbd> or the Cities button at the top. There you choose what each city builds.",
-  "Rádce vlevo radí, co dělat dál. Křížkem ho schováš, tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.":
-    "The advisor on the left suggests what to do next. Hide it with the cross, show it again with the Advisor button at the top or in the menu.",
+  "Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.":
+    "The advisor at the top left suggests what to do next. The arrow folds it into one line, the cross hides it, and the Advisor button at the top or in the menu brings it back.",
   "Přiblížení: roztažení dvěma prsty na trackpadu, <kbd>Ctrl</kbd> + kolečko myši nebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Klávesa <kbd>0</kbd> vrátí celou mapu.":
     "Zoom: spread two fingers on the trackpad, <kbd>Ctrl</kbd> + mouse wheel, or the <kbd>+</kbd> and <kbd>−</kbd> keys. The <kbd>0</kbd> key shows the whole map again.",
   "Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši, tažením nebo klikem do malé mapy vpravo dole.":
@@ -2359,10 +2357,10 @@ export const EN_STRINGS: Record<string, string> = {
     "Press space and the unit waits until next turn.",
   "Zavři město tlačítkem Zavřít nebo klávesou Esc.":
     "Close the city with the Close button or the Esc key.",
-  "Vyber, co budou vědci zkoumat. Doporučuju {tech}, klikni na něj vlevo.":
-    "Choose what your scientists research. I suggest {tech}, click it on the left.",
-  "Vyber, co budou vědci zkoumat. Klikni na jeden z objevů vlevo.":
-    "Choose what your scientists research. Click one of the advances on the left.",
+  "Vyber, co budou vědci zkoumat. Doporučuju {tech}, klikni na něj vlevo nahoře.":
+    "Choose what your scientists research. I suggest {tech}, click it at the top left.",
+  "Vyber, co budou vědci zkoumat. Klikni na jeden z objevů vlevo nahoře.":
+    "Choose what your scientists research. Click one of the advances at the top left.",
   "Klikni na Vyhlásit revoluci u vlády, kterou ti doporučuju.":
     "Click Start a revolution at the government I suggest.",
   "Je čas na lepší vládu. Klikni nahoře na tlačítko Vláda.":
@@ -2379,8 +2377,8 @@ export const EN_STRINGS: Record<string, string> = {
     "Exactly!",
   "Dobrá práce!":
     "Good job!",
-  "V panelu vlevo klikni na Vybrat u jednotky {unit}.":
-    "In the panel on the left, click Select next to the {unit}.",
+  "V panelu dole klikni na Vybrat u jednotky {unit}.":
+    "In the panel at the bottom, click Select next to the {unit}.",
   "Ve městě {city} čeká jednotka {unit}. Klikni na to město.":
     "A {unit} is waiting in {city}. Click that city.",
   "Pohled na mapu":
@@ -2389,4 +2387,12 @@ export const EN_STRINGS: Record<string, string> = {
     "At an angle, mountains and cities stand up",
   "Shora jako plán":
     "From above, like a plan",
+  "Rozbalit rady":
+    "Show the tips",
+  "Sbalit do jednoho řádku":
+    "Fold into one line",
+  "Průvodce":
+    "Guide",
+  "{n} rada|{n} rady|{n} rad":
+    "{n} tip|{n} tips",
 };

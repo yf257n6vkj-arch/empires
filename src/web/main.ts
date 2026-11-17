@@ -149,6 +149,8 @@ const luxInput = $<HTMLInputElement>("#lux");
 const luxLabel = $<HTMLSpanElement>("#lux-label");
 const taxLabel = $<HTMLSpanElement>("#tax-label");
 const researchPanel = $<HTMLElement>("#research-pick");
+// The owl's bubble and the panels at the top left keep clear of the bar at the bottom.
+new ResizeObserver(() => document.documentElement.style.setProperty("--sel-h", `${selectionPanel.offsetHeight}px`)).observe(selectionPanel);
 const zoomInButton = $<HTMLButtonElement>("#zoom-in");
 const zoomOutButton = $<HTMLButtonElement>("#zoom-out");
 const zoomResetButton = $<HTMLButtonElement>("#zoom-reset");
@@ -935,8 +937,9 @@ function renderSelection(): void {
   if (city) return renderCity(city);
   if (unit) return renderUnit(unit);
   const waiting = state.units.filter(needsOrders).length;
+  selectionPanel.dataset.kind = "idle";
   selectionPanel.innerHTML =
-    `<h2>${t("Výběr")}</h2><p class="facts">` +
+    `<p class="facts">` +
     (waiting > 0
       ? tn("Na rozkaz čeká {n} jednotka. Stiskni <kbd>N</kbd> nebo klikni na jednotku.|Na rozkaz čekají {n} jednotky. Stiskni <kbd>N</kbd> nebo klikni na jednotku.|Na rozkaz čeká {n} jednotek. Stiskni <kbd>N</kbd> nebo klikni na jednotku.", waiting)
       : t("Všechny jednotky mají rozkazy. Ukonči tah klávesou <kbd>Enter</kbd>.")) +
@@ -1070,12 +1073,13 @@ function renderUnit(unit: Unit): void {
 
   const homeName = unit.homeCity !== null ? state.cities.find((c) => c.id === unit.homeCity)?.name : undefined;
   const home = homeName ? cityLabel(homeName) : undefined;
+  selectionPanel.dataset.kind = "unit";
   selectionPanel.innerHTML = `
-    <div class="panel-title"><h3><button type="button" class="linklike" data-codex="${entryKey("unit", unit.type)}" title="${t("Co je to za jednotku? (klávesa E)")}">${unitName(unit.type)}</button></h3><span class="sub">[${unit.x}, ${unit.y}] ${terrainName(terrain)}</span></div>
+    <div class="sel-info"><div class="panel-title"><h3><button type="button" class="linklike" data-codex="${entryKey("unit", unit.type)}" title="${t("Co je to za jednotku? (klávesa E)")}">${unitName(unit.type)}</button></h3><span class="sub">[${unit.x}, ${unit.y}] ${terrainName(terrain)}</span></div>
     <p class="facts">${t("Pohyb: {moves}", { moves })}${home ? ` · ${t("domov: {city}", { city: escapeHtml(home) })}` : ""}<br>
     ${t("Útok {attack} · obrana {defense} · životy {hp} z {max}", { attack: UNIT_TYPES[unit.type].attack, defense: UNIT_TYPES[unit.type].defense, hp: unit.hp, max: UNIT_TYPES[unit.type].hp })}${unit.veteran ? ` · <b>${t("veterán")}</b>` : ""}<br>
-    <span class="muted">${status || (sendingUnitId === unit.id ? t("Klikni na políčko, kam má jít. Může to být i město nebo jiná jednotka.") : t("Klikni na mapu, kam má jít. Do města ji pošleš pravým klikem nebo klávesou G."))}</span></p>
-    <div class="actions">${buttons.join("")}</div>`;
+    <span class="muted">${status || (sendingUnitId === unit.id ? t("Klikni na políčko, kam má jít. Může to být i město nebo jiná jednotka.") : t("Klikni na mapu, kam má jít. Do města ji pošleš pravým klikem nebo klávesou G."))}</span></p></div>
+    <div class="actions row">${buttons.join("")}</div>`;
 
   selectionPanel.querySelectorAll<HTMLButtonElement>("button[data-action]").forEach((b) =>
     b.addEventListener("click", () => doUnitAction(b.dataset.action!)),
@@ -1201,16 +1205,17 @@ function renderCity(city: City): void {
       ? ""
       : `<button type="button" class="wide" data-buy ${gold < price ? `disabled title="${t("Máš jen {gold} zlata.", { gold })}"` : ""}>${t("Koupit hned za {price} zlata", { price })}</button>`;
 
+  selectionPanel.dataset.kind = "city";
   selectionPanel.innerHTML = `
-    <div class="panel-title"><h3>${escapeHtml(cityLabel(city.name))}</h3><span class="sub">${t("velikost {size}", { size: city.size })}</span></div>
+    <div class="sel-col"><div class="panel-title"><h3>${escapeHtml(cityLabel(city.name))}</h3><span class="sub">${t("velikost {size}", { size: city.size })}</span></div>
     <p class="facts">${t("Jídlo {food} z {need} ({change} za tah), {growth}", { food: city.food, need: r.growthThreshold, change: signed(r.foodSurplus), growth })}</p>
     <div class="bar food"><div style="width:${foodPct}%"></div></div>
     <p class="facts">${productionLabel(city.production)}: ${t("{done} z {cost} ({change} za tah), {state}", { done: Math.min(city.shields, cost), cost, change: signed(r.shieldSurplus), state: done })}</p>
     <div class="bar prod"><div style="width:${prodPct}%"></div></div>
-    <label for="production">${t("Co stavět")}</label>
-    <select id="production">${options}</select>
-    ${buy}
-    <p class="facts" style="margin-top:8px">${
+    <div class="sel-prod"><label for="production">${t("Co stavět")}</label>
+    <select id="production">${options}</select></div>
+    ${buy}</div>
+    <div class="sel-col"><p class="facts">${
       h.disorder ? `<span class="neg">${t("Nepokoje! Město nic nevyrábí.")}</span><br>` : ""
     }${city.celebrating ? `<span class="pos">${t("Město slaví!")}</span> ` : ""}${moodLine(h)}<br>
     ${t("Obchod {trade}", { trade: r.production.trade })}${r.corruption ? t(", korupce −{corruption}", { corruption: r.corruption }) : ""}: ${t("věda {science}, zlato {gold}", { science: r.science, gold: r.gold + r.wealthGold })}${r.luxury ? t(", zábava {luxury}", { luxury: r.luxury }) : ""}<br>${
@@ -1220,7 +1225,8 @@ function renderCity(city: City): void {
     <span class="muted">${t("Obyvatelé obdělávají políčka orámovaná na mapě.")}${
       h.entertainers ? t(" Baviči nepracují na poli a udržují ve městě klid.") : ""
     }</span></p>
-    ${
+    </div>
+    <div class="sel-col sel-side">${
       unitsHere.length
         ? `<h2>${t("Jednotky ve městě")}</h2><ul class="unit-list">${unitsHere
             .map(
@@ -1230,7 +1236,7 @@ function renderCity(city: City): void {
             .join("")}</ul>`
         : ""
     }
-    <div class="actions" style="margin-top:10px"><button type="button" data-open-city class="primary">${t("Otevřít město")}</button><button type="button" data-close>${t("Zavřít")} <kbd>Esc</kbd></button></div>`;
+    <div class="actions"><button type="button" data-open-city class="primary">${t("Otevřít město")}</button><button type="button" data-close>${t("Zavřít")} <kbd>Esc</kbd></button></div></div>`;
 
   selectionPanel.querySelector("button[data-buy]")?.addEventListener("click", () => {
     run({ type: "buy", cityId: city.id });

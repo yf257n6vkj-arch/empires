@@ -25,7 +25,7 @@ Hotové jsou fáze 1 a 2. Hráč si vybere jeden z patnácti národů (čtrnáct
 - Žebříček v menu ukáže graf skóre a pořadí národů, které znáš, a to, jak si zatím vedeš. Po konci hry se sám otevře se všemi národy.
 - `O` nebo tlačítko `Města` nahoře otevře přehled všech měst. U každého města je vidět velikost, růst, výroba, obchod a nálada a v seznamu jde rovnou změnit, co staví.
 - Jazyk hry přepneš na úvodní obrazovce nebo v menu. Hra umí česky a anglicky.
-- Rádce vlevo radí začátečníkům, co dělat dál. Křížkem ho schováš, tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.
+- Rádce vlevo nahoře radí začátečníkům, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře nebo v menu ho zase ukážeš. Vybraná jednotka nebo město mají panel dole uprostřed.
 - Ve městě můžeš místo stavby zvolit Vydělávat zlato. Otazník u stavby nebo klik na budovu v obrázku města otevře encyklopedii. Tlačítkem Prodat u budovy ji prodáš, jednu za tah. Klik na obyvatele mimo pole z něj udělá výběrčího daní nebo vědce.
 - Mapu přiblížíš roztažením prstů na trackpadu, `Ctrl` a kolečkem myši, tlačítky v rohu mapy nebo klávesami `+` a `−`. Nula vrátí celou mapu.
 - Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši nebo tažením. Klik do malé mapy vpravo dole tě přenese na to místo.

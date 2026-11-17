@@ -2440,4 +2440,38 @@ export const DE_STRINGS: Record<string, string> = {
     "Karte",
   "Celá hra":
     "Das ganze Spiel",
+  "Vláda":
+    "Regierung",
+  "Sazba nejvýš":
+    "Höchstsatz",
+  "Korupce":
+    "Korruption",
+  "Zdarma":
+    "Gratis",
+  "Vojáci":
+    "Soldaten",
+  "Slavící město":
+    "Feiernde Stadt",
+  "Navíc":
+    "Außerdem",
+  "Kolik nejvíc obchodu můžeš dát na vědu, daně nebo zábavu.":
+    "Wie viel Handel du höchstens in Wissenschaft, Steuern oder Luxus stecken kannst.",
+  "Kolik obchodu se ztratí ve městech daleko od paláce, srovnáno s despocií.":
+    "Wie viel Handel in Städten weit vom Palast verloren geht, verglichen mit der Despotie.",
+  "Kolik jednotek každé město živí zdarma. Každá další stojí štít.":
+    "Wie viele Einheiten jede Stadt kostenlos versorgt. Jede weitere kostet einen Schild.",
+  "{pct} % všude":
+    "{pct} % überall",
+  "žádná":
+    "keine",
+  "doma uklidní":
+    "beruhigen daheim",
+  "venku rozladí {n}":
+    "verärgern auswärts {n}",
+  "bez postihu":
+    "keine Strafe",
+  "obchod navíc":
+    "mehr Handel",
+  "roste každý tah":
+    "wächst jede Runde",
 };

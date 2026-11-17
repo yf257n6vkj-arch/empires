@@ -2440,4 +2440,38 @@ export const SK_STRINGS: Record<string, string> = {
     "Mapa",
   "Celá hra":
     "Celá hra",
+  "Vláda":
+    "Vláda",
+  "Sazba nejvýš":
+    "Sadzba najviac",
+  "Korupce":
+    "Korupcia",
+  "Zdarma":
+    "Zadarmo",
+  "Vojáci":
+    "Vojaci",
+  "Slavící město":
+    "Oslavujúce mesto",
+  "Navíc":
+    "Navyše",
+  "Kolik nejvíc obchodu můžeš dát na vědu, daně nebo zábavu.":
+    "Koľko najviac obchodu môžeš dať na vedu, dane alebo zábavu.",
+  "Kolik obchodu se ztratí ve městech daleko od paláce, srovnáno s despocií.":
+    "Koľko obchodu sa stratí v mestách ďaleko od paláca, v porovnaní s despociou.",
+  "Kolik jednotek každé město živí zdarma. Každá další stojí štít.":
+    "Koľko jednotiek každé mesto živí zadarmo. Každá ďalšia stojí štít.",
+  "{pct} % všude":
+    "{pct} % všade",
+  "žádná":
+    "žiadna",
+  "doma uklidní":
+    "doma upokoja",
+  "venku rozladí {n}":
+    "vonku rozladia {n}",
+  "bez postihu":
+    "bez postihu",
+  "obchod navíc":
+    "obchod navyše",
+  "roste každý tah":
+    "rastie každý ťah",
 };

@@ -2,6 +2,10 @@
 
 What we decided with Michal, so we don't have to go back over it. Newest first. Entries before version 1.0 were written in Czech and translated to English when the repository switched to English.
 
+## 17 Nov 2026: Governments are compared in a table
+
+The government window described each government in one long sentence of comma-separated rules, so choosing between monarchy and republic meant reading and comparing sentences in your head. Michal approved a comparison table: one row per government and columns for the highest rate, corruption (compared with despotism, or the same everywhere under communism), units each city supports for free, what soldiers do, what a celebrating city gains, and the remaining rules (tile penalty, trade bonus, settlers eating two food, collapse in long disorder), each on its own line. The column headings explain themselves on hover. The revolution button stays at the end of the row, the ruling government is highlighted and unknown ones are dimmed. The encyclopedia and the technology tree keep the one-line description.
+
 ## 17 Nov 2026: The controls help is split into four groups
 
 The Controls window was one list of 17 points that mixed units, cities, the map and keys for the whole game, so finding for example how to zoom meant reading nearly everything. Michal approved splitting the same points into four headed groups, Units, Cities, Map and The whole game, in two columns: units on the left, the other three on the right. The window is wider and fits on a 900-pixel screen without scrolling; on narrow screens the columns stack. The texts of the points did not change.

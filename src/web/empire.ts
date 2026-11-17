@@ -17,7 +17,7 @@ import {
 import { buildingPortraitCanvas } from "./buildingArt";
 import { playerColor } from "./render";
 import { spaceshipCanvas, type SpaceshipPicture } from "./spaceshipArt";
-import { describeGovernment, escapeHtml, realmName } from "./texts";
+import { escapeHtml, governmentCells, realmName } from "./texts";
 import { t, tn } from "./i18n";
 import { governmentName, inSentence } from "./i18n/names";
 
@@ -55,16 +55,19 @@ export function createEmpireDialogs(dialog: HTMLDialogElement, host: EmpireHost)
         const button = current
           ? `<span class="tag">${t("vládne teď")}</span>`
           : `<button type="button" data-gov="${g}" ${!known || p.revolution ? "disabled" : ""}>${known ? (wonderFlag(s, p.id, "noAnarchy") ? t("Změnit vládu") : t("Vyhlásit revoluci")) : t("Zatím neznáš")}</button>`;
-        return `<div class="gov ${current ? "on" : ""} ${known ? "" : "locked"}"><div><button type="button" class="linklike" data-entry="gov-${g}"><b>${escapeHtml(governmentName(g))}</b></button><div class="muted small">${escapeHtml(describeGovernment(rule))}</div></div>${button}</div>`;
+        const c = governmentCells(rule);
+        return `<tr class="${current ? "on" : ""} ${known ? "" : "locked"}"><th scope="row"><button type="button" class="linklike" data-entry="gov-${g}">${escapeHtml(governmentName(g))}</button></th><td class="num">${c.rate}</td><td>${c.corruption}</td><td class="num">${c.freeUnits}</td><td>${c.soldiers}</td><td>${c.celebration}</td><td class="gov-extra">${c.extra}</td><td class="gov-act">${button}</td></tr>`;
       })
       .join("");
+    const head = `<thead><tr><th>${t("Vláda")}</th><th title="${escapeHtml(t("Kolik nejvíc obchodu můžeš dát na vědu, daně nebo zábavu."))}">${t("Sazba nejvýš")}</th><th title="${escapeHtml(t("Kolik obchodu se ztratí ve městech daleko od paláce, srovnáno s despocií."))}">${t("Korupce")}</th><th title="${escapeHtml(t("Kolik jednotek každé město živí zdarma. Každá další stojí štít."))}">${t("Zdarma")}</th><th>${t("Vojáci")}</th><th>${t("Slavící město")}</th><th>${t("Navíc")}</th><th></th></tr></thead>`;
+    const table = `<table class="gov-table">${head}<tbody>${rows}</tbody></table>`;
     frame(
       t("Vláda: {now}", { now: governmentName(p.government) }),
       `${running}<p class="small">${
         wonderFlag(s, p.id, "noAnarchy")
           ? t("Máš pyramidy, a tak vládu změníš hned bez anarchie a vybrat můžeš kteroukoli.")
           : tn("Revoluce znamená jeden tah anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami se vláda změní hned.|Revoluce znamená {n} tahy anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami se vláda změní hned.|Revoluce znamená {n} tahů anarchie, kdy říše nevybírá daně a nezkoumá. S pyramidami se vláda změní hned.", RULES.anarchyTurns)
-      }</p>${rows}`,
+      }</p>${table}`,
     );
     dialog.querySelectorAll<HTMLButtonElement>("[data-entry]").forEach((b) =>
       b.addEventListener("click", () => {

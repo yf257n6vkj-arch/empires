@@ -529,6 +529,32 @@ export function describeGovernment(g: GovernmentRule): string {
   return parts.join(", ");
 }
 
+/** A government's rules as short cells for the comparison table in the government window. */
+export function governmentCells(g: GovernmentRule): { rate: string; corruption: string; freeUnits: string; soldiers: string; celebration: string; extra: string } {
+  const none = "–";
+  const corruption = g.corruptionFlatPct
+    ? t("{pct} % všude", { pct: g.corruptionFlatPct })
+    : g.corruptionPct === 0
+      ? t("žádná")
+      : `${g.corruptionPct} %`;
+  const soldiers = g.martialLaw ? t("doma uklidní") : g.militaryUnhappy ? t("venku rozladí {n}", { n: g.militaryUnhappy }) : none;
+  const celebration =
+    g.celebration === "noTilePenalty" ? t("bez postihu") : g.celebration === "tradeBonus" ? t("obchod navíc") : g.celebration === "rapture" ? t("roste každý tah") : none;
+  const extra: string[] = [];
+  if (g.tilePenalty) extra.push(t("políčka s výnosem nad 2 dají o jeden méně"));
+  if (g.tradeBonus) extra.push(t("políčka s obchodem dají o jeden víc"));
+  if (g.settlerFood > 1) extra.push(t("osadník jí {settlerFood} jídla", { settlerFood: g.settlerFood }));
+  if (g.collapsesInDisorder) extra.push(t("dlouhé nepokoje ji můžou svrhnout"));
+  return {
+    rate: `${g.maxRate} %`,
+    corruption: escapeHtml(corruption),
+    freeUnits: String(g.freeUnits),
+    soldiers: escapeHtml(soldiers),
+    celebration: escapeHtml(celebration),
+    extra: extra.map(escapeHtml).join("<br>") || none,
+  };
+}
+
 /** "Šťastní 1 · spokojení 3 · nespokojení 0 · baviči 1": the moods of a city in one line. */
 export function moodLine(h: Happiness): string {
   const parts = [

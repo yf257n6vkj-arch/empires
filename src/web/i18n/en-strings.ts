@@ -2443,4 +2443,38 @@ export const EN_STRINGS: Record<string, string> = {
     "Map",
   "Celá hra":
     "The whole game",
+  "Vláda":
+    "Government",
+  "Sazba nejvýš":
+    "Highest rate",
+  "Korupce":
+    "Corruption",
+  "Zdarma":
+    "Free units",
+  "Vojáci":
+    "Soldiers",
+  "Slavící město":
+    "Celebrating city",
+  "Navíc":
+    "Also",
+  "Kolik nejvíc obchodu můžeš dát na vědu, daně nebo zábavu.":
+    "The most trade you can put into science, taxes or luxuries.",
+  "Kolik obchodu se ztratí ve městech daleko od paláce, srovnáno s despocií.":
+    "How much trade is lost in cities far from the palace, compared with despotism.",
+  "Kolik jednotek každé město živí zdarma. Každá další stojí štít.":
+    "How many units each city supports for free. Each further unit costs a shield.",
+  "{pct} % všude":
+    "{pct} % everywhere",
+  "žádná":
+    "none",
+  "doma uklidní":
+    "keep order at home",
+  "venku rozladí {n}":
+    "upset {n} when abroad",
+  "bez postihu":
+    "no penalty",
+  "obchod navíc":
+    "extra trade",
+  "roste každý tah":
+    "grows every turn",
 };

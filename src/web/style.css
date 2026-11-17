@@ -292,6 +292,21 @@ button.spaceship b { color: #e7c98a; }
 .empire-body p { margin: 6px 0 10px; line-height: 1.45; }
 .empire-body .small { font-size: 12.5px; }
 .empire-body .warn { color: #f0b46a; }
+.empire-dialog:has(.gov-table) { width: min(1120px, 96vw); }
+.gov-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+.gov-table th, .gov-table td { padding: 8px 10px; border-bottom: 1px solid #3d342a; text-align: left; vertical-align: middle; }
+.gov-table thead th { font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; color: #c9a85e; white-space: nowrap; border-bottom-color: #5a4a36; }
+.gov-table thead th[title] { cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; }
+.gov-table tbody th { font-size: 14px; font-weight: 700; white-space: nowrap; }
+.gov-table td.num { text-align: right; white-space: nowrap; }
+.gov-table thead th:nth-child(2), .gov-table thead th:nth-child(4) { text-align: right; }
+.gov-table td { white-space: nowrap; }
+.gov-table td.gov-extra { white-space: normal; color: var(--muted); font-size: 12.5px; line-height: 1.4; min-width: 200px; }
+.gov-table td.gov-act { text-align: right; }
+.gov-table tr.on th, .gov-table tr.on td { background: rgba(217, 164, 65, 0.1); }
+.gov-table tr.on th { box-shadow: inset 3px 0 0 #d9a441; }
+.gov-table tr.locked th, .gov-table tr.locked td { opacity: 0.55; }
+.gov-table .tag { font-size: 12px; color: #e7c98a; white-space: nowrap; }
 .gov { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; margin: 6px 0; border: 1px solid #3d342a; border-radius: 8px; }
 .gov.on { border-color: #d9a441; background: rgba(217, 164, 65, 0.08); }
 .gov.locked { opacity: 0.6; }

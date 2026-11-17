@@ -48,12 +48,12 @@ const pct = (n: number) => `${(n * 100).toFixed(1)} %`;
 const landTotal = TERRAIN_IDS.filter((t) => t !== "ocean").reduce((n, t) => n + totals[t], 0);
 const sorted = [...minDistances].sort((a, b) => a - b);
 
-console.log(`Map: ${count}, chyby: ${failures}, ${(ms / count).toFixed(1)} ms na mapu`);
-console.log(`Podíl souše: min ${pct(Math.min(...landShares))}, průměr ${pct(landShares.reduce((a, b) => a + b, 0) / landShares.length)}, max ${pct(Math.max(...landShares))}`);
-console.log("Terén (podíl ze souše):");
+console.log(`Maps: ${count}, errors: ${failures}, ${(ms / count).toFixed(1)} ms per map`);
+console.log(`Land share: min ${pct(Math.min(...landShares))}, mean ${pct(landShares.reduce((a, b) => a + b, 0) / landShares.length)}, max ${pct(Math.max(...landShares))}`);
+console.log("Terrain (share of land):");
 for (const t of TERRAIN_IDS) if (t !== "ocean") console.log(`  ${t.padEnd(10)} ${pct(totals[t] / landTotal)}`);
-console.log(`Nejmenší vzdálenost mezi starty: min ${sorted[0]}, medián ${sorted[Math.floor(sorted.length / 2)]}, max ${sorted[sorted.length - 1]}`);
-console.log(`  map se vzdáleností pod 8: ${sorted.filter((d) => d < 8).length}`);
+console.log(`Smallest distance between starts: min ${sorted[0]}, median ${sorted[Math.floor(sorted.length / 2)]}, max ${sorted[sorted.length - 1]}`);
+console.log(`  maps with a distance under 8: ${sorted.filter((d) => d < 8).length}`);
 
 /**
  * Every combination of the extreme world settings, each with the most
@@ -90,8 +90,8 @@ function checkWorlds(perCombo: number): void {
                 }
               }
             }
-  console.log(`Světy: ${n} map, ${((performance.now() - started) / n).toFixed(1)} ms na mapu, nejvíc soupeřů pro každou velikost`);
-  console.log("velikost tvar      pevnina  chyby  souše  ostrovy(políček)  vzdálenost startů min/medián  pod 6");
+  console.log(`Worlds: ${n} maps, ${((performance.now() - started) / n).toFixed(1)} ms per map, most rivals for each size`);
+  console.log("size     shape     land     errors land  islands(tiles)    start distance min/median     <6");
   for (const [key, r] of rows) {
     const sorted = [...r.distances].sort((a, b) => a - b);
     const ok = r.maps - r.failures;

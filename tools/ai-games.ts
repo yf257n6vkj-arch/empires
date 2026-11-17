@@ -199,20 +199,20 @@ const pct = (xs: number[], p: number) => {
   const s = [...xs].sort((a, b) => a - b);
   return s.length ? s[Math.min(s.length - 1, Math.floor(s.length * p))] : 0;
 };
-console.log(`${games} partií, ${((performance.now() - started) / 1000 / Math.max(1, games)).toFixed(1)} s na partii, chyby: ${failures}`);
+console.log(`${games} games, ${((performance.now() - started) / 1000 / Math.max(1, games)).toFixed(1)} s per game, errors: ${failures}`);
 for (const [turn, r] of rows) {
-  console.log(`tah ${String(turn).padStart(3)}: města medián ${med(r.cities)} (10 % ${pct(r.cities, 0.1)}, 90 % ${pct(r.cities, 0.9)}) · technologie medián ${med(r.techs)} · jednotky medián ${med(r.units)}`);
+  console.log(`turn ${String(turn).padStart(3)}: cities median ${med(r.cities)} (10 % ${pct(r.cities, 0.1)}, 90 % ${pct(r.cities, 0.9)}) · technologies median ${med(r.techs)} · units median ${med(r.units)}`);
 }
-console.log(`hráčů s jedním městem po 60. tahu: ${stuck} · poražených: ${defeated} · měst na ostrovech: ${islandCities}`);
+console.log(`players with one city after turn 60: ${stuck} · defeated: ${defeated} · cities on islands: ${islandCities}`);
 const warTurns = firstWar.filter((t) => t >= 0);
-console.log(`válek: ${wars} · partií s válkou: ${warTurns.length} z ${games} · první válka medián v tahu ${med(warTurns)} · bitev: ${battles} (útočník vyhrál ${battles ? Math.round((100 * attackerWins) / battles) : 0} %) · dobytých měst: ${captured} · zničených měst: ${destroyed}`);
-console.log(`barbaři (${level}): skupin ${barbarianGroups}, jednotek ${barbarianUnits} · dobyli měst: ${takenByBarbarians}, vzato zpět: ${retaken} · drží na konci měst: ${barbarianCities} · prozkoumaných ruin: ${ruins}`);
-console.log(`výhry: ${Object.entries(wins).map(([k, n]) => `${k} ${n}`).join(" · ")}`);
+console.log(`wars: ${wars} · games with war: ${warTurns.length} of ${games} · first war median turn ${med(warTurns)} · battles: ${battles} (attacker won ${battles ? Math.round((100 * attackerWins) / battles) : 0} %) · cities taken: ${captured} · cities destroyed: ${destroyed}`);
+console.log(`barbarians (${level}): groups ${barbarianGroups}, units ${barbarianUnits} · cities taken: ${takenByBarbarians}, taken back: ${retaken} · cities held at the end: ${barbarianCities} · ruins explored: ${ruins}`);
+console.log(`wins: ${Object.entries(wins).map(([k, n]) => `${k} ${n}`).join(" · ")}`);
 if (difficultyArg) {
-  console.log(`obtížnost ${difficulty}: hráč na místě člověka vyhrál ${seatWins.reference}×, soupeři ${seatWins.others}× · města na konci: hráč medián ${med(seatCities.reference)}, soupeři medián ${med(seatCities.others)} · skóre hráče v % nejlepšího soupeře: medián ${med(scoreShare)}`);
+  console.log(`difficulty ${difficulty}: the human seat won ${seatWins.reference}×, rivals ${seatWins.others}× · cities at the end: human seat median ${med(seatCities.reference)}, rivals median ${med(seatCities.others)} · human seat score as % of the best rival: median ${med(scoreShare)}`);
 }
-console.log(`mír: nabídek ${offers}, odmítnutých ${rejected}, uzavřených mírů ${peaces} · válka do míru trvala medián ${med(warLengths)} tahů · porušených smluv ${broken}`);
-console.log(`útoky na města: ${cityAttacks}, z toho ve skupině aspoň tří vojáků ${cityAttacks ? Math.round((100 * groupAttacks) / cityAttacks) : 0} %`);
-console.log(`moře: postavených válečných lodí ${warshipsBuilt}, útoků lodí ${seaAttacks}, měst dobytých za mořem ${overseas}`);
-console.log(`vzduch: postavených letadel ${aircraftBuilt}, útoků letadel ${airAttacks}, letadel bez paliva ${aircraftLost} · jaderných útoků ${nukes}, z toho zastavených štítem ${nukesStopped}`);
-console.log(`karavany: obchodních cest ${routes}, pomoc s divy ${helped}× · diplomati: velvyslanectví ${embassies}, ukradených objevů ${stolen}, podplacených měst ${incited} (barbarských ${incitedBarbarian}), sabotáží ${sabotaged} · vypuštěných lodí ${launches}`);
+console.log(`peace: offers ${offers}, refused ${rejected}, peaces made ${peaces} · war until peace median ${med(warLengths)} turns · treaties broken ${broken}`);
+console.log(`attacks on cities: ${cityAttacks}, of which in a group of at least three soldiers ${cityAttacks ? Math.round((100 * groupAttacks) / cityAttacks) : 0} %`);
+console.log(`sea: warships built ${warshipsBuilt}, ship attacks ${seaAttacks}, cities taken overseas ${overseas}`);
+console.log(`air: aircraft built ${aircraftBuilt}, air attacks ${airAttacks}, aircraft out of fuel ${aircraftLost} · nuclear strikes ${nukes}, stopped by a shield ${nukesStopped}`);
+console.log(`caravans: trade routes ${routes}, wonder help ${helped}× · diplomats: embassies ${embassies}, discoveries stolen ${stolen}, cities incited ${incited} (barbarian ${incitedBarbarian}), sabotage ${sabotaged} · ships launched ${launches}`);

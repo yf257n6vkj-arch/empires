@@ -388,20 +388,20 @@ function quantiles(values: (number | null)[]): string {
   const missing = values.length - known.length;
   if (known.length === 0) return `nikdy (${missing}×)`;
   const q = (p: number) => known[Math.min(known.length - 1, Math.floor(p * known.length))];
-  return `medián ${q(0.5)}, 10 % ${q(0.1)}, 90 % ${q(0.9)}${missing ? `, nedosaženo ${missing}×` : ""}`;
+  return `median ${q(0.5)}, 10 % ${q(0.1)}, 90 % ${q(0.9)}${missing ? `, not reached ${missing}×` : ""}`;
 }
 
-console.log(`${games} partií za ${seconds} s, cena výzkumu ${RULES.researchCostBase} + ${RULES.researchCostPerTech} × počet technologií`);
-for (const e of [2, 3, 4, 5]) console.log(`éra ${e} v tahu: ${quantiles(results.map((r) => r.eraTurn[e] ?? null))}`);
-for (const t of TECH_CHECKS) console.log(`technologie v tahu ${t}: ${quantiles(results.map((r) => r.techsAt[t] ?? null))}`);
-console.log(`celý strom v tahu: ${quantiles(results.map((r) => r.allTechsTurn))}`);
-console.log(`města v tahu 120: ${quantiles(results.map((r) => r.cities))}`);
-console.log(`obyvatel v tahu 120: ${quantiles(results.map((r) => r.population))}`);
-console.log(`největší město v tahu 120: ${quantiles(results.map((r) => r.largest))}`);
-console.log(`korupce v tahu 120 (% obchodu): ${quantiles(results.map((r) => r.corruption))}`);
-console.log(`znečištěná políčka v tahu 120: ${quantiles(results.map((r) => r.smog))}`);
-console.log(`globální oteplování za partii: ${quantiles(results.map((r) => r.warmings))}`);
-console.log(`katastrofy za partii (zasáhly / odvrácené): ${quantiles(results.map((r) => r.disasters[0]))} / ${quantiles(results.map((r) => r.disasters[1]))}`);
-console.log(`divy: ${quantiles(results.map((r) => r.wonders))}`);
-console.log(`vláda v tahu 120: ${[...governments].map(([g, n]) => `${g} ${n}×`).join(", ")}`);
-if (stuck.length) console.log(`zaseknuté partie (méně než 3 města): ${stuck.join(", ")}`);
+console.log(`${games} games in ${seconds} s, research cost ${RULES.researchCostBase} + ${RULES.researchCostPerTech} × known technologies`);
+for (const e of [2, 3, 4, 5]) console.log(`era ${e} at turn: ${quantiles(results.map((r) => r.eraTurn[e] ?? null))}`);
+for (const t of TECH_CHECKS) console.log(`technologies at turn ${t}: ${quantiles(results.map((r) => r.techsAt[t] ?? null))}`);
+console.log(`whole tree at turn: ${quantiles(results.map((r) => r.allTechsTurn))}`);
+console.log(`cities at the end: ${quantiles(results.map((r) => r.cities))}`);
+console.log(`citizens at the end: ${quantiles(results.map((r) => r.population))}`);
+console.log(`largest city at the end: ${quantiles(results.map((r) => r.largest))}`);
+console.log(`corruption at the end (% of trade): ${quantiles(results.map((r) => r.corruption))}`);
+console.log(`polluted tiles at the end: ${quantiles(results.map((r) => r.smog))}`);
+console.log(`global warmings per game: ${quantiles(results.map((r) => r.warmings))}`);
+console.log(`disasters per game (struck / prevented): ${quantiles(results.map((r) => r.disasters[0]))} / ${quantiles(results.map((r) => r.disasters[1]))}`);
+console.log(`wonders: ${quantiles(results.map((r) => r.wonders))}`);
+console.log(`government at the end: ${[...governments].map(([g, n]) => `${g} ${n}×`).join(", ")}`);
+if (stuck.length) console.log(`stuck games (fewer than 3 cities): ${stuck.join(", ")}`);

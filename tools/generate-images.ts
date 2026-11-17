@@ -38,7 +38,7 @@ const key = process.env.GEMINI_API_KEY;
 
 const unknown = (only ?? []).filter((id) => !(id in prompts.scenes));
 if (unknown.length) {
-  console.error(`Neznámé technologie: ${unknown.join(", ")}`);
+  console.error(`Unknown technologies: ${unknown.join(", ")}`);
   process.exit(1);
 }
 const todo = Object.keys(prompts.scenes).filter((id) =>
@@ -46,11 +46,11 @@ const todo = Object.keys(prompts.scenes).filter((id) =>
 );
 
 if (dryRun || todo.length === 0) {
-  console.log(todo.length ? `Vygeneroval bych ${todo.length} obrázků: ${todo.join(", ")}` : "Všechny obrázky už existují.");
+  console.log(todo.length ? `Would generate ${todo.length} pictures: ${todo.join(", ")}` : "All pictures already exist.");
   process.exit(0);
 }
 if (!key && !process.env.HTTPS_PROXY) {
-  console.error("Chybí GEMINI_API_KEY. Klíč vytvoříš v Google AI Studiu a spustíš: GEMINI_API_KEY=... npm run images");
+  console.error("GEMINI_API_KEY is missing. Create a key in Google AI Studio and run: GEMINI_API_KEY=... npm run images");
   process.exit(1);
 }
 
@@ -95,22 +95,22 @@ async function generate(id: string): Promise<void> {
     const text = await res.text();
     if (res.status === 429 || res.status >= 500) {
       const wait = 5000 * attempt;
-      console.log(`  ${id}: služba je přetížená (${res.status}), zkusím znovu za ${wait / 1000} s`);
+      console.log(`  ${id}: the service is overloaded (${res.status}), retrying in ${wait / 1000} s`);
       await new Promise((r) => setTimeout(r, wait));
       continue;
     }
     if (!res.ok) throw new Error(`${id}: ${res.status} ${text.slice(0, 400)}`);
     const image = findImage(JSON.parse(text) as InteractionResponse);
-    if (!image?.data) throw new Error(`${id}: odpověď neobsahuje obrázek: ${text.slice(0, 400)}`);
+    if (!image?.data) throw new Error(`${id}: the response holds no image: ${text.slice(0, 400)}`);
     const ext = image.mime_type === "image/png" ? "png" : "jpg";
     writeFileSync(join(outDir, `${id}.${ext}`), Buffer.from(image.data, "base64"));
     return;
   }
-  throw new Error(`${id}: ani po čtyřech pokusech to nevyšlo`);
+  throw new Error(`${id}: failed after four attempts`);
 }
 
 mkdirSync(outDir, { recursive: true });
-console.log(`Generuji ${todo.length} obrázků modelem ${model} (${size}, 4:3), ${parallel} najednou.`);
+console.log(`Generating ${todo.length} pictures with ${model} (${size}, 4:3), ${parallel} at a time.`);
 const failed: string[] = [];
 let next = 0;
 let done = 0;
@@ -129,7 +129,7 @@ await Promise.all(
   }),
 );
 if (failed.length) {
-  console.error(`\nNepovedlo se: ${failed.join(", ")}. Spusť příkaz znovu, hotové obrázky přeskočí.`);
+  console.error(`\nFailed: ${failed.join(", ")}. Run the command again; finished pictures are skipped.`);
   process.exit(1);
 }
 console.log("Hotovo.");

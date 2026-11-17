@@ -463,6 +463,7 @@ main.playfield { flex: 1 1 auto; min-height: 0; display: block; gap: 0; }
 .st-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8, 9, 11, 0.92) 0%, rgba(8, 9, 11, 0.72) 32%, rgba(8, 9, 11, 0.1) 70%); }
 .st-panel { position: absolute; left: 7vw; top: 50%; transform: translateY(-50%); width: min(420px, 80vw); }
 .st-title { font-family: Georgia, "Times New Roman", serif; font-size: clamp(48px, 7vw, 88px); letter-spacing: 0.08em; margin: 0; color: #f0cf7d; text-shadow: 0 3px 18px rgba(0, 0, 0, 0.7); text-transform: uppercase; }
+.st-title span { display: block; font-size: 0.4em; letter-spacing: 0.42em; margin-top: 2px; color: #e9dcbf; }
 .st-sub { margin: 2px 0 28px; color: #cbbf9f; font-size: 16px; letter-spacing: 0.04em; }
 .st-menu { display: flex; flex-direction: column; gap: 10px; }
 .st-menu button {
@@ -472,6 +473,13 @@ main.playfield { flex: 1 1 auto; min-height: 0; display: block; gap: 0; }
 .st-menu button span { font-size: 13px; color: #b8aa88; }
 .st-menu button:hover:not(:disabled), .st-menu button:focus-visible { background: rgba(138, 106, 36, 0.85); border-color: #e0b75a; }
 .st-foot { margin-top: 26px; color: #8e8470; font-size: 12px; }
+.st-howto { position: absolute; right: 5vw; bottom: 7vh; width: min(400px, 34vw); background: rgba(14, 12, 10, 0.82); border: 1px solid #5a4a36; border-radius: 10px; padding: 16px 20px 12px; color: #e3d8bd; font-size: 14px; line-height: 1.45; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); }
+.st-howto h2 { margin: 0 0 8px; font-family: Georgia, "Times New Roman", serif; font-size: 20px; letter-spacing: 0.05em; color: #f0cf7d; text-transform: none; }
+.st-howto ol { margin: 0 0 8px; padding-left: 20px; }
+.st-howto li { margin-bottom: 6px; }
+.st-howto b { color: #f3e2b8; }
+.st-howto p { margin: 0; color: #b8aa88; font-size: 13px; }
+@media (max-width: 1000px), (max-height: 640px) { .st-howto { display: none; } }
 
 /* ---------- in-game menu, saves, help ---------- */
 .menu-dialog, .saves-dialog, .help-dialog { background: #1f1b17; border: 1px solid #5a4a36; border-radius: 12px; color: inherit; padding: 18px 22px; }
@@ -548,7 +556,7 @@ label.check input { flex: 0 0 auto; }
 .warn-text { color: #f0b46a; }
 
 /* ---------- language picker on the start screen ---------- */
-.st-langs { display: flex; gap: 6px; margin-top: 18px; }
+.st-langs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
 .st-langs button { background: rgba(20, 16, 12, 0.6); border: 1px solid #5a4a36; color: #cdbb94; border-radius: 6px; padding: 4px 10px; font-size: 12.5px; cursor: pointer; }
 .st-langs button.on { border-color: #e0b75a; color: #f3e2b8; }
 .gm-settings select { margin-left: 6px; }

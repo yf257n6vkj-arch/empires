@@ -49,6 +49,9 @@ export interface MenuHost {
   player: number;
 }
 
+/** The version shown on the start screen; keep in step with package.json. */
+export const GAME_VERSION = "1.0";
+
 const BACKDROPS = ["civ-czechs", "civ-romans", "civ-egyptians", "wdr-pyramids", "civ-english", "civ-aztecs", "wdr-greatWall", "civ-greeks", "wdr-stVitus", "civ-chinese"];
 
 function dateText(ms: number): string {
@@ -85,7 +88,7 @@ export function createMenus(
     start.innerHTML = `
       <div class="st-bg"></div><div class="st-bg"></div><div class="st-shade"></div>
       <div class="st-panel">
-        <h1 class="st-title">Empires</h1>
+        <h1 class="st-title">Empires <span>Reloaded</span></h1>
         <p class="st-sub">${t("tahová strategie o patnácti národech")}</p>
         <nav class="st-menu">
           <button type="button" data-act="continue" ${info ? "" : "disabled"}>${t("Pokračovat")}<span>${escapeHtml(cont)}</span></button>
@@ -95,8 +98,19 @@ export function createMenus(
           <button type="button" data-act="help">${t("Ovládání")}</button>
         </nav>
         <div class="st-langs">${languageButtons()}</div>
-        <p class="st-foot">${t("fáze 3 · hra se průběžně ukládá sama")}</p>
-      </div>`;
+        <p class="st-foot">${t("verze {version} · hra se průběžně ukládá sama", { version: GAME_VERSION })}</p>
+      </div>
+      <aside class="st-howto">
+        <h2>${t("Jak začít hrát")}</h2>
+        <ol>
+          <li>${t("Klikni na <b>Nová hra</b> a vyber si národ. Pod volbou národa si nastavíš svět, třeba rychlou hru na 60 tahů.")}</li>
+          <li>${t("Najdi osadníkem dobré místo u řeky nebo u moře a klávesou <b>B</b> založ první město.")}</li>
+          <li>${t("Klikni na město a vyber, co se v něm má stavět. Nahoře vlevo vyber, co budou vědci zkoumat.")}</li>
+          <li>${t("Jednotky posíláš klikáním na mapu. Když máš hotovo, ukonči tah tlačítkem <b>Konec tahu</b> nebo klávesou Enter.")}</li>
+          <li>${t("Když nevíš, co dál, poradí ti Rádce. Dětem v menu zapneš Průvodce, se kterým hrou provede sova.")}</li>
+        </ol>
+        <p>${t("Vyhrát jde dobytím všech soupeřů nebo vesmírnou lodí. Když po posledním tahu nevyhrál nikdo, rozhodne skóre.")}</p>
+      </aside>`;
     start.querySelectorAll<HTMLButtonElement>("[data-lang]").forEach((b) => b.addEventListener("click", () => switchLanguage(b.dataset.lang!)));
     start.querySelector('[data-act="continue"]')!.addEventListener("click", () => {
       hideStart();

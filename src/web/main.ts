@@ -138,7 +138,6 @@ const endTurnButton = $<HTMLButtonElement>("#end-turn");
 const seedLabel = $<HTMLElement>("#seed-label");
 const mapWrap = $<HTMLDivElement>("#map-wrap");
 const minimap = $<HTMLCanvasElement>("#minimap");
-const showAllBox = $<HTMLInputElement>("#show-all");
 /** The map seen at an angle: a tile is this much shorter than wide, and mountains, trees, cities and units stand up. */
 const MAP_TILT = 0.72;
 const MAP_VIEW_KEY = "empires.mapView";
@@ -710,20 +709,19 @@ function buildDrawInput(): DrawInput {
   const unit = selectedUnit();
   const city = selectedCity();
   const view = playerView(state, HUMAN);
-  const showAll = showAllBox.checked;
   const route = routePreview();
   return {
     width: view.width,
     height: view.height,
-    terrain: showAll ? state.map.terrain : view.terrain,
-    road: showAll ? state.map.road : view.road,
-    irrigation: showAll ? state.map.irrigation : view.irrigation,
-    mine: showAll ? state.map.mine : view.mine,
-    railroad: showAll ? state.map.railroad : view.railroad,
-    fortress: showAll ? state.map.fortress : view.fortress,
-    special: showAll ? state.map.special : view.special,
-    pollution: showAll ? state.map.pollution : view.pollution,
-    ruins: showAll ? state.map.ruins : view.ruins,
+    terrain: view.terrain,
+    road: view.road,
+    irrigation: view.irrigation,
+    mine: view.mine,
+    railroad: view.railroad,
+    fortress: view.fortress,
+    special: view.special,
+    pollution: view.pollution,
+    ruins: view.ruins,
     units: [...view.units, ...view.foreignUnits].map((u) => ({
       id: u.id,
       owner: u.owner,
@@ -749,7 +747,7 @@ function buildDrawInput(): DrawInput {
       walls: c.buildings.includes("walls"),
       era: currentEra(state.players[c.owner]!),
     })),
-    starts: showAll ? state.players.slice(1).map((p) => ({ point: p.start, playerId: p.id })) : [],
+    starts: [],
     selectedUnitId,
     selectedCityId,
     territory: territoryOf(view.cities),
@@ -1687,7 +1685,7 @@ canvas.addEventListener("mousemove", (e) => {
     return;
   }
   const i = p.y * state.map.width + p.x;
-  const known = showAllBox.checked || state.players[HUMAN]!.explored[i] === 1;
+  const known = state.players[HUMAN]!.explored[i] === 1;
   const ter = state.map.terrain[i]!;
   if (!known) {
     tooltip.textContent = t("[{x}, {y}] neprozkoumáno", p);
@@ -1840,7 +1838,6 @@ document.addEventListener("keydown", (e) => {
 });
 
 endTurnButton.addEventListener("click", endTurn);
-showAllBox.addEventListener("change", refresh);
 mapViewSelect.addEventListener("change", () => {
   const flat = mapViewSelect.value === "flat";
   localStorage.setItem(MAP_VIEW_KEY, flat ? "flat" : "tilted");
@@ -1910,14 +1907,13 @@ function drawMinimap(): void {
   g.fillStyle = PARCHMENT;
   g.fillRect(0, 0, w * scale, h * scale);
   const explored = state.players[HUMAN]!.explored;
-  const all = showAllBox.checked;
   for (let i = 0; i < w * h; i++) {
-    if (!all && !explored[i]) continue;
+    if (!explored[i]) continue;
     g.fillStyle = MINI_COLORS[state.map.terrain[i]!] ?? "#555";
     g.fillRect((i % w) * scale, Math.floor(i / w) * scale, scale, scale);
   }
   for (const c of state.cities) {
-    if (!all && !explored[c.y * w + c.x]) continue;
+    if (!explored[c.y * w + c.x]) continue;
     g.fillStyle = CIVS[state.players[c.owner]!.civ].color;
     g.fillRect(c.x * scale - 1.5, c.y * scale - 1.5, scale + 3, scale + 3);
     g.strokeStyle = "#111";

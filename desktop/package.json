@@ -1,12 +1,12 @@
 {
-  "name": "empires",
-  "productName": "Empires",
-  "version": "0.4.0",
-  "description": "Tahová strategie ve stylu Civilizace 1",
+  "name": "empires-reloaded",
+  "productName": "Empires Reloaded",
+  "version": "1.0.0",
+  "description": "A turn-based strategy game in the spirit of the 1991 classic",
   "main": "main.cjs",
   "private": true,
   "scripts": {
-    "package": "electron-packager . Empires --platform=darwin --arch=arm64 --out=out --overwrite --icon=icon.icns --app-bundle-id=io.itch.sigmanek67.empires --ignore=^/out --prune=true"
+    "package": "electron-packager . \"Empires Reloaded\" --platform=darwin --arch=arm64 --out=out --overwrite --icon=icon.icns --app-bundle-id=io.itch.sigmanek67.empires --ignore=^/out --prune=true"
   },
   "devDependencies": {
     "@electron/packager": "^20.3.0",

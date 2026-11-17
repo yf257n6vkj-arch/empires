@@ -1,6 +1,6 @@
 {
-  "name": "empires",
-  "version": "0.0.1",
+  "name": "empires-reloaded",
+  "version": "1.0.0",
   "description": "Tahová strategie do prohlížeče ve stylu Civilizace 1",
   "directories": {
     "test": "tests"

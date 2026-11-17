@@ -1039,8 +1039,6 @@ export const EN_STRINGS: Record<string, string> = {
     "The game saves itself as you play. The code of this map is <b id=\"seed-label\"></b>. Enter it for a new game and you get the same map.",
   "Rádce radí, co dělat dál":
     "The advisor suggests what to do next",
-  "Ukázat celou mapu (ladění)":
-    "Show the whole map (debugging)",
   "Jazyk":
     "Language",
   "Klikni na svou jednotku nebo město a vyber ho.":
@@ -1725,8 +1723,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Details",
   "Správce:":
     "Governor:",
-  "fáze 3 · hra se průběžně ukládá sama":
-    "phase 3 · the game saves itself as you play",
   "žádní":
     "none",
   "málo":
@@ -2421,4 +2417,20 @@ export const EN_STRINGS: Record<string, string> = {
     "Battles, new cities, discoveries and buildings. All the way to the left turns sound off.",
   "Tichá středověká hudba. Mezi skladbami chvíli nehraje nic. Úplně vlevo je hudba vypnutá.":
     "Quiet medieval music. Between pieces nothing plays for a while. All the way to the left turns music off.",
+  "verze {version} · hra se průběžně ukládá sama":
+    "version {version} · the game saves itself as you play",
+  "Jak začít hrát":
+    "How to start playing",
+  "Klikni na <b>Nová hra</b> a vyber si národ. Pod volbou národa si nastavíš svět, třeba rychlou hru na 60 tahů.":
+    "Click <b>New game</b> and pick a nation. Below the nations you can set up the world, for example a quick game of 60 turns.",
+  "Najdi osadníkem dobré místo u řeky nebo u moře a klávesou <b>B</b> založ první město.":
+    "Find a good spot by a river or the sea with your settler and found your first city with the <b>B</b> key.",
+  "Klikni na město a vyber, co se v něm má stavět. Nahoře vlevo vyber, co budou vědci zkoumat.":
+    "Click the city and choose what it should build. At the top left, choose what your scientists will research.",
+  "Jednotky posíláš klikáním na mapu. Když máš hotovo, ukonči tah tlačítkem <b>Konec tahu</b> nebo klávesou Enter.":
+    "You send units by clicking on the map. When you are done, end the turn with the <b>End turn</b> button or the Enter key.",
+  "Když nevíš, co dál, poradí ti Rádce. Dětem v menu zapneš Průvodce, se kterým hrou provede sova.":
+    "When you don't know what to do next, the Advisor will help. For children, turn on the Guide in the menu and an owl will lead them through the game.",
+  "Vyhrát jde dobytím všech soupeřů nebo vesmírnou lodí. Když po posledním tahu nevyhrál nikdo, rozhodne skóre.":
+    "You can win by conquering all rivals or with a spaceship. If nobody has won after the last turn, the score decides.",
 };

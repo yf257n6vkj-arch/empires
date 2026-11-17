@@ -1078,8 +1078,6 @@ export const SK_STRINGS: Record<string, string> = {
     "anarchia: len zábava",
   "daně {tax} %":
     "dane {tax} %",
-  "Vláda: <b>{gov}</b>":
-    "Vláda: <b>{gov}</b>",
   "{gov} za {turns}":
     "{gov} o {turns}",
   "Loď letí, přistání v tahu <b>{arrivalTurn}</b>":
@@ -2306,8 +2304,6 @@ export const SK_STRINGS: Record<string, string> = {
     "Zábava",
   "Města":
     "Mestá",
-  "🦉 Rádce":
-    "🦉 Radca",
   "Konec tahu":
     "Koniec ťahu",
   "Co se stalo":

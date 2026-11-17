@@ -1061,7 +1061,7 @@ export const DE_STRINGS: Record<string, string> = {
   "Šance na výhru byla {pct} %.":
     "Die Siegchance lag bei {pct} %.",
   "Tah {turn} z {maxTurns}":
-    "Runde {turn} von {maxTurns}",
+    "Runde {turn}/{maxTurns}",
   "Zlato <b>{gold}</b>":
     "Gold <b>{gold}</b>",
   "{net} za tah":
@@ -1078,8 +1078,6 @@ export const DE_STRINGS: Record<string, string> = {
     "Anarchie: nur Luxus",
   "daně {tax} %":
     "Steuern {tax} %",
-  "Vláda: <b>{gov}</b>":
-    "Regierung: <b>{gov}</b>",
   "{gov} za {turns}":
     "{gov} in {turns}",
   "Loď letí, přistání v tahu <b>{arrivalTurn}</b>":
@@ -2306,8 +2304,6 @@ export const DE_STRINGS: Record<string, string> = {
     "Luxus",
   "Města":
     "Städte",
-  "🦉 Rádce":
-    "🦉 Berater",
   "Konec tahu":
     "Runde beenden",
   "Co se stalo":

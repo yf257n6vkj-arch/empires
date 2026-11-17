@@ -901,9 +901,11 @@ function renderEconomy(): void {
   rateLabel.textContent = anarchy ? "0 %" : `${p.scienceRate} %`;
   luxLabel.textContent = anarchy ? "100 %" : `${p.luxuryRate} %`;
   taxLabel.textContent = anarchy ? t("anarchie: jen zábava") : t("daně {tax} %", { tax: 100 - p.scienceRate - p.luxuryRate });
+  // The building icon stands for "government"; the button's title says it in words.
+  const govIcon = `<span class="nav-ico" aria-hidden="true">🏛</span>`;
   governmentButton.innerHTML = p.revolution
-    ? t("Vláda: <b>{gov}</b>", { gov: governmentName("anarchy") }) + ` <span class="muted">${t("{gov} za {turns}", { gov: governmentName(p.revolution.target), turns: turnsText(p.revolution.turnsLeft) })}</span>`
-    : t("Vláda: <b>{gov}</b>", { gov: governmentName(p.government) });
+    ? `${govIcon}<b>${governmentName("anarchy")}</b> <span class="muted">${t("{gov} za {turns}", { gov: governmentName(p.revolution.target), turns: turnsText(p.revolution.turnsLeft) })}</span>`
+    : `${govIcon}<b>${governmentName(p.government)}</b>`;
   const ship = p.spaceship;
   const apollo = state.cities.some((c) => c.buildings.includes("apolloProgram"));
   spaceshipButton.hidden = !apollo && ship.structural + ship.component + ship.module === 0 && !state.players.some((x) => x.spaceship.arrivalTurn !== null);

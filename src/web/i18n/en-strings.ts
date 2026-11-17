@@ -415,8 +415,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Choose research",
   "Všechno je vyzkoumané":
     "Everything has been researched",
-  "Vláda: <b>{gov}</b>":
-    "Government: <b>{gov}</b>",
   "{gov} za {turns}":
     "{gov} in {turns}",
   "Loď letí, přistání v tahu <b>{arrivalTurn}</b>":
@@ -1025,8 +1023,6 @@ export const EN_STRINGS: Record<string, string> = {
     ", upkeep {upkeep} gold per turn",
   "Města":
     "Cities",
-  "🦉 Rádce":
-    "🦉 Advisor",
   "Konec tahu":
     "End turn",
   "Co se stalo":

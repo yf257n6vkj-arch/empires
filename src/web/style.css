@@ -1,3 +1,4 @@
+[hidden] { display: none !important; }
 :root {
   --bg: #1d2127;
   --panel: #262b33;
@@ -318,7 +319,14 @@ button.spaceship b { color: #e7c98a; }
 .ss-part canvas { border-radius: 6px; display: block; }
 
 /* ---------- encyclopedia ---------- */
-button.codex-button { font-size: 13px; padding: 4px 10px; white-space: nowrap; }
+button.codex-button { font-size: 13px; padding: 4px 10px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+button.codex-button .nav-ico, button.government .nav-ico { font-size: 16px; line-height: 1; }
+button.government { display: inline-flex; align-items: center; gap: 6px; }
+/* The four navigation buttons show only their icon unless the screen is wide; the title says what they do. */
+@media (max-width: 1799px) {
+  button.codex-button .nav-word { display: none; }
+  button.codex-button { padding: 4px 8px; }
+}
 .cx-dialog { background: #1f1b17; border: 1px solid #5a4a36; border-radius: 12px; padding: 0; width: min(1240px, 96vw); height: 90vh; max-height: 90vh; color: inherit; }
 .cx-dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .cx { display: grid; grid-template-columns: 250px 1fr; height: 100%; }
@@ -403,7 +411,7 @@ header.topbar {
   flex: 0 0 auto; margin: 0; padding: 7px 12px; gap: 12px; align-items: center;
   background: linear-gradient(#2b2620, #1f1c18); border-bottom: 1px solid #4a3f31; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); z-index: 5;
 }
-header.topbar h1 { font-size: 17px; }
+header.topbar h1 { display: none; }
 header.topbar button { white-space: nowrap; }
 header.topbar .economy { margin-left: 4px; gap: 6px 10px; flex: 1 1 auto; min-width: 0; flex-wrap: wrap; }
 /* Longer languages wrap the controls onto a second row rather than push the end-turn button off the screen. */
@@ -629,9 +637,10 @@ label.rate input#lux { width: 60px; } .rate.tax { color: var(--muted); white-spa
 /* The top bar has many controls; on narrower screens the title goes and the sliders shrink. */
 @media (max-width: 1560px) {
   header.topbar h1 { display: none; }
-  label.rate input { width: 64px; }
-  label.rate input#lux { width: 48px; }
-  header.topbar .economy { gap: 8px; }
+  label.rate input { width: 56px; }
+  label.rate input#lux { width: 44px; }
+  header.topbar .economy { gap: 6px; font-size: 12.5px; }
+  header.topbar .economy button { font-size: 12.5px; padding-left: 8px; padding-right: 8px; }
   header.topbar { gap: 8px; }
 }
 @media (max-width: 1320px) {

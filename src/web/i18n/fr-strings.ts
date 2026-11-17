@@ -1078,8 +1078,6 @@ export const FR_STRINGS: Record<string, string> = {
     "anarchie : luxe seulement",
   "daně {tax} %":
     "impôts {tax} %",
-  "Vláda: <b>{gov}</b>":
-    "Gouvernement : <b>{gov}</b>",
   "{gov} za {turns}":
     "{gov} dans {turns}",
   "Loď letí, přistání v tahu <b>{arrivalTurn}</b>":
@@ -2306,8 +2304,6 @@ export const FR_STRINGS: Record<string, string> = {
     "Luxe",
   "Města":
     "Villes",
-  "🦉 Rádce":
-    "🦉 Conseiller",
   "Konec tahu":
     "Fin du tour",
   "Co se stalo":

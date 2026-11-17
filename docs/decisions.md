@@ -2,6 +2,10 @@
 
 What we decided with Michal, so we don't have to go back over it. Newest first. Entries before version 1.0 were written in Czech and translated to English when the repository switched to English.
 
+## 17 Nov 2026: The leaders stay as they are for the promotion
+
+Michal wants as many people as possible to play the game and asked for promotion texts (Reddit r/playmygame and r/WebGames, an itch.io devlog, a Czech message for parents and school). Before promoting, Claude proposed replacing Joseph Stalin and Mao Zedong with Peter the Great and the Kangxi Emperor, because teachers and parents of the 8 to 14 audience would see them right away in the nation picker, and because the roster would then differ more from the 1991 game. Michal decided to keep the leaders as they are; in his view the game uses elements general enough that nobody can stop its promotion.
+
 ## 17 Nov 2026: The game is published on itch.io
 
 Michal published the browser version at https://sigmanek67.itch.io/empires-reloaded. The README links to it, and the start screen shows an itch.io link next to the version, so players of the Mac app can find the page too.

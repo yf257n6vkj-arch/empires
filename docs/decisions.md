@@ -2,6 +2,10 @@
 
 What we decided with Michal, so we don't have to go back over it. Newest first. Entries before version 1.0 were written in Czech and translated to English when the repository switched to English.
 
+## 17 Nov 2026: The game is published on itch.io
+
+Michal published the browser version at https://sigmanek67.itch.io/empires-reloaded. The README links to it, and the start screen shows an itch.io link next to the version, so players of the Mac app can find the page too.
+
 ## 17 Nov 2026: Safari players are told to open the game in its own tab
 
 itch.io runs the game in a frame served from another domain. Safari, and every browser on iPhone and iPad because they all use WebKit, treats storage in such a frame as third-party: it is partitioned and deleted when the browser quits, so a child playing in Safari would lose the autosaved game. Chrome, Edge and Firefox keep it. Michal approved a warning: when the game detects WebKit inside a frame, the start screen says that saves last only until the browser quits and offers a button that opens the game in its own tab, where the storage is first-party and lasts; it also points to saving to a file in the menu. Other browsers and the Mac app see no change. The start screen also got a smaller title and tighter buttons on windows lower than 800 pixels, so the column fits in the itch.io frame.

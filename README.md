@@ -4,6 +4,8 @@ A turn-based strategy game for the browser and the Mac, in the spirit of the emp
 
 The game is in Czech, Slovak, English, German and French. It was made by a dad and his son together with Claude (Anthropic).
 
+**Play it in your browser on itch.io: <https://sigmanek67.itch.io/empires-reloaded>**
+
 ## What is in version 1.0
 
 - **Fifteen nations** (fourteen historical empires and the Czechs), each with a leader, colour and its own city names. No nation has special advantages.

@@ -48,6 +48,8 @@ export interface MenuHost {
 
 /** The version shown on the start screen; keep in step with package.json. */
 export const GAME_VERSION = "1.0";
+/** The game's page on itch.io, where it can be played in the browser. */
+export const ITCH_URL = "https://sigmanek67.itch.io/empires-reloaded";
 
 const BACKDROPS = ["civ-czechs", "civ-romans", "civ-egyptians", "wdr-pyramids", "civ-english", "civ-aztecs", "wdr-greatWall", "civ-greeks", "wdr-stVitus", "civ-chinese"];
 
@@ -100,7 +102,7 @@ export function createMenus(
           <button type="button" data-act="help">${t("Ovládání")}</button>
         </nav>
         <div class="st-langs">${languageButtons()}</div>
-        <p class="st-foot">${t("verze {version} · hra se průběžně ukládá sama", { version: GAME_VERSION })}</p>
+        <p class="st-foot">${t("verze {version} · hra se průběžně ukládá sama", { version: GAME_VERSION })} · <a href="${ITCH_URL}" target="_blank" rel="noopener">itch.io</a></p>
         <p class="st-license">${t("Svobodný software pod licencí GPL-3.0, bez jakékoli záruky.")}</p>
       </div>
       <aside class="st-howto">

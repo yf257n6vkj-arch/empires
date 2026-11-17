@@ -1863,9 +1863,7 @@ const menus = createMenus($<HTMLElement>("#start-screen"), $<HTMLDialogElement>(
     say(t("Hra je nahraná: {civ}, tah {turn}.", { civ: civName(state.players[HUMAN]!.civ), turn: state.turn }));
   },
   openCodex: () => codex.open(),
-  openAdvisor: () => advisor.show(),
   openScores: () => endScreen.open(),
-  openCities: () => citiesOverview.open(),
   player: HUMAN,
 });
 $<HTMLButtonElement>("#menu-button").addEventListener("click", () => menus.openMenu());

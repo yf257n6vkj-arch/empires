@@ -146,8 +146,8 @@ export const FR_STRINGS: Record<string, string> = {
     "Réduire à une ligne",
   "Co udělat teď":
     "Que faire maintenant",
-  "Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu.":
-    "Cacher jusqu'au prochain tour. Le bouton Conseiller en haut ou dans le menu le fait revenir.",
+  "Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře.":
+    "Cacher jusqu'au prochain tour. Le bouton Conseiller en haut le fait revenir.",
   "Schovat":
     "Cacher",
   "Proč:":
@@ -2316,8 +2316,6 @@ export const FR_STRINGS: Record<string, string> = {
     "Retour au jeu",
   "Hlavní menu":
     "Menu principal",
-  "Hra se průběžně ukládá sama. Kód téhle mapy je <b id=\"seed-label\"></b>. Když ho zadáš u nové hry, dostaneš stejnou mapu.":
-    "La partie s'enregistre toute seule. Le code de cette carte est <b id=\"seed-label\"></b>. Si tu le saisis pour une nouvelle partie, tu obtiens la même carte.",
   "Pomocník":
     "Aide",
   "Rádce radí, co dělat dál":
@@ -2374,8 +2372,8 @@ export const FR_STRINGS: Record<string, string> = {
     "Un double-clic sur une ville ou le bouton <b>Ouvrir la ville</b> montre toute la ville. Un clic sur une case autour de la ville déplace les habitants. Le bouton + à côté d'une construction l'ajoute au plan, et la ville la construit après l'actuelle. Tu peux tirer avec la souris la limite entre l'image de la ville et les panneaux.",
   "Přehled měst otevřeš klávesou <kbd>O</kbd> nebo tlačítkem Města nahoře. U každého města tam vybereš, co má stavět.":
     "Ouvre la vue d'ensemble des villes avec <kbd>O</kbd> ou le bouton Villes en haut. Tu y choisis ce que chaque ville construit.",
-  "Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.":
-    "Le conseiller en haut à gauche suggère quoi faire ensuite. La flèche le réduit à une ligne, la croix le cache, et le bouton Conseiller en haut ou dans le menu le fait revenir.",
+  "Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře ho zase ukážeš.":
+    "Le conseiller en haut à gauche suggère quoi faire ensuite. La flèche le réduit à une ligne, la croix le cache, et le bouton Conseiller en haut le fait revenir.",
   "Přiblížení: roztažení dvěma prsty na trackpadu, <kbd>Ctrl</kbd> + kolečko myši nebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Klávesa <kbd>0</kbd> vrátí celou mapu.":
     "Zoom : écarte deux doigts sur le pavé tactile, <kbd>Ctrl</kbd> + molette de la souris ou les touches <kbd>+</kbd> et <kbd>−</kbd>. La touche <kbd>0</kbd> remontre toute la carte.",
   "Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši, tažením nebo klikem do malé mapy vpravo dole.":
@@ -2432,4 +2430,10 @@ export const FR_STRINGS: Record<string, string> = {
     "Batailles, nouvelles villes, découvertes et constructions. Tout à gauche, le son est coupé.",
   "Tichá středověká hudba. Mezi skladbami chvíli nehraje nic. Úplně vlevo je hudba vypnutá.":
     "Musique médiévale douce. Entre les morceaux, rien ne joue pendant un moment. Tout à gauche, la musique est coupée.",
+  "Nastavení":
+    "Paramètres",
+  "Hra se průběžně ukládá sama.":
+    "La partie s'enregistre toute seule.",
+  "Když tenhle kód zadáš u nové hry, dostaneš stejnou mapu.":
+    "Saisis ce code dans une nouvelle partie pour obtenir la même carte.",
 };

@@ -21,8 +21,8 @@ export const EN_STRINGS: Record<string, string> = {
     "Everything has work to do. End the turn with <kbd>Enter</kbd>.",
   "Rádce":
     "Advisor",
-  "Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu.":
-    "Hide until next turn. The Advisor button at the top or in the menu brings it back.",
+  "Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře.":
+    "Hide until next turn. The Advisor button at the top brings it back.",
   "Schovat":
     "Hide",
   "{n} tah|{n} tahy|{n} tahů":
@@ -1035,8 +1035,6 @@ export const EN_STRINGS: Record<string, string> = {
     "Back to the game",
   "Hlavní menu":
     "Main menu",
-  "Hra se průběžně ukládá sama. Kód téhle mapy je <b id=\"seed-label\"></b>. Když ho zadáš u nové hry, dostaneš stejnou mapu.":
-    "The game saves itself as you play. The code of this map is <b id=\"seed-label\"></b>. Enter it for a new game and you get the same map.",
   "Rádce radí, co dělat dál":
     "The advisor suggests what to do next",
   "Jazyk":
@@ -1069,8 +1067,8 @@ export const EN_STRINGS: Record<string, string> = {
     "Double-click a city or press <b>Open city</b> to see the whole city. Click a tile around the city to move citizens. Use + next to an item to add it to the plan, and the city builds it after the current one. You can drag the border between the city picture and the panels with the mouse.",
   "Přehled měst otevřeš klávesou <kbd>O</kbd> nebo tlačítkem Města nahoře. U každého města tam vybereš, co má stavět.":
     "Open the cities overview with <kbd>O</kbd> or the Cities button at the top. There you choose what each city builds.",
-  "Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.":
-    "The advisor at the top left suggests what to do next. The arrow folds it into one line, the cross hides it, and the Advisor button at the top or in the menu brings it back.",
+  "Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře ho zase ukážeš.":
+    "The advisor at the top left suggests what to do next. The arrow folds it into one line, the cross hides it, and the Advisor button at the top brings it back.",
   "Přiblížení: roztažení dvěma prsty na trackpadu, <kbd>Ctrl</kbd> + kolečko myši nebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Klávesa <kbd>0</kbd> vrátí celou mapu.":
     "Zoom: spread two fingers on the trackpad, <kbd>Ctrl</kbd> + mouse wheel, or the <kbd>+</kbd> and <kbd>−</kbd> keys. The <kbd>0</kbd> key shows the whole map again.",
   "Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši, tažením nebo klikem do malé mapy vpravo dole.":
@@ -2435,4 +2433,10 @@ export const EN_STRINGS: Record<string, string> = {
     "When you don't know what to do next, the Advisor will help. For children, turn on the Guide in the menu and an owl will lead them through the game.",
   "Vyhrát jde dobytím všech soupeřů nebo vesmírnou lodí. Když po posledním tahu nevyhrál nikdo, rozhodne skóre.":
     "You can win by conquering all rivals or with a spaceship. If nobody has won after the last turn, the score decides.",
+  "Nastavení":
+    "Settings",
+  "Hra se průběžně ukládá sama.":
+    "The game saves itself as you play.",
+  "Když tenhle kód zadáš u nové hry, dostaneš stejnou mapu.":
+    "Enter this code in a new game to get the same map.",
 };

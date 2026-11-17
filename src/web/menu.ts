@@ -39,12 +39,8 @@ export interface MenuHost {
   currentPayload(): SavePayload;
   loadPayload(payload: SavePayload): void;
   openCodex(): void;
-  /** Shows the advisor's tips again. */
-  openAdvisor(): void;
   /** Shows the leaderboard of known nations. */
   openScores(): void;
-  /** Opens the overview of all cities. */
-  openCities(): void;
   /** Player whose game is saved, for slot names. */
   player: number;
 }
@@ -149,19 +145,7 @@ export function createMenus(
       menuDialog.close();
       host.newGame();
     });
-    act("codex", () => {
-      menuDialog.close();
-      host.openCodex();
-    });
     act("help", () => helpDialog.showModal());
-    act("cities", () => {
-      menuDialog.close();
-      host.openCities();
-    });
-    act("advisor", () => {
-      menuDialog.close();
-      host.openAdvisor();
-    });
     act("scores", () => {
       menuDialog.close();
       host.openScores();

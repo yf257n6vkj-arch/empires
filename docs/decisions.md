@@ -2,6 +2,10 @@
 
 What we decided with Michal, so we don't have to go back over it. Newest first. Entries before version 1.0 were written in Czech and translated to English when the repository switched to English.
 
+## 17 Nov 2026: The in-game menu has two columns
+
+Michal found the settings in the in-game menu hard to read. The menu was one column of ten equal buttons with the settings stuck underneath without a heading; the labels had different widths, "Map view" broke onto two lines, the sliders started elsewhere than the drop-downs, the map code hid in a paragraph and the language flags ran off the edge of the window, so German and French could not be picked there at all. Michal chose a two-column layout. The left column holds the commands for the game (resume, save, load, new game, main menu) with the map code under Save game, and below a line the smaller links Leaderboard and Controls. The right column is headed Settings and lines up every label with its control in a grid, with thin lines between the helper, the map view, sound and language; the flags wrap. City overview, Encyclopedia and Advisor left the menu because the top bar has them. On narrow screens the columns stack.
+
 ## 17 Nov 2026: The game is released free under GPL-3.0, pictures under CC0
 
 Michal asked whether the game is worth selling. Analysts estimate that the median game on Steam earns roughly one to two thousand dollars over its lifetime. Steam charges 100 dollars per game and 30 % of sales, and a Mac app outside the App Store shows every buyer a warning unless it is notarised through the Apple Developer Program at 99 dollars a year. Selling also carries two specific risks. The nations and leaders follow the 1991 roster closely, and according to the Unciv README Steam declined to host that similar game. The AI pictures must be disclosed on Steam, and under the 2023 judgment of the Municipal Court in Prague (10 C 13/2023) and the US Thaler v. Perlmutter line they are not protected by copyright, so anyone could reuse them. Michal chose to release the game for free on itch.io with an optional contribution.

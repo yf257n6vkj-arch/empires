@@ -728,7 +728,7 @@ export function createGuide(host: GuideHost) {
   /** The head and plan part of the panel; the advisor's tips follow under it. */
   function panelHead(): string {
     const m = memory();
-    const close = `<button type="button" class="adv-close" data-close title="${t("Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu.")}" aria-label="${t("Schovat")}">×</button>`;
+    const close = `<button type="button" class="adv-close" data-close title="${t("Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře.")}" aria-label="${t("Schovat")}">×</button>`;
     if (!m.path) {
       return `<div class="gd-head">${owlHtml("advise", 56)}<div class="gd-say"><b>${escapeHtml(name())}</b><p>${t("Vyber si, jak chceš vyhrát, a já ti udělám plán.")}</p></div>${close}</div>
         <div class="gd-choose">${VICTORY_PATHS.map((p) => `<button type="button" data-gd-path="${p}">${escapeHtml(pathName(p))}</button>`).join("")}</div>`;

@@ -327,7 +327,7 @@ export function createAdvisor(panel: HTMLElement, picker: HTMLSelectElement, hos
       (guide
         ? host.guide.panelHead() + `<div class="gd-now">${t("Co udělat teď")}</div>`
         : `<div class="adv-head"><span class="adv-owl" aria-hidden="true">🦉</span><b>${t("Rádce")}</b><span class="spacer"></span>` +
-          `<button type="button" class="adv-close" data-close title="${t("Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu.")}" aria-label="${t("Schovat")}">×</button></div>`) +
+          `<button type="button" class="adv-close" data-close title="${t("Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře.")}" aria-label="${t("Schovat")}">×</button></div>`) +
       `<ol class="adv-tips">${tips
         .map(
           (tip, n) =>

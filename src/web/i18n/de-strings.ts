@@ -146,8 +146,8 @@ export const DE_STRINGS: Record<string, string> = {
     "Auf eine Zeile zuklappen",
   "Co udělat teď":
     "Was jetzt zu tun ist",
-  "Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu.":
-    "Bis zur nächsten Runde verstecken. Die Schaltfläche Berater oben oder im Menü holt ihn zurück.",
+  "Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře.":
+    "Bis zur nächsten Runde verstecken. Die Schaltfläche Berater oben holt ihn zurück.",
   "Schovat":
     "Verstecken",
   "Proč:":
@@ -2316,8 +2316,6 @@ export const DE_STRINGS: Record<string, string> = {
     "Zurück zum Spiel",
   "Hlavní menu":
     "Hauptmenü",
-  "Hra se průběžně ukládá sama. Kód téhle mapy je <b id=\"seed-label\"></b>. Když ho zadáš u nové hry, dostaneš stejnou mapu.":
-    "Das Spiel speichert sich laufend selbst. Der Code dieser Karte ist <b id=\"seed-label\"></b>. Gibst du ihn bei einem neuen Spiel ein, bekommst du dieselbe Karte.",
   "Pomocník":
     "Helfer",
   "Rádce radí, co dělat dál":
@@ -2374,8 +2372,8 @@ export const DE_STRINGS: Record<string, string> = {
     "Ein Doppelklick auf eine Stadt oder die Schaltfläche <b>Stadt öffnen</b> zeigt die ganze Stadt. Mit einem Klick auf ein Feld rund um die Stadt versetzt du Bewohner. Mit + neben einem Bauvorhaben nimmst du es in den Plan, und die Stadt baut es nach dem aktuellen. Die Grenze zwischen dem Stadtbild und den Leisten kannst du mit der Maus ziehen.",
   "Přehled měst otevřeš klávesou <kbd>O</kbd> nebo tlačítkem Města nahoře. U každého města tam vybereš, co má stavět.":
     "Die Städteübersicht öffnest du mit <kbd>O</kbd> oder der Schaltfläche Städte oben. Dort wählst du für jede Stadt, was sie bauen soll.",
-  "Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.":
-    "Der Berater oben links schlägt vor, was als Nächstes zu tun ist. Der Pfeil klappt ihn auf eine Zeile zu, das Kreuz versteckt ihn, und die Schaltfläche Berater oben oder im Menü holt ihn zurück.",
+  "Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře ho zase ukážeš.":
+    "Der Berater oben links schlägt vor, was als Nächstes zu tun ist. Der Pfeil klappt ihn auf eine Zeile zu, das Kreuz versteckt ihn, und die Schaltfläche Berater oben holt ihn zurück.",
   "Přiblížení: roztažení dvěma prsty na trackpadu, <kbd>Ctrl</kbd> + kolečko myši nebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Klávesa <kbd>0</kbd> vrátí celou mapu.":
     "Zoomen: zwei Finger auf dem Trackpad auseinanderziehen, <kbd>Strg</kbd> + Mausrad oder die Tasten <kbd>+</kbd> und <kbd>−</kbd>. Die Taste <kbd>0</kbd> zeigt wieder die ganze Karte.",
   "Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši, tažením nebo klikem do malé mapy vpravo dole.":
@@ -2432,4 +2430,10 @@ export const DE_STRINGS: Record<string, string> = {
     "Schlachten, neue Städte, Entdeckungen und Bauten. Ganz links ist der Ton aus.",
   "Tichá středověká hudba. Mezi skladbami chvíli nehraje nic. Úplně vlevo je hudba vypnutá.":
     "Ruhige mittelalterliche Musik. Zwischen den Stücken ist eine Weile Stille. Ganz links ist die Musik aus.",
+  "Nastavení":
+    "Einstellungen",
+  "Hra se průběžně ukládá sama.":
+    "Das Spiel speichert sich laufend selbst.",
+  "Když tenhle kód zadáš u nové hry, dostaneš stejnou mapu.":
+    "Gib diesen Code bei einem neuen Spiel ein, dann bekommst du dieselbe Karte.",
 };

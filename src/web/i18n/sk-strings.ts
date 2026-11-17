@@ -146,8 +146,8 @@ export const SK_STRINGS: Record<string, string> = {
     "Zbaliť do jedného riadku",
   "Co udělat teď":
     "Čo urobiť teraz",
-  "Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře nebo v menu.":
-    "Schovať do ďalšieho ťahu. Späť ho vráti tlačidlo Radca hore alebo v menu.",
+  "Schovat do příštího tahu. Zpátky ho vrátí tlačítko Rádce nahoře.":
+    "Schovať do ďalšieho ťahu. Späť ho vráti tlačidlo Radca hore.",
   "Schovat":
     "Schovať",
   "Proč:":
@@ -2316,8 +2316,6 @@ export const SK_STRINGS: Record<string, string> = {
     "Pokračovať v hre",
   "Hlavní menu":
     "Hlavné menu",
-  "Hra se průběžně ukládá sama. Kód téhle mapy je <b id=\"seed-label\"></b>. Když ho zadáš u nové hry, dostaneš stejnou mapu.":
-    "Hra sa priebežne ukladá sama. Kód tejto mapy je <b id=\"seed-label\"></b>. Keď ho zadáš pri novej hre, dostaneš rovnakú mapu.",
   "Pomocník":
     "Pomocník",
   "Rádce radí, co dělat dál":
@@ -2374,8 +2372,8 @@ export const SK_STRINGS: Record<string, string> = {
     "Dvojklik na mesto alebo tlačidlo <b>Otvoriť mesto</b> ukáže celé mesto. Klikom na políčko v okolí mesta presunieš obyvateľov. Tlačidlom + pri stavbe ju pridáš do plánu a mesto ju postaví, keď dokončí tú predchádzajúcu. Hranicu medzi obrázkom mesta a panelmi môžeš ťahať myšou.",
   "Přehled měst otevřeš klávesou <kbd>O</kbd> nebo tlačítkem Města nahoře. U každého města tam vybereš, co má stavět.":
     "Prehľad miest otvoríš klávesom <kbd>O</kbd> alebo tlačidlom Mestá hore. Pri každom meste tam vyberieš, čo má stavať.",
-  "Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.":
-    "Radca vľavo hore radí, čo robiť ďalej. Šípkou ho zbalíš do jedného riadku, krížikom ho schováš a tlačidlom Radca hore alebo v menu ho znova ukážeš.",
+  "Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře ho zase ukážeš.":
+    "Radca vľavo hore radí, čo robiť ďalej. Šípkou ho zbalíš do jedného riadku, krížikom ho schováš a tlačidlom Radca hore ho znova ukážeš.",
   "Přiblížení: roztažení dvěma prsty na trackpadu, <kbd>Ctrl</kbd> + kolečko myši nebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Klávesa <kbd>0</kbd> vrátí celou mapu.":
     "Priblíženie: roztiahnutie dvoma prstami na trackpade, <kbd>Ctrl</kbd> + koliesko myši alebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Kláves <kbd>0</kbd> vráti celú mapu.",
   "Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši, tažením nebo klikem do malé mapy vpravo dole.":
@@ -2432,4 +2430,10 @@ export const SK_STRINGS: Record<string, string> = {
     "Bitky, nové mestá, objavy a stavby. Úplne vľavo je zvuk vypnutý.",
   "Tichá středověká hudba. Mezi skladbami chvíli nehraje nic. Úplně vlevo je hudba vypnutá.":
     "Tichá stredoveká hudba. Medzi skladbami chvíľu nehrá nič. Úplne vľavo je hudba vypnutá.",
+  "Nastavení":
+    "Nastavenia",
+  "Hra se průběžně ukládá sama.":
+    "Hra sa priebežne ukladá sama.",
+  "Když tenhle kód zadáš u nové hry, dostaneš stejnou mapu.":
+    "Keď tento kód zadáš pri novej hre, dostaneš rovnakú mapu.",
 };

@@ -56,45 +56,56 @@
     <div id="start-screen" class="start" hidden></div>
     <dialog id="menu-dialog" class="menu-dialog">
       <h2>Menu</h2>
-      <nav class="gm-menu">
-        <button type="button" class="primary" data-act="resume"><span data-i18n>Pokračovat ve hře</span> <kbd>Esc</kbd></button>
-        <button type="button" data-act="save" data-i18n>Uložit hru</button>
-        <button type="button" data-act="load" data-i18n>Nahrát hru</button>
-        <button type="button" data-act="new" data-i18n>Nová hra</button>
-        <button type="button" data-act="cities" data-i18n>Přehled měst</button>
-        <button type="button" data-act="codex" data-i18n>Encyklopedie</button>
-        <button type="button" data-act="advisor" data-i18n>Rádce</button>
-        <button type="button" data-act="scores" data-i18n>Žebříček</button>
-        <button type="button" data-act="help" data-i18n>Ovládání</button>
-        <button type="button" data-act="main" data-i18n>Hlavní menu</button>
-      </nav>
-      <div class="gm-settings">
-        <p class="hint" data-i18n>Hra se průběžně ukládá sama. Kód téhle mapy je <b id="seed-label"></b>. Když ho zadáš u nové hry, dostaneš stejnou mapu.</p>
-        <label class="check gm-row"><span data-i18n>Pomocník</span>
-          <select id="helper-mode">
-            <option value="on" data-i18n>Rádce radí, co dělat dál</option>
-            <option value="guide" data-i18n>Průvodce pro děti</option>
-            <option value="off" data-i18n>Nikdo, hraju sám</option>
-          </select>
-        </label>
-        <div class="gm-guide">
-          <label class="check gm-row"><span data-i18n>Průvodce vypráví</span>
-            <select id="guide-volume">
-              <option value="all" data-i18n>o všem novém</option>
-              <option value="important" data-i18n>jen to důležité</option>
-            </select>
-          </label>
-          <label class="check gm-row"><span data-i18n>Jméno průvodce</span> <input id="guide-name" type="text" maxlength="24" placeholder="Sova" /></label>
+      <div class="gm-cols">
+        <div class="gm-left">
+          <nav class="gm-menu">
+            <button type="button" class="primary" data-act="resume"><span data-i18n>Pokračovat ve hře</span> <kbd>Esc</kbd></button>
+            <button type="button" data-act="save" data-i18n>Uložit hru</button>
+            <p class="gm-seed" title="Když tenhle kód zadáš u nové hry, dostaneš stejnou mapu."><span data-i18n>Kód mapy</span> <b id="seed-label"></b></p>
+            <button type="button" data-act="load" data-i18n>Nahrát hru</button>
+            <button type="button" data-act="new" data-i18n>Nová hra</button>
+            <button type="button" data-act="main" data-i18n>Hlavní menu</button>
+          </nav>
+          <div class="gm-links">
+            <button type="button" class="link" data-act="scores" data-i18n>Žebříček</button>
+            <button type="button" class="link" data-act="help" data-i18n>Ovládání</button>
+          </div>
+          <p class="hint" data-i18n>Hra se průběžně ukládá sama.</p>
         </div>
-        <label class="check gm-row"><span data-i18n>Pohled na mapu</span>
-          <select id="map-view">
-            <option value="tilted" data-i18n>Šikmo, hory a města stojí</option>
-            <option value="flat" data-i18n>Shora jako plán</option>
-          </select>
-        </label>
-        <label class="check gm-row" title="Bitvy, nová města, objevy a stavby. Úplně vlevo je zvuk vypnutý."><span data-i18n>Zvuky</span> <input id="sound-effects" type="range" min="0" max="100" step="5" /></label>
-        <label class="check gm-row" title="Tichá středověká hudba. Mezi skladbami chvíli nehraje nic. Úplně vlevo je hudba vypnutá."><span data-i18n>Hudba</span> <input id="sound-music" type="range" min="0" max="100" step="5" /></label>
-        <div class="check lang-pick"><span data-i18n>Jazyk</span> <span id="language" class="lang-flags"></span></div>
+        <div class="gm-settings">
+          <h3 data-i18n>Nastavení</h3>
+          <div class="gm-grid">
+            <label for="helper-mode" data-i18n>Pomocník</label>
+            <select id="helper-mode">
+              <option value="on" data-i18n>Rádce radí, co dělat dál</option>
+              <option value="guide" data-i18n>Průvodce pro děti</option>
+              <option value="off" data-i18n>Nikdo, hraju sám</option>
+            </select>
+            <div class="gm-guide">
+              <label for="guide-volume" data-i18n>Průvodce vypráví</label>
+              <select id="guide-volume">
+                <option value="all" data-i18n>o všem novém</option>
+                <option value="important" data-i18n>jen to důležité</option>
+              </select>
+              <label for="guide-name" data-i18n>Jméno průvodce</label>
+              <input id="guide-name" type="text" maxlength="24" placeholder="Sova" />
+            </div>
+            <hr />
+            <label for="map-view" data-i18n>Pohled na mapu</label>
+            <select id="map-view">
+              <option value="tilted" data-i18n>Šikmo, hory a města stojí</option>
+              <option value="flat" data-i18n>Shora jako plán</option>
+            </select>
+            <hr />
+            <label for="sound-effects" title="Bitvy, nová města, objevy a stavby. Úplně vlevo je zvuk vypnutý." data-i18n>Zvuky</label>
+            <input id="sound-effects" type="range" min="0" max="100" step="5" title="Bitvy, nová města, objevy a stavby. Úplně vlevo je zvuk vypnutý." />
+            <label for="sound-music" title="Tichá středověká hudba. Mezi skladbami chvíli nehraje nic. Úplně vlevo je hudba vypnutá." data-i18n>Hudba</label>
+            <input id="sound-music" type="range" min="0" max="100" step="5" title="Tichá středověká hudba. Mezi skladbami chvíli nehraje nic. Úplně vlevo je hudba vypnutá." />
+            <hr />
+            <span class="gm-label" data-i18n>Jazyk</span>
+            <span id="language" class="lang-flags"></span>
+          </div>
+        </div>
       </div>
     </dialog>
     <dialog id="saves-dialog" class="saves-dialog"></dialog>
@@ -115,7 +126,7 @@
         <li data-i18n><kbd>Esc</kbd> zruší výběr. Když není nic vybrané, otevře menu, kde hru uložíš nebo nahraješ.</li>
         <li data-i18n>Dvojklik na město nebo tlačítko <b>Otevřít město</b> ukáže celé město. Klikem na políčko v okolí města přesuneš obyvatele. Tlačítkem + u stavby ji přidáš do plánu a město ji postaví, až dokončí tu předchozí. Hranici mezi obrázkem města a panely můžeš táhnout myší.</li>
         <li data-i18n>Přehled měst otevřeš klávesou <kbd>O</kbd> nebo tlačítkem Města nahoře. U každého města tam vybereš, co má stavět.</li>
-        <li data-i18n>Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře nebo v menu ho zase ukážeš.</li>
+        <li data-i18n>Rádce vlevo nahoře radí, co dělat dál. Šipkou ho sbalíš do jednoho řádku, křížkem ho schováš a tlačítkem Rádce nahoře ho zase ukážeš.</li>
         <li data-i18n>Přiblížení: roztažení dvěma prsty na trackpadu, <kbd>Ctrl</kbd> + kolečko myši nebo klávesy <kbd>+</kbd> a <kbd>−</kbd>. Klávesa <kbd>0</kbd> vrátí celou mapu.</li>
         <li data-i18n>Přiblíženou mapu posuneš dvěma prsty na trackpadu, kolečkem myši, tažením nebo klikem do malé mapy vpravo dole.</li>
       </ul>

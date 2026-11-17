@@ -2,6 +2,10 @@
 
 What we decided with Michal, so we don't have to go back over it. Newest first. Entries before version 1.0 were written in Czech and translated to English when the repository switched to English.
 
+## 17 Nov 2026: Safari players are told to open the game in its own tab
+
+itch.io runs the game in a frame served from another domain. Safari, and every browser on iPhone and iPad because they all use WebKit, treats storage in such a frame as third-party: it is partitioned and deleted when the browser quits, so a child playing in Safari would lose the autosaved game. Chrome, Edge and Firefox keep it. Michal approved a warning: when the game detects WebKit inside a frame, the start screen says that saves last only until the browser quits and offers a button that opens the game in its own tab, where the storage is first-party and lasts; it also points to saving to a file in the menu. Other browsers and the Mac app see no change. The start screen also got a smaller title and tighter buttons on windows lower than 800 pixels, so the column fits in the itch.io frame.
+
 ## 17 Nov 2026: itch.io gets only the browser version, launched in fullscreen
 
 Michal chose to publish only the browser version on itch.io. It runs on Mac, Windows, Linux and Chromebooks without installing anything and fits itch.io's limits (344 files and 24 MB against 1000 files and 500 MB). The Mac app is not signed with a paid Apple developer account, so macOS on Apple Silicon would call a downloaded copy damaged and a child could not open it without the Terminal; the Windows build could not be tested and would also show a warning. `tools/build-web-zip.sh` builds the zip with index.html at its root plus both license files. On the project page the game uses "Click to launch in fullscreen", because in a 1280 × 720 frame the panels cover up to half of the map. The itch.io page discloses AI-generated graphics, text and code; the sounds are synthesised by the game.

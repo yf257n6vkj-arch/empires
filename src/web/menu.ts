@@ -3,6 +3,7 @@
  * help. Inspired by the main menu of Civilization III: a big painted
  * background with a short column of choices.
  */
+import { isFramed, savesVanishOnQuit } from "./storageWarning";
 import { CIVS, type CivId } from "../core";
 import { pictureOf } from "./codex";
 import {
@@ -86,6 +87,11 @@ export function createMenus(
       <div class="st-panel">
         <h1 class="st-title">Empires <span>Reloaded</span></h1>
         <p class="st-sub">${t("tahová strategie o patnácti národech")}</p>
+        ${
+          savesVanishOnQuit(navigator.userAgent, isFramed())
+            ? `<div class="st-warn"><p>${t("V Safari se hra v tomhle okně uloží jen do zavření prohlížeče. Ve vlastní záložce ukládání vydrží. Hru si můžeš uložit i do souboru v menu.")}</p><button type="button" data-act="own-tab">${t("Otevřít hru ve vlastní záložce")}</button></div>`
+            : ""
+        }
         <nav class="st-menu">
           <button type="button" data-act="continue" ${info ? "" : "disabled"}>${t("Pokračovat")}<span>${escapeHtml(cont)}</span></button>
           <button type="button" data-act="new">${t("Nová hra")}</button>
@@ -117,6 +123,7 @@ export function createMenus(
     start.querySelector('[data-act="load"]')!.addEventListener("click", () => openSaves("load"));
     start.querySelector('[data-act="codex"]')!.addEventListener("click", host.openCodex);
     start.querySelector('[data-act="help"]')!.addEventListener("click", () => helpDialog.showModal());
+    start.querySelector('[data-act="own-tab"]')?.addEventListener("click", () => window.open(location.href, "_blank", "noopener"));
     showSlide();
   }
 

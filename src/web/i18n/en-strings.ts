@@ -2475,4 +2475,8 @@ export const EN_STRINGS: Record<string, string> = {
     "grows every turn",
   "Zavřít (Esc)":
     "Close (Esc)",
+  "V Safari se hra v tomhle okně uloží jen do zavření prohlížeče. Ve vlastní záložce ukládání vydrží. Hru si můžeš uložit i do souboru v menu.":
+    "In Safari, the game in this window is saved only until you quit the browser. In its own tab, saving lasts. You can also save the game to a file in the menu.",
+  "Otevřít hru ve vlastní záložce":
+    "Open the game in its own tab",
 };

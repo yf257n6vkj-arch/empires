@@ -2472,4 +2472,8 @@ export const FR_STRINGS: Record<string, string> = {
     "grandit à chaque tour",
   "Zavřít (Esc)":
     "Fermer (Échap)",
+  "V Safari se hra v tomhle okně uloží jen do zavření prohlížeče. Ve vlastní záložce ukládání vydrží. Hru si můžeš uložit i do souboru v menu.":
+    "Dans Safari, la partie dans cette fenêtre n'est enregistrée que jusqu'à la fermeture du navigateur. Dans son propre onglet, la sauvegarde dure. Tu peux aussi enregistrer la partie dans un fichier depuis le menu.",
+  "Otevřít hru ve vlastní záložce":
+    "Ouvrir le jeu dans son propre onglet",
 };

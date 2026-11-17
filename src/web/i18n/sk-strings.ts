@@ -2472,4 +2472,8 @@ export const SK_STRINGS: Record<string, string> = {
     "rastie každý ťah",
   "Zavřít (Esc)":
     "Zavrieť (Esc)",
+  "V Safari se hra v tomhle okně uloží jen do zavření prohlížeče. Ve vlastní záložce ukládání vydrží. Hru si můžeš uložit i do souboru v menu.":
+    "V Safari sa hra v tomto okne uloží len do zatvorenia prehliadača. Vo vlastnej karte ukladanie vydrží. Hru si môžeš uložiť aj do súboru v menu.",
+  "Otevřít hru ve vlastní záložce":
+    "Otvoriť hru vo vlastnej karte",
 };

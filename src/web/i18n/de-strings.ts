@@ -2472,4 +2472,8 @@ export const DE_STRINGS: Record<string, string> = {
     "wächst jede Runde",
   "Zavřít (Esc)":
     "Schließen (Esc)",
+  "V Safari se hra v tomhle okně uloží jen do zavření prohlížeče. Ve vlastní záložce ukládání vydrží. Hru si můžeš uložit i do souboru v menu.":
+    "In Safari bleibt das Spiel in diesem Fenster nur gespeichert, bis du den Browser beendest. In einem eigenen Tab bleibt der Spielstand erhalten. Im Menü kannst du das Spiel auch in eine Datei speichern.",
+  "Otevřít hru ve vlastní záložce":
+    "Spiel in eigenem Tab öffnen",
 };

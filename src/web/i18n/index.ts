@@ -42,16 +42,22 @@ export const LANGUAGES: readonly Language[] = [CS, SK, EN, DE, FR];
 
 const STORAGE_KEY = "empires.lang";
 
+/** The language a player starts in: the one they picked before, otherwise English. */
+export function startLanguage(stored: string | null): Language {
+  return LANGUAGES.find((l) => l.id === stored) ?? EN;
+}
+
 function storedLanguage(): Language {
   let id: string | null = null;
   try {
     id = localStorage.getItem(STORAGE_KEY);
   } catch {
-    // Storage is blocked; stay with Czech.
+    // Storage is blocked; start in English.
   }
-  return LANGUAGES.find((l) => l.id === id) ?? CS;
+  return startLanguage(id);
 }
 
+// Outside a browser (tests, tools) the texts stay in Czech, the source language.
 let current: Language = typeof localStorage === "undefined" ? CS : storedLanguage();
 
 /** The language the page runs in. */

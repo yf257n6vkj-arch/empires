@@ -2,6 +2,10 @@
 
 What we decided with Michal, so we don't have to go back over it. Newest first. Entries before version 1.0 were written in Czech and translated to English when the repository switched to English.
 
+## 17 Nov 2026: The game starts in English
+
+Before publishing on itch.io Michal asked for English as the default language. A player who has not picked a language yet starts in English; a language picked before is kept, so existing players, including Michal's own Czech setup, see no change. Czech stays the source language of the code, and tests and tools without a browser still run in Czech.
+
 ## 17 Nov 2026: The top bar fits on one row
 
 Measured in all five languages at 1280, 1440 and 1680 pixels, the top bar always broke onto a second row that carried one to three stray buttons. Michal approved turning Encyclopedia, Cities, Nations and Advisor into icon buttons (book, castle, flag, owl) whose title says what they do; the words appear next to the icons only on screens at least 1800 pixels wide. The game's name left the bar, the start screen carries it. The government button shows a building icon and the government's name without the word "Government", the bar uses a slightly smaller font and narrower sliders below 1560 pixels, and German counts turns as "Runde 70/120". The measurement also found a bug: the global-warming indicator showed "0 %" although it was meant to be hidden, because its CSS display overrode the hidden attribute. A global rule now makes the hidden attribute always win. The bar now fits on one row from 1440 pixels in every language and from 1280 pixels in Czech and Slovak, while a turn is being researched.

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { CIV_IDS, CIVS, TECH_IDS } from "../src/core";
 import { collectKeys, placeholders } from "../tools/i18n";
-import { LANGUAGES, t, tn, useLanguageForTest } from "../src/web/i18n";
+import { LANGUAGES, startLanguage, t, tn, useLanguageForTest } from "../src/web/i18n";
 import { cityLabel, productionLabel, realmLabel, unitName } from "../src/web/i18n/names";
 import { codexKeys, codexPage } from "../src/web/codex";
 import { techPage } from "../src/web/encyclopedia";
@@ -171,5 +171,17 @@ describe("switching the language", () => {
     expect(codexPage("unit-settlers")!.url).toBe("https://en.wikipedia.org/w/index.php?search=Colonization");
     useLanguageForTest("cs");
     expect(techPage("pottery").url).toBe("https://cs.wikipedia.org/wiki/Keramika");
+  });
+});
+
+describe("starting language", () => {
+  it("starts in English when the player has not picked a language", () => {
+    expect(startLanguage(null).id).toBe("en");
+    expect(startLanguage("xx").id).toBe("en");
+  });
+
+  it("keeps the language the player picked before", () => {
+    expect(startLanguage("cs").id).toBe("cs");
+    expect(startLanguage("de").id).toBe("de");
   });
 });

@@ -527,7 +527,11 @@ main.playfield { flex: 1 1 auto; min-height: 0; display: block; gap: 0; }
 .sv-empty { padding: 10px 2px; }
 .sv-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
 .small { font-size: 12px; }
-.help-dialog { width: min(720px, 94vw); }
+.help-dialog { width: min(1040px, 94vw); max-height: calc(100vh - 32px); overflow-y: auto; }
+.help-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 32px; }
+.help-cols section + section { margin-top: 16px; }
+.help-cols h3 { margin: 4px 0 6px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #c9a85e; }
+@media (max-width: 760px) { .help-cols { grid-template-columns: 1fr; } }
 .help-dialog .help { font-size: 14px; }
 label.check input { flex: 0 0 auto; }
 .sv-foot button { white-space: nowrap; }

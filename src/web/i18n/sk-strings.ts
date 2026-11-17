@@ -2436,4 +2436,8 @@ export const SK_STRINGS: Record<string, string> = {
     "Hra sa priebežne ukladá sama.",
   "Když tenhle kód zadáš u nové hry, dostaneš stejnou mapu.":
     "Keď tento kód zadáš pri novej hre, dostaneš rovnakú mapu.",
+  "Mapa":
+    "Mapa",
+  "Celá hra":
+    "Celá hra",
 };

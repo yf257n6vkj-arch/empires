@@ -2436,4 +2436,8 @@ export const DE_STRINGS: Record<string, string> = {
     "Das Spiel speichert sich laufend selbst.",
   "Když tenhle kód zadáš u nové hry, dostaneš stejnou mapu.":
     "Gib diesen Code bei einem neuen Spiel ein, dann bekommst du dieselbe Karte.",
+  "Mapa":
+    "Karte",
+  "Celá hra":
+    "Das ganze Spiel",
 };

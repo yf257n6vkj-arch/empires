@@ -2439,4 +2439,8 @@ export const EN_STRINGS: Record<string, string> = {
     "The game saves itself as you play.",
   "Když tenhle kód zadáš u nové hry, dostaneš stejnou mapu.":
     "Enter this code in a new game to get the same map.",
+  "Mapa":
+    "Map",
+  "Celá hra":
+    "The whole game",
 };

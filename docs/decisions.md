@@ -2,6 +2,10 @@
 
 What we decided with Michal, so we don't have to go back over it. Newest first. Entries before version 1.0 were written in Czech and translated to English when the repository switched to English.
 
+## 17 Nov 2026: The controls help is split into four groups
+
+The Controls window was one list of 17 points that mixed units, cities, the map and keys for the whole game, so finding for example how to zoom meant reading nearly everything. Michal approved splitting the same points into four headed groups, Units, Cities, Map and The whole game, in two columns: units on the left, the other three on the right. The window is wider and fits on a 900-pixel screen without scrolling; on narrow screens the columns stack. The texts of the points did not change.
+
 ## 17 Nov 2026: The in-game menu has two columns
 
 Michal found the settings in the in-game menu hard to read. The menu was one column of ten equal buttons with the settings stuck underneath without a heading; the labels had different widths, "Map view" broke onto two lines, the sliders started elsewhere than the drop-downs, the map code hid in a paragraph and the language flags ran off the edge of the window, so German and French could not be picked there at all. Michal chose a two-column layout. The left column holds the commands for the game (resume, save, load, new game, main menu) with the map code under Save game, and below a line the smaller links Leaderboard and Controls. The right column is headed Settings and lines up every label with its control in a grid, with thin lines between the helper, the map view, sound and language; the flags wrap. City overview, Encyclopedia and Advisor left the menu because the top bar has them. On narrow screens the columns stack.

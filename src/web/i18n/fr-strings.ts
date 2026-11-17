@@ -2436,4 +2436,8 @@ export const FR_STRINGS: Record<string, string> = {
     "La partie s'enregistre toute seule.",
   "Když tenhle kód zadáš u nové hry, dostaneš stejnou mapu.":
     "Saisis ce code dans une nouvelle partie pour obtenir la même carte.",
+  "Mapa":
+    "Carte",
+  "Celá hra":
+    "Toute la partie",
 };
